@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>{{ titulo }}</title>
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 16mm 20mm 16mm;
+    @bottom-left { content: "FAPERON · Central de Inteligência Agropecuária"; font-size: 8pt; color: #666; }
+    @bottom-right { content: "Página " counter(page) " de " counter(pages); font-size: 8pt; color: #666; }
+  }
+  body { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 9.5pt; color: #1f2933; line-height: 1.45; }
+  header { border-bottom: 3px solid #2E7D32; padding-bottom: 8px; margin-bottom: 14px; }
+  .marca { font-size: 9pt; letter-spacing: 0.08em; text-transform: uppercase; color: #2E7D32; font-weight: bold; }
+  h1 { font-size: 16pt; margin: 4px 0 0; }
+  h2 { font-size: 11.5pt; margin: 18px 0 6px; color: #2E7D32; }
+  dl.filtros { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 0; }
+  dl.filtros dt { font-weight: bold; color: #52606d; }
+  dl.filtros dd { margin: 0; }
+  figure { margin: 6px 0 0; }
+  figure svg { width: 100%; height: auto; }
+  figcaption { font-size: 8pt; color: #52606d; }
+  table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+  th { text-align: left; background: #EEF3EC; padding: 3px 6px; border-bottom: 1px solid #b9c5b5; }
+  td { padding: 2px 6px; border-bottom: 1px solid #e4e7eb; }
+  td.num, th.num { text-align: right; }
+  tr { break-inside: avoid; }
+  .analise p { margin: 0 0 6px; text-align: justify; }
+  footer.fonte { margin-top: 18px; padding-top: 8px; border-top: 1px solid #b9c5b5; font-size: 8pt; color: #52606d; }
+</style>
+</head>
+<body>
+<header>
+  <div class="marca">FAPERON · Central de Inteligência Agropecuária</div>
+  <h1>{{ titulo }}</h1>
+</header>
+
+<section>
+  <dl class="filtros">
+    <dt>Produto</dt><dd>{{ produto }}</dd>
+    <dt>Indicador</dt><dd>{{ indicador }} ({{ unidade }})</dd>
+    <dt>Período</dt><dd>{{ inicio }} a {{ fim }}</dd>
+    <dt>Recorte</dt><dd>{{ escopo }}</dd>
+  </dl>
+</section>
+
+<section>
+  <h2>Série histórica — {{ escopo }}</h2>
+  <figure>
+    {{ grafico_serie }}
+    <figcaption>{{ indicador }} em {{ unidade }}, {{ inicio }}–{{ fim }}. Anos sem coluna não têm dado publicado.</figcaption>
+  </figure>
+</section>
+
+{% if grafico_comparacao %}
+<section>
+  <h2>Comparação entre municípios</h2>
+  <figure>{{ grafico_comparacao }}</figure>
+</section>
+{% endif %}
+
+<section class="analise">
+  <h2>Análise estratégica</h2>
+  {% for p in paragrafos %}<p>{{ p }}</p>{% endfor %}
+</section>
+
+<section>
+  <h2>Ranking dos municípios em {{ fim }}</h2>
+  <table>
+    <thead><tr><th class="num">#</th><th>Município</th><th class="num">{{ indicador }} ({{ unidade }})</th><th class="num">% do total estadual</th></tr></thead>
+    <tbody>
+      {% for l in ranking %}
+      <tr><td class="num">{{ l.posicao }}</td><td>{{ l.nome }}</td><td class="num">{{ l.valor }}</td><td class="num">{{ l.percentual }}</td></tr>
+      {% endfor %}
+      {% if total_estadual %}
+      <tr><td></td><td><strong>Total de Rondônia</strong></td><td class="num"><strong>{{ total_estadual }}</strong></td><td class="num">100,0%</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+  <p style="font-size:8pt;color:#52606d">"X" indica valor omitido pelo IBGE para evitar a identificação do informante (sigilo); não significa zero.</p>
+</section>
+
+<footer class="fonte">
+  <strong>Fonte:</strong> {{ fonte }}, tabela SIDRA {{ tabela_sidra }} ({{ url_fonte }}).<br>
+  Dados atualizados em {{ atualizado_em }} · Relatório gerado em {{ gerado_em }}.
+</footer>
+</body>
+</html>
