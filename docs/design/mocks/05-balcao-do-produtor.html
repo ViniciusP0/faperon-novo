@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mock 5 · Balcão do produtor — FAPERON</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/base.css">
+<style>
+  body { font-family: "Nunito Sans", system-ui, sans-serif; font-size: 18px; background: var(--surface-alt); padding-bottom: 76px; }
+  h1, h2, h3, .ui { font-family: "Poppins", system-ui, sans-serif; }
+  .mockbar { bottom: 84px; }
+  header.top { background: var(--brand-dark); color: #fff; position: sticky; top: 0; z-index: 40; }
+  header.top .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; gap: 12px; }
+  header.top img.logo { height: 32px; width: auto; }
+  .wa { display: inline-flex; align-items: center; gap: 8px; background: #25d366; color: #05331a; text-decoration: none; padding: 10px 16px; border-radius: 999px; font: 600 15px "Poppins", sans-serif; }
+  .wa svg { width: 20px; height: 20px; }
+  .wa:hover { background: #3be078; }
+  nav.desk { display: none; gap: 4px; }
+  nav.desk a { color: #fff; text-decoration: none; padding: 8px 12px; border-radius: 8px; font: 500 14.5px "Poppins", sans-serif; }
+  nav.desk a:hover { background: rgba(255,255,255,.12); }
+  nav.desk a[aria-current] { background: rgba(255,255,255,.18); }
+
+  .hello { padding: 30px 0 8px; }
+  .hello h1 { font-size: clamp(28px, 6vw, 42px); line-height: 1.12; font-weight: 700; letter-spacing: -.02em; max-width: 18ch; }
+  .hello > p { color: var(--ink-muted); margin-top: 8px; }
+
+  .tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 20px; }
+  .tile { border-radius: 18px; padding: 20px 18px; text-decoration: none; min-height: 172px; display: flex; flex-direction: column; justify-content: space-between; }
+  .tile svg { width: 40px; height: 40px; }
+  .tile h2 { font: 600 19px/1.2 "Poppins", sans-serif; }
+  .tile p { font-size: 15px; margin-top: 4px; opacity: .9; line-height: 1.35; }
+  .tile:hover { filter: brightness(1.06); }
+  .tile.a { background: var(--brand); color: #fff; }
+  .tile.b { background: var(--steel); color: #fff; }
+  .tile.c { background: var(--brand-lime); color: var(--brand-deep); }
+  .tile.d { background: #fff; color: var(--ink); border: 2px solid var(--brand); }
+
+  .facts { margin-top: 30px; }
+  .facts h2 { font-size: 20px; font-weight: 600; }
+  .scroller { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 12px 16px 8px; margin: 0 -16px; scrollbar-width: none; }
+  .scroller:focus-visible { outline-offset: -3px; }
+  .fact { flex: 0 0 min(78%, 260px); scroll-snap-align: start; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 16px 16px 12px; }
+  .fact .k { font: 700 30px/1.1 "Poppins", sans-serif; color: var(--brand); letter-spacing: -.02em; }
+  .fact .t { font-size: 15.5px; margin-top: 4px; color: var(--ink-muted); line-height: 1.35; }
+  .fact svg { margin-top: 8px; }
+
+  .central { margin-top: 28px; background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 24px 20px; }
+  .central h2 { font-size: 22px; font-weight: 600; line-height: 1.2; }
+  .central > p { color: var(--ink-muted); margin-top: 6px; font-size: 16.5px; }
+  .central form { display: grid; gap: 12px; margin-top: 18px; }
+  .central label { font: 600 14.5px "Poppins", sans-serif; display: block; margin-bottom: 4px; }
+  .central select { width: 100%; padding: 14px 12px; border: 2px solid var(--line); border-radius: 12px; background: #fff; font-size: 17px; }
+  .central select:focus-visible { outline-offset: 1px; }
+  .go { display: inline-flex; justify-content: center; background: var(--brand); color: #fff; text-decoration: none; padding: 15px 22px; border-radius: 12px; font: 600 16px "Poppins", sans-serif; border: 0; cursor: pointer; }
+  .go:hover { background: var(--brand-dark); }
+  .central .more { display: block; text-align: center; margin-top: 12px; color: var(--brand); font: 600 15px "Poppins", sans-serif; }
+
+  .news { margin-top: 30px; }
+  .news .h { display: flex; justify-content: space-between; align-items: baseline; }
+  .news h2 { font-size: 22px; font-weight: 600; }
+  .news .h a { color: var(--brand); font: 600 14.5px "Poppins", sans-serif; }
+  .news ul { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 10px; }
+  .news li a { display: grid; grid-template-columns: 96px 1fr; gap: 14px; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 10px; text-decoration: none; align-items: center; }
+  .news li a:hover { border-color: var(--brand); }
+  .news img { width: 96px; height: 80px; object-fit: cover; border-radius: 10px; }
+  .news h3 { font: 600 16px/1.3 "Poppins", sans-serif; }
+  .news time { display: block; font-size: 14px; color: var(--ink-muted); margin-top: 4px; }
+
+  .agro { margin-top: 30px; background: var(--brand-dark); color: #fff; border-radius: 20px; padding: 24px 20px; }
+  .agro h2 { font-size: 22px; font-weight: 600; }
+  .agro p { margin-top: 8px; color: #d3e8dc; font-size: 16.5px; }
+  .agro dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0 0; }
+  .agro dt { font: 700 24px/1.1 "Poppins", sans-serif; color: var(--brand-lime); }
+  .agro dd { margin: 2px 0 0; font-size: 14px; color: #d3e8dc; line-height: 1.3; }
+
+  .bottom { position: fixed; z-index: 60; left: 0; right: 0; bottom: 0; background: #fff; border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(4, 1fr); padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); }
+  .bottom a { text-decoration: none; text-align: center; font: 500 12.5px "Poppins", sans-serif; padding: 6px 2px; color: var(--ink-muted); border-radius: 10px; }
+  .bottom a svg { width: 24px; height: 24px; margin: 0 auto 2px; }
+  .bottom a[aria-current] { color: var(--brand); font-weight: 600; }
+  footer { margin-top: 30px; padding: 24px 0; font-size: 14.5px; color: var(--ink-muted); }
+
+  @media (min-width: 900px) {
+    body { padding-bottom: 0; font-size: 18px; }
+    .mockbar { bottom: 12px; }
+    .bottom { display: none; }
+    nav.desk { display: flex; }
+    .tiles { grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .tile { min-height: 210px; padding: 24px 22px; }
+    .layout { display: grid; grid-template-columns: 1.15fr 1fr; gap: 28px; align-items: start; }
+    .scroller { flex-wrap: wrap; overflow: visible; margin: 0; padding: 12px 0 0; }
+    .fact { flex: 1 1 calc(50% - 6px); }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#conteudo">Ir para o conteúdo</a>
+<header class="top"><div class="wrap">
+  <a href="#"><img class="logo" src="assets/img/logo-branca.png" alt="FAPERON"></a>
+  <nav class="desk" aria-label="Principal"><a href="#" aria-current="page">Início</a><a href="#">Central de Inteligência</a><a href="#">Painel Agro RO</a><a href="#">Sobre</a><a href="#">Informativos Técnicos</a><a href="#">Fale Conosco</a></nav>
+  <a class="wa" href="#"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.200Zm4.500-6.100c-.2-.1-1.500-.7-1.700-.8-.2-.1-.4-.1-.6.100l-.8 1c-.1.200-.3.200-.5.100a6.700 6.700 0 0 1-3.300-2.900c-.2-.4.200-.4.700-1.300.1-.2 0-.3 0-.5l-.8-1.800c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.300 3 3 0 0 0-.9 2.200c0 1.300.9 2.500 1 2.700.1.200 1.800 2.800 4.400 3.900 1.600.7 2.200.7 3 .6.500-.1 1.500-.6 1.700-1.200.2-.6.200-1.100.2-1.200-.1-.1-.3-.2-.5-.3Z"/></svg>Falar no WhatsApp</a>
+</div></header>
+
+<main id="conteudo" class="wrap">
+  <section class="hello" aria-labelledby="h1">
+    <h1 id="h1">Como podemos ajudar você hoje?</h1>
+    <p>Preço, produção, informativo ou conversa com a FAPERON. Escolha abaixo.</p>
+    <div class="tiles">
+      <a class="tile b" href="https://www.cnabrasil.org.br/servicos/precos-commodities" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l5-5 4 4 8-9"/><path d="M15 7h5v5"/></svg>
+        <div><h2>Preços das commodities</h2><p>Cotações do dia, na CNA.</p></div></a>
+      <a class="tile a" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="12" width="4" height="8" rx="1"/><rect x="10" y="4" width="4" height="16" rx="1"/><rect x="17" y="9" width="4" height="11" rx="1"/></svg>
+        <div><h2>Produção do meu município</h2><p>Lavouras e rebanhos, com dados do IBGE.</p></div></a>
+      <a class="tile c" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h7"/></svg>
+        <div><h2>Informativo do mês</h2><p>Gado de corte e de leite.</p></div></a>
+      <a class="tile d" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>
+        <div><h2>Falar com a FAPERON</h2><p>Dúvidas, pedidos e sugestões.</p></div></a>
+    </div>
+  </section>
+
+  <div class="layout">
+    <div>
+      <section class="central" aria-labelledby="hc">
+        <h2 id="hc">Central de Inteligência Agropecuária</h2>
+        <p>Escolha um produto e veja quem mais produz em Rondônia.</p>
+        <form onsubmit="return false">
+          <div><label for="prod">Produto</label><select id="prod"></select></div>
+          <button class="go" type="submit">Ver quem mais produz</button>
+        </form>
+        <a class="more" href="#">Conheça a Central de Inteligência</a>
+      </section>
+
+      <section class="facts" aria-labelledby="hf">
+        <h2 id="hf">Rondônia em 2024</h2>
+        <div class="scroller" id="facts" tabindex="0" role="group" aria-label="Números do agro de Rondônia. Role para o lado."></div>
+      </section>
+    </div>
+
+    <div>
+      <section class="news" aria-labelledby="hn">
+        <div class="h"><h2 id="hn">Notícias recentes</h2><a href="#">Ver todas</a></div>
+        <ul id="news"></ul>
+      </section>
+      <section class="agro" aria-labelledby="ha">
+        <h2 id="ha">Nosso Agro</h2>
+        <p>Lavouras, rebanhos e produção de leite, ovos e mel, município a município.</p>
+        <dl id="agro"></dl>
+      </section>
+    </div>
+  </div>
+  <footer>FAPERON · Federação da Agricultura e Pecuária do Estado de Rondônia</footer>
+</main>
+
+<nav class="bottom" aria-label="Atalhos">
+  <a href="#" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-7 8 7v9H4z"/></svg>Início</a>
+  <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="12" width="4" height="8" rx="1"/><rect x="10" y="4" width="4" height="16" rx="1"/><rect x="17" y="9" width="4" height="11" rx="1"/></svg>Painel</a>
+  <a href="#hn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Notícias</a>
+  <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>Contato</a>
+</nav>
+
+<script src="assets/data.js"></script>
+<script src="assets/produtos.js"></script>
+<script src="assets/common.js"></script>
+<script>
+(function () {
+  const { D, compact, date, spark } = F, P = D.produtos;
+  const sel = document.getElementById("prod");
+  const order = ["soja-em-grao", "leite", "bovino", "cafe-em-grao-canephora", "cacau-em-amendoa", "milho-em-grao"];
+  const nm = Object.fromEntries(window.PRODUTOS.map((p) => [p[0], p[1]]));
+  sel.innerHTML = order.map((s) => `<option>${nm[s]}</option>`).join("") + `<option disabled>Mais produtos no painel</option>`;
+  const fact = (k, t, key) => `<div class="fact"><div class="k tnum">${k}</div><p class="t">${t}</p>${spark(P[key].serie, { w: 200, h: 34, area: true })}</div>`;
+  document.getElementById("facts").innerHTML =
+    fact(compact(P.soja.total) + " t", "de soja colhidas", "soja") +
+    fact(compact(P.milho.total) + " t", "de milho colhidas", "milho") +
+    fact(compact(P.leite.total) + " L", "de leite produzidos", "leite") +
+    fact(compact(P.bovino.total), "cabeças de gado", "bovino");
+  const n = D.noticias;
+  document.getElementById("news").innerHTML = n.slice(0, 4).map((x) => `<li><a href="#"><img src="${x.imagem || n[0].imagem}" alt=""><div><h3>${x.titulo}</h3><time datetime="${x.data}">${date(x.data)}</time></div></a></li>`).join("");
+  document.getElementById("agro").innerHTML = [[String(D.produtos_catalogo - 16), "culturas"], [compact(P.bovino.total), "cabeças de gado"], [String(D.municipios), "municípios"]].map(([k, l]) => `<div><dt>${k}</dt><dd>${l}</dd></div>`).join("");
+  F.mockbar(5, "Balcão do produtor");
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mock 1 · Consulta — FAPERON</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/base.css">
+<style>
+  body { font-family: "Source Sans 3", system-ui, sans-serif; font-size: 17px; }
+  h1, h2, h3, .ui { font-family: "Poppins", system-ui, sans-serif; }
+  .top { background: var(--brand-deep); color: #fff; }
+  .top .wrap { display: flex; align-items: center; justify-content: space-between; height: 68px; gap: 24px; }
+  .top img { height: 34px; width: auto; }
+  .top nav { display: flex; gap: 4px; flex-wrap: wrap; }
+  .top nav a { text-decoration: none; padding: 8px 12px; border-radius: 8px; font: 500 14.5px "Poppins", sans-serif; opacity: .9; }
+  .top nav a:hover { background: rgba(255,255,255,.1); opacity: 1; }
+  .top nav a[aria-current] { background: rgba(255,255,255,.14); opacity: 1; }
+
+  .hero { background: linear-gradient(180deg, var(--brand-deep) 0%, var(--brand-dark) 100%); color: #fff; padding: 64px 0 120px; }
+  .hero h1 { font-size: clamp(32px, 4.6vw, 54px); line-height: 1.08; font-weight: 600; letter-spacing: -.02em; max-width: 17ch; }
+  .hero p.lead { margin-top: 18px; font-size: 19px; max-width: 52ch; color: #d8ebe1; }
+  .search { position: relative; margin-top: 34px; max-width: 760px; }
+  .search label { display: block; font: 500 14px "Poppins", sans-serif; margin-bottom: 8px; color: #cfe6da; }
+  .field { display: flex; background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,.28); }
+  .field input { flex: 1; border: 0; padding: 20px 22px; font-size: 20px; color: var(--ink); min-width: 0; background: transparent; }
+  .field input:focus-visible { outline: none; }
+  .field:focus-within { outline: 3px solid var(--brand-lime); outline-offset: 2px; }
+  .field button { border: 0; background: var(--brand-lime); color: var(--brand-deep); padding: 0 26px; font: 600 16px "Poppins", sans-serif; cursor: pointer; }
+  .field button:hover { background: #9bdc60; }
+  .list { position: absolute; left: 0; right: 0; top: calc(100% + 6px); background: #fff; color: var(--ink); border-radius: 12px; box-shadow: 0 14px 34px rgba(0,0,0,.3); max-height: 320px; overflow: auto; z-index: 20; padding: 6px; }
+  .list[hidden] { display: none; }
+  .list li { list-style: none; padding: 10px 14px; border-radius: 8px; display: flex; justify-content: space-between; gap: 12px; cursor: pointer; }
+  .list li[aria-selected="true"], .list li:hover { background: var(--brand-soft); }
+  .list small { color: var(--ink-muted); font-size: 14px; }
+  .chips { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .chips span { color: #cfe6da; font-size: 15px; margin-right: 4px; }
+  .chip { border: 1px solid rgba(255,255,255,.4); background: transparent; color: #fff; border-radius: 999px; padding: 7px 15px; font: 500 14.5px "Poppins", sans-serif; cursor: pointer; }
+  .chip:hover, .chip[aria-pressed="true"] { background: #fff; color: var(--brand-dark); border-color: #fff; }
+
+  .result { margin-top: -84px; position: relative; z-index: 5; }
+  .panel { background: #fff; border-radius: 18px; box-shadow: 0 18px 50px rgba(0, 51, 41, .18); display: grid; grid-template-columns: 1.15fr 1fr; overflow: hidden; border: 1px solid var(--line); }
+  .panel .l { padding: 30px 34px; }
+  .panel .r { padding: 30px 34px; background: var(--surface-alt); border-left: 1px solid var(--line); }
+  .panel h2 { font-size: 15px; font-weight: 500; color: var(--ink-muted); }
+  .total { font: 600 clamp(34px, 5vw, 52px)/1.05 "Poppins", sans-serif; margin-top: 6px; letter-spacing: -.02em; }
+  .total small { font-size: 18px; font-weight: 500; color: var(--ink-muted); letter-spacing: 0; margin-left: 6px; }
+  .var { margin-top: 8px; color: var(--ink-muted); }
+  .var b { color: var(--brand); }
+  .chart { margin-top: 20px; height: 120px; }
+  .axis { display: flex; justify-content: space-between; color: var(--ink-muted); font-size: 13.5px; margin-top: 6px; }
+  ol.tops { margin: 14px 0 0; padding: 0; list-style: none; }
+  ol.tops li { display: grid; grid-template-columns: 26px 1fr auto; gap: 10px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--line); }
+  ol.tops li:last-child { border-bottom: 0; }
+  ol.tops .bar { grid-column: 2 / -1; height: 6px; border-radius: 3px; background: var(--line); margin-top: -2px; overflow: hidden; }
+  ol.tops .bar i { display: block; height: 100%; background: var(--brand); }
+  .cta { display: inline-flex; margin-top: 20px; background: var(--brand); color: #fff; text-decoration: none; padding: 13px 22px; border-radius: 10px; font: 600 15px "Poppins", sans-serif; }
+  .cta:hover { background: var(--brand-dark); }
+  .src { margin-top: 14px; font-size: 13.5px; color: var(--ink-muted); }
+  .empty { padding: 30px 34px; grid-column: 1 / -1; }
+
+  section.blk { padding: 76px 0 0; }
+  .sec-h { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 24px; }
+  .sec-h h2 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; }
+  .sec-h a { font: 500 15px "Poppins", sans-serif; color: var(--brand); }
+  .news { display: grid; grid-template-columns: 1.3fr 1fr; gap: 36px; }
+  .lead-n img { width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: 14px; }
+  .lead-n h3 { font-size: 26px; line-height: 1.2; font-weight: 600; margin-top: 16px; letter-spacing: -.01em; }
+  .lead-n p { margin-top: 10px; color: var(--ink-muted); max-width: 62ch; }
+  .meta { font-size: 14px; color: var(--ink-muted); margin-top: 8px; }
+  .side-n { display: flex; flex-direction: column; }
+  .side-n article { display: grid; grid-template-columns: 112px 1fr; gap: 16px; padding: 16px 0; border-top: 1px solid var(--line); }
+  .side-n article:first-child { border-top: 0; padding-top: 0; }
+  .side-n img { width: 112px; height: 84px; object-fit: cover; border-radius: 10px; }
+  .side-n h3 { font-size: 16.5px; line-height: 1.3; font-weight: 500; }
+
+  .central { margin-top: 76px; background: var(--brand-soft); }
+  .central .wrap { display: grid; grid-template-columns: 1fr 1.1fr; gap: 56px; padding: 56px 0; align-items: center; }
+  .central h2 { font-size: 30px; font-weight: 600; line-height: 1.15; letter-spacing: -.01em; }
+  .central p { margin-top: 12px; color: var(--ink-muted); max-width: 50ch; }
+  .central ul { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; }
+  .central li { padding: 14px 0; border-top: 1px solid rgba(0,96,78,.25); font-weight: 600; font-family: "Poppins", sans-serif; font-size: 15.5px; }
+  .central li span { display: block; font: 400 15px "Source Sans 3", sans-serif; color: var(--ink-muted); margin-top: 2px; }
+
+  .comm { margin-top: 0; background: var(--steel); color: #fff; }
+  .comm .wrap { display: flex; justify-content: space-between; gap: 28px; align-items: center; padding: 30px 0; flex-wrap: wrap; }
+  .comm h2 { font-size: 20px; font-weight: 600; }
+  .comm p { color: #d6e4ee; max-width: 62ch; margin-top: 4px; font-size: 16px; }
+  .comm a { background: #fff; color: var(--steel); text-decoration: none; padding: 12px 20px; border-radius: 10px; font: 600 15px "Poppins", sans-serif; }
+  .comm a:hover { background: var(--steel-soft); }
+
+  .agro { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: 2px solid var(--ink); }
+  .agro div { padding: 22px 26px 6px 0; }
+  .agro div + div { padding-left: 26px; border-left: 1px solid var(--line); }
+  .agro h3 { font-size: 20px; font-weight: 600; }
+  .agro p { margin-top: 8px; color: var(--ink-muted); }
+  footer { margin-top: 88px; background: var(--brand-deep); color: #cfe6da; padding: 40px 0 90px; font-size: 15px; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  footer img { height: 32px; }
+
+  @media (max-width: 900px) {
+    .top nav { display: none; }
+    .panel, .news, .central .wrap, .agro { grid-template-columns: 1fr; }
+    .panel .r { border-left: 0; border-top: 1px solid var(--line); }
+    .agro div + div { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); margin-top: 16px; }
+    .central ul { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#conteudo">Ir para o conteúdo</a>
+<header class="top">
+  <div class="wrap">
+    <a href="#"><img src="assets/img/logo-branca.png" alt="FAPERON — Federação da Agricultura e Pecuária de Rondônia"></a>
+    <nav aria-label="Principal">
+      <a href="#" aria-current="page">Início</a><a href="#central">Central de Inteligência</a><a href="#">Painel Agro RO</a><a href="#">Sobre</a><a href="#">Informativos Técnicos</a><a href="#">Fale Conosco</a>
+    </nav>
+  </div>
+</header>
+
+<main id="conteudo">
+  <section class="hero" aria-labelledby="h1">
+    <div class="wrap">
+      <h1 id="h1">O que você quer saber sobre o agro de Rondônia?</h1>
+      <p class="lead">Dados oficiais do IBGE para os 52 municípios: produção, área, rebanhos e valor. Escolha um produto e veja o resultado na hora.</p>
+      <div class="search">
+        <label for="q">Produto</label>
+        <div class="field">
+          <input id="q" type="text" role="combobox" aria-expanded="false" aria-controls="lista" aria-autocomplete="list" autocomplete="off" placeholder="Digite soja, leite, café, cacau…">
+          <button type="button" id="ir">Ver resultado</button>
+        </div>
+        <ul id="lista" class="list" role="listbox" hidden></ul>
+        <div class="chips" id="chips"><span>Mais buscados:</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="result wrap" aria-live="polite" aria-label="Resultado da consulta">
+    <div class="panel" id="panel"></div>
+  </section>
+
+  <section class="blk wrap" aria-labelledby="hn">
+    <div class="sec-h"><h2 id="hn">Notícias recentes</h2><a href="#">Ver todas as notícias</a></div>
+    <div class="news" id="news"></div>
+  </section>
+
+  <section class="central" id="central" aria-labelledby="hc">
+    <div class="wrap">
+      <div>
+        <h2 id="hc">Central de Inteligência Agropecuária</h2>
+        <p>Um painel para consultar, comparar e explicar os números do campo em Rondônia, com fonte e data de atualização em cada tela.</p>
+        <a class="cta" href="#">Conheça a Central de Inteligência</a>
+      </div>
+      <ul>
+        <li>Ranking<span>Os 52 municípios do maior ao menor.</span></li>
+        <li>Série histórica<span>Evolução ano a ano desde 1974.</span></li>
+        <li>Comparação<span>Até 5 municípios ou produtos.</span></li>
+        <li>Análise e PDF<span>Texto pronto e relatório para levar.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <aside class="comm" aria-labelledby="hm">
+    <div class="wrap">
+      <div><h2 id="hm">Preços das commodities</h2><p>A CNA atualiza todos os dias as cotações das principais bolsas do mundo e das praças brasileiras.</p></div>
+      <a href="https://www.cnabrasil.org.br/servicos/precos-commodities" rel="noopener">Confira os preços na CNA</a>
+    </div>
+  </aside>
+
+  <section class="blk wrap" aria-labelledby="ha" style="padding-top:64px">
+    <div class="sec-h"><h2 id="ha">Nosso Agro</h2></div>
+    <div class="agro" id="agro"></div>
+  </section>
+</main>
+<footer><div class="wrap"><img src="assets/img/logo-branca.png" alt="FAPERON"><p>Federação da Agricultura e Pecuária do Estado de Rondônia · Porto Velho, RO</p></div></footer>
+
+<script src="assets/data.js"></script>
+<script src="assets/produtos.js"></script>
+<script src="assets/common.js"></script>
+<script>
+(function () {
+  const { D, nf, compact, pct, delta, bars, date } = F;
+  const chipKeys = ["soja", "leite", "bovino", "cafe", "cacau", "milho"];
+  const slugToKey = Object.fromEntries(Object.entries(D.produtos).map(([k, v]) => [v.slug, k]));
+  const panel = document.getElementById("panel");
+  const q = document.getElementById("q"), list = document.getElementById("lista");
+  let active = -1, shown = [];
+
+  function render(slug, nome) {
+    const k = slugToKey[slug];
+    if (!k) {
+      panel.innerHTML = `<div class="empty"><h2>${nome}</h2><p style="margin-top:8px;color:var(--ink-muted);max-width:60ch">Este mock mostra a prévia dos seis produtos mais buscados. No site, todo produto publicado pelo IBGE para Rondônia tem ranking, série histórica, comparação e análise.</p><a class="cta" href="#">Abrir ${nome} no painel</a></div>`;
+      return;
+    }
+    const p = D.produtos[k], dl = delta(p.serie), max = p.top[0].valor;
+    const unit = p.unidade.toLowerCase();
+    panel.innerHTML = `
+      <div class="l">
+        <h2>${p.nome} · ${p.indicador_nome.toLowerCase()} em ${p.ano}</h2>
+        <div class="total tnum">${compact(p.total)}<small>${unit}</small></div>
+        <p class="var">Total de Rondônia. Em relação a ${p.serie[0][0]}: <b>${dl >= 0 ? "+" : ""}${pct(dl, 0)}%</b>.</p>
+        <div class="chart">${bars(p.serie, { h: 120 })}</div>
+        <div class="axis"><span>${p.serie[0][0]}</span><span>${p.serie[p.serie.length - 1][0]}</span></div>
+      </div>
+      <div class="r">
+        <h2>Maiores municípios em ${p.ano}</h2>
+        <ol class="tops">${p.top.slice(0, 5).map((m, i) => `<li><span class="tnum" style="color:var(--ink-muted)">${i + 1}º</span><span>${m.nome}</span><b class="tnum">${nf(m.valor)}</b><span class="bar"><i style="width:${(m.valor / max) * 100}%"></i></span></li>`).join("")}</ol>
+        <a class="cta" href="#">Abrir ${p.nome} no painel</a>
+        <p class="src">Fonte: IBGE, tabela SIDRA ${p.meta.tabela_sidra}. Atualizado em ${new Date(p.meta.atualizado_em).toLocaleDateString("pt-BR")}.</p>
+      </div>`;
+  }
+
+  const chips = document.getElementById("chips");
+  chipKeys.forEach((k) => {
+    const b = document.createElement("button");
+    b.className = "chip"; b.type = "button"; b.textContent = D.produtos[k].nome.replace(/ \(.*\)/, "").replace("Café (em grão) Canephora", "Café canéfora").replace("Cacau (em amêndoa)", "Cacau");
+    b.setAttribute("aria-pressed", "false");
+    b.onclick = () => { choose(D.produtos[k].slug, D.produtos[k].nome); };
+    b.dataset.slug = D.produtos[k].slug;
+    chips.appendChild(b);
+  });
+  function choose(slug, nome) {
+    q.value = nome; close(); render(slug, nome);
+    chips.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", String(c.dataset.slug === slug)));
+  }
+  const norm = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  function open() {
+    const t = norm(q.value.trim());
+    shown = window.PRODUTOS.filter((p) => !t || norm(p[1]).includes(t)).slice(0, 8);
+    active = -1;
+    list.innerHTML = shown.map((p, i) => `<li role="option" id="o${i}" data-i="${i}"><span>${p[1]}</span><small>${p[2] === "agricultura" ? "Agricultura" : "Pecuária"}</small></li>`).join("") || `<li role="option" aria-disabled="true">Nenhum produto encontrado</li>`;
+    list.hidden = false; q.setAttribute("aria-expanded", "true");
+  }
+  function close() { list.hidden = true; q.setAttribute("aria-expanded", "false"); q.removeAttribute("aria-activedescendant"); }
+  function mark() { list.querySelectorAll("li").forEach((li, i) => li.setAttribute("aria-selected", String(i === active))); if (active >= 0) q.setAttribute("aria-activedescendant", "o" + active); }
+  q.addEventListener("input", open); q.addEventListener("focus", open);
+  q.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown") { e.preventDefault(); if (list.hidden) open(); active = Math.min(active + 1, shown.length - 1); mark(); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); active = Math.max(active - 1, 0); mark(); }
+    else if (e.key === "Enter") { e.preventDefault(); const p = shown[active >= 0 ? active : 0]; if (p) choose(p[0], p[1]); }
+    else if (e.key === "Escape") close();
+  });
+  list.addEventListener("mousedown", (e) => { const li = e.target.closest("li[data-i]"); if (li) { const p = shown[+li.dataset.i]; choose(p[0], p[1]); } });
+  document.addEventListener("click", (e) => { if (!e.target.closest(".search")) close(); });
+  document.getElementById("ir").onclick = () => { const p = shown[0] || window.PRODUTOS.find((x) => norm(x[1]).includes(norm(q.value))); if (p) choose(p[0], p[1]); else open(); };
+
+  // notícias
+  const n = D.noticias;
+  document.getElementById("news").innerHTML = `
+    <article class="lead-n"><a href="#" style="text-decoration:none"><img src="${n[0].imagem}" alt=""><h3>${n[0].titulo}</h3></a><p>${n[0].resumo}…</p><p class="meta">${date(n[0].data)}</p></article>
+    <div class="side-n">${n.slice(1, 5).map((x) => `<article><img src="${x.imagem || n[0].imagem}" alt=""><div><h3><a href="#" style="text-decoration:none">${x.titulo}</a></h3><p class="meta">${date(x.data)}</p></div></article>`).join("")}</div>`;
+  document.getElementById("agro").innerHTML = [
+    ["Agricultura", `${D.produtos_catalogo - 16} culturas acompanhadas`, "Área plantada, produção, rendimento e valor das lavouras temporárias e permanentes."],
+    ["Pecuária", `${compact(D.produtos.bovino.total)} de cabeças de gado`, "Efetivo dos rebanhos e produção de leite, ovos, mel e outros produtos de origem animal."],
+    ["52 municípios", "Do maior ao menor produtor", "Compare qualquer município de Rondônia com o restante do estado."],
+  ].map(([t, s, p]) => `<div><h3>${t}</h3><p style="margin-top:4px;font-weight:600">${s}</p><p>${p}</p></div>`).join("");
+
+  render(D.produtos.soja.slug, D.produtos.soja.nome);
+  chips.querySelector('[data-slug="soja-em-grao"]').setAttribute("aria-pressed", "true");
+  F.mockbar(1, "Consulta");
+})();
+</script>
+</body>
+</html>

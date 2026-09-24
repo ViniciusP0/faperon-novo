@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mock 4 · Editorial — FAPERON</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/base.css">
+<style>
+  body { font-family: "Source Serif 4", Georgia, serif; font-size: 18px; line-height: 1.62; background: #fff; }
+  .ui, nav a, .btn, .tag, .meta { font-family: "Poppins", system-ui, sans-serif; }
+  .ticker { background: var(--ink); color: #dbe9e2; font: 500 13.5px "Poppins", sans-serif; }
+  .ticker .wrap { display: flex; gap: 28px; padding: 9px 0; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+  .ticker b { color: #fff; font-weight: 600; }
+  .ticker a { color: var(--brand-lime); text-decoration: none; margin-left: auto; }
+
+  .mast { position: absolute; z-index: 10; left: 0; right: 0; color: #fff; }
+  .mast .wrap { display: flex; align-items: center; justify-content: space-between; height: 84px; gap: 20px; }
+  .mast img { height: 38px; width: auto; }
+  .mast nav { display: flex; gap: 6px; }
+  .mast nav a { color: #fff; text-decoration: none; padding: 8px 12px; border-radius: 8px; font: 500 14.5px "Poppins", sans-serif; }
+  .mast nav a:hover { background: rgba(255,255,255,.16); }
+  .mast nav a[aria-current] { background: rgba(255,255,255,.2); }
+
+  .hero { position: relative; color: #fff; min-height: 640px; display: flex; align-items: flex-end; background: #0a1f18; }
+  .hero > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,20,14,.55) 0%, rgba(0,20,14,.15) 34%, rgba(0,20,14,.88) 100%); }
+  .hero .wrap { position: relative; z-index: 2; display: grid; grid-template-columns: 1.7fr 1fr; gap: 56px; padding: 120px 0 52px; align-items: end; }
+  .hero .tag { display: inline-block; font: 500 14px "Poppins", sans-serif; border-bottom: 2px solid var(--brand-lime); padding-bottom: 3px; }
+  .hero h1 { font-size: clamp(32px, 4.4vw, 56px); line-height: 1.08; font-weight: 700; letter-spacing: -.015em; margin-top: 16px; text-wrap: balance; }
+  .hero .lead { margin-top: 16px; font-size: 19px; color: #e6f1ec; max-width: 58ch; }
+  .hero .meta { margin-top: 16px; font-size: 14px; color: #c2d8cd; }
+  .rail { background: rgba(0,20,14,.62); backdrop-filter: blur(6px); border-radius: 14px; padding: 20px 24px; }
+  .rail h2 { font: 600 15px "Poppins", sans-serif; color: #c2d8cd; }
+  .rail ol { list-style: none; margin: 10px 0 0; padding: 0; }
+  .rail li { padding: 12px 0; border-top: 1px solid rgba(255,255,255,.2); }
+  .rail li:first-child { border-top: 0; }
+  .rail a { text-decoration: none; font-weight: 600; font-size: 17px; line-height: 1.3; display: block; }
+  .rail a:hover { text-decoration: underline; }
+  .rail .meta { margin-top: 4px; }
+
+  .questions { padding: 72px 0 0; }
+  .questions .head { display: grid; grid-template-columns: 1fr 1.6fr; gap: 56px; }
+  .questions h2 { font-size: 34px; line-height: 1.15; font-weight: 700; letter-spacing: -.01em; }
+  .questions .head p { color: var(--ink-muted); align-self: end; max-width: 56ch; }
+  .qa { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 32px; border-top: 3px solid var(--ink); }
+  .qa article { padding: 24px 28px 26px 0; }
+  .qa article + article { padding-left: 28px; border-left: 1px solid var(--line); }
+  .qa h3 { font: 500 15.5px/1.35 "Poppins", sans-serif; color: var(--ink-muted); }
+  .qa .ans { font-size: 26px; line-height: 1.2; font-weight: 700; margin-top: 10px; letter-spacing: -.01em; }
+  .qa p { margin-top: 10px; color: var(--ink-muted); font-size: 16.5px; }
+  .qa a { display: inline-block; margin-top: 12px; color: var(--brand); font: 600 14.5px "Poppins", sans-serif; }
+  .central-cta { margin-top: 30px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .btn { display: inline-block; text-decoration: none; padding: 14px 24px; border-radius: 10px; font: 600 15px "Poppins", sans-serif; background: var(--brand); color: #fff; }
+  .btn:hover { background: var(--brand-dark); }
+  .central-cta span { color: var(--ink-muted); font-size: 16px; }
+
+  .news { padding: 80px 0 0; }
+  .news .sec-h { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--ink); padding-bottom: 12px; }
+  .news h2 { font-size: 30px; font-weight: 700; }
+  .news .sec-h a { font: 500 15px "Poppins", sans-serif; color: var(--brand); }
+  .ngrid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 0 32px; margin-top: 26px; }
+  .ngrid article { border-right: 1px solid var(--line); padding-right: 32px; }
+  .ngrid article:last-child { border-right: 0; padding-right: 0; }
+  .ngrid img { width: 100%; aspect-ratio: 4/3; object-fit: cover; }
+  .ngrid article:first-child img { aspect-ratio: 16/11; }
+  .ngrid h3 { font-size: 21px; line-height: 1.25; font-weight: 700; margin-top: 14px; }
+  .ngrid article:first-child h3 { font-size: 27px; }
+  .ngrid h3 a { text-decoration: none; }
+  .ngrid h3 a:hover { text-decoration: underline; }
+  .ngrid p { color: var(--ink-muted); font-size: 16px; margin-top: 8px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .ngrid .meta { font-size: 13.5px; color: var(--ink-muted); margin-top: 10px; }
+
+  .comm { margin-top: 80px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
+  .comm .wrap { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: center; padding: 26px 0; }
+  .comm h2 { font-size: 24px; font-weight: 700; }
+  .comm p { color: var(--ink-muted); margin-top: 4px; font-size: 16.5px; }
+  .comm a { border: 2px solid var(--ink); color: var(--ink); text-decoration: none; padding: 11px 20px; border-radius: 10px; font: 600 15px "Poppins", sans-serif; }
+  .comm a:hover { background: var(--ink); color: #fff; }
+
+  .agro { padding: 72px 0 0; display: grid; grid-template-columns: 1fr 1.6fr; gap: 56px; }
+  .agro h2 { font-size: 34px; font-weight: 700; line-height: 1.15; }
+  .agro .txt p { font-size: 20px; line-height: 1.6; max-width: 60ch; }
+  .agro .txt p + p { margin-top: 16px; color: var(--ink-muted); font-size: 18px; }
+  .agro .txt a { display: inline-block; margin-top: 18px; color: var(--brand); font: 600 15px "Poppins", sans-serif; }
+  footer { margin-top: 88px; background: var(--ink); color: #cfe0d7; padding: 36px 0 90px; font: 15px "Poppins", sans-serif; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+  @media (max-width: 980px) {
+    .mast nav { display: none; }
+    .hero { min-height: 560px; }
+    .hero .wrap, .questions .head, .qa, .ngrid, .agro, .comm .wrap { grid-template-columns: 1fr; gap: 28px; }
+    .rail { padding: 16px 18px; }
+    .qa article + article { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); }
+    .ngrid article { border-right: 0; padding-right: 0; margin-bottom: 26px; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#conteudo">Ir para o conteúdo</a>
+<div class="ticker" role="region" aria-label="Números do painel"><div class="wrap" id="tick"></div></div>
+
+<header class="mast"><div class="wrap">
+  <a href="#"><img src="assets/img/logo-branca.png" alt="FAPERON — Federação da Agricultura e Pecuária de Rondônia"></a>
+  <nav aria-label="Principal"><a href="#" aria-current="page">Início</a><a href="#">Central de Inteligência</a><a href="#">Painel Agro RO</a><a href="#">Sobre</a><a href="#">Informativos Técnicos</a><a href="#">Fale Conosco</a></nav>
+</div></header>
+
+<main id="conteudo">
+  <section class="hero" aria-labelledby="h1" id="hero"></section>
+
+  <section class="questions wrap" aria-labelledby="hq">
+    <div class="head">
+      <h2 id="hq">Três perguntas sobre o campo de Rondônia</h2>
+      <p>As respostas vêm da Central de Inteligência, com dados do IBGE. Cada uma abre a consulta completa: ranking, série histórica e análise.</p>
+    </div>
+    <div class="qa" id="qa"></div>
+    <div class="central-cta"><a class="btn" href="#">Conheça a Central de Inteligência</a><span>Faça a sua própria pergunta no painel.</span></div>
+  </section>
+
+  <section class="news wrap" aria-labelledby="hn">
+    <div class="sec-h"><h2 id="hn">Notícias recentes</h2><a href="#">Ver todas as notícias</a></div>
+    <div class="ngrid" id="ngrid"></div>
+  </section>
+
+  <aside class="comm" aria-labelledby="hm"><div class="wrap"><div><h2 id="hm">Preços das commodities</h2><p>A CNA atualiza todos os dias as cotações das principais bolsas do mundo e das praças brasileiras.</p></div><a href="https://www.cnabrasil.org.br/servicos/precos-commodities" rel="noopener">Confira os preços na CNA</a></div></aside>
+
+  <section class="agro wrap" aria-labelledby="ha">
+    <h2 id="ha">Nosso Agro</h2>
+    <div class="txt" id="agro"></div>
+  </section>
+</main>
+<footer><div class="wrap"><b>FAPERON</b><span>Federação da Agricultura e Pecuária do Estado de Rondônia · Porto Velho</span></div></footer>
+
+<script src="assets/data.js"></script>
+<script src="assets/common.js"></script>
+<script>
+(function () {
+  const { D, compact, nf, pct, date, delta } = F;
+  const n = D.noticias, P = D.produtos;
+  document.getElementById("tick").innerHTML =
+    `<span><b>Painel Agro RO, 2024</b></span><span>Soja <b>${compact(P.soja.total)} t</b></span><span>Milho <b>${compact(P.milho.total)} t</b></span><span>Leite <b>${compact(P.leite.total)} L</b></span><span>Rebanho bovino <b>${compact(P.bovino.total)} cabeças</b></span><a href="#">Abrir o painel</a>`;
+  document.getElementById("hero").innerHTML = `
+    <img src="${n[0].imagem}" alt="">
+    <div class="wrap">
+      <div>
+        <span class="tag">Notícia em destaque</span>
+        <h1 id="h1"><a href="#" style="text-decoration:none">${n[0].titulo}</a></h1>
+        <p class="lead">${n[0].resumo}…</p>
+        <p class="meta">${date(n[0].data, true)}</p>
+      </div>
+      <aside class="rail" aria-labelledby="hr"><h2 id="hr">Também nas notícias</h2><ol>${n.slice(1, 5).map((x) => `<li><a href="#">${x.titulo}</a><p class="meta">${date(x.data)}</p></li>`).join("")}</ol></aside>
+    </div>`;
+  const ans = (k, ttl, pre, post) => `<article><h3>${ttl}</h3><p class="ans">${P[k].top[0].nome}</p><p>${pre} ${nf(P[k].top[0].valor)} ${post} em ${P[k].ano}, ${pct(P[k].top[0].pct, 1)}% do total do estado.</p><a href="#">Ver o ranking completo</a></article>`;
+  document.getElementById("qa").innerHTML =
+    ans("soja", "Quem colhe mais soja?", "Colheu", "toneladas") +
+    ans("leite", "Quem produz mais leite?", "Produziu", "litros") +
+    ans("bovino", "Onde está o maior rebanho bovino?", "Reúne", "cabeças");
+  document.getElementById("ngrid").innerHTML = n.slice(1, 4).map((x) => `<article><img src="${x.imagem || n[0].imagem}" alt=""><h3><a href="#">${x.titulo}</a></h3><p>${x.resumo}</p><p class="meta">${date(x.data)}</p></article>`).join("");
+  document.getElementById("agro").innerHTML = `
+    <p>Rondônia acompanha ${D.produtos_catalogo - 16} culturas agrícolas e ${compact(P.bovino.total)} de cabeças de gado, distribuídas em ${D.municipios} municípios.</p>
+    <p>A FAPERON reúne esses números, mostra de onde vêm e ajuda o produtor, o sindicato e o poder público a decidir com base no que o campo realmente produz.</p>
+    <a href="#">Explorar o Nosso Agro no painel</a>`;
+  F.mockbar(4, "Editorial");
+})();
+</script>
+</body>
+</html>

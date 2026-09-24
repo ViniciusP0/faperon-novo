@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mocks da tela Início — FAPERON</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/base.css">
+<style>
+  body { font-family: "Source Sans 3", system-ui, sans-serif; font-size: 17px; background: #f7faf8; }
+  h1, h2, h3 { font-family: "Poppins", system-ui, sans-serif; }
+  header { background: var(--brand-deep); color: #fff; padding: 44px 0 40px; }
+  header h1 { font-size: clamp(28px, 4vw, 44px); line-height: 1.12; font-weight: 600; letter-spacing: -.02em; max-width: 24ch; }
+  header p { color: #cfe6da; margin-top: 12px; max-width: 70ch; }
+  .rec { background: #fff; border: 2px solid var(--brand); border-radius: 16px; padding: 22px 26px; margin-top: -28px; position: relative; }
+  .rec h2 { font-size: 20px; font-weight: 600; }
+  .rec p { margin-top: 6px; color: var(--ink-muted); max-width: 90ch; }
+  section.mock { display: grid; grid-template-columns: 1.25fr 1fr; gap: 40px; margin-top: 56px; align-items: start; }
+  .shots { display: grid; grid-template-columns: 1fr 120px; gap: 14px; align-items: start; }
+  .shots a { display: block; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: #fff; box-shadow: 0 8px 24px rgba(0, 51, 41, .1); }
+  .shots img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+  .shots .d img { aspect-ratio: 16 / 11; }
+  .shots .m img { aspect-ratio: 9 / 19; }
+  .info h2 { font-size: 26px; font-weight: 600; letter-spacing: -.01em; }
+  .info .lead { color: var(--ink-muted); margin-top: 6px; }
+  .info dl { margin: 18px 0 0; display: grid; gap: 12px; }
+  .info dt { font: 600 14.5px "Poppins", sans-serif; color: var(--brand); }
+  .info dd { margin: 2px 0 0; }
+  .open { display: inline-block; margin-top: 18px; background: var(--brand); color: #fff; text-decoration: none; padding: 12px 20px; border-radius: 10px; font: 600 15px "Poppins", sans-serif; }
+  .open:hover { background: var(--brand-dark); }
+  .compare { margin-top: 64px; overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; background: #fff; border: 1px solid var(--line); font-size: 15.5px; min-width: 760px; }
+  th, td { padding: 12px 14px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { font: 600 14px "Poppins", sans-serif; background: var(--brand-soft); }
+  .research { margin-top: 64px; display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+  .research h2 { font-size: 22px; font-weight: 600; }
+  .research ul { padding-left: 20px; margin: 10px 0 0; }
+  .research li { margin-top: 6px; }
+  footer { padding: 44px 0 96px; color: var(--ink-muted); font-size: 15px; }
+  @media (max-width: 900px) { section.mock, .research { grid-template-columns: 1fr; } .shots { grid-template-columns: 1fr 88px; } }
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Cinco modelos para a tela Início da FAPERON</h1>
+  <p>Todos usam a marca atual (logo, verdes e Poppins), os dados reais já ingeridos do IBGE e as quatro peças definidas no plano: destaque da Central de Inteligência, notícias recentes, link das commodities para a CNA e Nosso Agro. Clique em um modelo para abri-lo funcionando.</p>
+</div></header>
+
+<main class="wrap">
+  <div class="rec">
+    <h2>Recomendação</h2>
+    <p>Comece pelo Mock 2 (Rondônia em números). Ele é o que mais se parece com o que o cliente gostou na home da CNI, faz do Início a porta de entrada da Central com dados reais e usa só o que a API já entrega. Leve para a Fase 2 o bloco "O que você precisa hoje?" do Mock 3, e adote agora o botão de WhatsApp fixo do Mock 5, que custa quase nada.</p>
+  </div>
+
+  <section class="mock" aria-labelledby="m1">
+    <div class="shots"><a class="d" href="01-consulta.html"><img src="assets/thumbs/01-consulta-d.png" alt="Miniatura do Mock 1 em desktop"></a><a class="m" href="01-consulta.html"><img src="assets/thumbs/01-consulta-m.png" alt="Miniatura do Mock 1 em celular"></a></div>
+    <div class="info">
+      <h2 id="m1">Mock 1 · Consulta</h2>
+      <p class="lead">A busca é a página. O visitante digita um produto e recebe total, evolução e os maiores municípios na hora.</p>
+      <dl>
+        <div><dt>Referência</dt><dd>Portais de dados como Farsul Big Data e a busca da CNI.</dd></div>
+        <div><dt>Melhor para</dt><dd>Técnicos, sindicatos e imprensa que já chegam com uma pergunta.</dd></div>
+        <div><dt>Ponto forte</dt><dd>Mostra o valor da Central em menos de 10 segundos, sem sair do Início.</dd></div>
+        <div><dt>Risco</dt><dd>O produtor que não sabe o que procurar fica sem caminho; exige a prévia de dados no Início (chamada extra à API).</dd></div>
+      </dl>
+      <a class="open" href="01-consulta.html">Abrir o Mock 1</a>
+    </div>
+  </section>
+
+  <section class="mock" aria-labelledby="m2">
+    <div class="shots"><a class="d" href="02-em-numeros.html"><img src="assets/thumbs/02-em-numeros-d.png" alt="Miniatura do Mock 2 em desktop"></a><a class="m" href="02-em-numeros.html"><img src="assets/thumbs/02-em-numeros-m.png" alt="Miniatura do Mock 2 em celular"></a></div>
+    <div class="info">
+      <h2 id="m2">Mock 2 · Rondônia em números</h2>
+      <p class="lead">A manchete é um fato do campo. Seis indicadores em faixa, cada um com tendência, abrem o detalhe e o ranking de municípios.</p>
+      <dl>
+        <div><dt>Referência</dt><dd>A seção "Importância da Indústria Brasileira" e "Indústria em Números" da CNI.</dd></div>
+        <div><dt>Melhor para</dt><dd>Todos os públicos: dá contexto imediato e leva ao painel.</dd></div>
+        <div><dt>Ponto forte</dt><dd>Reforça a autoridade da FAPERON com números oficiais e usa só o que a API já entrega.</dd></div>
+        <div><dt>Risco</dt><dd>Depende de dados atualizados; o texto do título precisa de regra para escolher quais números destacar.</dd></div>
+      </dl>
+      <a class="open" href="02-em-numeros.html">Abrir o Mock 2</a>
+    </div>
+  </section>
+
+  <section class="mock" aria-labelledby="m3">
+    <div class="shots"><a class="d" href="03-por-publico.html"><img src="assets/thumbs/03-por-publico-d.png" alt="Miniatura do Mock 3 em desktop"></a><a class="m" href="03-por-publico.html"><img src="assets/thumbs/03-por-publico-m.png" alt="Miniatura do Mock 3 em celular"></a></div>
+    <div class="info">
+      <h2 id="m3">Mock 3 · Por público</h2>
+      <p class="lead">Três destaques no topo e um bloco "O que você precisa hoje?" que muda conforme o perfil: produtor, sindicato, técnico ou imprensa.</p>
+      <dl>
+        <div><dt>Referência</dt><dd>Os destaques com etiqueta e o bloco "Para sua empresa" da CNI, organizado por objetivo.</dd></div>
+        <div><dt>Melhor para</dt><dd>Uma federação que atende públicos muito diferentes com um só site.</dd></div>
+        <div><dt>Ponto forte</dt><dd>Reduz a pergunta "por onde eu começo?" e prepara o lugar dos serviços da Fase 2.</dd></div>
+        <div><dt>Risco</dt><dd>Depende de conteúdo que ainda não existe (informativos, Fale Conosco, relatórios); o cadastro no Wagtail é maior.</dd></div>
+      </dl>
+      <a class="open" href="03-por-publico.html">Abrir o Mock 3</a>
+    </div>
+  </section>
+
+  <section class="mock" aria-labelledby="m4">
+    <div class="shots"><a class="d" href="04-editorial.html"><img src="assets/thumbs/04-editorial-d.png" alt="Miniatura do Mock 4 em desktop"></a><a class="m" href="04-editorial.html"><img src="assets/thumbs/04-editorial-m.png" alt="Miniatura do Mock 4 em celular"></a></div>
+    <div class="info">
+      <h2 id="m4">Mock 4 · Editorial</h2>
+      <p class="lead">Um veículo de notícias: foto grande, manchete em serifa e três perguntas com resposta em dado real que levam à Central.</p>
+      <dl>
+        <div><dt>Referência</dt><dd>Portais de notícias e o "Acontece na Indústria" da CNI, com peso maior para o conteúdo.</dd></div>
+        <div><dt>Melhor para</dt><dd>Relacionamento institucional e imprensa; mostra a FAPERON em movimento.</dd></div>
+        <div><dt>Ponto forte</dt><dd>É o mais memorável e o que menos parece um painel de dados; a foto real carrega a marca.</dd></div>
+        <div><dt>Risco</dt><dd>O Início vira tão bom quanto a última notícia; sem fotos boas e publicação frequente, perde força.</dd></div>
+      </dl>
+      <a class="open" href="04-editorial.html">Abrir o Mock 4</a>
+    </div>
+  </section>
+
+  <section class="mock" aria-labelledby="m5">
+    <div class="shots"><a class="d" href="05-balcao-do-produtor.html"><img src="assets/thumbs/05-balcao-do-produtor-d.png" alt="Miniatura do Mock 5 em desktop"></a><a class="m" href="05-balcao-do-produtor.html"><img src="assets/thumbs/05-balcao-do-produtor-m.png" alt="Miniatura do Mock 5 em celular"></a></div>
+    <div class="info">
+      <h2 id="m5">Mock 5 · Balcão do produtor</h2>
+      <p class="lead">Pensado para o celular no campo: quatro atalhos grandes, WhatsApp sempre à vista, poucas imagens e uma barra de navegação na base.</p>
+      <dl>
+        <div><dt>Referência</dt><dd>Aplicativos de serviço e o hábito do produtor rural de resolver tudo pelo WhatsApp.</dd></div>
+        <div><dt>Melhor para</dt><dd>O produtor com internet limitada; leve e legível ao sol.</dd></div>
+        <div><dt>Ponto forte</dt><dd>Resolve as quatro tarefas mais comuns em um toque e carrega rápido.</dd></div>
+        <div><dt>Risco</dt><dd>Transmite menos autoridade institucional no desktop; a Central fica em segundo plano.</dd></div>
+      </dl>
+      <a class="open" href="05-balcao-do-produtor.html">Abrir o Mock 5</a>
+    </div>
+  </section>
+
+  <section class="compare" aria-labelledby="hc">
+    <h2 id="hc" style="font-size:24px;font-weight:600;margin-bottom:14px">Comparação</h2>
+    <table>
+      <thead><tr><th></th><th>1 Consulta</th><th>2 Em números</th><th>3 Por público</th><th>4 Editorial</th><th>5 Balcão</th></tr></thead>
+      <tbody>
+        <tr><th>Protagonista</th><td>Busca</td><td>Indicadores</td><td>Perfis e serviços</td><td>Notícia</td><td>Atalhos</td></tr>
+        <tr><th>Peso da Central</th><td>Alto</td><td>Alto</td><td>Médio</td><td>Médio</td><td>Médio</td></tr>
+        <tr><th>Proximidade com a CNI</th><td>Média</td><td>Alta</td><td>Alta</td><td>Baixa</td><td>Baixa</td></tr>
+        <tr><th>Esforço de implementação</th><td>Médio (busca e prévia)</td><td>Baixo</td><td>Médio (mais conteúdo)</td><td>Baixo</td><td>Baixo</td></tr>
+        <tr><th>Dependência de conteúdo novo</th><td>Baixa</td><td>Baixa</td><td>Alta</td><td>Alta (fotos)</td><td>Baixa</td></tr>
+        <tr><th>Leveza no celular</th><td>Boa</td><td>Boa</td><td>Boa</td><td>Média</td><td>Excelente</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="research" aria-labelledby="hr">
+    <div>
+      <h2 id="hr">O que a pesquisa mostrou</h2>
+      <ul>
+        <li>A home da CNI organiza a página em blocos com um propósito cada um: destaques com etiqueta, indicadores em destaque, soluções por objetivo, ferramentas de dados, notícias e representatividade.</li>
+        <li>O site atual da FAPERON é institucional: carrossel de banners, três notícias, widget de commodities, grade de informativos e formulário. O menu tem pouca hierarquia, os botões são discretos e não há busca.</li>
+        <li>O público é o produtor rural de Rondônia, os sindicatos, os técnicos e a imprensa. Federações como Farsul e FAEP oferecem cotações e dados de mercado, o que reforça o bloco de commodities.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>Notas sobre os mocks</h2>
+      <ul>
+        <li>Os números são reais: IBGE, PAM e PPM 2024, carregados no banco do projeto. O leite aparece em litros (o IBGE publica em mil litros).</li>
+        <li>As notícias e as fotos vêm do site atual, importadas pelo comando do plano.</li>
+        <li>"Nosso Agro" foi interpretado como um resumo do campo rondoniense em números. Se o cliente pensa em outra coisa, ajusta-se sem mudar o layout.</li>
+        <li>Os links dos mocks apontam para "#", exceto o da CNA. As fontes vêm do Google Fonts, então abra com internet.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+<footer><div class="wrap">Arquivos em <code>docs/design/mocks/</code>. Cada mock é um HTML independente que lê <code>assets/data.js</code>.</div></footer>
+</body>
+</html>
