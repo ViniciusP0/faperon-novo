@@ -1,0 +1,65 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: faperon
+          POSTGRES_USER: faperon
+          POSTGRES_PASSWORD: faperon
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U faperon" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_DB: faperon
+      POSTGRES_USER: faperon
+      POSTGRES_PASSWORD: faperon
+      DJANGO_SECRET_KEY: ci-only
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build da imagem da API
+        run: docker build -t faperon-api apps/api
+      - name: Ruff
+        run: docker run --rm faperon-api ruff check .
+      - name: mypy
+        run: docker run --rm faperon-api mypy .
+      - name: Migrações (verificação) e testes
+        run: |
+          docker run --rm --network host \
+            -e POSTGRES_HOST -e POSTGRES_DB -e POSTGRES_USER -e POSTGRES_PASSWORD -e DJANGO_SECRET_KEY \
+            faperon-api sh -c "python manage.py makemigrations --check --dry-run && pytest"
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+
+  images:
+    runs-on: ubuntu-latest
+    needs: [api, web]
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose build

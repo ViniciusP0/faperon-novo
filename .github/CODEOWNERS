@@ -1,0 +1,7 @@
+*                @vinicius @weslley @ranieri
+/apps/web/       @vinicius
+/apps/api/       @ranieri
+/infra/          @weslley
+/docker-compose.yml @weslley
+/.github/        @weslley
+/docs/adr/       @weslley
