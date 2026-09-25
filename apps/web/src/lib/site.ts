@@ -1,6 +1,19 @@
 export const SITE_URL = process.env.SITE_URL ?? "http://localhost:3000";
 export const WIX_URL = "https://www.faperon.com.br";
+
+/** Endereços reais de páginas que continuam só no site atual (Wix). Conferidos em 24/09/2026; o Wix usa nomes como /blank-6, então não dá para deduzir. */
+export const WIX_PAGINAS = {
+  noticias: `${WIX_URL}/blog`,
+  transparencia: `${WIX_URL}/portaldatranspar%C3%AAncia`,
+} as const;
 export const CNA_COMMODITIES_URL = "https://www.cnabrasil.org.br/servicos/precos-commodities";
+
+/** Rotas internas das páginas institucionais, com conteúdo verídico extraído do site atual em 25/09/2026. */
+export const ROTAS = {
+  sobre: "/sobre",
+  informativos: "/informativos-tecnicos",
+  faleConosco: "/fale-conosco",
+} as const;
 
 export interface ItemMenu {
   label: string;
@@ -12,13 +25,13 @@ export const MENU: ItemMenu[] = [
   { label: "Início", href: "/" },
   { label: "Central de Inteligência", href: "/central-de-inteligencia" },
   { label: "Painel Agro RO", href: "/painel" },
-  { label: "Sobre", href: `${WIX_URL}/sobre`, externo: true },
-  { label: "Informativos Técnicos", href: `${WIX_URL}/informativos-tecnicos`, externo: true },
-  { label: "Fale Conosco", href: `${WIX_URL}/fale-conosco`, externo: true },
+  { label: "Sobre", href: ROTAS.sobre },
+  { label: "Informativos Técnicos", href: ROTAS.informativos },
+  { label: "Fale Conosco", href: ROTAS.faleConosco },
 ];
 
 export const LINKS_INSTITUCIONAIS: ItemMenu[] = [
-  { label: "Transparência", href: `${WIX_URL}/transparencia`, externo: true },
+  { label: "Transparência", href: WIX_PAGINAS.transparencia, externo: true },
   { label: "Sistema FAPERON – SENAR", href: "https://sistemafaperon.org.br/", externo: true },
   { label: "IBGE – SIDRA", href: "https://sidra.ibge.gov.br/", externo: true },
 ];

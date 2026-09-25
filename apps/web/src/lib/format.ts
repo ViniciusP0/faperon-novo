@@ -34,3 +34,9 @@ export function formatData(iso: string): string {
   if (!ano || !mes || !dia) return iso;
   return new Date(Date.UTC(ano, mes - 1, dia)).toLocaleDateString("pt-BR", { dateStyle: "long", timeZone: "UTC" });
 }
+
+export function formatDataCurta(iso: string): string {
+  const [ano, mes, dia] = iso.split("-").map(Number);
+  if (!ano || !mes || !dia) return iso;
+  return new Date(Date.UTC(ano, mes - 1, dia)).toLocaleDateString("pt-BR", { dateStyle: "medium", timeZone: "UTC" });
+}

@@ -16,7 +16,7 @@ test("jornada Início → Central → Painel → filtros → ranking → série 
   // Carrossel: 1 FAPERON, 2 números (conteúdo anterior do hero), 3 SENAR
   const carrossel = page.getByRole("region", { name: "Destaques da FAPERON" });
   await expect(carrossel.getByRole("heading", { level: 2, name: "A voz do produtor rural de Rondônia" })).toBeVisible();
-  await expect(carrossel.getByRole("link", { name: /Conheça a FAPERON/ })).toHaveAttribute("href", /faperon.com.br/);
+  await expect(carrossel.getByRole("link", { name: /Conheça a FAPERON/ })).toHaveAttribute("href", "/sobre");
   await semViolacoesSerias(page);
   await carrossel.getByRole("button", { name: "Próximo slide" }).click();
   await expect(page.getByRole("heading", { level: 2 }).filter({ hasText: /Rondônia colheu .*toneladas de soja/ })).toBeVisible();
@@ -88,10 +88,13 @@ test("jornada Início → Central → Painel → filtros → ranking → série 
   await expect(page).toHaveURL(/aba=serie/);
   await expect(page.getByTestId("grafico").locator("svg")).toBeVisible();
   await expect(page.getByTestId("serie-descricao")).toContainText("Rondônia (total)");
+  await expect(page.getByTestId("serie-tendencia")).toContainText(/Linha de tendência .* (crescimento médio|queda média) de [+−][\d.,]+ .* por ano \(R² = \d,\d\d\)/);
+  await expect(page.getByTestId("grafico")).toHaveAttribute("aria-label", /Linha de tendência/);
   await page.getByLabel("Recorte territorial").selectOption({ label: "Vilhena" });
   await expect(page.getByTestId("serie-descricao")).toContainText("Vilhena");
   await page.getByText("Ver tabela de dados do gráfico").click();
   await expect(page.getByRole("table", { name: /Série histórica/ })).toBeVisible();
+  await expect(page.getByRole("table", { name: /Série histórica/ }).getByRole("columnheader", { name: "Tendência linear" })).toBeVisible();
   await semViolacoesSerias(page);
 
   // PDF: link com os filtros
@@ -155,9 +158,43 @@ test("navegação e páginas auxiliares", async ({ page, request }) => {
   await page.goto("/");
   await expect(page.locator("html")).toHaveAttribute("lang", "pt-BR");
   const sobre = page.getByRole("navigation", { name: "Principal" }).getByRole("link", { name: /^Sobre/ });
-  await expect(sobre).toHaveAttribute("href", /faperon\.com\.br/);
+  await expect(sobre).toHaveAttribute("href", "/sobre");
   expect((await request.get("/robots.txt")).status()).toBe(200);
-  expect(await (await request.get("/sitemap.xml")).text()).toContain("/painel");
+  const sitemapXml = await (await request.get("/sitemap.xml")).text();
+  expect(sitemapXml).toContain("/painel");
+  expect(sitemapXml).toContain("/sobre");
   const r404 = await page.goto("/nao-existe");
   expect(r404?.status()).toBe(404);
+});
+
+test("páginas institucionais: Sobre, Informativos Técnicos e Fale Conosco", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+
+  await page.goto("/sobre");
+  await expect(page.getByRole("heading", { level: 1, name: /Desde 1983, a FAPERON representa o produtor rural/ })).toBeVisible();
+  await expect(page.getByText("Hélio Dias de Souza")).toBeVisible();
+  await expect(page.getByRole("link", { name: /Estatuto FAPERON/ })).toHaveAttribute("href", /\.pdf$/);
+  await expect(page.getByRole("heading", { level: 2, name: "Estatuto" })).toBeVisible();
+  await semViolacoesSerias(page);
+  await page.getByRole("navigation", { name: "Principal" }).getByRole("link", { name: /^Sobre/ }).click();
+  await expect(page.getByRole("navigation", { name: "Principal" }).getByRole("link", { name: /^Sobre/ })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+
+  await page.goto("/informativos-tecnicos");
+  await expect(page.getByRole("heading", { level: 1, name: /Informativos mensais do agro de Rondônia/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Bovinocultura de Corte, Dezembro\/2025/ })).toHaveAttribute(
+    "href",
+    /\.pdf$/,
+  );
+  await page.getByRole("tab", { name: "Bovinocultura de Leite" }).click();
+  await page.getByRole("button", { name: "2024" }).click();
+  await expect(page.getByRole("tabpanel").getByRole("link")).toHaveCount(1);
+  await semViolacoesSerias(page);
+
+  await page.goto("/fale-conosco");
+  await expect(page.getByRole("heading", { level: 1, name: /Fale com a FAPERON pelos canais oficiais/ })).toBeVisible();
+  await expect(page.getByLabel(/E-mail/)).toBeVisible();
+  await semViolacoesSerias(page);
 });

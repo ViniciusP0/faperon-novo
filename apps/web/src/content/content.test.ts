@@ -3,7 +3,9 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { CENTRAL } from "./central";
 import { INICIO } from "./inicio";
+import { INFORMATIVOS } from "./informativos";
 import { NOTICIAS, noticiasRecentes } from "./noticias";
+import { SOBRE } from "./sobre";
 
 const PUBLIC = path.resolve(__dirname, "../../public");
 
@@ -53,5 +55,101 @@ describe("Início e Central", () => {
     expect(CENTRAL.blocos).toHaveLength(6);
     expect(CENTRAL.paragrafos.every((p) => !p.includes("<"))).toBe(true);
     expect(CENTRAL.cta_url).toBe("/painel");
+  });
+});
+
+describe("Sobre", () => {
+  it("traz a diretoria 2024-2027 completa, com 15 nomes únicos", () => {
+    const nomes = SOBRE.diretoria.grupos.flatMap((g) => g.membros.map((m) => m.nome));
+    expect(nomes).toHaveLength(15);
+    expect(new Set(nomes).size).toBe(15);
+    expect(SOBRE.diretoria.grupos[0]?.membros[0]).toEqual({ cargo: "Presidente", nome: "Hélio Dias de Souza" });
+  });
+
+  it("tem os cinco valores e textos sem HTML", () => {
+    expect(SOBRE.valores).toHaveLength(5);
+    const textos = [...SOBRE.quem_somos.paragrafos, SOBRE.missao, SOBRE.visao];
+    expect(textos.every((t) => !t.includes("<"))).toBe(true);
+  });
+
+  it("o Estatuto é um PDF do site atual, publicado em 01/01/2025", () => {
+    expect(SOBRE.estatuto.titulo).toBe("Estatuto FAPERON");
+    expect(SOBRE.estatuto.data).toBe("2025-01-01");
+    expect(SOBRE.estatuto.url).toMatch(/^https:\/\/www\.faperon\.com\.br\/_files\/ugd\/cbbcc7_[0-9a-f]{32}\.pdf$/);
+  });
+
+  it("traz os quatro objetivos da entidade, como no site atual", () => {
+    expect(SOBRE.quem_somos.objetivos).toHaveLength(4);
+    expect(SOBRE.visao).toContain("instituição de excelência");
+  });
+
+  it("as âncoras das seções são únicas", () => {
+    expect(new Set(SOBRE.secoes.map((s) => s.id)).size).toBe(SOBRE.secoes.length);
+  });
+
+  it("toda seção do índice tem conteúdo correspondente e todo grupo da diretoria tem coluna", () => {
+    expect(SOBRE.secoes.map((s) => s.id)).toEqual([
+      "quem-somos",
+      "missao-visao-valores",
+      "diretoria",
+      "estatuto",
+      "sistema",
+    ]);
+    expect(SOBRE.diretoria.grupos.every((g) => g.coluna.length > 0)).toBe(true);
+    expect(new Set(SOBRE.diretoria.grupos.map((g) => g.coluna)).size).toBe(3);
+  });
+
+  it("o Sistema FAPERON tem 4 entidades com link https e o calendário aponta para um PDF", () => {
+    expect(SOBRE.sistema.entidades).toHaveLength(4);
+    for (const e of SOBRE.sistema.entidades) expect(e.url, e.nome).toMatch(/^https:\/\//);
+    expect(SOBRE.sistema.calendario.url).toMatch(/^https:\/\/www\.faperon\.com\.br\/_files\/ugd\/cbbcc7_[0-9a-f]{32}\.pdf$/);
+  });
+});
+
+describe("Informativos Técnicos", () => {
+  const todos = [...INFORMATIVOS.categorias.flatMap((c) => c.itens), ...INFORMATIVOS.boletins];
+
+  it("tem 12 de corte, 11 de leite e 2 boletins", () => {
+    expect(INFORMATIVOS.categorias.map((c) => [c.id, c.itens.length])).toEqual([
+      ["corte", 12],
+      ["leite", 11],
+    ]);
+    expect(INFORMATIVOS.boletins).toHaveLength(2);
+  });
+
+  it("cada item aponta para um PDF próprio do site atual", () => {
+    for (const i of todos)
+      expect(i.url, i.titulo).toMatch(/^https:\/\/www\.faperon\.com\.br\/_files\/ugd\/cbbcc7_[0-9a-f]{32}\.pdf$/);
+    expect(new Set(todos.map((i) => i.url)).size).toBe(todos.length);
+  });
+
+  it("datas ISO válidas, da mais recente para a mais antiga em cada categoria", () => {
+    for (const c of INFORMATIVOS.categorias) {
+      const datas = c.itens.map((i) => i.data);
+      for (const d of datas) expect(Number.isNaN(Date.parse(`${d}T12:00:00Z`)), d).toBe(false);
+      expect(datas).toEqual([...datas].sort().reverse());
+    }
+  });
+
+  it("título do item corresponde ao mês da data", () => {
+    const MESES = [
+      "Janeiro",
+      "Fevereiro",
+      "Março",
+      "Abril",
+      "Maio",
+      "Junho",
+      "Julho",
+      "Agosto",
+      "Setembro",
+      "Outubro",
+      "Novembro",
+      "Dezembro",
+    ];
+    for (const c of INFORMATIVOS.categorias)
+      for (const i of c.itens) {
+        const [ano, mes] = i.data.split("-").map(Number) as [number, number];
+        expect(i.titulo).toBe(`${MESES[mes - 1]}/${ano}`);
+      }
   });
 });

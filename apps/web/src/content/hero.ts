@@ -1,4 +1,4 @@
-import { WIX_URL } from "@/lib/site";
+import { ROTAS } from "@/lib/site";
 
 export const HERO = {
   rotulo: "Destaques da FAPERON",
@@ -7,7 +7,7 @@ export const HERO = {
     texto:
       "A Federação da Agricultura e Pecuária do Estado de Rondônia representa quem produz, defende o setor e transforma dados oficiais em informação para decidir.",
     cta_texto: "Conheça a FAPERON",
-    cta_url: `${WIX_URL}/sobre`,
+    cta_url: ROTAS.sobre,
     imagem: "/hero/faperon.jpg",
     posicao: "50% 72%",
   },

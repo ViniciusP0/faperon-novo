@@ -1,0 +1,68 @@
+/* Base compartilhada das telas institucionais (Sobre, Informativos, Fale Conosco). Tema do Mock 2 (Rondônia em números). */
+body { font-family: "IBM Plex Sans", system-ui, sans-serif; font-size: 17px; background: #fff; }
+h1, h2, h3, .ui { font-family: "Poppins", system-ui, sans-serif; }
+
+header.top { border-bottom: 1px solid var(--line); background: #fff; position: sticky; top: 0; z-index: 30; }
+header.top .wrap { display: flex; align-items: center; justify-content: space-between; height: 72px; gap: 20px; }
+.brand { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+.brand img { height: 56px; width: 56px; margin: -6px; }
+.brand b { font: 700 22px "Poppins", sans-serif; color: var(--brand); letter-spacing: -.01em; }
+.brand small { display: block; font: 400 11.5px/1.2 "IBM Plex Sans", sans-serif; color: var(--ink-muted); max-width: 180px; }
+nav.main { display: flex; gap: 2px; }
+nav.main a { text-decoration: none; padding: 9px 13px; font: 500 14.5px "Poppins", sans-serif; color: var(--ink); border-bottom: 3px solid transparent; }
+nav.main a:hover { color: var(--brand); }
+nav.main a[aria-current] { border-color: var(--brand-light); color: var(--brand); }
+.search-btn { border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px; background: #fff; font: 500 14px "Poppins", sans-serif; color: var(--ink-muted); }
+
+.crumbs { padding: 20px 0 0; font: 500 13.5px "Poppins", sans-serif; color: var(--ink-muted); }
+.crumbs a { color: var(--brand); text-decoration: none; }
+.crumbs a:hover { text-decoration: underline; }
+
+.hero { padding: 36px 0 48px; }
+.hero .wrap { display: grid; grid-template-columns: 1.55fr 1fr; gap: 64px; align-items: end; }
+.hero h1 { font-size: clamp(30px, 4.1vw, 50px); line-height: 1.16; font-weight: 600; letter-spacing: -.02em; }
+.hero h1 b { font-weight: 700; color: var(--brand); }
+.hero .side p { color: var(--ink-muted); max-width: 42ch; }
+.btn { display: inline-block; background: var(--brand); color: #fff; text-decoration: none; padding: 14px 22px; border-radius: 10px; font: 600 15px "Poppins", sans-serif; border: 0; cursor: pointer; }
+.btn:hover { background: var(--brand-dark); }
+.btn.outline { background: transparent; color: var(--steel); border: 2px solid var(--steel); padding: 12px 20px; }
+.btn.outline:hover { background: var(--steel); color: #fff; }
+.hero .side .btn { margin-top: 16px; }
+
+.pillars { border-top: 2px solid var(--ink); border-bottom: 1px solid var(--line); }
+.pillars .wrap { display: grid; grid-template-columns: repeat(var(--n, 3), 1fr); }
+.pillar { padding: 22px 20px 20px; border-left: 1px solid var(--line); }
+.pillar:first-child { border-left: 0; padding-left: 0; }
+.pillar .n { font: 600 12.5px "Poppins", sans-serif; color: var(--ink-muted); }
+.pillar .v { font: 600 clamp(26px, 3vw, 38px)/1.1 "Poppins", sans-serif; letter-spacing: -.02em; margin-top: 8px; display: block; color: var(--brand); }
+.pillar .u { font-size: 14px; color: var(--ink-muted); display: block; margin-top: 2px; }
+
+section.blk { padding: 72px 0 0; }
+.sec-h { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 26px; }
+.sec-h h2 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; }
+.sec-h a { font: 500 15px "Poppins", sans-serif; color: var(--brand); }
+.lead { color: var(--ink-muted); max-width: 62ch; }
+
+.cols { display: grid; grid-template-columns: 1.2fr 1fr; margin-top: 72px; }
+.central { background: var(--brand-dark); color: #fff; padding: 52px 56px 52px max(16px, calc((100vw - 1180px) / 2)); }
+.central h2 { font-size: 30px; line-height: 1.15; font-weight: 600; max-width: 20ch; letter-spacing: -.01em; }
+.central p { margin-top: 14px; color: #cfe6da; max-width: 46ch; }
+.central a { display: inline-block; margin-top: 22px; background: var(--brand-lime); color: var(--brand-deep); text-decoration: none; padding: 13px 22px; border-radius: 10px; font: 600 15px "Poppins", sans-serif; }
+.central a:hover { background: #9bdc60; }
+.comm { background: var(--steel-soft); padding: 52px max(16px, calc((100vw - 1180px) / 2)) 52px 56px; }
+.comm h2 { font-size: 22px; font-weight: 600; }
+.comm p { margin-top: 10px; color: var(--ink-muted); max-width: 42ch; }
+.comm .btn { margin-top: 20px; }
+
+footer { margin-top: 88px; background: var(--brand-deep); color: #cfe6da; padding: 36px 0 90px; font-size: 15px; }
+footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
+
+@media (max-width: 980px) {
+  nav.main { display: none; }
+  .hero .wrap, .cols { grid-template-columns: 1fr; }
+  .hero .wrap { gap: 28px; }
+  .pillars .wrap { grid-template-columns: 1fr; }
+  .pillar { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); }
+  .pillar:first-child { border-top: 0; }
+  .central, .comm { padding: 40px 16px; }
+}

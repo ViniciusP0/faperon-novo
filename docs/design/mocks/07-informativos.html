@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mock 7 · Informativos Técnicos — FAPERON</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/paginas.css">
+<style>
+  .latest { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+  .dest { background: var(--surface-alt); border-top: 4px solid var(--brand-light); border-radius: 6px; padding: 28px; display: flex; flex-direction: column; gap: 6px; }
+  .dest small { font: 600 12.5px "Poppins", sans-serif; color: var(--brand); text-transform: uppercase; letter-spacing: .06em; }
+  .dest h3 { font: 600 24px/1.2 "Poppins", sans-serif; letter-spacing: -.01em; }
+  .dest .meta { color: var(--ink-muted); font-size: 15px; }
+  .dest .btn { margin-top: 16px; align-self: flex-start; }
+  .dest .pdf { font: 700 12px "Poppins", sans-serif; background: var(--brand); color: #fff; border-radius: 4px; padding: 2px 8px; margin-left: 8px; vertical-align: middle; }
+
+  .tools { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
+  [role=tablist] { display: flex; gap: 2px; }
+  [role=tab] { appearance: none; background: none; border: 0; border-bottom: 3px solid transparent; padding: 12px 16px; font: 500 15px "Poppins", sans-serif; color: var(--ink-muted); cursor: pointer; }
+  [role=tab]:hover { color: var(--brand); }
+  [role=tab][aria-selected=true] { color: var(--brand); border-color: var(--brand-light); }
+  .years { display: flex; gap: 8px; padding-bottom: 8px; }
+  .chip { appearance: none; border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 6px 14px; font: 500 13.5px "Poppins", sans-serif; color: var(--ink-muted); cursor: pointer; }
+  .chip[aria-pressed=true] { background: var(--brand); border-color: var(--brand); color: #fff; }
+
+  .arq { margin-top: 8px; }
+  .arq h3 { font: 600 13px "Poppins", sans-serif; color: var(--ink-muted); text-transform: uppercase; letter-spacing: .06em; padding: 24px 0 8px; }
+  .arq ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); column-gap: 40px; }
+  .arq a { display: grid; grid-template-columns: 1fr auto auto; gap: 14px; align-items: center; padding: 13px 4px; border-bottom: 1px solid var(--line); text-decoration: none; }
+  .arq a:hover { background: var(--surface-alt); }
+  .arq a b { font-weight: 500; }
+  .arq time { color: var(--ink-muted); font-size: 14px; }
+  .arq .tag { font: 700 11.5px "Poppins", sans-serif; color: var(--brand); border: 1px solid var(--brand); border-radius: 4px; padding: 1px 7px; }
+
+  .boletins { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+  .bol { display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: center; border: 1px solid var(--line); border-left: 4px solid var(--steel); border-radius: 6px; padding: 20px 24px; text-decoration: none; }
+  .bol:hover { background: var(--steel-soft); }
+  .bol .ico { width: 44px; height: 56px; border-radius: 4px; background: var(--steel); color: #fff; display: grid; place-items: center; font: 700 12px "Poppins", sans-serif; }
+  .bol b { font: 600 17px/1.3 "Poppins", sans-serif; display: block; }
+  .bol span { color: var(--ink-muted); font-size: 14px; }
+
+  @media (max-width: 980px) {
+    .latest, .boletins, .arq ul { grid-template-columns: 1fr; }
+    .years { padding: 10px 0; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#conteudo">Ir para o conteúdo</a>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#"><img src="assets/img/marca.png" alt=""><span><b>FAPERON</b><small>Federação da Agricultura e Pecuária de Rondônia</small></span></a>
+    <nav class="main" aria-label="Principal"><a href="#">Início</a><a href="#">Central de Inteligência</a><a href="#">Painel Agro RO</a><a href="#">Sobre</a><a href="#" aria-current="page">Informativos Técnicos</a><a href="#">Fale Conosco</a></nav>
+    <button class="search-btn" type="button" aria-label="Buscar no site">Buscar</button>
+  </div>
+</header>
+
+<main id="conteudo">
+  <div class="wrap crumbs"><a href="#">Início</a> / Informativos Técnicos</div>
+  <section class="hero" aria-labelledby="h1">
+    <div class="wrap">
+      <h1 id="h1">Acompanhe todos os dados do agro, <b>todo mês</b>, em PDF.</h1>
+      <div class="side">
+        <p>Informativos mensais de bovinocultura de corte e de leite em Rondônia, além dos boletins técnicos semestrais.</p>
+        <a class="btn" href="#arquivo">Ver todos os informativos</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="pillars" aria-label="Publicações">
+    <div class="wrap" style="--n:3">
+      <div class="pillar"><span class="n">Bovinocultura de corte</span><span class="v tnum">12</span><span class="u">informativos mensais em 2025</span></div>
+      <div class="pillar"><span class="n">Bovinocultura de leite</span><span class="v tnum">11</span><span class="u">informativos, de dez/2024 a out/2025</span></div>
+      <div class="pillar"><span class="n">Boletins técnicos</span><span class="v tnum">2</span><span class="u">edição 2024.2</span></div>
+    </div>
+  </section>
+
+  <section class="blk wrap" aria-labelledby="hl">
+    <div class="sec-h"><h2 id="hl">Últimas edições</h2></div>
+    <div class="latest">
+      <article class="dest"><small>Bovinocultura de corte</small><h3>Informativo Mensal, dezembro de 2025</h3><p class="meta">Publicado em 1 de dez. de 2025</p><a class="btn" href="#">Baixar <span class="pdf">PDF</span></a></article>
+      <article class="dest"><small>Bovinocultura de leite</small><h3>Informativo Mensal, outubro de 2025</h3><p class="meta">Publicado em 6 de out. de 2025</p><a class="btn" href="#">Baixar <span class="pdf">PDF</span></a></article>
+    </div>
+  </section>
+
+  <section class="blk wrap" id="arquivo" aria-labelledby="ha">
+    <div class="sec-h"><h2 id="ha">Arquivo</h2></div>
+    <div class="tools">
+      <div role="tablist" aria-label="Categoria" id="tabs">
+        <button role="tab" aria-selected="true" data-c="corte">Corte</button>
+        <button role="tab" aria-selected="false" data-c="leite">Leite</button>
+      </div>
+      <div class="years" id="years" role="group" aria-label="Ano">
+        <button class="chip" aria-pressed="true" data-y="todos">Todos</button>
+        <button class="chip" aria-pressed="false" data-y="2025">2025</button>
+        <button class="chip" aria-pressed="false" data-y="2024">2024</button>
+      </div>
+    </div>
+    <div class="arq" id="arq" aria-live="polite"></div>
+  </section>
+
+  <section class="blk wrap" aria-labelledby="hb">
+    <div class="sec-h"><h2 id="hb">Boletins técnicos</h2></div>
+    <div class="boletins">
+      <a class="bol" href="#"><span class="ico" aria-hidden="true">PDF</span><span><b>Boletim Bovinocultura de Corte 2024.2</b><span>Publicado em 10 de out. de 2025</span></span></a>
+      <a class="bol" href="#"><span class="ico" aria-hidden="true">PDF</span><span><b>Boletim Bovinocultura de Leite 2024.2</b><span>Publicado em 10 de out. de 2025</span></span></a>
+    </div>
+  </section>
+
+  <div class="cols">
+    <section class="central" aria-labelledby="hc">
+      <h2 id="hc">Central de Inteligência Agropecuária</h2>
+      <p>Ranking dos municípios, série histórica desde 1974, comparação, análise pronta e relatório em PDF, tudo em um painel.</p>
+      <a href="#">Conheça a Central de Inteligência</a>
+    </section>
+    <aside class="comm" aria-labelledby="hm">
+      <h2 id="hm">Preços das commodities</h2>
+      <p>A CNA atualiza todos os dias as cotações das principais bolsas do mundo e das praças brasileiras.</p>
+      <a class="btn outline" href="https://www.cnabrasil.org.br/servicos/precos-commodities" rel="noopener">Confira os preços na CNA</a>
+    </aside>
+  </div>
+</main>
+<footer><div class="wrap"><b class="ui">FAPERON</b><span>Federação da Agricultura e Pecuária do Estado de Rondônia · Porto Velho, RO</span></div></footer>
+
+<script>
+(function () {
+  const M = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+  const mk = (ano, arr) => arr.map(([m, d]) => ({ m, ano, data: `${ano}-${String(m).padStart(2,"0")}-${d}` }));
+  const D = {
+    corte: [...mk(2025, [[12,"01"],[11,"03"],[10,"31"],[9,"30"],[8,"31"],[7,"31"],[6,"30"],[5,"31"],[4,"30"],[3,"31"],[2,"28"],[1,"31"]])],
+    leite: [...mk(2025, [[10,"06"],[9,"01"],[8,"04"],[7,"07"],[6,"02"],[5,"05"],[4,"07"],[3,"03"],[2,"03"],[1,"06"]]), ...mk(2024, [[12,"02"]])],
+  };
+  let cat = "corte", ano = "todos";
+  const fmt = (iso) => new Date(iso + "T12:00:00").toLocaleDateString("pt-BR", { day: "numeric", month: "short", year: "numeric" }).replace(".", "");
+  function draw() {
+    const anos = [...new Set(D[cat].map((x) => x.ano))].filter((a) => ano === "todos" || String(a) === ano);
+    const html = anos.map((a) => `<h3>${a}</h3><ul>${D[cat].filter((x) => x.ano === a).map((x) => `<li><a href="#"><b>${M[x.m-1][0].toUpperCase() + M[x.m-1].slice(1)}/${x.ano}</b><time datetime="${x.data}">${fmt(x.data)}</time><span class="tag">PDF</span></a></li>`).join("")}</ul>`).join("");
+    document.getElementById("arq").innerHTML = html || "<p class='lead' style='padding:24px 0'>Nenhum informativo neste ano.</p>";
+  }
+  document.querySelectorAll("#tabs [role=tab]").forEach((b) => b.onclick = () => { cat = b.dataset.c; document.querySelectorAll("#tabs [role=tab]").forEach((x) => x.setAttribute("aria-selected", String(x === b))); draw(); });
+  document.querySelectorAll("#years .chip").forEach((b) => b.onclick = () => { ano = b.dataset.y; document.querySelectorAll("#years .chip").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); draw(); });
+  draw();
+})();
+</script>
+</body>
+</html>

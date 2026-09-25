@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mock 8 · Fale Conosco — FAPERON</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/paginas.css">
+<style>
+  .contato { display: grid; grid-template-columns: 1.4fr 1fr; gap: 64px; align-items: start; padding-top: 56px; }
+  .contato h2 { font-size: 26px; font-weight: 600; letter-spacing: -.01em; }
+  form { margin-top: 22px; display: grid; gap: 18px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  label { display: grid; gap: 6px; font: 500 14.5px "Poppins", sans-serif; }
+  label .req { color: var(--ink-muted); font-weight: 400; font-size: 13px; }
+  input, textarea { border: 1px solid #647f71; border-radius: 8px; padding: 12px 14px; background: #fff; font: 400 16px "IBM Plex Sans", sans-serif; }
+  textarea { min-height: 140px; resize: vertical; }
+  input:focus, textarea:focus { outline: 3px solid var(--focus); outline-offset: 1px; }
+  .hint { font: 400 13.5px "IBM Plex Sans", sans-serif; color: var(--ink-muted); }
+  form .btn { justify-self: start; }
+  .note { font-size: 14px; color: var(--ink-muted); }
+
+  .canais { background: var(--surface-alt); border-top: 4px solid var(--brand-light); border-radius: 6px; padding: 28px; }
+  .canais h2 { font-size: 20px; }
+  .canal { padding: 16px 0; border-bottom: 1px solid var(--line); display: grid; gap: 4px; }
+  .canal:last-of-type { border-bottom: 0; }
+  .canal small { font: 600 12.5px "Poppins", sans-serif; color: var(--ink-muted); text-transform: uppercase; letter-spacing: .06em; }
+  .canal a, .canal address { font-style: normal; font-weight: 500; text-decoration: none; }
+  .canal a:hover { color: var(--brand); text-decoration: underline; }
+  .canal .sub { color: var(--ink-muted); font-size: 15px; }
+  .wpp { display: block; text-align: center; margin-top: 8px; background: var(--brand-lime); color: var(--brand-deep); text-decoration: none; padding: 13px 22px; border-radius: 10px; font: 600 15px "Poppins", sans-serif; }
+  .wpp:hover { background: #9bdc60; }
+  .redes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .redes a { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 7px 14px; font: 500 14px "Poppins", sans-serif; color: var(--brand); text-decoration: none; }
+  .redes a:hover { background: var(--brand); color: #fff; }
+
+  .mapa { margin-top: 56px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 24px; background: var(--steel-soft); border-radius: 6px; padding: 26px 32px; }
+  .mapa b { font: 600 19px "Poppins", sans-serif; }
+  .mapa p { color: var(--ink-muted); margin-top: 2px; }
+
+  @media (max-width: 980px) {
+    .contato, .two, .mapa { grid-template-columns: 1fr; gap: 28px; }
+    .contato { gap: 40px; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#conteudo">Ir para o conteúdo</a>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#"><img src="assets/img/marca.png" alt=""><span><b>FAPERON</b><small>Federação da Agricultura e Pecuária de Rondônia</small></span></a>
+    <nav class="main" aria-label="Principal"><a href="#">Início</a><a href="#">Central de Inteligência</a><a href="#">Painel Agro RO</a><a href="#">Sobre</a><a href="#">Informativos Técnicos</a><a href="#" aria-current="page">Fale Conosco</a></nav>
+    <button class="search-btn" type="button" aria-label="Buscar no site">Buscar</button>
+  </div>
+</header>
+
+<main id="conteudo">
+  <div class="wrap crumbs"><a href="#">Início</a> / Fale Conosco</div>
+  <section class="hero" aria-labelledby="h1">
+    <div class="wrap">
+      <h1 id="h1">Fale com a FAPERON pelos <b>canais oficiais</b>.</h1>
+      <div class="side">
+        <p>Envie sua mensagem pelo formulário, ligue ou chame no WhatsApp. Nossa sede fica em Porto Velho.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap contato" style="border-top:2px solid var(--ink)">
+    <section aria-labelledby="hf">
+      <h2 id="hf">Envie sua mensagem</h2>
+      <form onsubmit="return false" novalidate>
+        <div class="two">
+          <label><span>Primeiro nome <span class="req">(obrigatório)</span></span><input autocomplete="given-name" required></label>
+          <label><span>Último nome</span><input autocomplete="family-name"></label>
+        </div>
+        <label><span>E-mail <span class="req">(obrigatório)</span></span><input type="email" autocomplete="email" required></label>
+        <label><span>Telefone para contato <span class="req">(obrigatório)</span></span><input type="tel" autocomplete="tel" required><span class="hint">Com DDD, por exemplo (69) 90000-0000.</span></label>
+        <label><span>Mensagem <span class="req">(obrigatório)</span></span><textarea required></textarea></label>
+        <button class="btn" type="submit">Enviar mensagem</button>
+        <p class="note">Ao enviar, você abre uma conversa no WhatsApp da FAPERON com a mensagem já preenchida.</p>
+      </form>
+    </section>
+
+    <aside class="canais" aria-labelledby="hc">
+      <h2 id="hc">Outros canais</h2>
+      <div class="canal"><small>Telefone</small><a href="tel:+556932148371">(69) 3214-8371</a></div>
+      <div class="canal"><small>WhatsApp</small><a href="https://wa.me/556932247620">(69) 3224-7620</a><a class="wpp" href="https://wa.me/556932247620">Chamar no WhatsApp</a></div>
+      <div class="canal"><small>Endereço</small><address>Rua João Goulart, 1843 - Nossa Sra. das Graças<br>Porto Velho - RO, 78915-450</address></div>
+      <div class="canal"><small>Redes sociais</small><div class="redes"><a href="#">Instagram</a><a href="#">Facebook</a><a href="#">LinkedIn</a><a href="#">YouTube</a></div></div>
+    </aside>
+  </div>
+
+  <div class="wrap">
+    <div class="mapa"><div><b>Como chegar</b><p>Rua João Goulart, 1843, Porto Velho - RO.</p></div><a class="btn outline" href="https://www.google.com/maps/search/?api=1&query=Rua+Jo%C3%A3o+Goulart+1843+Porto+Velho+RO" rel="noopener">Abrir no Google Maps</a></div>
+  </div>
+
+  <div class="cols">
+    <section class="central" aria-labelledby="hs">
+      <h2 id="hs">Conheça a FAPERON</h2>
+      <p>Missão, visão, valores e a diretoria da gestão 2024-2027.</p>
+      <a href="#">Ir para Sobre</a>
+    </section>
+    <aside class="comm" aria-labelledby="ht">
+      <h2 id="ht">Transparência</h2>
+      <p>Consulte a prestação de contas da entidade no Portal da Transparência.</p>
+      <a class="btn outline" href="#">Portal da Transparência</a>
+    </aside>
+  </div>
+</main>
+<footer><div class="wrap"><b class="ui">FAPERON</b><span>Federação da Agricultura e Pecuária do Estado de Rondônia · Porto Velho, RO</span></div></footer>
+</body>
+</html>

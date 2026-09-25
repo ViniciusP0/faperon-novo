@@ -16,7 +16,7 @@ import type { Destaque } from "@/lib/api-types";
 import { manchete, normalizarDestaque } from "@/lib/destaques";
 import { formatCompacto, formatNumero } from "@/lib/format";
 import { contarMunicipios, contarProdutos, destaques as buscarDestaques } from "@/lib/server-api";
-import { WIX_URL } from "@/lib/site";
+import { WIX_PAGINAS } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -170,7 +170,7 @@ export default async function InicioPage() {
             Notícias recentes
           </h2>
           <a
-            href={`${WIX_URL}/noticias`}
+            href={WIX_PAGINAS.noticias}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 font-medium text-brand hover:underline"

@@ -12,3 +12,12 @@ test("celular: menu abre, sem rolagem horizontal, painel usável", async ({ page
   const larguraPagina = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(larguraPagina).toBeLessThanOrEqual(1);
 });
+
+for (const rota of ["/sobre", "/informativos-tecnicos", "/fale-conosco"]) {
+  test(`celular: ${rota} não tem rolagem horizontal`, async ({ page }) => {
+    await page.goto(rota);
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    const excesso = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(excesso).toBeLessThanOrEqual(1);
+  });
+}

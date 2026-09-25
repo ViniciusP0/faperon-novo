@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mock 6 · Sobre — FAPERON</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/paginas.css">
+<style>
+  .layout { display: grid; grid-template-columns: 220px 1fr; gap: 56px; align-items: start; }
+  .layout > * { min-width: 0; }
+  .toc { position: sticky; top: 96px; padding-top: 72px; }
+  .toc h2 { font: 600 12.5px "Poppins", sans-serif; color: var(--ink-muted); text-transform: uppercase; letter-spacing: .06em; }
+  .toc ol { list-style: none; margin: 12px 0 0; padding: 0; border-left: 1px solid var(--line); }
+  .toc a { display: block; padding: 8px 14px; margin-left: -1px; border-left: 3px solid transparent; text-decoration: none; font: 500 14.5px "Poppins", sans-serif; color: var(--ink-muted); }
+  .toc a:hover { color: var(--brand); }
+  .toc a[aria-current] { border-color: var(--brand-light); color: var(--brand); }
+  .layout section.blk:first-child { padding-top: 72px; }
+  .layout > div > section { scroll-margin-top: 90px; }
+
+  .quem p + p { margin-top: 14px; }
+  .quem p { max-width: 64ch; }
+
+  .mvv { display: grid; grid-template-columns: 1.2fr 1fr 1fr; border-top: 3px solid var(--ink); }
+  .mvv article { padding: 24px 28px 8px 0; }
+  .mvv article + article { padding-left: 28px; border-left: 1px solid var(--line); }
+  .mvv h3 { font: 600 13px "Poppins", sans-serif; color: var(--brand); text-transform: uppercase; letter-spacing: .06em; }
+  .mvv p { margin-top: 10px; font-size: 18px; line-height: 1.45; }
+  .mvv ul { margin: 10px 0 0; padding: 0; list-style: none; }
+  .mvv li { padding: 6px 0; border-top: 1px solid var(--line); font-weight: 500; }
+  .mvv li:first-child { border-top: 0; }
+
+  .pres { background: var(--surface-alt); border-radius: 6px; padding: 28px 32px; display: grid; grid-template-columns: auto 1fr; gap: 24px; align-items: center; border-left: 4px solid var(--brand-light); }
+  .avatar { width: 72px; height: 72px; border-radius: 50%; background: var(--brand); color: #fff; display: grid; place-items: center; font: 600 24px "Poppins", sans-serif; }
+  .pres small { font: 500 13.5px "Poppins", sans-serif; color: var(--ink-muted); }
+  .pres b { display: block; font: 600 24px "Poppins", sans-serif; letter-spacing: -.01em; margin-top: 2px; }
+  .gestao { display: inline-block; margin-left: 12px; font: 500 13px "Poppins", sans-serif; background: var(--brand-soft); color: var(--brand); border-radius: 999px; padding: 4px 12px; vertical-align: middle; }
+  .grupos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: 32px; }
+  .grupo h3 { font: 600 16px "Poppins", sans-serif; padding-bottom: 10px; border-bottom: 2px solid var(--ink); }
+  .grupo dl { margin: 0; }
+  .grupo div { padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .grupo dt { font-size: 13.5px; color: var(--ink-muted); }
+  .grupo dd { margin: 2px 0 0; font-weight: 500; }
+
+  .sistema { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .ent { border: 1px solid var(--line); border-top: 4px solid var(--brand-light); border-radius: 6px; padding: 20px; text-decoration: none; display: flex; flex-direction: column; gap: 6px; }
+  .ent:hover { background: var(--surface-alt); }
+  .ent b { font: 600 17px "Poppins", sans-serif; }
+  .ent span { color: var(--ink-muted); font-size: 14.5px; }
+  .ent i { font: 600 14px "Poppins", sans-serif; color: var(--brand); font-style: normal; margin-top: auto; padding-top: 10px; }
+  .cal { margin-top: 20px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; background: var(--steel-soft); border-radius: 6px; padding: 22px 28px; }
+  .cal b { font: 600 18px "Poppins", sans-serif; }
+  .cal p { color: var(--ink-muted); margin-top: 2px; font-size: 15px; }
+
+  .aviso { border: 2px dashed var(--line); border-radius: 6px; padding: 22px 26px; color: var(--ink-muted); font-size: 15px; }
+  .aviso b { color: var(--ink); font-family: "Poppins", sans-serif; }
+
+  @media (max-width: 980px) {
+    .layout { grid-template-columns: 1fr; gap: 0; }
+    .toc { position: sticky; top: 72px; z-index: 20; background: #fff; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .toc h2 { display: none; }
+    .toc ol { display: flex; overflow-x: auto; border: 0; margin: 0; gap: 4px; scrollbar-width: none; }
+    .toc a { white-space: nowrap; border-left: 0; border-bottom: 3px solid transparent; margin: 0; }
+    .toc a[aria-current] { border-color: var(--brand-light); }
+    .mvv, .grupos, .sistema { grid-template-columns: 1fr; }
+    .mvv article, .mvv article + article { padding: 20px 0; border-left: 0; border-top: 1px solid var(--line); }
+    .pres { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#conteudo">Ir para o conteúdo</a>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#"><img src="assets/img/marca.png" alt=""><span><b>FAPERON</b><small>Federação da Agricultura e Pecuária de Rondônia</small></span></a>
+    <nav class="main" aria-label="Principal"><a href="#">Início</a><a href="#">Central de Inteligência</a><a href="#">Painel Agro RO</a><a href="#" aria-current="page">Sobre</a><a href="#">Informativos Técnicos</a><a href="#">Fale Conosco</a></nav>
+    <button class="search-btn" type="button" aria-label="Buscar no site">Buscar</button>
+  </div>
+</header>
+
+<main id="conteudo">
+  <div class="wrap crumbs"><a href="#">Início</a> / Sobre</div>
+  <section class="hero" aria-labelledby="h1">
+    <div class="wrap">
+      <h1 id="h1">Desde 1983, a FAPERON <b>representa o produtor rural</b> de todos os 52 municípios de Rondônia.</h1>
+      <div class="side">
+        <p>Entidade de grau superior, sem fins lucrativos, integrante da Confederação da Agricultura e Pecuária do Brasil (CNA).</p>
+        <a class="btn" href="#">Fale com a FAPERON</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="pillars" aria-label="A FAPERON em números">
+    <div class="wrap" style="--n:3">
+      <div class="pillar"><span class="n">Fundação</span><span class="v tnum">1983</span><span class="u">mais de 40 anos de representação</span></div>
+      <div class="pillar"><span class="n">Sindicatos rurais</span><span class="v tnum">36</span><span class="u">filiados à federação</span></div>
+      <div class="pillar"><span class="n">Municípios</span><span class="v tnum">52</span><span class="u">com atuação em todo o estado</span></div>
+    </div>
+  </section>
+
+  <div class="wrap layout">
+    <nav class="toc" aria-label="Nesta página">
+      <h2>Nesta página</h2>
+      <ol>
+        <li><a href="#quem-somos" aria-current="true">Quem somos</a></li>
+        <li><a href="#mvv">Missão, visão e valores</a></li>
+        <li><a href="#diretoria">Diretoria</a></li>
+        <li><a href="#sistema">Sistema FAPERON</a></li>
+      </ol>
+    </nav>
+
+    <div>
+      <section class="blk quem" id="quem-somos" aria-labelledby="hq">
+        <div class="sec-h"><h2 id="hq">Quem somos</h2></div>
+        <p>A FAPERON é uma entidade de grau superior sem fins lucrativos que integra a Confederação da Agricultura e Pecuária do Brasil (CNA).</p>
+        <p>Fundada em 1983, representa 36 sindicatos rurais que atuam nos 52 municípios de Rondônia.</p>
+        <p>Tem como objetivos a união da classe produtora rural, a defesa do homem do campo e da economia agrícola e a defesa do comércio de produtos agropecuários.</p>
+      </section>
+
+      <section class="blk" id="mvv" aria-labelledby="hm">
+        <div class="sec-h"><h2 id="hm">Missão, visão e valores</h2></div>
+        <div class="mvv">
+          <article><h3>Missão</h3><p>Representar, organizar e fortalecer os produtores rurais, defender seus direitos e interesses por meio dos sindicatos, promovendo o desenvolvimento econômico e social do setor agropecuário de Rondônia.</p></article>
+          <article><h3>Visão</h3><p>Ser reconhecida como instituição que se destaca na representação dos produtores rurais e na contribuição social.</p></article>
+          <article><h3>Valores</h3><ul><li>Protagonismo</li><li>Responsabilidade social, econômica e ambiental</li><li>Transparência</li><li>Inovação</li><li>Credibilidade</li></ul></article>
+        </div>
+      </section>
+
+      <section class="blk" id="diretoria" aria-labelledby="hd">
+        <div class="sec-h"><h2 id="hd">Diretoria<span class="gestao">Gestão 2024-2027</span></h2></div>
+        <div class="pres"><div class="avatar" aria-hidden="true">HD</div><div><small>Presidente</small><b>Hélio Dias de Souza</b></div></div>
+        <div class="grupos">
+          <div class="grupo"><h3>Vice-presidências</h3><dl>
+            <div><dt>Vice-Presidente</dt><dd>Gustavo José Sartor</dd></div>
+            <div><dt>2º Vice-Presidente</dt><dd>Alex Sandro Guaitolini</dd></div>
+            <div><dt>3º Vice-Presidente</dt><dd>João Carlos Volpato</dd></div>
+            <div><dt>4º Vice-Presidente</dt><dd>João Paulo da Silva Carneiro</dd></div></dl></div>
+          <div class="grupo"><h3>Secretaria e Financeiro</h3><dl>
+            <div><dt>1º Diretor(a) Secretário(a)</dt><dd>Lindinalva Pereira dos Santos Sousa</dd></div>
+            <div><dt>2º Diretor(a) Secretário(a)</dt><dd>Adelaine dos Santos</dd></div>
+            <div><dt>1º Diretor Financeiro</dt><dd>José Orlean Gomes da Silva</dd></div>
+            <div><dt>2º Diretor Financeiro</dt><dd>Antônio Vagno de Souza</dd></div></dl></div>
+          <div class="grupo"><h3>Conselho Fiscal</h3><dl>
+            <div><dt>Titular</dt><dd>José de Carvalho Sobrinho</dd></div>
+            <div><dt>Titular</dt><dd>Miguel Nunes Neto</dd></div>
+            <div><dt>Titular</dt><dd>Jair de Oliveira Ferro</dd></div>
+            <div><dt>Suplente</dt><dd>José Severino Batista Juvino</dd></div>
+            <div><dt>Suplente</dt><dd>Natã Feliciano da Silva</dd></div>
+            <div><dt>Suplente</dt><dd>Renildo Luciano Nunes</dd></div></dl></div>
+        </div>
+      </section>
+
+      <section class="blk" id="sistema" aria-labelledby="hs">
+        <div class="sec-h"><h2 id="hs">Sistema FAPERON</h2></div>
+        <div class="sistema">
+          <a class="ent" href="https://sistemafaperon.org.br/"><b>SENAR Rondônia</b><span>Formação profissional e promoção social rural.</span><i>Acessar →</i></a>
+          <a class="ent" href="#"><b>IPAGRO</b><span>Instituto vinculado ao Sistema FAPERON.</span><i>Acessar →</i></a>
+          <a class="ent" href="#"><b>Sindicatos Rurais</b><span>Mapa dos 36 sindicatos filiados.</span><i>Ver mapa →</i></a>
+          <a class="ent" href="#"><b>Comissão Mulheres</b><span>Comissão Mulheres FAPERON.</span><i>Acessar →</i></a>
+        </div>
+        <div class="cal"><div><b>Calendário do Sistema FAPERON | SENAR-RO</b><p>Datas e eventos do ano, em PDF.</p></div><a class="btn outline" href="#">Baixar o calendário (PDF)</a></div>
+      </section>
+
+      <section class="blk" aria-labelledby="hp">
+        <div class="aviso"><b id="hp">Em breve: Histórico, Áreas de atuação e Representações.</b> Estas páginas existem no site atual, mas sem texto publicado. Entram aqui assim que a FAPERON enviar o conteúdo.</div>
+      </section>
+    </div>
+  </div>
+
+  <div class="cols">
+    <section class="central" aria-labelledby="hc">
+      <h2 id="hc">Transparência em tudo o que fazemos</h2>
+      <p>Consulte a prestação de contas da entidade no Portal da Transparência.</p>
+      <a href="#">Abrir o Portal da Transparência</a>
+    </section>
+    <aside class="comm" aria-labelledby="hf">
+      <h2 id="hf">Quer falar com a FAPERON?</h2>
+      <p>Envie sua mensagem ou ligue: nossa equipe responde pelos canais oficiais.</p>
+      <a class="btn outline" href="#">Ir para Fale Conosco</a>
+    </aside>
+  </div>
+</main>
+<footer><div class="wrap"><b class="ui">FAPERON</b><span>Federação da Agricultura e Pecuária do Estado de Rondônia · Porto Velho, RO</span></div></footer>
+</body>
+</html>
