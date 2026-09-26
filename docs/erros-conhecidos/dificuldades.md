@@ -197,7 +197,7 @@ Registro cronológico por área, atualizado em 24/09/2026. Cada entrada tem sint
 - **Sintoma:** o site abria no notebook, mas não no celular fora da rede: `ERR_CONNECTION_CLOSED`. Isso valia para as duas portas do Funnel (443 e 8443).
 - **Causa:** o Funnel do notebook deixou de receber conexões dos nós de entrada do Tailscale (nenhum pacote chegava, e `tailscale funnel status` seguia dizendo "Funnel on"). O reparo foi religar o Funnel. A causa exata não foi identificada. Além disso, os testes feitos no próprio notebook enganavam: o nome `*.ts.net` resolve para o IP da tailnet (`100.x`), então o acesso nunca passava pela entrada pública.
 - **Solução:** para testar de verdade, conectar direto ao IP público de entrada (`nslookup` mostra os IPs `209.177.145.x`): `curl --resolve vinicin.tail3fe9ce.ts.net:8443:209.177.145.97 https://vinicin.tail3fe9ce.ts.net:8443/`, ou abrir o link no celular com dados móveis. Para reparar: `tailscale funnel --https=8443 off` e depois `tailscale funnel --bg --https=8443 3000`.
-- **Status:** contornado. Se voltar a acontecer, repetir o reparo.
+- **Status:** contornado. Se voltar a acontecer, repetir o reparo. Em 26/09/2026, logo depois de o notebook acordar, o teste pela entrada pública respondeu 200 nas duas portas sem precisar do reparo. Ou seja, este problema não acontece em toda retomada, e a hipótese de ligação com a suspensão (ver "A demo depende do notebook") não foi provada. Os logs do serviço Tailscale (`C:\ProgramData\Tailscale`) exigem administrador e não foram lidos.
 
 ### O link público expunha a documentação da API
 
@@ -209,9 +209,9 @@ Registro cronológico por área, atualizado em 24/09/2026. Cada entrada tem sint
 ### A demo depende do notebook
 
 - **Sintoma:** o link cai quando o notebook dorme, reinicia ou perde a rede.
-- **Causa:** a demo roda no notebook de um desenvolvedor (decisão 15 do plano).
-- **Solução:** `restart: unless-stopped`, Docker e Tailscale iniciando com o sistema e o checklist em `infra/demo-checklist.md`.
-- **Status:** contornado.
+- **Causa:** a demo roda no notebook de um desenvolvedor (decisão 15 do plano). Investigado em 26/09/2026 pelo log de eventos do Windows: nos 7 dias anteriores o notebook entrou em suspensão 22 vezes, cerca de 93 h fora do ar. Não é o Tailscale que desliga, é o notebook que suspende, e o Tailscale, o Docker e o Next.js param junto. Motivos registrados: `Application API` (suspender pelo menu Iniciar), `Button or Lid` (tampa ou botão), `System Idle` e `Battery`, além da hibernação após 3 h suspenso (`Hibernate from Sleep - Fixed Timeout`). O esquema de energia "Acer" suspende após 10 min na bateria e hiberna após 3 h, e o notebook alterna entre tomada e bateria quase todo dia. Houve suspensão por inatividade mesmo na tomada (22/09, 23/09 e 25/09); não foi confirmado se a configuração mudou depois. Ao conferir, o serviço Tailscale estava ativo (início automático), a rede sem problemas (UDP ok, relay de São Paulo) e os 4 containers `healthy`, então depois de acordar tudo volta sozinho.
+- **Solução:** `restart: unless-stopped`, Docker e Tailscale iniciando com o sistema e o checklist em `infra/demo-checklist.md`. Isso só recupera o serviço depois de acordar, não evita a queda. Para evitá-la durante a demo: notebook na tomada, sem suspensão nem hibernação e sem ação ao fechar a tampa (comandos em `infra/demo-checklist.md`, terminal como administrador). Para ser avisado das quedas: monitor de disponibilidade externo apontando para a URL `:8443`. Solução definitiva: rodar `docker compose` e o Funnel num servidor sempre ligado; o `dt-server` (Linux, já na tailnet) é candidato.
+- **Status:** contornado, mas a queda volta se o notebook suspender. As configurações de energia acima ainda não foram aplicadas.
 
 ## Migração de conteúdo do Wix
 

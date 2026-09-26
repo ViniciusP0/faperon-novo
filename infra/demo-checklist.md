@@ -2,18 +2,26 @@
 
 Antes de cada apresentação:
 
-1. Desativar suspensão e hibernação na tomada (Configurações > Energia).
+1. Notebook na tomada e sem suspensão nem hibernação, inclusive com a tampa fechada. Num terminal como administrador:
+   ```powershell
+   powercfg /setacvalueindex SCHEME_CURRENT SUB_BUTTONS LIDACTION 0
+   powercfg /change standby-timeout-ac 0
+   powercfg /change hibernate-timeout-ac 0
+   powercfg /setactive SCHEME_CURRENT
+   ```
+   Não usar "Suspender" no menu Iniciar. Na bateria o esquema atual suspende após 10 min e hiberna após 3 h, então o link cai. Conferir com `powercfg /q SCHEME_CURRENT SUB_SLEEP`.
 2. Conferir rede e que o Tailscale está conectado (`tailscale status`).
 3. `docker compose up -d` e aguardar `docker compose ps` mostrar `api` como `healthy`.
 4. Se o banco estiver vazio ou desatualizado: `make seed` (não depende do IBGE).
 5. Publicar o link: `make funnel` (ou `infra/funnel.ps1 -Up`). Anotar a URL `https://<maquina>.<tailnet>.ts.net`.
-6. Abrir a URL fora da rede local (celular em 4G) e percorrer Início -> Central -> Painel -> PDF.
+6. Abrir a URL fora da rede local (celular em dados móveis, sem Tailscale). No notebook o nome resolve para a tailnet, então o teste local não vale: use `curl --resolve <nome>:<porta>:<IP público de entrada> ...` (veja `docs/erros-conhecidos/dificuldades.md`) ou o celular e percorrer Início -> Central -> Painel -> PDF.
 7. Confirmar que `https://<url>/api/schema/` e `https://<url>/admin/` **não** abrem pelo Funnel (respondem 404).
 8. Depois da demo: `make funnel-off`.
 
 Notas:
 
 - Containers usam `restart: unless-stopped`; o Docker Desktop e o Tailscale devem iniciar com o Windows.
+- Para saber se o link caiu enquanto ninguém olhava, use um monitor de disponibilidade externo (por exemplo, UptimeRobot) na URL `:8443`. Para ver as suspensões dos últimos dias: `Get-WinEvent -FilterHashtable @{LogName='System'; ProviderName='Microsoft-Windows-Power-Troubleshooter'; Id=1}` (mostra hora de dormir e de acordar).
 - O `scheduler` roda a ingestão ao subir se a última carga tiver mais de 3 dias.
 - O Postgres não publica porta no host.
 - Se a porta 443 do Funnel já estiver em uso por outro app (`tailscale funnel status`), publique em outra porta sem derrubá-lo: `tailscale funnel --bg --https=8443 3000` (URL termina em `:8443`) e desligue com `tailscale funnel --https=8443 off`.
