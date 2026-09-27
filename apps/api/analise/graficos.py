@@ -7,6 +7,8 @@ from html import escape
 from analise.regras import formatar_numero
 
 PALETA = ["#2E7D32", "#B7791F", "#1B6E8C", "#8E3B5B", "#5C6B2F"]
+COR_TENDENCIA = "#B45309"
+NOME_TENDENCIA = "Tendência linear"
 FONTE = "DejaVu Sans, Arial, sans-serif"
 
 
@@ -36,14 +38,21 @@ def grafico_colunas(
     series: Sequence[tuple[str, Sequence[float | None]]],
     largura: int = 680,
     altura: int = 260,
+    tendencia: Sequence[float] | None = None,
 ) -> str:
-    """Colunas agrupadas: uma série = colunas simples; várias = agrupadas com legenda."""
+    """Colunas agrupadas: uma série = colunas simples; várias = agrupadas com legenda.
+
+    `tendencia` (um valor por ano) desenha a linha tracejada de tendência linear sobre as colunas.
+    """
     margem_esq, margem_dir, margem_top, margem_base = 62, 12, 14, 30
-    if len(series) > 1:
+    legenda = len(series) > 1 or tendencia is not None
+    if legenda:
         margem_base += 22
     area_w = largura - margem_esq - margem_dir
     area_h = altura - margem_top - margem_base
     maximo = max((v for _, valores in series for v in valores if v is not None), default=0.0)
+    if tendencia:
+        maximo = max(maximo, *tendencia)
     teto = _teto(maximo)
     grupo_w = area_w / max(len(anos), 1)
     col_w = max(grupo_w * 0.7 / len(series), 1.5)
@@ -79,7 +88,17 @@ def grafico_colunas(
                 f'<text x="{margem_esq + gi * grupo_w + grupo_w / 2:.1f}" '
                 f'y="{margem_top + area_h + 14}" text-anchor="middle" fill="#555">{ano}</text>'
             )
-    if len(series) > 1:
+    if tendencia:
+        pontos = " ".join(
+            f"{margem_esq + gi * grupo_w + grupo_w / 2:.1f},"
+            f"{margem_top + area_h - area_h * min(max(v, 0.0), teto) / teto:.1f}"
+            for gi, v in enumerate(tendencia)
+        )
+        p.append(
+            f'<polyline points="{pontos}" fill="none" stroke="{COR_TENDENCIA}" stroke-width="2" '
+            'stroke-dasharray="6 4" stroke-linejoin="round"/>'
+        )
+    if legenda:
         x = margem_esq
         y = altura - 8
         for si, (nome, _) in enumerate(series):
@@ -88,5 +107,11 @@ def grafico_colunas(
             )
             p.append(f'<text x="{x + 13}" y="{y}" fill="#333">{escape(nome)}</text>')
             x += 22 + int(len(nome) * 5.6)
+        if tendencia:
+            p.append(
+                f'<line x1="{x}" y1="{y - 4}" x2="{x + 16}" y2="{y - 4}" stroke="{COR_TENDENCIA}" '
+                'stroke-width="2" stroke-dasharray="6 4"/>'
+            )
+            p.append(f'<text x="{x + 21}" y="{y}" fill="#333">{NOME_TENDENCIA}</text>')
     p.append("</svg>")
     return "".join(p)

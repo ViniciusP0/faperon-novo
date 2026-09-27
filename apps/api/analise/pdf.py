@@ -15,11 +15,12 @@ from analise import graficos
 from analise.models import Relatorio
 from analise.regras import formatar_numero
 from analise.servico import ResultadoAnalise, analisar
+from analise.tendencia import descrever_tendencia, tendencia_linear
 from indicadores import servicos
 from indicadores.models import StatusValor
 from ingestao.models import Carga
 
-VERSAO_TEMPLATE = "2"
+VERSAO_TEMPLATE = "3"
 
 
 def versao_dos_dados() -> str:
@@ -44,14 +45,12 @@ def _contexto(r: ResultadoAnalise, codigos_comparacao: list[str]) -> dict[str, A
     tabela = r.recorte.produto.tabela_origem
     meta = servicos.meta_da_tabela(tabela)
     anos = [p.ano for p in r.pontos]
+    valores = [None if p.valor is None else float(p.valor) for p in r.pontos]
+    tendencia = tendencia_linear(anos, valores)
     grafico_serie = graficos.grafico_colunas(
         anos,
-        [
-            (
-                r.recorte.indicador.nome,
-                [None if p.valor is None else float(p.valor) for p in r.pontos],
-            )
-        ],
+        [(r.recorte.indicador.nome, valores)],
+        tendencia=tendencia.valores if tendencia else None,
     )
     grafico_comparacao = None
     if len(codigos_comparacao) >= 2:
@@ -89,6 +88,9 @@ def _contexto(r: ResultadoAnalise, codigos_comparacao: list[str]) -> dict[str, A
         "inicio": r.inicio,
         "fim": r.fim,
         "grafico_serie": mark_safe(grafico_serie),  # noqa: S308
+        "texto_tendencia": (
+            descrever_tendencia(tendencia, r.recorte.unidade) if tendencia else None
+        ),
         "grafico_comparacao": mark_safe(grafico_comparacao) if grafico_comparacao else None,  # noqa: S308
         "paragrafos": r.paragrafos,
         "ranking": linhas,

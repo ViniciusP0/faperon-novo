@@ -49,7 +49,8 @@
   <h2>Série histórica — {{ escopo }}</h2>
   <figure>
     {{ grafico_serie }}
-    <figcaption>{{ indicador }} em {{ unidade }}, {{ inicio }}–{{ fim }}. Anos sem coluna não têm dado publicado.</figcaption>
+    <figcaption>{{ indicador }} em {{ unidade }}, {{ inicio }}–{{ fim }}. Anos sem coluna não têm dado publicado.{% if texto_tendencia %} A linha tracejada é a tendência linear.{% endif %}</figcaption>
+    {% if texto_tendencia %}<p class="tendencia">{{ texto_tendencia }}</p>{% endif %}
   </figure>
 </section>
 

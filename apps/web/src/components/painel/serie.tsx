@@ -5,8 +5,9 @@ import { useMemo } from "react";
 import { Label, Select } from "@/components/ui/field";
 import { api } from "@/lib/api";
 import type { Municipio } from "@/lib/api-types";
-import { opcaoSerie } from "@/lib/chart-options";
+import { NOME_TENDENCIA, opcaoSerie } from "@/lib/chart-options";
 import { descreverSerie } from "@/lib/descricao";
+import { descreverTendencia, pontosDaTendencia, tendenciaLinear } from "@/lib/tendencia";
 import { recorteParams, type Filtros } from "@/lib/filters";
 import { Carregando, ErroConsulta, NotaMetodologica, TabelaSeries } from "./comuns";
 import { Grafico } from "./grafico";
@@ -25,6 +26,7 @@ export function Serie({ filtros, municipios, onMunicipio }: Props) {
 
   const nome = data ? (data.municipio ? data.municipio.nome : "Rondônia (total)") : "";
   const option = useMemo(() => (data ? opcaoSerie(nome, data.pontos, data.indicador.unidade) : null), [data, nome]);
+  const tendencia = useMemo(() => (data ? tendenciaLinear(data.pontos) : null), [data]);
 
   return (
     <section aria-labelledby="serie-titulo">
@@ -52,15 +54,26 @@ export function Serie({ filtros, municipios, onMunicipio }: Props) {
             <p className="mb-2 text-sm text-ink-muted">
               {nome} — {data.indicador.unidade.toLowerCase()}, {data.inicio} a {data.fim}.
             </p>
-            <Grafico option={option} descricao={descreverSerie(nome, data.pontos, data.indicador.unidade)} />
+            <Grafico
+              option={option}
+              descricao={`${descreverSerie(nome, data.pontos, data.indicador.unidade)}${tendencia ? ` ${descreverTendencia(tendencia, data.indicador.unidade)}` : ""}`}
+            />
             <p className="mt-3 text-sm leading-relaxed" data-testid="serie-descricao">
               {descreverSerie(nome, data.pontos, data.indicador.unidade)}
             </p>
+            {tendencia && (
+              <p className="mt-1.5 text-sm leading-relaxed text-ink-muted" data-testid="serie-tendencia">
+                {descreverTendencia(tendencia, data.indicador.unidade)}
+              </p>
+            )}
             <TabelaSeries
               legenda={`Série histórica de ${data.produto.nome}, ${data.indicador.nome.toLowerCase()}, ${nome}`}
               unidade={data.indicador.unidade}
               anos={data.pontos.map((p) => p.ano)}
-              series={[{ id: "serie", nome, pontos: data.pontos }]}
+              series={[
+                { id: "serie", nome, pontos: data.pontos },
+                ...(tendencia ? [{ id: "tendencia", nome: NOME_TENDENCIA, pontos: pontosDaTendencia(data.pontos, tendencia) }] : []),
+              ]}
             />
           </>
         )}

@@ -2,7 +2,7 @@
 
 ## Critério de aceite principal
 
-Botão gera PDF com filtros, gráfico, ranking, análise, fonte IBGE e data da carga; < 10 s para o caso típico; mesmo recorte = mesmo PDF (cache).
+Botão gera PDF com filtros, gráfico, ranking, análise, gráfico com a linha de tendência linear, fonte IBGE e data da carga; < 10 s para o caso típico; mesmo recorte = mesmo PDF (cache).
 
 ## Gherkin
 

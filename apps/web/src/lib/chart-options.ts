@@ -1,6 +1,7 @@
 import type { EChartsCoreOption } from "echarts/core";
 import type { Ponto, SerieComparada } from "./api-types";
 import { formatCompacto, formatValor } from "./format";
+import { pontosDaTendencia, tendenciaLinear } from "./tendencia";
 
 export const PALETA = ["#00604e", "#b45309", "#2b5672", "#7e3f98", "#5b8c2a"];
 
@@ -36,12 +37,33 @@ function tooltip(unidade: string, pontosPorSerie: Ponto[][]): EChartsCoreOption[
   };
 }
 
+export const NOME_TENDENCIA = "Tendência linear";
+const COR_TENDENCIA = PALETA[1]!;
+
 export function opcaoSerie(nome: string, pontos: Ponto[], unidade: string): EChartsCoreOption {
   const anos = pontos.map((p) => p.ano);
+  const tendencia = tendenciaLinear(pontos);
+  const reta = tendencia ? pontosDaTendencia(pontos, tendencia) : null;
+
+  const barras = { type: "bar", name: nome, data: pontos.map((p) => p.valor), itemStyle: { borderRadius: [4, 4, 0, 0] }, barMaxWidth: 44 };
+  if (!reta) return { ...base(unidade, anos), tooltip: tooltip(unidade, [pontos]), series: [barras] };
+
   return {
     ...base(unidade, anos),
-    tooltip: tooltip(unidade, [pontos]),
-    series: [{ type: "bar", name: nome, data: pontos.map((p) => p.valor), itemStyle: { borderRadius: [4, 4, 0, 0] }, barMaxWidth: 44 }],
+    legend: { top: 0, right: 0, icon: "roundRect", textStyle: { color: "#14261f" } },
+    tooltip: tooltip(unidade, [pontos, reta]),
+    series: [
+      barras,
+      {
+        type: "line",
+        name: NOME_TENDENCIA,
+        data: reta.map((p) => p.valor),
+        symbol: "none",
+        z: 3,
+        lineStyle: { type: "dashed", width: 2.5, color: COR_TENDENCIA },
+        itemStyle: { color: COR_TENDENCIA },
+      },
+    ],
   };
 }
 

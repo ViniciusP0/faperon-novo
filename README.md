@@ -29,7 +29,7 @@ Com `make` (ou copie os comandos do `Makefile` no Windows): `make up`, `make see
 ```
 apps/web    Next.js (site, painel e conteúdo editorial em src/content)
 apps/api    Django (ingestão, indicadores, análise/PDF)
-docs/       ADRs (docs/adr), Specs (docs/specs), contrato da API
+docs/       ADRs (docs/adr), Specs (docs/specs), contrato da API, erros conhecidos (docs/erros-conhecidos)
 data/seed/  Snapshot do banco
 infra/      Funnel/serve do Tailscale, checklist de demo
 ```
