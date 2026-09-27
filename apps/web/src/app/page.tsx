@@ -1,16 +1,15 @@
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, TrendingUp } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BannersSenar } from "@/components/inicio/banners-senar";
-import { FaixaIndicadores } from "@/components/inicio/faixa-indicadores";
 import { HeroCarrossel, type SlideHero } from "@/components/inicio/hero-carrossel";
 import { NoticiaChamada } from "@/components/inicio/noticia-chamada";
 import { SlideImagem } from "@/components/inicio/slide-imagem";
 import { buttonVariants } from "@/components/ui/button";
-import { Alert } from "@/components/ui/feedback";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HERO } from "@/content/hero";
 import { INICIO } from "@/content/inicio";
-import { noticiasRecentes } from "@/content/noticias";
+import { noticiasRecentes, type Noticia } from "@/content/noticias";
 import { SENAR } from "@/content/senar";
 import type { Destaque } from "@/lib/api-types";
 import { manchete, normalizarDestaque } from "@/lib/destaques";
@@ -55,9 +54,29 @@ export default async function InicioPage() {
   ]);
   const { central, commodities, nosso_agro } = INICIO;
   const noticias = noticiasRecentes(3);
+  const noticiasTicker = noticiasRecentes(5);
   const itens = (indicadores?.itens ?? []).map(normalizarDestaque);
   const partes = manchete(itens);
   const numeros = numerosDoAgro(culturas, itens.find((i) => i.chave === "bovino"), municipios);
+
+  const itemTicker = (lista: Noticia[], duplicado = false) =>
+    lista.map((n, i) => (
+      <li key={`${n.slug}-${duplicado ? "dup" : "orig"}`} aria-hidden={duplicado || undefined} className="flex items-center gap-2">
+        {(i > 0 || duplicado) && (
+          <span aria-hidden="true" className="text-line">
+            |
+          </span>
+        )}
+        {n.url_original ? (
+          <a href={n.url_original} target="_blank" rel="noopener noreferrer" tabIndex={duplicado ? -1 : undefined} className="hover:text-brand hover:underline">
+            {n.titulo}
+            <span className="sr-only"> (abre no site atual em nova aba)</span>
+          </a>
+        ) : (
+          <span>{n.titulo}</span>
+        )}
+      </li>
+    ));
 
   const slides: SlideHero[] = [
     {
@@ -135,15 +154,49 @@ export default async function InicioPage() {
       <h1 className="sr-only">FAPERON – Federação da Agricultura e Pecuária de Rondônia</h1>
       <HeroCarrossel rotulo={HERO.rotulo} slides={slides} />
 
-      {itens.length > 0 ? (
-        <FaixaIndicadores itens={itens} />
-      ) : (
-        <div className="container">
-          <Alert tone="erro" title="Indicadores indisponíveis no momento">
-            Não foi possível carregar os números do IBGE. O painel continua disponível em Painel Agro RO.
-          </Alert>
+      <section aria-label="Notícias" className="border-y border-line bg-white">
+        <div className="container flex items-center gap-4 py-3 text-sm">
+          <span className="shrink-0 font-bold uppercase tracking-wide text-brand">Notícias</span>
+          <div className="group flex-1 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_2rem,black_calc(100%-2rem),transparent)]">
+            <ul className="flex w-max animate-[marquee_54s_linear_infinite] items-center gap-x-2 whitespace-nowrap text-ink-muted group-hover:[animation-play-state:paused]">
+              {itemTicker(noticiasTicker)}
+              {itemTicker(noticiasTicker, true)}
+            </ul>
+          </div>
+          <a
+            href={WIX_PAGINAS.noticias}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex shrink-0 items-center gap-1 font-medium text-brand hover:underline"
+          >
+            Ver todas as notícias
+            <ExternalLink aria-hidden="true" className="h-3.5 w-3.5" />
+            <span className="sr-only"> (abre o site atual em nova aba)</span>
+          </a>
         </div>
-      )}
+      </section>
+
+      <section aria-label={commodities.titulo} className="container mt-10">
+        <Card className="mx-auto max-w-2xl border-transparent bg-brand-dark text-white shadow-md">
+          <CardHeader className="flex-row items-center gap-2 pb-2">
+            <TrendingUp aria-hidden="true" className="h-5 w-5 shrink-0 text-brand-lime" />
+            <CardTitle className="text-white">{commodities.titulo}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="leading-relaxed text-white/90">{commodities.texto}</p>
+            <a
+              href={commodities.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(buttonVariants({ size: "sm" }), "mt-4 bg-brand-lime text-brand-dark hover:bg-[#9bdc60]")}
+            >
+              {commodities.cta_texto}
+              <ExternalLink aria-hidden="true" className="h-4 w-4" />
+              <span className="sr-only"> (abre em nova aba)</span>
+            </a>
+          </CardContent>
+        </Card>
+      </section>
 
       <section aria-labelledby="senar-titulo" className="container mt-16">
         <div className="mb-6 flex items-baseline justify-between gap-4">
@@ -189,33 +242,17 @@ export default async function InicioPage() {
         </ul>
       </section>
 
-      <div className="mt-16 grid lg:grid-cols-[1.2fr_1fr]">
-        <section aria-labelledby="central-titulo" className="bg-brand-dark px-4 py-12 text-white md:px-6 lg:pl-[max(1.5rem,calc((100vw-1200px)/2+1.5rem))] lg:pr-14">
-          <h2 id="central-titulo" className="max-w-[20ch] text-3xl font-semibold leading-tight tracking-tight">
+      <section aria-labelledby="central-titulo" className="mt-16 bg-brand-dark px-4 py-12 text-white md:px-6">
+        <div className="container">
+          <h2 id="central-titulo" className="max-w-[36ch] text-3xl font-semibold leading-tight tracking-tight">
             {central.titulo}
           </h2>
-          <p className="mt-3.5 max-w-[46ch] leading-relaxed text-white/90">{central.texto}</p>
+          <p className="mt-3.5 max-w-[60ch] leading-relaxed text-white/90">{central.texto}</p>
           <Link href={central.cta_url} className={cn(buttonVariants({ size: "lg" }), "mt-6 bg-brand-lime text-brand-dark hover:bg-[#9bdc60]")}>
             {central.cta_texto}
           </Link>
-        </section>
-        <aside aria-labelledby="commodities-titulo" className="bg-[#e4edf3] px-4 py-12 md:px-6 lg:pl-14 lg:pr-[max(1.5rem,calc((100vw-1200px)/2+1.5rem))]">
-          <h2 id="commodities-titulo" className="text-2xl font-semibold">
-            {commodities.titulo}
-          </h2>
-          <p className="mt-2.5 max-w-[42ch] leading-relaxed text-ink-muted">{commodities.texto}</p>
-          <a
-            href={commodities.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={cn(buttonVariants({ variant: "outline", size: "lg" }), "mt-5 border-2 border-steel text-steel hover:bg-steel hover:text-white")}
-          >
-            {commodities.cta_texto}
-            <ExternalLink aria-hidden="true" className="h-4 w-4" />
-            <span className="sr-only"> (abre em nova aba)</span>
-          </a>
-        </aside>
-      </div>
+        </div>
+      </section>
 
       {numeros.length > 0 && (
         <section aria-labelledby="nosso-agro-titulo" className="container mt-16">

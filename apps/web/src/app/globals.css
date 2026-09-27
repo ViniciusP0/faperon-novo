@@ -37,6 +37,12 @@ html {
   scroll-behavior: smooth;
 }
 
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 body {
   background: var(--surface);
   color: var(--ink);

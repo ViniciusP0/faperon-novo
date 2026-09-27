@@ -24,7 +24,6 @@ export interface ItemMenu {
 export const MENU: ItemMenu[] = [
   { label: "Início", href: "/" },
   { label: "Central de Inteligência", href: "/central-de-inteligencia" },
-  { label: "Painel Agro RO", href: "/painel" },
   { label: "Sobre", href: ROTAS.sobre },
   { label: "Informativos Técnicos", href: ROTAS.informativos },
   { label: "Fale Conosco", href: ROTAS.faleConosco },

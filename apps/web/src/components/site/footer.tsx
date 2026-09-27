@@ -49,9 +49,15 @@ export function SiteFooter() {
         </nav>
       </div>
       <div className="border-t border-white/20">
-        <p className="container py-4 text-xs text-white/85">
-          Protótipo em avaliação. Dados do painel: IBGE (SIDRA). O site atual da FAPERON continua no ar.
-        </p>
+        <div className="container flex flex-col items-center justify-between gap-4 py-4 text-xs text-white/85 sm:flex-row">
+          <p>Protótipo em avaliação. Dados do painel: IBGE (SIDRA). O site atual da FAPERON continua no ar.</p>
+          <div className="flex shrink-0 items-center gap-3">
+            <span className="text-sm">Desenvolvido por DATA-RO Inteligência Territorial</span>
+            <span className="inline-flex items-center rounded-lg bg-white px-1.5 py-1 shadow-sm">
+              <Image src="/logo-dataro.png" alt="DATA-RO – Inteligência Territorial" width={80} height={100} className="h-16 w-auto" />
+            </span>
+          </div>
+        </div>
       </div>
     </footer>
   );

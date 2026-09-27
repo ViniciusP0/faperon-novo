@@ -11,7 +11,6 @@ describe("páginas institucionais internas", () => {
     expect(MENU.map((i) => [i.label, i.href])).toEqual([
       ["Início", "/"],
       ["Central de Inteligência", "/central-de-inteligencia"],
-      ["Painel Agro RO", "/painel"],
       ["Sobre", "/sobre"],
       ["Informativos Técnicos", "/informativos-tecnicos"],
       ["Fale Conosco", "/fale-conosco"],
