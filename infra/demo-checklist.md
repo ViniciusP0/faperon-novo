@@ -28,30 +28,24 @@ Operação:
 
 Validação ponta a ponta (2026-09-28): os commits de teste anteriores foram feitos e empurrados a partir do próprio `dt-server`, então `deploy.sh` sempre encontrou `HEAD` já igual a `origin/main` (log só mostra `already up to date`, nunca `new commits found, deploying`). Este commit foi feito e empurrado de uma máquina diferente do `dt-server` para exercitar de fato o caminho de rebuild.
 
-# Checklist de demo (notebook)
+# Checklist de operação (dt-server)
 
-Antes de cada apresentação:
+Desde 28/09/2026 (ADR 0021), o site e o deploy rodam permanentemente no `dt-server` (sempre ligado, na tailnet), não mais no notebook de um desenvolvedor. O checklist abaixo substitui o antigo checklist de demo no notebook.
 
-1. Notebook na tomada e sem suspensão nem hibernação, inclusive com a tampa fechada. Num terminal como administrador:
-   ```powershell
-   powercfg /setacvalueindex SCHEME_CURRENT SUB_BUTTONS LIDACTION 0
-   powercfg /change standby-timeout-ac 0
-   powercfg /change hibernate-timeout-ac 0
-   powercfg /setactive SCHEME_CURRENT
-   ```
-   Não usar "Suspender" no menu Iniciar. Na bateria o esquema atual suspende após 10 min e hiberna após 3 h, então o link cai. Conferir com `powercfg /q SCHEME_CURRENT SUB_SLEEP`.
-2. Conferir rede e que o Tailscale está conectado (`tailscale status`).
-3. `docker compose up -d` e aguardar `docker compose ps` mostrar `api` como `healthy`.
-4. Se o banco estiver vazio ou desatualizado: `make seed` (não depende do IBGE).
-5. Publicar o link: `make funnel` (ou `infra/funnel.ps1 -Up`). Anotar a URL `https://<maquina>.<tailnet>.ts.net`.
-6. Abrir a URL fora da rede local (celular em dados móveis, sem Tailscale). No notebook o nome resolve para a tailnet, então o teste local não vale: use `curl --resolve <nome>:<porta>:<IP público de entrada> ...` (veja `docs/erros-conhecidos/dificuldades.md`) ou o celular e percorrer Início -> Central -> Painel -> PDF.
-7. Confirmar que `https://<url>/api/schema/` e `https://<url>/admin/` **não** abrem pelo Funnel (respondem 404).
-8. Depois da demo: `make funnel-off`.
+Antes de uma apresentação (ou a qualquer momento, para conferir que está tudo no ar):
+
+1. Conferir que os containers estão de pé: `docker compose ps` deve mostrar `api` como `healthy`.
+2. Se o banco estiver vazio ou desatualizado: `make seed` (não depende do IBGE).
+3. Confirmar o Funnel do site: `tailscale funnel status` deve mostrar a porta 3000 publicada. Se precisar religar: `make funnel` (ou `infra/funnel.ps1 -Up` num Windows).
+4. Abrir a URL fora da rede local (celular em dados móveis, sem Tailscale) — dentro da tailnet o nome resolve direto para o `dt-server` e não passa pela entrada pública. Use `curl --resolve <nome>:<porta>:<IP público de entrada> ...` (veja `docs/erros-conhecidos/dificuldades.md`) ou o celular, e percorra Início -> Central -> Painel -> PDF.
+5. Confirmar que `https://<url>/api/schema/` e `https://<url>/admin/` **não** abrem pelo Funnel (respondem 404).
+
+Não é mais preciso desligar o Funnel depois da demo (`make funnel-off`): o site fica público continuamente por decisão do projeto (ADR 0014).
 
 Notas:
 
-- Containers usam `restart: unless-stopped`; o Docker Desktop e o Tailscale devem iniciar com o Windows.
-- Para saber se o link caiu enquanto ninguém olhava, use um monitor de disponibilidade externo (por exemplo, UptimeRobot) na URL `:8443`. Para ver as suspensões dos últimos dias: `Get-WinEvent -FilterHashtable @{LogName='System'; ProviderName='Microsoft-Windows-Power-Troubleshooter'; Id=1}` (mostra hora de dormir e de acordar).
+- Containers usam `restart: unless-stopped`; o `dt-server` fica sempre ligado, então não há mais risco de suspensão/hibernação como no notebook (ver "A demo depende do notebook" em `docs/erros-conhecidos/dificuldades.md`, resolvido).
+- Para saber se o link caiu, use um monitor de disponibilidade externo (por exemplo, UptimeRobot) na URL pública do site.
 - O `scheduler` roda a ingestão ao subir se a última carga tiver mais de 3 dias.
 - O Postgres não publica porta no host.
 - Se a porta 443 do Funnel já estiver em uso por outro app (`tailscale funnel status`), publique em outra porta sem derrubá-lo: `tailscale funnel --bg --https=8443 3000` (URL termina em `:8443`) e desligue com `tailscale funnel --https=8443 off`.
