@@ -1,3 +1,31 @@
+# Deploy automático (webhook)
+
+O servidor atualiza sozinho a cada push em `main`, sem precisar acessar a máquina manualmente.
+
+Instalação (uma vez):
+
+```bash
+cp .env.example .env   # se ainda não existir; gerar GITHUB_WEBHOOK_SECRET com: python3 -c "import secrets; print(secrets.token_hex(32))"
+sudo cp infra/faperon-webhook.service /etc/systemd/system/faperon-webhook.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now faperon-webhook
+tailscale funnel --bg --https=8444 9001   # 8443 já está em uso por outro serviço neste servidor
+```
+
+Depois, em `github.com/ViniciusP0/faperon-novo` → Settings → Webhooks → Add webhook:
+
+- Payload URL: `https://dt-server.tail3fe9ce.ts.net:8444/webhook`
+- Content type: `application/json`
+- Secret: o mesmo valor de `GITHUB_WEBHOOK_SECRET` do `.env`
+- Eventos: só `push`
+
+Operação:
+
+- Ver se está no ar: `systemctl status faperon-webhook`
+- Log de cada deploy: `infra/deploy.log` (ou `journalctl -u faperon-webhook -f` para o listener)
+- `deploy.sh` só reconstrói quando há commit novo em `origin/main`; usa `flock` para não rodar dois deploys ao mesmo tempo
+- `make funnel-off` desliga só a porta 3000 (site); o webhook fica em outra porta e continua no ar
+
 # Checklist de demo (notebook)
 
 Antes de cada apresentação:

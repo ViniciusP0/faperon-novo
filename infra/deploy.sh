@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_DIR="/home/molho-shoyo/faperon-novo"
+cd "$REPO_DIR"
+
+exec flock -n /tmp/faperon-deploy.lock -c "
+  set -euo pipefail
+  cd '$REPO_DIR'
+  echo \"[\$(date -Is)] checking for updates\"
+  git fetch origin main
+  if [ \"\$(git rev-parse HEAD)\" != \"\$(git rev-parse origin/main)\" ]; then
+    echo \"[\$(date -Is)] new commits found, deploying\"
+    git reset --hard origin/main
+    docker compose up -d --build
+    docker image prune -f
+    echo \"[\$(date -Is)] deploy finished at \$(git rev-parse --short HEAD)\"
+  else
+    echo \"[\$(date -Is)] already up to date\"
+  fi
+" >> "$REPO_DIR/infra/deploy.log" 2>&1

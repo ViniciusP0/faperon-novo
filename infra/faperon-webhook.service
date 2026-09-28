@@ -1,0 +1,15 @@
+[Unit]
+Description=FAPERON deploy webhook
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+EnvironmentFile=/home/molho-shoyo/faperon-novo/.env
+WorkingDirectory=/home/molho-shoyo/faperon-novo
+ExecStart=/usr/bin/python3 /home/molho-shoyo/faperon-novo/infra/webhook_listener.py
+Restart=always
+RestartSec=5
+User=molho-shoyo
+
+[Install]
+WantedBy=multi-user.target

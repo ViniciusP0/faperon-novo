@@ -38,4 +38,13 @@ Contrato entre front e back: `docs/api-contract.md`. Decisões: `docs/adr/`. Cri
 
 ## Demo pelo Tailscale
 
-Ver `infra/demo-checklist.md`. O Funnel expõe só a porta 3000 (Next.js).
+Ver `infra/demo-checklist.md`. O Funnel expõe a porta 3000 (Next.js) e, para o deploy automático, a 9001 (webhook) em `:8444`.
+
+## Deploy automático
+
+O `dt-server` atualiza sozinho a cada `git push` em `main`: um serviço systemd (`faperon-webhook`, ver `infra/faperon-webhook.service`) recebe o webhook do GitHub, valida a assinatura HMAC e roda `infra/deploy.sh` (`git reset --hard origin/main` + `docker compose up -d --build`). Não precisa mais acessar o servidor manualmente para publicar uma mudança.
+
+- Status do serviço: `systemctl status faperon-webhook`
+- Log de deploy: `infra/deploy.log` ou `journalctl -u faperon-webhook -f`
+- Segredo compartilhado com o GitHub: `GITHUB_WEBHOOK_SECRET` no `.env` (configurar o mesmo valor em Settings > Webhooks no GitHub)
+- Detalhes de instalação (unit systemd, Funnel na porta 8444): `infra/demo-checklist.md`
