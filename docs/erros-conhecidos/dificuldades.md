@@ -204,7 +204,7 @@ Registro cronológico por área, atualizado em 24/09/2026. Cada entrada tem sint
 - **Sintoma:** o webhook do deploy automático respondia 401/200 em teste local (`curl` no próprio `dt-server`), mas o GitHub reportava "Falha de conexão com o host" em toda entrega.
 - **Causa:** o Funnel do Tailscale só aceita as portas 443, 8443 e 10000; o webhook foi publicado na 8444, que o CLI aceita sem erro (`tailscale funnel status` mostrava "Funnel on") mas a infraestrutura pública de entrada não roteia. Testar do próprio `dt-server` enganava porque o nome resolve para o IP da tailnet, não passando pela entrada pública (mesmo problema da seção acima).
 - **Solução:** publicar em `:10000` (`tailscale funnel --bg --https=10000 9001`), já que 443 é o site e 8443 já está em uso por outro serviço. Testar com `curl --resolve <nome>:<porta>:<IP público>` antes de cadastrar no GitHub.
-- **Status:** resolvido.
+- **Status:** resolvido. Confirmado com um `push` real em 28/09/2026 (este commit): webhook entregue, assinatura validada (202) e `deploy.sh` executado.
 
 ### O link público expunha a documentação da API
 
