@@ -9,12 +9,12 @@ cp .env.example .env   # se ainda não existir; gerar GITHUB_WEBHOOK_SECRET com:
 sudo cp infra/faperon-webhook.service /etc/systemd/system/faperon-webhook.service
 sudo systemctl daemon-reload
 sudo systemctl enable --now faperon-webhook
-tailscale funnel --bg --https=8444 9001   # 8443 já está em uso por outro serviço neste servidor
+tailscale funnel --bg --https=10000 9001   # Funnel só aceita 443, 8443 e 10000; 443 é o site e 8443 já está em uso por outro serviço neste servidor
 ```
 
 Depois, em `github.com/ViniciusP0/faperon-novo` → Settings → Webhooks → Add webhook:
 
-- Payload URL: `https://dt-server.tail3fe9ce.ts.net:8444/webhook`
+- Payload URL: `https://dt-server.tail3fe9ce.ts.net:10000/webhook`
 - Content type: `application/json`
 - Secret: o mesmo valor de `GITHUB_WEBHOOK_SECRET` do `.env`
 - Eventos: só `push`

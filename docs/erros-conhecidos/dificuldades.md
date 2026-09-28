@@ -199,6 +199,13 @@ Registro cronológico por área, atualizado em 24/09/2026. Cada entrada tem sint
 - **Solução:** para testar de verdade, conectar direto ao IP público de entrada (`nslookup` mostra os IPs `209.177.145.x`): `curl --resolve vinicin.tail3fe9ce.ts.net:8443:209.177.145.97 https://vinicin.tail3fe9ce.ts.net:8443/`, ou abrir o link no celular com dados móveis. Para reparar: `tailscale funnel --https=8443 off` e depois `tailscale funnel --bg --https=8443 3000`.
 - **Status:** contornado. Se voltar a acontecer, repetir o reparo. Em 26/09/2026, logo depois de o notebook acordar, o teste pela entrada pública respondeu 200 nas duas portas sem precisar do reparo. Ou seja, este problema não acontece em toda retomada, e a hipótese de ligação com a suspensão (ver "A demo depende do notebook") não foi provada. Os logs do serviço Tailscale (`C:\ProgramData\Tailscale`) exigem administrador e não foram lidos.
 
+### Webhook do GitHub não conectava numa porta de Funnel inválida
+
+- **Sintoma:** o webhook do deploy automático respondia 401/200 em teste local (`curl` no próprio `dt-server`), mas o GitHub reportava "Falha de conexão com o host" em toda entrega.
+- **Causa:** o Funnel do Tailscale só aceita as portas 443, 8443 e 10000; o webhook foi publicado na 8444, que o CLI aceita sem erro (`tailscale funnel status` mostrava "Funnel on") mas a infraestrutura pública de entrada não roteia. Testar do próprio `dt-server` enganava porque o nome resolve para o IP da tailnet, não passando pela entrada pública (mesmo problema da seção acima).
+- **Solução:** publicar em `:10000` (`tailscale funnel --bg --https=10000 9001`), já que 443 é o site e 8443 já está em uso por outro serviço. Testar com `curl --resolve <nome>:<porta>:<IP público>` antes de cadastrar no GitHub.
+- **Status:** resolvido.
+
 ### O link público expunha a documentação da API
 
 - **Sintoma:** `/api/schema/` e `/api/docs/` abriam pelo endereço público.
