@@ -13,6 +13,7 @@ export const ROTAS = {
   sobre: "/sobre",
   informativos: "/informativos-tecnicos",
   faleConosco: "/fale-conosco",
+  login: "/login",
 } as const;
 
 export interface ItemMenu {

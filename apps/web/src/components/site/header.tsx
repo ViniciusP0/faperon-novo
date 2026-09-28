@@ -1,11 +1,12 @@
 "use client";
 
-import { ExternalLink, Menu, X } from "lucide-react";
+import { ExternalLink, LogIn, Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { MENU } from "@/lib/site";
+import { buttonVariants } from "@/components/ui/button";
+import { MENU, ROTAS } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 export function SiteHeader() {
@@ -27,31 +28,38 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav aria-label="Principal" className="hidden xl:block">
-          <ul className="flex items-center">
-            {MENU.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  {...(item.externo ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                  aria-current={!item.externo && ativo(item.href) ? "page" : undefined}
-                  className={cn(
-                    "inline-flex items-center gap-1 whitespace-nowrap border-b-[3px] border-transparent px-3 py-2 text-sm font-medium text-ink hover:text-brand",
-                    !item.externo && ativo(item.href) && "border-brand-light text-brand",
-                  )}
-                >
-                  {item.label}
-                  {item.externo && (
-                    <>
-                      <ExternalLink aria-hidden="true" className="h-3.5 w-3.5" />
-                      <span className="sr-only"> (abre o site atual em nova aba)</span>
-                    </>
-                  )}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <div className="hidden items-center gap-2 xl:flex">
+          <nav aria-label="Principal">
+            <ul className="flex items-center">
+              {MENU.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    {...(item.externo ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                    aria-current={!item.externo && ativo(item.href) ? "page" : undefined}
+                    className={cn(
+                      "inline-flex items-center gap-1 whitespace-nowrap border-b-[3px] border-transparent px-3 py-2 text-sm font-medium text-ink hover:text-brand",
+                      !item.externo && ativo(item.href) && "border-brand-light text-brand",
+                    )}
+                  >
+                    {item.label}
+                    {item.externo && (
+                      <>
+                        <ExternalLink aria-hidden="true" className="h-3.5 w-3.5" />
+                        <span className="sr-only"> (abre o site atual em nova aba)</span>
+                      </>
+                    )}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <Link href={ROTAS.login} className={cn(buttonVariants({ variant: "outline", size: "sm" }), "ml-2 shrink-0")}>
+            <LogIn aria-hidden="true" className="h-4 w-4" />
+            Acessar o sistema
+          </Link>
+        </div>
 
         <button
           type="button"
@@ -87,6 +95,16 @@ export function SiteHeader() {
                 </Link>
               </li>
             ))}
+            <li className="mt-2 border-t border-line pt-2">
+              <Link
+                href={ROTAS.login}
+                onClick={() => setAberto(false)}
+                className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-medium text-brand hover:bg-brand-soft"
+              >
+                <LogIn aria-hidden="true" className="h-4 w-4" />
+                Acessar o sistema
+              </Link>
+            </li>
           </ul>
         </nav>
       )}
