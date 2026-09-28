@@ -24,7 +24,7 @@ Operação:
 - Ver se está no ar: `systemctl status faperon-webhook`
 - Log de cada deploy: `infra/deploy.log` (ou `journalctl -u faperon-webhook -f` para o listener)
 - `deploy.sh` só reconstrói quando há commit novo em `origin/main`; usa `flock` para não rodar dois deploys ao mesmo tempo
-- `make funnel-off` desliga só a porta 3000 (site); o webhook fica em outra porta e continua no ar
+- `make funnel-off` desliga só a porta 3000 (site); o webhook fica em outra porta e continua no ar (antes usava `tailscale funnel reset`, que derrubava os dois)
 
 # Checklist de demo (notebook)
 

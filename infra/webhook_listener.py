@@ -13,6 +13,7 @@ DEPLOY_SCRIPT = os.path.join(REPO_DIR, "infra", "deploy.sh")
 SECRET = os.environ.get("GITHUB_WEBHOOK_SECRET", "")
 HOST = "127.0.0.1"
 PORT = 9001
+MAX_BODY_SIZE = 5 * 1024 * 1024  # payloads de push do GitHub não passam disso
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -29,6 +30,9 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         length = int(self.headers.get("Content-Length", 0))
+        if length > MAX_BODY_SIZE:
+            self._reject(413)
+            return
         body = self.rfile.read(length)
 
         signature = self.headers.get("X-Hub-Signature-256", "")

@@ -42,5 +42,5 @@ funnel:
 	tailscale funnel --bg 3000
 
 funnel-off:
-	tailscale funnel reset
+	tailscale funnel 3000 off
 
