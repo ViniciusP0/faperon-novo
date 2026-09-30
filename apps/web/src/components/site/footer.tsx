@@ -53,9 +53,13 @@ export function SiteFooter() {
           <p>Protótipo em avaliação. Dados do painel: IBGE (SIDRA). O site atual da FAPERON continua no ar.</p>
           <div className="flex shrink-0 items-center gap-3">
             <span className="text-sm">Desenvolvido por DATA-RO Inteligência Territorial</span>
-            <span className="inline-flex items-center rounded-lg bg-white px-1.5 py-1 shadow-sm">
-              <Image src="/logo-dataro.png" alt="DATA-RO – Inteligência Territorial" width={80} height={100} className="h-16 w-auto" />
-            </span>
+            <Image
+              src="/logo-dataro-v2.png"
+              alt="DATA-RO – Inteligência Territorial"
+              width={733}
+              height={841}
+              className="h-20 w-auto [filter:drop-shadow(0_0_2px_rgba(255,255,255,0.55))]"
+            />
           </div>
         </div>
       </div>
