@@ -162,39 +162,7 @@ export default async function InicioPage() {
       <h1 className="sr-only">FAPERON – Federação da Agricultura e Pecuária de Rondônia</h1>
       <HeroCarrossel rotulo={HERO.rotulo} slides={slides} />
 
-      <section aria-labelledby="sistema-titulo" className="container mt-8">
-        <Card className="p-5 md:p-6">
-          <h2 id="sistema-titulo" className="text-sm font-bold uppercase tracking-wide text-brand">
-            Sistema FAPERON
-          </h2>
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {SOBRE.sistema.entidades.map((e) => {
-              const Icone = ICONES_SISTEMA[e.nome] ?? Sprout;
-              return (
-                <li key={e.nome} className="flex">
-                  <a
-                    href={e.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group flex w-full items-center gap-3 rounded-xl border border-line p-4 transition-colors hover:border-brand-light hover:bg-brand-soft"
-                  >
-                    <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand group-hover:bg-white">
-                      <Icone aria-hidden="true" className="h-5 w-5" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block font-semibold uppercase leading-tight">{e.nome}</span>
-                      <span className="mt-0.5 block text-sm font-medium text-brand">{e.acao} →</span>
-                    </span>
-                    <span className="sr-only"> (abre em nova aba)</span>
-                  </a>
-                </li>
-              );
-            })}
-          </ul>
-        </Card>
-      </section>
-
-      <section aria-label="Notícias" className="mt-8 border-y border-line bg-white">
+      <section aria-label="Notícias" className="border-y border-line bg-white">
         <div className="container flex items-center gap-4 py-3 text-sm">
           <span className="shrink-0 font-bold uppercase tracking-wide text-brand">Notícias</span>
           <div className="group flex-1 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_2rem,black_calc(100%-2rem),transparent)]">
@@ -214,6 +182,38 @@ export default async function InicioPage() {
             <span className="sr-only"> (abre o site atual em nova aba)</span>
           </a>
         </div>
+      </section>
+
+      <section aria-labelledby="sistema-titulo" className="container mt-10">
+        <Card className="p-7 md:p-10">
+          <h2 id="sistema-titulo" className="text-xl font-bold uppercase tracking-wide text-brand md:text-2xl">
+            Sistema FAPERON
+          </h2>
+          <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {SOBRE.sistema.entidades.map((e) => {
+              const Icone = ICONES_SISTEMA[e.nome] ?? Sprout;
+              return (
+                <li key={e.nome} className="flex">
+                  <a
+                    href={e.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex w-full flex-col items-start justify-center gap-4 rounded-xl border border-line p-6 md:min-h-[11rem] transition-colors hover:border-brand-light hover:bg-brand-soft"
+                  >
+                    <span className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand group-hover:bg-white">
+                      <Icone aria-hidden="true" className="h-7 w-7" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-lg font-semibold uppercase leading-tight">{e.nome}</span>
+                      <span className="mt-1 block font-medium text-brand">{e.acao} →</span>
+                    </span>
+                    <span className="sr-only"> (abre em nova aba)</span>
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </Card>
       </section>
 
       <section aria-label={commodities.titulo} className="container mt-10">
