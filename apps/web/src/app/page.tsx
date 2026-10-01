@@ -1,4 +1,4 @@
-import { ExternalLink, GraduationCap, MapPin, Sprout, TrendingUp, Users, type LucideIcon } from "lucide-react";
+import { ArrowUpRight, ExternalLink, GraduationCap, MapPin, Sprout, TrendingUp, Users, type LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BannersSenar } from "@/components/inicio/banners-senar";
@@ -60,7 +60,7 @@ export default async function InicioPage() {
     contarProdutos("agricultura"),
     contarMunicipios(),
   ]);
-  const { central, commodities, nosso_agro } = INICIO;
+  const { central, commodities, nosso_agro, sistema } = INICIO;
   const noticias = noticiasRecentes(3);
   const noticiasTicker = noticiasRecentes(5);
   const itens = (indicadores?.itens ?? []).map(normalizarDestaque);
@@ -106,7 +106,7 @@ export default async function InicioPage() {
       id: "numeros",
       titulo: HERO.numeros.titulo,
       conteudo: (
-        <div className="flex min-h-[560px] items-center bg-surface-alt md:min-h-[600px]">
+        <div className="flex min-h-[max(560px,calc(100svh-7.75rem))] items-center bg-surface-alt">
           <div className="w-full pb-24 pt-14 md:pb-28">
             <div className="container grid items-end gap-8 lg:grid-cols-[1.55fr_1fr] lg:gap-16">
               <h2 id="manchete" className="text-3xl font-semibold leading-[1.16] tracking-tight md:text-4xl lg:text-5xl">
@@ -184,13 +184,31 @@ export default async function InicioPage() {
         </div>
       </section>
 
-      <section aria-labelledby="sistema-titulo" className="container mt-10">
-        <Card className="p-7 md:p-10">
-          <h2 id="sistema-titulo" className="text-xl font-bold uppercase tracking-wide text-brand md:text-2xl">
-            Sistema FAPERON
-          </h2>
-          <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {SOBRE.sistema.entidades.map((e) => {
+      <section aria-labelledby="sistema-titulo" className="relative mt-10 overflow-hidden border-y border-line bg-surface-alt py-14 md:py-20">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-brand-lime/20 blur-3xl" />
+        <div aria-hidden="true" className="pointer-events-none absolute -bottom-32 -left-16 h-80 w-80 rounded-full bg-brand/10 blur-3xl" />
+        <div className="container relative grid gap-10">
+          <div className="max-w-3xl">
+            <p className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.18em] text-brand">
+              <span aria-hidden="true" className="h-[3px] w-10 rounded-full bg-brand-light" />
+              {sistema.etiqueta}
+            </p>
+            <h2 id="sistema-titulo" className="mt-4 text-3xl font-bold leading-tight tracking-tight text-brand-dark md:text-4xl">
+              {sistema.titulo}
+            </h2>
+            <p className="mt-4 max-w-[62ch] leading-relaxed text-ink-muted">{sistema.texto}</p>
+            <ul className="mt-6 flex gap-8">
+              {SOBRE.quem_somos.numeros.slice(1).map((n) => (
+                <li key={n.rotulo}>
+                  <p className="text-3xl font-bold tabular-nums text-brand">{n.valor}</p>
+                  <p className="mt-0.5 text-sm text-ink-muted">{n.rotulo}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {SOBRE.sistema.entidades.map((e, i) => {
               const Icone = ICONES_SISTEMA[e.nome] ?? Sprout;
               return (
                 <li key={e.nome} className="flex">
@@ -198,14 +216,19 @@ export default async function InicioPage() {
                     href={e.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group flex w-full flex-col items-start justify-center gap-4 rounded-xl border border-line p-6 md:min-h-[11rem] transition-colors hover:border-brand-light hover:bg-brand-soft"
+                    className="group relative flex w-full flex-col overflow-hidden rounded-2xl border border-line border-t-4 border-t-brand-light bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-t-brand-lime hover:bg-brand-dark hover:shadow-lg md:min-h-[17rem] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
                   >
-                    <span className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand group-hover:bg-white">
+                    <span aria-hidden="true" className="absolute right-5 top-3 text-6xl font-bold tabular-nums text-brand-soft transition-colors group-hover:text-white/10">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="relative inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-brand text-white transition-colors group-hover:bg-brand-lime group-hover:text-brand-dark">
                       <Icone aria-hidden="true" className="h-7 w-7" />
                     </span>
-                    <span className="min-w-0">
-                      <span className="block text-lg font-semibold uppercase leading-tight">{e.nome}</span>
-                      <span className="mt-1 block font-medium text-brand">{e.acao} →</span>
+                    <span className="relative mt-5 block text-lg font-bold uppercase leading-tight text-brand-dark group-hover:text-white">{e.nome}</span>
+                    <span className="relative mt-2 block leading-relaxed text-ink-muted group-hover:text-white/85">{sistema.descricoes[e.nome]}</span>
+                    <span className="relative mt-auto inline-flex items-center gap-1.5 pt-5 font-semibold text-brand group-hover:text-brand-lime">
+                      {e.acao}
+                      <ArrowUpRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                     </span>
                     <span className="sr-only"> (abre em nova aba)</span>
                   </a>
@@ -213,7 +236,7 @@ export default async function InicioPage() {
               );
             })}
           </ul>
-        </Card>
+        </div>
       </section>
 
       <section aria-label={commodities.titulo} className="container mt-10">

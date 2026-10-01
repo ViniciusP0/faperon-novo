@@ -14,7 +14,7 @@ interface SlideImagemProps {
 
 export function SlideImagem({ imagem, posicao, titulo, texto, ctaTexto, ctaUrl, etiqueta, prioridade = false }: SlideImagemProps) {
   return (
-    <div className="relative flex min-h-[560px] items-center overflow-hidden bg-brand-dark text-white md:min-h-[600px]">
+    <div className="relative flex min-h-[max(560px,calc(100svh-7.75rem))] items-center overflow-hidden bg-brand-dark text-white">
       <Image
         src={imagem}
         alt=""
