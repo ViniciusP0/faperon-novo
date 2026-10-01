@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mock – Informativos Técnicos em formato de livro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brand:#00604e;--brand-dark:#00463a;--brand-light:#63b45a;--brand-lime:#8bcd51;--brand-soft:#e6f2ea;
+  --ink:#14261f;--ink-muted:#46564f;--surface:#fff;--surface-alt:#f3f8f5;--line:#d3e1d8;--steel:#2b5672;
+}
+*{box-sizing:border-box;margin:0}
+body{font-family:Poppins,system-ui,sans-serif;color:var(--ink);background:var(--surface);-webkit-font-smoothing:antialiased;line-height:1.5}
+a{color:inherit}
+button{font:inherit;cursor:pointer}
+.container{width:min(1152px,100% - 48px);margin-inline:auto}
+:focus-visible{outline:3px solid var(--steel);outline-offset:2px}
+
+/* ---- cabeçalho (simplificado) ---- */
+header.site{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--line)}
+header.site .container{height:72px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.marca{display:flex;align-items:center;gap:6px;text-decoration:none}
+.marca img{width:52px;height:52px}
+.marca b{display:block;font-size:1.3rem;color:var(--brand);line-height:1}
+.marca small{display:block;font-size:.68rem;color:var(--ink-muted);max-width:11rem;line-height:1.25;margin-top:2px}
+nav.menu{display:flex;gap:4px}
+nav.menu a{padding:8px 12px;font-size:.88rem;font-weight:500;text-decoration:none;border-bottom:3px solid transparent}
+nav.menu a[aria-current]{color:var(--brand);border-color:var(--brand-light)}
+@media(max-width:900px){nav.menu{display:none}}
+
+/* ---- hero ---- */
+.hero{position:relative;overflow:hidden;color:#fff;background:#00463a;border-bottom:1px solid var(--line)}
+.hero .campo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 68%}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,70,58,.94) 0%,rgba(0,70,58,.78) 38%,rgba(0,70,58,.12) 72%,rgba(0,70,58,0) 100%)}
+.hero .container{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,640px);padding-block:84px 96px}
+.crumb{font-size:.82rem;color:rgba(255,255,255,.85)}
+.crumb a{color:#fff;text-decoration:underline;text-underline-offset:3px}
+.hero h1{font-size:clamp(2rem,4vw,3.1rem);line-height:1.12;letter-spacing:-.02em;margin-top:14px}
+.hero h1 em{font-style:normal;color:var(--brand-lime)}
+.hero p.lead{margin-top:16px;max-width:50ch;color:rgba(255,255,255,.92)}
+.hero .btn{background:var(--brand-lime);color:var(--brand-dark)}
+.hero .btn:hover{background:#9bdc60}
+.hero .btn.sec{background:transparent;color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.85)}
+.hero .btn.sec:hover{background:rgba(255,255,255,.14)}
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:10px;padding:12px 20px;font-weight:600;font-size:.95rem;text-decoration:none;background:var(--brand);color:#fff;transition:background .2s}
+.btn:hover{background:var(--brand-dark)}
+.btn.sec{background:#fff;color:var(--brand);box-shadow:inset 0 0 0 1.5px var(--brand)}
+.btn.sec:hover{background:var(--brand-soft)}
+.btn small{background:rgba(255,255,255,.22);border-radius:5px;padding:0 6px;font-size:.68rem}
+.hero .acoes{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
+@media(max-width:700px){.hero .container{padding-block:56px 64px}.hero::after{background:rgba(0,70,58,.82)}}
+
+/* ---- LIVRO 3D ---- */
+.book{--w:180px;--h:250px;--d:30px;width:var(--w);height:var(--h);transform-style:preserve-3d;transform:rotateY(-24deg);transition:transform .5s cubic-bezier(.2,.8,.2,1);position:relative;font-size:calc(var(--w) / 180 * 16px)}
+.book.lg{--w:230px;--h:320px;--d:36px}
+.book.sm{--w:150px;--h:210px;--d:24px}
+.book>*{position:absolute}
+.capa{inset:0;border-radius:3px 8px 8px 3px;overflow:hidden;transform:translateZ(calc(var(--d) / 2));color:#fff;padding:1.1em .9em .9em 1.55em;display:flex;flex-direction:column;background:var(--grad);box-shadow:inset 6px 0 8px -4px rgba(0,0,0,.35)}
+.capa::before{content:"";position:absolute;left:.65em;top:0;bottom:0;width:2px;background:rgba(255,255,255,.14);box-shadow:3px 0 0 rgba(0,0,0,.12)}
+.capa::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,.22),transparent 38%,transparent 70%,rgba(0,0,0,.18));pointer-events:none}
+.arcos{position:absolute;right:-30%;bottom:-18%;width:120%;aspect-ratio:1;opacity:.26;border-radius:50%;background:radial-gradient(circle at 50% 50%,transparent 0 22%,#fff 22.5% 25%,transparent 25.5% 36%,#fff 36.5% 39%,transparent 39.5% 50%,#fff 50.5% 53%,transparent 53.5%)}
+.capa .sel{font-size:.62em;letter-spacing:.14em;font-weight:600;opacity:.92;position:relative;display:flex;align-items:center;gap:.5em}
+.capa .sel img{width:2.4em;height:2.4em;object-fit:contain;filter:brightness(0) invert(1)}
+.capa .cat{font-size:.68em;margin-top:1.1em;font-weight:500;opacity:.92;position:relative;line-height:1.35}
+.capa .mes{font-family:"Source Serif 4",Georgia,serif;font-weight:700;font-size:1.45em;line-height:1;margin-top:auto;position:relative;white-space:nowrap}
+.capa .ano{font-size:.95em;font-weight:600;letter-spacing:.12em;margin-top:.3em;position:relative;color:var(--acento)}
+.capa .barra{height:3px;width:2.2em;background:var(--acento);margin-top:.7em;border-radius:2px;position:relative}
+.lombada{left:0;top:0;width:var(--d);height:100%;transform:rotateY(-90deg) translateZ(calc(var(--d) / 2));background:var(--grad);filter:brightness(.8);display:flex;align-items:center;justify-content:center}
+.lombada span{writing-mode:vertical-rl;transform:rotate(180deg);font-size:.6em;font-weight:600;letter-spacing:.1em;color:#fff;white-space:nowrap}
+.paginas{right:0;top:2%;width:var(--d);height:96%;transform:rotateY(90deg) translateZ(calc(var(--d) / 2));background:repeating-linear-gradient(90deg,#f6f3ea 0 2px,#d8d3c4 2px 3px)}
+.fundo{inset:0;transform:translateZ(calc(var(--d) / -2));background:var(--grad);filter:brightness(.7)}
+.sombra{left:4%;bottom:-6px;width:100%;height:22px;transform:translateZ(calc(var(--d) / 2)) translateY(14px);background:radial-gradient(ellipse at center,rgba(0,0,0,.32),transparent 68%);filter:blur(5px);transition:opacity .4s}
+.t-corte{--grad:linear-gradient(160deg,#0a7a63,#00463a 70%);--acento:var(--brand-lime)}
+.t-leite{--grad:linear-gradient(160deg,#3a7396,#1d3f57 70%);--acento:#bfe3f5}
+.t-boletim{--grad:linear-gradient(160deg,#a8843f,#5f4416 75%);--acento:#f4dd9c}
+
+/* ---- Últimas edições ---- */
+section.bloco{padding-block:64px}
+h2.tit{font-size:1.75rem;letter-spacing:-.01em}
+.tit-sub{color:var(--ink-muted);margin-top:4px;max-width:60ch}
+.destaques{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:28px}
+.destaque{display:grid;grid-template-columns:auto 1fr;gap:34px;align-items:center;background:var(--surface-alt);border-radius:18px;padding:34px 34px 34px 44px;border:1px solid var(--line);perspective:1200px}
+.destaque:hover .book{transform:rotateY(-10deg) translateY(-6px)}
+.destaque p.k{font-size:.74rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--brand)}
+.destaque h3{font-size:1.3rem;line-height:1.2;margin-top:6px}
+.destaque .quando{color:var(--ink-muted);font-size:.9rem;margin-top:6px}
+.destaque .acoes{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.selo{display:inline-block;background:var(--brand-lime);color:var(--brand-dark);font-weight:700;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;border-radius:99px;padding:2px 10px;margin-bottom:8px}
+@media(max-width:1000px){.destaques{grid-template-columns:1fr}}
+@media(max-width:520px){.destaque{grid-template-columns:1fr;justify-items:center;text-align:center;padding-left:34px}.destaque .acoes{justify-content:center}}
+
+/* ---- Estante ---- */
+.barra-estante{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px;border-bottom:1px solid var(--line);margin-top:24px}
+.abas{display:flex}
+.aba{background:none;border:0;border-bottom:3px solid transparent;padding:12px 18px;font-weight:500;color:var(--ink-muted)}
+.aba[aria-selected=true]{color:var(--brand);border-color:var(--brand-light)}
+.ferr{display:flex;gap:16px;flex-wrap:wrap;align-items:center;padding-bottom:8px}
+.chips{display:flex;gap:6px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:99px;padding:5px 14px;font-size:.84rem;font-weight:500;color:var(--ink-muted)}
+.chip[aria-pressed=true]{background:var(--brand);border-color:var(--brand);color:#fff}
+.vistas{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.vistas button{background:#fff;border:0;padding:6px 12px;font-size:.82rem;font-weight:500;color:var(--ink-muted)}
+.vistas button[aria-pressed=true]{background:var(--brand-soft);color:var(--brand)}
+.ano-tit{font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:var(--ink-muted);margin:34px 0 6px;display:flex;align-items:center;gap:12px}
+.ano-tit::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* prateleira de capas */
+.prateleira{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:0 26px;perspective:1400px;position:relative;isolation:isolate}
+.item{position:relative;padding:26px 0 0;display:flex;flex-direction:column;align-items:center;background:none;border:0;text-align:center}
+.item .palco{height:236px;display:flex;align-items:flex-end;justify-content:center;width:100%}
+.item:hover .book,.item:focus-visible .book{transform:rotateY(-8deg) translateY(-10px)}
+.item:hover .sombra{opacity:.5}
+.item::after{content:"";position:absolute;left:-14px;right:-14px;top:262px;height:12px;background:linear-gradient(#e7e1d3,#cfc7b3);border-radius:0 0 4px 4px;box-shadow:0 8px 14px -6px rgba(0,0,0,.25);z-index:-1}
+.item .rotulo{margin-top:26px;font-weight:600;font-size:.92rem}
+.item .data{font-size:.78rem;color:var(--ink-muted)}
+.item .abrir{margin-top:2px;font-size:.78rem;font-weight:600;color:var(--brand);opacity:0;transition:opacity .2s}
+.item:hover .abrir,.item:focus-visible .abrir{opacity:1}
+
+/* lombadas */
+.lombadas{display:flex;align-items:flex-end;gap:4px;padding:30px 24px 0;overflow-x:auto;background:linear-gradient(#fff,var(--surface-alt));border-radius:14px 14px 0 0;border:1px solid var(--line);border-bottom:0;min-height:300px}
+.lomb{flex:none;width:46px;height:var(--h);border:0;border-radius:3px 3px 0 0;background:var(--grad);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:12px 0;box-shadow:inset 3px 0 4px -2px rgba(255,255,255,.3),inset -3px 0 4px -2px rgba(0,0,0,.3);transition:transform .25s,box-shadow .25s}
+.lomb:hover,.lomb:focus-visible{transform:translateY(-16px);box-shadow:0 14px 18px -8px rgba(0,0,0,.4),inset 3px 0 4px -2px rgba(255,255,255,.3)}
+.lomb span{writing-mode:vertical-rl;transform:rotate(180deg);font-size:.78rem;font-weight:600;letter-spacing:.05em;white-space:nowrap}
+.lomb i{display:block;width:20px;height:3px;background:var(--acento);border-radius:2px}
+.base-lomb{height:16px;background:linear-gradient(#cfc7b3,#b9b09a);border-radius:0 0 8px 8px;box-shadow:0 10px 16px -8px rgba(0,0,0,.35)}
+
+/* lista (igual à atual, mais acessível) */
+.lista{list-style:none;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:0 40px}
+.lista a{display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:center;border-bottom:1px solid var(--line);padding:12px 4px;text-decoration:none}
+.lista a:hover{background:var(--surface-alt)}
+.lista small{color:var(--ink-muted)}
+.lista b.pdf{font-size:.7rem;border:1px solid var(--brand);color:var(--brand);border-radius:4px;padding:0 6px}
+@media(max-width:800px){.lista{grid-template-columns:1fr}}
+
+/* boletins */
+.faixa-bol{background:linear-gradient(135deg,#fbf6e8,#f3f8f5);border-block:1px solid var(--line)}
+.bols{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:28px}
+.bol{display:grid;grid-template-columns:auto 1fr;gap:30px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:16px;padding:28px 30px 28px 38px;text-align:left;width:100%;perspective:1200px}
+.bol:hover .book{transform:rotateY(-10deg) translateY(-6px)}
+.bol h3{font-size:1.1rem;line-height:1.25}
+.bol p{font-size:.88rem;color:var(--ink-muted);margin-top:4px}
+@media(max-width:1000px){.bols{grid-template-columns:1fr}}
+
+/* ---- Pré-visualização (modal) ---- */
+dialog{border:0;border-radius:20px;padding:0;width:min(880px,calc(100% - 32px));box-shadow:0 30px 80px -20px rgba(0,0,0,.5);background:#fff;margin:auto;overflow:visible}
+dialog::backdrop{background:rgba(7,28,22,.62);backdrop-filter:blur(3px)}
+.modal{display:grid;grid-template-columns:1fr 1fr;min-height:430px}
+.modal .vitrine{background:radial-gradient(circle at 50% 40%,#fff,var(--surface-alt) 70%);display:grid;place-items:center;padding:34px 20px;perspective:1400px;border-radius:20px 0 0 20px;overflow:hidden}
+.modal .info{padding:34px 34px 28px;display:flex;flex-direction:column}
+.modal .k{font-size:.74rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--brand)}
+.modal h3{font-size:1.5rem;line-height:1.2;margin-top:6px}
+.modal .meta{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin-top:18px;font-size:.88rem}
+.modal .meta dt{color:var(--ink-muted)}
+.modal .meta dd{font-weight:500;margin:0}
+.modal .nota{margin-top:16px;font-size:.84rem;color:var(--ink-muted);background:var(--surface-alt);border-radius:10px;padding:10px 12px}
+.modal .acoes{display:flex;gap:10px;flex-wrap:wrap;margin-top:auto;padding-top:22px}
+.fechar{position:absolute;right:-10px;top:-10px;z-index:2;border:0;background:#fff;border-radius:50%;width:38px;height:38px;font-size:1.3rem;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+.nav-mod{display:flex;gap:8px;margin-top:14px}
+.nav-mod button{background:none;border:1px solid var(--line);border-radius:8px;padding:4px 12px;font-size:.8rem;color:var(--ink-muted)}
+.nav-mod button:disabled{opacity:.4;cursor:default}
+.vitrine .book{transform:rotateY(-30deg);animation:gira .9s cubic-bezier(.2,.8,.2,1)}
+@keyframes gira{from{transform:rotateY(-95deg) scale(.8);opacity:0}to{transform:rotateY(-30deg)}}
+.vitrine:hover .book{transform:rotateY(-12deg)}
+@media(max-width:760px){.modal{grid-template-columns:1fr}.modal .vitrine{border-radius:20px 20px 0 0;padding-block:24px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ---- rodapé do mock ---- */
+footer.site{background:var(--brand-dark);color:#fff;padding:34px 0;font-size:.85rem}
+.mock-tag{position:fixed;left:14px;bottom:14px;z-index:50;background:#14261f;color:#fff;font-size:.74rem;padding:6px 12px;border-radius:99px;opacity:.88}
+.refs{background:var(--surface-alt);border-top:1px solid var(--line)}
+.refs ul{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;list-style:none;padding:0;margin-top:22px}
+.refs li{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px;font-size:.88rem;color:var(--ink-muted)}
+.refs li b{display:block;color:var(--ink);margin-bottom:4px}
+</style>
+</head>
+<body>
+<header class="site">
+  <div class="container">
+    <a class="marca" href="#"><img src="../../apps/web/public/marca-faperon.png" alt=""><span><b>FAPERON</b><small>Federação da Agricultura e Pecuária de Rondônia</small></span></a>
+    <nav class="menu" aria-label="Principal"><a href="#">Início</a><a href="#">Central de Inteligência</a><a href="#">Sobre</a><a href="#" aria-current="page">Informativos Técnicos</a><a href="#">Fale Conosco</a></nav>
+  </div>
+</header>
+
+<section class="hero">
+  <img class="campo" src="../../apps/web/public/hero/campo-rondonia.jpg" alt="Lavoura em Presidente Médici, Rondônia" width="2000" height="1336">
+  <div class="container">
+    <div>
+      <p class="crumb"><a href="#">Início</a> / Informativos Técnicos</p>
+      <h1>Informativos mensais do <em>agro de Rondônia</em>, em um só lugar.</h1>
+      <p class="lead">Acompanhamento mensal do setor agropecuário: bovinocultura de corte e de leite, além dos boletins técnicos. Escolha a edição, veja a capa e baixe o PDF.</p>
+      <div class="acoes"><a class="btn" href="#estante">Abrir a estante</a><a class="btn sec" href="#boletins">Boletins técnicos</a></div>
+    </div>
+  </div>
+</section>
+
+<section class="bloco container" aria-labelledby="ult">
+  <h2 class="tit" id="ult">Últimas edições</h2>
+  <p class="tit-sub">As publicações mais recentes de cada categoria, em destaque.</p>
+  <div class="destaques" id="destaques"></div>
+</section>
+
+<section class="bloco container" id="estante" style="padding-top:8px" aria-labelledby="arq">
+  <h2 class="tit" id="arq">Estante de informativos</h2>
+  <p class="tit-sub">Todo o arquivo mensal. Escolha a categoria, o ano e a forma de visualizar.</p>
+  <div class="barra-estante">
+    <div class="abas" role="tablist" aria-label="Categoria" id="abas"></div>
+    <div class="ferr">
+      <div class="chips" role="group" aria-label="Filtrar por ano" id="chips"></div>
+      <div class="vistas" role="group" aria-label="Forma de visualizar" id="vistas">
+        <button data-v="capas" aria-pressed="true">Capas</button><button data-v="lombadas" aria-pressed="false">Lombadas</button><button data-v="lista" aria-pressed="false">Lista</button>
+      </div>
+    </div>
+  </div>
+  <div id="conteudo" role="tabpanel"></div>
+</section>
+
+<div class="faixa-bol" id="boletins">
+  <section class="bloco container" aria-labelledby="bol">
+    <h2 class="tit" id="bol">Boletins técnicos</h2>
+    <p class="tit-sub">Edições semestrais, com mais profundidade que o informativo mensal.</p>
+    <div class="bols" id="bols"></div>
+  </section>
+</div>
+
+<section class="bloco refs">
+  <div class="container">
+    <h2 class="tit">Referências desta proposta</h2>
+    <ul>
+      <li><b>Loja Missão (referência do analista)</b>Livros fotografados em três quartos, com lombada e corte das páginas visíveis, sobre fundo limpo; título discreto abaixo e vitrine em fileira.</li>
+      <li><b>Apple Books / Kindle</b>Prateleira de capas com sombra de apoio e data abaixo. Base da visão "Capas".</li>
+      <li><b>Google Play Livros / bibliotecas físicas</b>Lombadas em pé, que sobem ao passar o mouse. Base da visão "Lombadas", boa para muitas edições.</li>
+      <li><b>Issuu / Calaméo</b>Pré-visualização antes de baixar: o livro gira numa janela com ficha e botão de PDF. Base do painel de pré-visualização.</li>
+    </ul>
+  </div>
+</section>
+
+<footer class="site"><div class="container">FAPERON – Mock de proposta visual. Dados reais dos informativos já publicados; capas ilustrativas geradas. Foto do Hero: lavoura em Presidente Médici (RO), Marco.inf, domínio público, via Wikimedia Commons.</div></footer>
+<div class="mock-tag">MOCK · proposta de layout</div>
+
+<dialog id="modal" aria-labelledby="m-tit"><button class="fechar" id="fechar" aria-label="Fechar">×</button><div class="modal" id="modal-corpo"></div></dialog>
+
+<script>
+const DADOS = {"categorias":[{"id":"corte","itens":[{"titulo":"Dezembro/2025","data":"2025-12-01","url":"https://www.faperon.com.br/_files/ugd/cbbcc7_e54c0da4618845329cfb29cb3b6935e0.pdf"},{"titulo":"Novembro/2025","data":"2025-11-03","url":"https://www.faperon.com.br/_files/ugd/cbbcc7_863e859b90ed49c59a18b98ac8f584e4.pdf"},{"titulo":"Outubro/2025","data":"2025-10-31","url":"https://www.faperon.com.br/_files/ugd/cbbcc7_e121129565cd44b9bfb3b1283b78211d.pdf"},{"titulo":"Setembro/2025","data":"2025-09-30","url":"https://www.faperon.com.br/_files/ugd/cbbcc7_00528760956640b6aa832516336d39ef.pdf"},{"titulo":"Agosto/2025","data":"2025-08-31","url":"https://www.faperon.com.br/_files/ugd/cbbcc7_7776f79c9f1e40349e4689b061aba2f1.pdf"},{"titulo":"Julho/2025","data":"2025-07-31","url":"https://www.faperon.com.br/_files/ugd/cbbcc7_da235c7d36514de899a86278ac51d8f5.pdf"},{"titulo":"Junho/2025","data":"2025-06-30","url":"https://www.faperon.com.br/_files/ugd/cbbcc7_3687b2a213384975a67e626039c1dcf2.pdf"},{"titulo":"Maio/2025","data":"2025-05-31","url":"https://www.faperon.com.br/_files/ugd/cbbcc7_aa002ea09f7f4fc98645296e48607564.pdf"},{"titulo":"Abril/2025","data":"2025-04-30","url":"https://www.faperon.com.br/_files/ugd/cbbcc7_81a88189108644e0a6b773e6e84e9781.pdf"},{"titulo":"Março/2025","data":"2025-03-31","url":"https://www.faperon.com.br/_files/ugd/cbbcc7_f5a473f336be474b83c41f4c31e6622e.pdf"},{"titulo":"Fevereiro/2025","data":"2025-02-28","url":"https://www.faperon.com.br/_files/ugd/cbbcc7_c95e2feaf69a4063a29651e219acc946.pdf"},{"titulo":"Janeiro/2025","data":"2025-01-31","url":"https://www.faperon.com.br/_files/ugd/cbbcc7_811e31831ae643409a3256d90a2e8f51.pdf"}],"titulo":"Bovinocultura de Corte","curto":"Corte"},{"id":"leite","itens":[{"titulo":"Outubro/2025","data":"2025-10-06","url":"https://www.faperon.com.br/_files/ugd/cbbcc7_508c333d190b42c992ab6b66d402d3d7.pdf"},{"titulo":"Setembro/2025","data":"2025-09-01","url":"https://www.faperon.com.br/_files/ugd/cbbcc7_a6626c77cda24d9d9976c05b420d30dd.pdf"},{"titulo":"Agosto/2025","data":"2025-08-04","url":"https://www.faperon.com.br/_files/ugd/cbbcc7_38a24ca3ba344230953929f9676c2708.pdf"},{"titulo":"Julho/2025","data":"2025-07-07","url":"https://www.faperon.com.br/_files/ugd/cbbcc7_19e29eac3bb34dacbdbabf7f02701612.pdf"},{"titulo":"Junho/2025","data":"2025-06-02","url":"https://www.faperon.com.br/_files/ugd/cbbcc7_5a1e605b9585438a85eee00dcafcd8df.pdf"},{"titulo":"Maio/2025","data":"2025-05-05","url":"https://www.faperon.com.br/_files/ugd/cbbcc7_fe063d848a4949fa8952e5cf307eb300.pdf"},{"titulo":"Abril/2025","data":"2025-04-07","url":"https://www.faperon.com.br/_files/ugd/cbbcc7_d3a74ff36b5e471e9366294475587551.pdf"},{"titulo":"Março/2025","data":"2025-03-03","url":"https://www.faperon.com.br/_files/ugd/cbbcc7_0791828463bc4c9ba036cd63d765fe22.pdf"},{"titulo":"Fevereiro/2025","data":"2025-02-03","url":"https://www.faperon.com.br/_files/ugd/cbbcc7_4e86cccbc80d4fc5944cb03e5faef206.pdf"},{"titulo":"Janeiro/2025","data":"2025-01-06","url":"https://www.faperon.com.br/_files/ugd/cbbcc7_dc42873caeaf44a88c2254f528c164f7.pdf"},{"titulo":"Dezembro/2024","data":"2024-12-02","url":"https://www.faperon.com.br/_files/ugd/cbbcc7_c54e587e556b473bad53a5506af4b1e0.pdf"}],"titulo":"Bovinocultura de Leite","curto":"Leite"}],"boletins":[{"titulo":"Boletim Bovinocultura de Corte 2024.2","data":"2025-10-10","categoria":"corte","url":"https://www.faperon.com.br/_files/ugd/cbbcc7_ce70c6768e4743768bc857a213aaa338.pdf"},{"titulo":"Boletim Bovinocultura de Leite 2024.2","data":"2025-10-10","categoria":"leite","url":"https://www.faperon.com.br/_files/ugd/cbbcc7_0769eb22d9bd466c8d1607173b9e57fc.pdf"}]};
+const TEMA = { corte:"t-corte", leite:"t-leite", boletim:"t-boletim" };
+const LOGO = "../../apps/web/public/marca-faperon.png";
+const fmt = d => new Date(d+"T12:00:00").toLocaleDateString("pt-BR",{day:"2-digit",month:"long",year:"numeric"});
+const fmtCurta = d => new Date(d+"T12:00:00").toLocaleDateString("pt-BR");
+const $ = s => document.querySelector(s);
+const anoDe = i => Number(i.data.slice(0,4));
+const cats = DADOS.categorias;
+const boletins = DADOS.boletins.map(b => ({...b, boletim:true}));
+const catDe = id => cats.find(c => c.id === id);
+const recente = c => c.itens.reduce((a,b)=> a.data>b.data?a:b);
+
+/** HTML de um livro 3D (capa, lombada, corte das páginas e fundo). */
+function livro(it, cat, tam="", extra="") {
+  const b = it.boletim;
+  const tema = b ? TEMA.boletim : TEMA[cat.id];
+  const [mes, ano] = b ? [it.titulo.match(/\d{4}\.\d/)[0], "2º SEM. 2024"] : it.titulo.split("/");
+  const tipo = b ? "Boletim técnico" : "Informativo mensal";
+  const assunto = b ? cat.titulo : cat.titulo;
+  const lomb = b ? "BOLETIM " + mes : cat.curto.toUpperCase() + " · " + mes.slice(0,3).toUpperCase() + " " + ano;
+  return `<div class="book ${tam} ${tema}" ${extra} aria-hidden="true">
+    <div class="fundo"></div><div class="paginas"></div>
+    <div class="lombada"><span>${lomb}</span></div>
+    <div class="capa"><div class="arcos"></div>
+      <div class="sel"><img src="${LOGO}" alt="">FAPERON</div>
+      <div class="cat">${tipo}<br>${assunto}</div>
+      <div class="mes">${mes}</div><div class="ano">${ano}</div><div class="barra"></div>
+    </div><div class="sombra"></div></div>`;
+}
+
+
+/* últimas edições */
+$("#destaques").innerHTML = cats.map(c=>{
+  const it = recente(c);
+  return `<article class="destaque">${livro(it,c,"lg")}
+    <div><span class="selo">Novo</span><p class="k">${c.titulo}</p><h3>Informativo mensal, ${it.titulo}</h3>
+    <p class="quando">Publicado em ${fmt(it.data)}</p>
+    <div class="acoes"><button class="btn sec" data-abrir="${c.id}|${it.url}">Pré-visualizar</button><a class="btn" href="${it.url}" target="_blank" rel="noopener">Baixar <small>PDF</small></a></div></div>
+  </article>`;
+}).join("");
+
+/* boletins */
+$("#bols").innerHTML = boletins.map(b=>`<button class="bol" data-abrir="boletim|${b.url}">${livro(b,catDe(b.categoria),"sm")}
+  <span><h3>${b.titulo}</h3><p>Publicado em ${fmt(b.data)}</p><p style="margin-top:10px;color:var(--brand);font-weight:600">Pré-visualizar →</p></span></button>`).join("");
+
+/* estante */
+let catId = cats[0].id, ano = null, vista = "capas";
+function desenhaEstante(){
+  const c = catDe(catId);
+  $("#abas").innerHTML = cats.map(x=>`<button class="aba" role="tab" aria-selected="${x.id===catId}" data-cat="${x.id}">${x.curto}</button>`).join("");
+  const anos = [...new Set(c.itens.map(anoDe))].sort((a,b)=>b-a);
+  $("#chips").innerHTML = [null,...anos].map(a=>`<button class="chip" aria-pressed="${a===ano}" data-ano="${a??""}">${a??"Todos"}</button>`).join("");
+  document.querySelectorAll("#vistas button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.v===vista));
+  const grupos = anos.filter(a=>ano===null||a===ano).map(a=>({ano:a,itens:c.itens.filter(i=>anoDe(i)===a).sort((x,y)=>y.data.localeCompare(x.data))}));
+  let html = "";
+  for (const g of grupos){
+    html += `<h3 class="ano-tit">${g.ano}</h3>`;
+    if (vista==="capas") html += `<div class="prateleira">${g.itens.map(i=>`<button class="item" data-abrir="${c.id}|${i.url}" aria-label="${c.titulo}, ${i.titulo}. Pré-visualizar"><div class="palco">${livro(i,c,"sm")}</div><span class="rotulo">${i.titulo}</span><span class="data">${fmtCurta(i.data)}</span><span class="abrir">Pré-visualizar</span></button>`).join("")}</div>`;
+    else if (vista==="lombadas") html += `<div class="lombadas">${g.itens.map((i,k)=>`<button class="lomb ${TEMA[c.id]}" style="--h:${190+((k*37)%5)*14}px" data-abrir="${c.id}|${i.url}" aria-label="${c.titulo}, ${i.titulo}. Pré-visualizar"><i></i><span>${i.titulo.replace("/"," · ")}</span><i></i></button>`).join("")}</div><div class="base-lomb"></div>`;
+    else html += `<ul class="lista">${g.itens.map(i=>`<li><a href="${i.url}" target="_blank" rel="noopener"><b>${i.titulo}</b><small>${fmtCurta(i.data)}</small><b class="pdf">PDF</b></a></li>`).join("")}</ul>`;
+  }
+  $("#conteudo").innerHTML = html;
+}
+desenhaEstante();
+document.addEventListener("click", e=>{
+  const t = e.target.closest("[data-cat],[data-ano],[data-v],[data-abrir]");
+  if(!t) return;
+  if(t.dataset.cat){catId=t.dataset.cat;ano=null;desenhaEstante()}
+  else if(t.dataset.ano!==undefined){ano=t.dataset.ano===""?null:Number(t.dataset.ano);desenhaEstante()}
+  else if(t.dataset.v){vista=t.dataset.v;desenhaEstante()}
+  else if(t.dataset.abrir){abrir(...t.dataset.abrir.split("|"))}
+});
+
+/* pré-visualização */
+const dlg = $("#modal");
+function abrir(catIdArg, url){
+  let it, c;
+  if (catIdArg==="boletim"){ it = boletins.find(b=>b.url===url); c = catDe(it.categoria); }
+  else { c = catDe(catIdArg); it = c.itens.find(i=>i.url===url); }
+  const lista = it.boletim ? boletins : c.itens;
+  const idx = lista.indexOf(it);
+  $("#modal-corpo").innerHTML = `<div class="vitrine">${livro(it,c,"lg")}</div>
+    <div class="info"><span class="k">${it.boletim?"Boletim técnico":"Informativo mensal"}</span>
+      <h3 id="m-tit">${it.boletim?it.titulo:c.titulo+" – "+it.titulo}</h3>
+      <dl class="meta"><dt>Categoria</dt><dd>${c.titulo}</dd><dt>Publicado em</dt><dd>${fmt(it.data)}</dd><dt>Formato</dt><dd>PDF, abre em nova aba</dd></dl>
+      <p class="nota">Na versão final, a capa pode ser a primeira página do próprio PDF, gerada automaticamente.</p>
+      <div class="nav-mod"><button ${idx>=lista.length-1?"disabled":""} data-prox="${idx+1}">← Edição anterior</button><button ${idx<=0?"disabled":""} data-prox="${idx-1}">Próxima edição →</button></div>
+      <div class="acoes"><a class="btn" href="${it.url}" target="_blank" rel="noopener">Baixar <small>PDF</small></a><button class="btn sec" id="fechar2">Fechar</button></div></div>`;
+  $("#modal-corpo").querySelectorAll("[data-prox]").forEach(b=>b.onclick=()=>{ const n=lista[Number(b.dataset.prox)]; if(n) abrir(it.boletim?"boletim":c.id,n.url) });
+  $("#fechar2").onclick = ()=>dlg.close();
+  if(!dlg.open) dlg.showModal();
+}
+$("#fechar").onclick = ()=>dlg.close();
+dlg.addEventListener("click", e=>{ if(e.target===dlg) dlg.close() });
+</script>
+</body>
+</html>
