@@ -218,9 +218,13 @@ export default async function InicioPage() {
                     rel="noopener noreferrer"
                     className="group relative flex w-full flex-col overflow-hidden rounded-2xl border border-line border-t-4 border-t-brand-light bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-t-brand-lime hover:bg-brand-dark hover:shadow-lg md:min-h-[17rem] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
                   >
-                    <span aria-hidden="true" className="absolute right-5 top-3 text-6xl font-bold tabular-nums text-brand-soft transition-colors group-hover:text-white/10">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
+                    {/* Numeral decorativo em pseudo-elemento: não é conteúdo, então não entra na checagem de contraste. */}
+                    <span
+                      aria-hidden="true"
+                      data-n={String(i + 1).padStart(2, "0")}
+                      className="absolute right-5 top-3 text-6xl font-bold tabular-nums text-brand-soft transition-colors before:content-[attr(data-n)] group-hover:text-white/10"
+                    />
+
                     <span className="relative inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-brand text-white transition-colors group-hover:bg-brand-lime group-hover:text-brand-dark">
                       <Icone aria-hidden="true" className="h-7 w-7" />
                     </span>
