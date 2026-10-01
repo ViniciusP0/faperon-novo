@@ -58,7 +58,7 @@ export function SiteFooter() {
               alt="DATA-RO – Inteligência Territorial"
               width={733}
               height={841}
-              className="h-20 w-auto [filter:drop-shadow(0_0_2px_rgba(255,255,255,0.55))]"
+              className="h-10 w-auto [filter:drop-shadow(0_0_2px_rgba(255,255,255,0.55))]"
             />
           </div>
         </div>
