@@ -5,10 +5,18 @@ import { LINKS_INSTITUCIONAIS, MENU } from "@/lib/site";
 export function SiteFooter() {
   return (
     <footer className="mt-20 bg-brand-dark text-white">
-      <div className="container grid gap-10 py-12 md:grid-cols-3">
+      <div className="container grid gap-10 py-12 md:grid-cols-[1.5fr_1fr_1fr]">
         <div>
-          <Image src="/logo-faperon-branca.png" alt="FAPERON" width={172} height={44} className="h-10 w-auto" />
-          <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/90">
+          <span className="inline-block rounded-xl bg-white p-4 shadow-sm">
+            <Image
+              src="/logos-sistema-faperon.png"
+              alt="FAPERON, SENAR Rondônia e Sindicato dos Produtores Rurais de Rondônia"
+              width={614}
+              height={195}
+              className="h-auto w-full max-w-[22rem]"
+            />
+          </span>
+          <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/90">
             Federação da Agricultura e Pecuária do Estado de Rondônia. Representação, inteligência e apoio ao produtor rural.
           </p>
         </div>
