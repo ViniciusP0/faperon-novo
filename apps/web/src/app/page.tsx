@@ -184,7 +184,7 @@ export default async function InicioPage() {
         </div>
       </section>
 
-      <section aria-labelledby="sistema-titulo" className="relative mt-10 overflow-hidden border-y border-line bg-surface-alt py-14 md:py-20">
+      <section aria-labelledby="sistema-titulo" className="relative mt-10 overflow-hidden border-y border-line bg-surface-alt/80 py-14 md:py-20">
         <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-brand-lime/20 blur-3xl" />
         <div aria-hidden="true" className="pointer-events-none absolute -bottom-32 -left-16 h-80 w-80 rounded-full bg-brand/10 blur-3xl" />
         <div className="container relative grid gap-10">

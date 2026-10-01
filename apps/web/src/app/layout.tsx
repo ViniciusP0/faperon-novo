@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { FundoParallax } from "@/components/site/fundo-parallax";
 import { SiteFooter } from "@/components/site/footer";
 import { SiteHeader } from "@/components/site/header";
 import { SITE_URL } from "@/lib/site";
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         >
           Ir para o conteúdo
         </a>
+        <FundoParallax />
         <SiteHeader />
         <main id="conteudo" className="flex-1">
           <Providers>{children}</Providers>
