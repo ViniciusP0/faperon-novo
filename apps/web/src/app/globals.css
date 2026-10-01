@@ -103,3 +103,225 @@ body {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
 }
+
+/* ---- Livro 3D dos informativos (capa, lombada, corte das páginas e sombra) ---- */
+.livro {
+  --w: 180px;
+  --h: 250px;
+  --d: 30px;
+  position: relative;
+  width: var(--w);
+  height: var(--h);
+  font-size: calc(var(--w) / 180 * 16px);
+  transform-style: preserve-3d;
+  transform: rotateY(-24deg);
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.livro-lg {
+  --w: 230px;
+  --h: 320px;
+  --d: 36px;
+}
+.livro-sm {
+  --w: 150px;
+  --h: 210px;
+  --d: 24px;
+}
+.livro > * {
+  position: absolute;
+}
+.livro-tema-corte {
+  --grad: linear-gradient(160deg, #0a7a63, #00463a 70%);
+  --acento: var(--brand-lime);
+}
+.livro-tema-leite {
+  --grad: linear-gradient(160deg, #3a7396, #1d3f57 70%);
+  --acento: #bfe3f5;
+}
+.livro-tema-boletim {
+  --grad: linear-gradient(160deg, #a8843f, #5f4416 75%);
+  --acento: #f4dd9c;
+}
+.livro__capa {
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 1.1em 0.9em 0.9em 1.55em;
+  border-radius: 3px 8px 8px 3px;
+  color: #fff;
+  background: var(--grad);
+  transform: translateZ(calc(var(--d) / 2));
+  box-shadow: inset 6px 0 8px -4px rgba(0, 0, 0, 0.35);
+}
+.livro__capa::before {
+  content: "";
+  position: absolute;
+  left: 0.65em;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: 3px 0 0 rgba(0, 0, 0, 0.12);
+}
+.livro__capa::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0.22), transparent 38%, transparent 70%, rgba(0, 0, 0, 0.18));
+}
+.livro__arcos {
+  position: absolute;
+  right: -30%;
+  bottom: -18%;
+  width: 120%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  opacity: 0.26;
+  background: radial-gradient(
+    circle at 50% 50%,
+    transparent 0 22%,
+    #fff 22.5% 25%,
+    transparent 25.5% 36%,
+    #fff 36.5% 39%,
+    transparent 39.5% 50%,
+    #fff 50.5% 53%,
+    transparent 53.5%
+  );
+}
+.livro__selo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-size: 0.62em;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  opacity: 0.92;
+}
+.livro__selo img {
+  width: 2.4em;
+  height: 2.4em;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+.livro__tipo {
+  position: relative;
+  margin-top: 1.1em;
+  font-size: 0.68em;
+  font-weight: 500;
+  line-height: 1.35;
+  opacity: 0.92;
+}
+.livro__mes {
+  position: relative;
+  margin-top: auto;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.45em;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+.livro__ano {
+  position: relative;
+  margin-top: 0.3em;
+  font-size: 0.95em;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--acento);
+}
+.livro__barra {
+  position: relative;
+  width: 2.2em;
+  height: 3px;
+  margin-top: 0.7em;
+  border-radius: 2px;
+  background: var(--acento);
+}
+.livro__lombada {
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--d);
+  height: 100%;
+  background: var(--grad);
+  filter: brightness(0.8);
+  transform: rotateY(-90deg) translateZ(calc(var(--d) / 2));
+}
+.livro__lombada span {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 0.6em;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: #fff;
+  white-space: nowrap;
+}
+.livro__paginas {
+  right: 0;
+  top: 2%;
+  width: var(--d);
+  height: 96%;
+  background: repeating-linear-gradient(90deg, #f6f3ea 0 2px, #d8d3c4 2px 3px);
+  transform: rotateY(90deg) translateZ(calc(var(--d) / 2));
+}
+.livro__fundo {
+  inset: 0;
+  background: var(--grad);
+  filter: brightness(0.7);
+  transform: translateZ(calc(var(--d) / -2));
+}
+.livro__sombra {
+  left: 4%;
+  bottom: -6px;
+  width: 100%;
+  height: 22px;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.32), transparent 68%);
+  filter: blur(5px);
+  transform: translateZ(calc(var(--d) / 2)) translateY(14px);
+  transition: opacity 0.4s;
+}
+.livro-gatilho:hover .livro,
+.livro-gatilho:focus-visible .livro {
+  transform: rotateY(-8deg) translateY(-10px);
+}
+.livro-gatilho:hover .livro__sombra {
+  opacity: 0.5;
+}
+
+/* Lombadas em pé na estante */
+.lombada-livro {
+  background: var(--grad);
+  box-shadow: inset 3px 0 4px -2px rgba(255, 255, 255, 0.3), inset -3px 0 4px -2px rgba(0, 0, 0, 0.3);
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+.lombada-livro:hover,
+.lombada-livro:focus-visible {
+  transform: translateY(-16px);
+  box-shadow: 0 14px 18px -8px rgba(0, 0, 0, 0.4), inset 3px 0 4px -2px rgba(255, 255, 255, 0.3);
+}
+
+/* Livro girando na pré-visualização */
+@keyframes livro-gira {
+  from {
+    transform: rotateY(-95deg) scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: rotateY(-30deg);
+    opacity: 1;
+  }
+}
+.vitrine-livro .livro {
+  transform: rotateY(-30deg);
+  animation: livro-gira 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.vitrine-livro:hover .livro {
+  transform: rotateY(-12deg);
+}
+.livro-sm .livro__mes {
+  font-size: 1.25em;
+}

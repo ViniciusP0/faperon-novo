@@ -184,12 +184,17 @@ test("páginas institucionais: Sobre, Informativos Técnicos e Fale Conosco", as
 
   await page.goto("/informativos-tecnicos");
   await expect(page.getByRole("heading", { level: 1, name: /Informativos mensais do agro de Rondônia/ })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Bovinocultura de Corte, Dezembro\/2025/ })).toHaveAttribute(
-    "href",
-    /\.pdf$/,
-  );
+  await expect(page.getByRole("tabpanel").getByRole("button")).toHaveCount(12);
+  await page.getByRole("button", { name: /Bovinocultura de Corte, Dezembro\/2025/ }).click();
+  const previa = page.getByRole("dialog", { name: /Bovinocultura de Corte – Dezembro\/2025/ });
+  await expect(previa).toBeVisible();
+  await expect(previa.getByRole("link", { name: /Baixar Dezembro\/2025/ })).toHaveAttribute("href", /\.pdf$/);
+  await page.keyboard.press("Escape");
+  await expect(previa).toBeHidden();
   await page.getByRole("tab", { name: "Bovinocultura de Leite" }).click();
-  await page.getByRole("button", { name: "2024" }).click();
+  await page.getByRole("button", { name: "2024", exact: true }).click();
+  await expect(page.getByRole("tabpanel").getByRole("button")).toHaveCount(1);
+  await page.getByRole("button", { name: "Lista" }).click();
   await expect(page.getByRole("tabpanel").getByRole("link")).toHaveCount(1);
   await semViolacoesSerias(page);
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { INFORMATIVOS } from "@/content/informativos";
-import { agruparPorAno, anosDisponiveis, maisRecente } from "./informativos";
+import { agruparPorAno, anosDisponiveis, livroDoBoletim, livroDoInformativo, maisRecente, textosDaCapa } from "./informativos";
 
 const corte = INFORMATIVOS.categorias[0]!.itens;
 const leite = INFORMATIVOS.categorias[1]!.itens;
@@ -27,5 +27,19 @@ describe("informativos", () => {
 
   it("anosDisponiveis lista os anos de várias categorias sem repetir", () => {
     expect(anosDisponiveis([...corte, ...leite])).toEqual([2025, 2024]);
+  });
+});
+
+describe("livros", () => {
+  it("textosDaCapa separa mês e ano de uma edição mensal e monta a lombada", () => {
+    const livro = livroDoInformativo(corte[0]!, INFORMATIVOS.categorias[0]!);
+    expect(textosDaCapa(livro)).toEqual({ tipo: "Informativo mensal", mes: "Dezembro", ano: "2025", lombada: "CORTE · DEZ 2025" });
+  });
+
+  it("textosDaCapa usa a edição do boletim no lugar do mês", () => {
+    const livro = livroDoBoletim(INFORMATIVOS.boletins[1]!, INFORMATIVOS.categorias);
+    expect(livro.tipo).toBe("boletim");
+    expect(livro.categoria).toBe("Bovinocultura de Leite");
+    expect(textosDaCapa(livro)).toEqual({ tipo: "Boletim técnico", mes: "2024.2", ano: "Edição", lombada: "BOLETIM 2024.2" });
   });
 });
