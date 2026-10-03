@@ -1,4 +1,4 @@
-import { ArrowUpRight, ExternalLink, GraduationCap, MapPin, Sprout, TrendingUp, Users, type LucideIcon } from "lucide-react";
+import { ArrowUpRight, ExternalLink, TrendingUp } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BannersSenar } from "@/components/inicio/banners-senar";
@@ -11,6 +11,7 @@ import { HERO } from "@/content/hero";
 import { INICIO } from "@/content/inicio";
 import { noticiasRecentes, type Noticia } from "@/content/noticias";
 import { SENAR } from "@/content/senar";
+import { LinkAuto } from "@/components/sistema/link-auto";
 import { SOBRE } from "@/content/sobre";
 import type { Destaque } from "@/lib/api-types";
 import { manchete, normalizarDestaque } from "@/lib/destaques";
@@ -27,11 +28,10 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-const ICONES_SISTEMA: Record<string, LucideIcon> = {
-  "SENAR Rondônia": GraduationCap,
-  IPAGRO: Sprout,
-  "Sindicatos Rurais": MapPin,
-  "Comissão Mulheres": Users,
+// Logos oficiais (recortadas do material do site da FAPERON). IPAGRO e Comissão Mulheres não têm logo própria publicada: usam o símbolo FAPERON + nome.
+const LOGOS_SISTEMA: Record<string, string> = {
+  "SENAR Rondônia": "/sistema/senar.png",
+  "Sindicatos Rurais": "/sistema/sindicatos.png",
 };
 
 interface NumeroAgro {
@@ -76,7 +76,7 @@ export default async function InicioPage() {
           </span>
         )}
         {n.url_original ? (
-          <a href={n.url_original} target="_blank" rel="noopener noreferrer" tabIndex={duplicado ? -1 : undefined} className="hover:text-brand hover:underline">
+          <a href={n.url_original} target="_blank" rel="noopener noreferrer" tabIndex={duplicado ? -1 : undefined} className="hover:text-brand-fg hover:underline">
             {n.titulo}
             <span className="sr-only"> (abre no site atual em nova aba)</span>
           </a>
@@ -113,7 +113,7 @@ export default async function InicioPage() {
                 {partes ? (
                   partes.map((p, i) =>
                     p.destaque ? (
-                      <strong key={i} className="font-bold text-brand">
+                      <strong key={i} className="font-bold text-brand-fg">
                         {p.texto}
                       </strong>
                     ) : (
@@ -162,9 +162,9 @@ export default async function InicioPage() {
       <h1 className="sr-only">FAPERON – Federação da Agricultura e Pecuária de Rondônia</h1>
       <HeroCarrossel rotulo={HERO.rotulo} slides={slides} />
 
-      <section aria-label="Notícias" className="border-y border-line bg-white">
+      <section aria-label="Notícias" className="border-y border-line bg-card">
         <div className="container flex items-center gap-4 py-3 text-sm">
-          <span className="shrink-0 font-bold uppercase tracking-wide text-brand">Notícias</span>
+          <span className="shrink-0 font-bold uppercase tracking-wide text-brand-fg">Notícias</span>
           <div className="group flex-1 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_2rem,black_calc(100%-2rem),transparent)]">
             <ul className="flex w-max animate-[marquee_54s_linear_infinite] items-center gap-x-2 whitespace-nowrap text-ink-muted group-hover:[animation-play-state:paused]">
               {itemTicker(noticiasTicker)}
@@ -175,7 +175,7 @@ export default async function InicioPage() {
             href={WIX_PAGINAS.noticias}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex shrink-0 items-center gap-1 font-medium text-brand hover:underline"
+            className="inline-flex shrink-0 items-center gap-1 font-medium text-brand-fg hover:underline"
           >
             Ver todas as notícias
             <ExternalLink aria-hidden="true" className="h-3.5 w-3.5" />
@@ -189,18 +189,18 @@ export default async function InicioPage() {
         <div aria-hidden="true" className="pointer-events-none absolute -bottom-32 -left-16 h-80 w-80 rounded-full bg-brand/10 blur-3xl" />
         <div className="container relative grid gap-10">
           <div className="max-w-3xl">
-            <p className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.18em] text-brand">
+            <p className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.18em] text-brand-fg">
               <span aria-hidden="true" className="h-[3px] w-10 rounded-full bg-brand-light" />
               {sistema.etiqueta}
             </p>
-            <h2 id="sistema-titulo" className="mt-4 text-3xl font-bold leading-tight tracking-tight text-brand-dark md:text-4xl">
+            <h2 id="sistema-titulo" className="mt-4 text-3xl font-bold leading-tight tracking-tight text-brand-strong md:text-4xl">
               {sistema.titulo}
             </h2>
             <p className="mt-4 max-w-[62ch] leading-relaxed text-ink-muted">{sistema.texto}</p>
             <ul className="mt-6 flex gap-8">
               {SOBRE.quem_somos.numeros.slice(1).map((n) => (
                 <li key={n.rotulo}>
-                  <p className="text-3xl font-bold tabular-nums text-brand">{n.valor}</p>
+                  <p className="text-3xl font-bold tabular-nums text-brand-fg">{n.valor}</p>
                   <p className="mt-0.5 text-sm text-ink-muted">{n.rotulo}</p>
                 </li>
               ))}
@@ -208,37 +208,33 @@ export default async function InicioPage() {
           </div>
 
           <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {SOBRE.sistema.entidades.map((e, i) => {
-              const Icone = ICONES_SISTEMA[e.nome] ?? Sprout;
-              return (
-                <li key={e.nome} className="flex">
-                  <a
-                    href={e.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group relative flex w-full flex-col overflow-hidden rounded-2xl border border-line border-t-4 border-t-brand-light bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-t-brand-lime hover:bg-brand-dark hover:shadow-lg md:min-h-[17rem] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
-                  >
-                    {/* Numeral decorativo em pseudo-elemento: não é conteúdo, então não entra na checagem de contraste. */}
-                    <span
-                      aria-hidden="true"
-                      data-n={String(i + 1).padStart(2, "0")}
-                      className="absolute right-5 top-3 text-6xl font-bold tabular-nums text-brand-soft transition-colors before:content-[attr(data-n)] group-hover:text-white/10"
-                    />
-
-                    <span className="relative inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-brand text-white transition-colors group-hover:bg-brand-lime group-hover:text-brand-dark">
-                      <Icone aria-hidden="true" className="h-7 w-7" />
-                    </span>
-                    <span className="relative mt-5 block text-lg font-bold uppercase leading-tight text-brand-dark group-hover:text-white">{e.nome}</span>
-                    <span className="relative mt-2 block leading-relaxed text-ink-muted group-hover:text-white/85">{sistema.descricoes[e.nome]}</span>
-                    <span className="relative mt-auto inline-flex items-center gap-1.5 pt-5 font-semibold text-brand group-hover:text-brand-lime">
-                      {e.acao}
-                      <ArrowUpRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                    </span>
-                    <span className="sr-only"> (abre em nova aba)</span>
-                  </a>
-                </li>
-              );
-            })}
+            {SOBRE.sistema.entidades.map((e) => (
+              <li key={e.nome} className="flex">
+                <LinkAuto
+                  href={e.url}
+                  className="group flex w-full flex-col overflow-hidden rounded-2xl border-b-4 border-brand-lime bg-brand-dark p-5 text-white shadow-md transition-all hover:-translate-y-1 hover:bg-brand hover:shadow-xl md:min-h-[19rem] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+                >
+                  <span className="flex h-24 items-center justify-center rounded-xl bg-white px-4">
+                    {LOGOS_SISTEMA[e.nome] ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={LOGOS_SISTEMA[e.nome]} alt={`Logo ${e.nome}`} className="max-h-14 w-auto max-w-full object-contain" />
+                    ) : (
+                      <span className="flex items-center gap-2.5">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/sistema/simbolo.png" alt="" aria-hidden="true" className="h-11 w-auto" />
+                        <span className="text-left text-base font-bold uppercase leading-tight text-brand-dark">{e.nome}</span>
+                      </span>
+                    )}
+                  </span>
+                  <span className="mt-5 block text-lg font-bold uppercase leading-tight">{e.nome}</span>
+                  <span className="mt-2 block leading-relaxed text-white/90">{sistema.descricoes[e.nome]}</span>
+                  <span className="mt-auto inline-flex items-center gap-1.5 pt-5 font-semibold text-brand-lime">
+                    {e.acao}
+                    <ArrowUpRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  </span>
+                </LinkAuto>
+              </li>
+            ))}
           </ul>
         </div>
       </section>
@@ -274,7 +270,7 @@ export default async function InicioPage() {
             href={SENAR.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 font-medium text-brand hover:underline"
+            className="inline-flex items-center gap-1 font-medium text-brand-fg hover:underline"
           >
             {SENAR.link_texto}
             <ExternalLink aria-hidden="true" className="h-3.5 w-3.5" />
@@ -293,7 +289,7 @@ export default async function InicioPage() {
             href={WIX_PAGINAS.noticias}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 font-medium text-brand hover:underline"
+            className="inline-flex items-center gap-1 font-medium text-brand-fg hover:underline"
           >
             Ver todas as notícias
             <ExternalLink aria-hidden="true" className="h-3.5 w-3.5" />
@@ -330,7 +326,7 @@ export default async function InicioPage() {
           <ul className="mt-6 grid gap-10 md:grid-cols-3">
             {numeros.map((n) => (
               <li key={n.rotulo}>
-                <p className="text-3xl font-semibold tracking-tight text-brand tabular-nums md:text-4xl">{n.valor}</p>
+                <p className="text-3xl font-semibold tracking-tight text-brand-fg tabular-nums md:text-4xl">{n.valor}</p>
                 <h3 className="mt-2.5 text-lg font-semibold">{n.rotulo}</h3>
                 <p className="mt-1.5 max-w-[36ch] text-ink-muted">{n.texto}</p>
               </li>

@@ -111,9 +111,9 @@ export const SOBRE = {
   sistema: {
     entidades: [
       { nome: "SENAR Rondônia", descricao: "Portal do Sistema FAPERON | SENAR-RO.", url: "https://sistemafaperon.org.br/", acao: "Acessar" },
-      { nome: "IPAGRO", descricao: "Página do IPAGRO no site da FAPERON.", url: `${WIX_URL}/blank-12`, acao: "Acessar" },
-      { nome: "Sindicatos Rurais", descricao: "Mapa dos sindicatos rurais de Rondônia.", url: `${WIX_URL}/mapa-sindicatos`, acao: "Ver mapa" },
-      { nome: "Comissão Mulheres", descricao: "Página da Comissão Mulheres FAPERON.", url: `${WIX_URL}/blank-14`, acao: "Acessar" },
+      { nome: "IPAGRO", descricao: "Instituto de pesquisa, serviços e desenvolvimento agropecuário.", url: "/ipagro", acao: "Acessar" },
+      { nome: "Sindicatos Rurais", descricao: "Contatos dos sindicatos rurais de Rondônia.", url: "/sindicatos-rurais", acao: "Ver sindicatos" },
+      { nome: "Comissão Mulheres", descricao: "Ações e encontros pelas mulheres do campo.", url: "/comissao-mulheres", acao: "Acessar" },
     ] satisfies EntidadeSistema[],
     calendario: {
       titulo: "Calendário do Sistema FAPERON | SENAR-RO",

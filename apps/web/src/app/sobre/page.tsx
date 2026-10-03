@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CtaDuplo } from "@/components/site/cta-duplo";
 import { FaixaNumeros } from "@/components/site/faixa-numeros";
 import { Destaque, HeroPagina } from "@/components/site/hero-pagina";
+import { LinkAuto } from "@/components/sistema/link-auto";
 import { IndiceSecoes } from "@/components/sobre/indice-secoes";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -37,7 +38,7 @@ function colunasDiretoria() {
 }
 
 const tituloSecao = "text-[1.75rem] font-semibold tracking-tight";
-const rotuloMvv = "text-[0.8rem] font-semibold uppercase tracking-wider text-brand";
+const rotuloMvv = "text-[0.8rem] font-semibold uppercase tracking-wider text-brand-fg";
 
 export default function SobrePage() {
   const numeros = s.quem_somos.numeros;
@@ -159,7 +160,7 @@ export default function SobrePage() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`${s.estatuto.titulo} (PDF, abre em nova aba)`}
-              className="mt-6 grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-md border border-l-4 border-line border-l-steel px-6 py-5 hover:bg-[#e4edf3]"
+              className="mt-6 grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-md border border-l-4 border-line border-l-steel px-6 py-5 hover:bg-steel-soft"
             >
               <span aria-hidden="true" className="grid h-14 w-11 place-items-center rounded bg-steel text-white">
                 <FileText className="h-6 w-6" />
@@ -185,7 +186,7 @@ export default function SobrePage() {
                 href={WIX_PAGINAS.transparencia}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-medium text-brand underline underline-offset-2"
+                className="font-medium text-brand-fg underline underline-offset-2"
               >
                 Portal da Transparência
                 <span className="sr-only"> (abre em nova aba)</span>
@@ -201,21 +202,18 @@ export default function SobrePage() {
             <ul className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
               {s.sistema.entidades.map((e) => (
                 <li key={e.nome} className="flex">
-                  <a
+                  <LinkAuto
                     href={e.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
                     className="flex w-full flex-col gap-1.5 rounded-md border border-t-4 border-line border-t-brand-light p-5 hover:bg-surface-alt"
                   >
                     <span className="font-semibold">{e.nome}</span>
                     <span className="text-sm text-ink-muted">{e.descricao}</span>
-                    <span className="mt-auto pt-2.5 text-sm font-semibold text-brand">{e.acao} →</span>
-                    <span className="sr-only"> (abre em nova aba)</span>
-                  </a>
+                    <span className="mt-auto pt-2.5 text-sm font-semibold text-brand-fg">{e.acao} →</span>
+                  </LinkAuto>
                 </li>
               ))}
             </ul>
-            <div className="mt-5 flex flex-wrap items-center justify-between gap-5 rounded-md bg-[#e4edf3] px-7 py-5">
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-5 rounded-md bg-steel-soft px-7 py-5">
               <div>
                 <p className="text-lg font-semibold">{s.sistema.calendario.titulo}</p>
                 <p className="mt-0.5 text-sm text-ink-muted">{s.sistema.calendario.descricao}</p>

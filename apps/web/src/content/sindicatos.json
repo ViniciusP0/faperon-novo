@@ -1,0 +1,317 @@
+[
+  {
+    "nome": "Alta Floresta D'Oeste",
+    "presidente": "Rildo Aparecido Damasceno",
+    "endereco": "Rua José Linhares - Redondo, Alta Floresta D'Oeste",
+    "telefones": [
+      "(69) 98431-1001",
+      "(69) 99903-2706"
+    ],
+    "email": "sindicatoruralafo@gmail.com"
+  },
+  {
+    "nome": "Alto Paraíso",
+    "presidente": "Antonielly Arce Rottoli",
+    "endereco": "R. Vinte e Um de Abril, 293, Alto Paraíso",
+    "telefones": [
+      "(69) 99999-2366"
+    ],
+    "email": "sindicatoruralaltoparaiso@gmail.com"
+  },
+  {
+    "nome": "Alvorada do Oeste",
+    "presidente": "Harllen Henrique Correia Araujo",
+    "endereco": "Avenida Marechal Rondon, 4580 - Alvorada D'Oeste, RO",
+    "telefones": [
+      "(69) 98433-7253"
+    ],
+    "email": "sindicatorural.alvorada@gmail.com"
+  },
+  {
+    "nome": "Ariquemes",
+    "presidente": "Dilermando Teodoro de Oliveira",
+    "endereco": "Av. Jamari, 4385, Ariquemes",
+    "telefones": [
+      "(69) 99360-3537"
+    ],
+    "email": "sinrural@sinrural.com"
+  },
+  {
+    "nome": "Buritis",
+    "presidente": "Helthon Vagno da Silva Souza",
+    "endereco": "Rua Barretos, 1897 - Setor 03, Buritis",
+    "telefones": [
+      "(69) 99213-4475"
+    ],
+    "email": "sindicatofaperondeburitis@hotmail.com"
+  },
+  {
+    "nome": "Cabixi",
+    "presidente": "Lucia da Silva Lopes",
+    "endereco": "Av. Planalto, Cabixi - RO, 76994-000",
+    "telefones": [
+      "(69) 98465-6411",
+      "(69) 98139-6769"
+    ],
+    "email": "sindicatocabixi@hotmail.com"
+  },
+  {
+    "nome": "Cacoal",
+    "presidente": "Alex Sandro Guaitolini",
+    "endereco": "Avenida Amazonas, 2690 - Centro, Cacoal",
+    "telefones": [
+      "(69) 98133-1717"
+    ],
+    "email": "sindicatorural.cacoal@gmail.com"
+  },
+  {
+    "nome": "Campo Novo de Rondônia",
+    "presidente": "Edvaldo Silva Santos",
+    "endereco": "R. Castelo Branco, 2232, Campo Novo de Rondônia - RO, 76887-000",
+    "telefones": [
+      "(69) 99389-9746"
+    ],
+    "email": "sindicatocamponovoderondonia@gmail.com"
+  },
+  {
+    "nome": "Candeias do Jamari",
+    "presidente": "José Orlean Gomes da Silva",
+    "endereco": "",
+    "telefones": [
+      "(69) 99326-2640"
+    ],
+    "email": "sindicatoruralcandeias@gmail.com"
+  },
+  {
+    "nome": "Castanheiras",
+    "presidente": "Odair Dias de Souza",
+    "endereco": "Rua do Jambo, 831, Castanheiras",
+    "telefones": [
+      "(69) 98130-4352",
+      "(69) 98146-9798"
+    ],
+    "email": "adrianedebranco@gmail.com"
+  },
+  {
+    "nome": "Cerejeiras",
+    "presidente": "Jair de Oliveira Ferro",
+    "endereco": "Rua Costa e Silva, 1609 - Eldorado, Cerejeiras",
+    "telefones": [
+      "(69) 3342-4277",
+      "(69) 99209-0494"
+    ],
+    "email": "sindicatoruraldecerejeirasepimenteiras@hotmail.com"
+  },
+  {
+    "nome": "Colorado do Oeste",
+    "presidente": "Luismar Gomes de Oliveira",
+    "endereco": "Avenida Marechal Rondon, 2987 - Cruzeiro, Colorado do Oeste",
+    "telefones": [
+      "(69) 3341-2559",
+      "(69) 98407-8386"
+    ],
+    "email": "sindicatoruralcol@hotmail.com"
+  },
+  {
+    "nome": "Costa Marques",
+    "presidente": "Carla Patricia de Sousa",
+    "endereco": "Av. Pedras Negras, 1192 - Costa Marques, RO",
+    "telefones": [
+      "(69) 98443-1950",
+      "(69) 99323-2224"
+    ],
+    "email": "cpm.maciel@gmail.com"
+  },
+  {
+    "nome": "Cujubim",
+    "presidente": "Luana Munari Damascena (afastada)",
+    "endereco": "Avenida do Canário, 2025, Cujubim",
+    "telefones": [
+      "(69) 98414-0851",
+      "(69) 99316-3843"
+    ],
+    "email": "sind.produtorescujubim@hotmail.com"
+  },
+  {
+    "nome": "Espigão do Oeste",
+    "presidente": "Nilson Pereira Dias",
+    "endereco": "Rua Rio Grande do Sul, 2721 - Vista Alegre, Espigão D'Oeste",
+    "telefones": [
+      "(69) 98405-7630"
+    ],
+    "email": "sindicatoruralespigaodooeste@hotmail.com"
+  },
+  {
+    "nome": "Governador Jorge Teixeira",
+    "presidente": "Adelaine dos Santos",
+    "endereco": "Avenida Ipê, Governador Jorge Teixeira",
+    "telefones": [
+      "(69) 9364-6142"
+    ],
+    "email": "sprural-gjt@hotmail.com"
+  },
+  {
+    "nome": "Guajará-Mirim",
+    "presidente": "Miguel Nunes Neto",
+    "endereco": "Avenida 15 de Novembro, no 2103 - Setor 02, Guajará-Mirim",
+    "telefones": [
+      "(69) 3541-2055",
+      "(69) 9965-2518"
+    ],
+    "email": "sindicatoguajara@gmail.com"
+  },
+  {
+    "nome": "Itapuã do Oeste",
+    "presidente": "Milton Leles Pereira",
+    "endereco": "Rua Sete de Setembro, 1349, Itapuã do Oeste",
+    "telefones": [
+      "(69) 3222-4366"
+    ],
+    "email": "spr.itapuadooeste@outlook.com"
+  },
+  {
+    "nome": "Jaru",
+    "presidente": "Salvador Messias Penga",
+    "endereco": "Rua Ceará, 2939 - Setor 5, Jaru",
+    "telefones": [
+      "(69) 99348-9650"
+    ],
+    "email": "salvadorpenga@gmail.com"
+  },
+  {
+    "nome": "Ji-Paraná",
+    "presidente": "José Ribeiro Junqueira Neto",
+    "endereco": "Rua Missionário Gunnar Vingren, 2034 - Nova Brasília, Ji-Paraná",
+    "telefones": [
+      "(69) 99907-1252"
+    ],
+    "email": "jbbento@hotmail.com"
+  },
+  {
+    "nome": "Machadinho D'Oeste",
+    "presidente": "Renildo Luciano Nunes",
+    "endereco": "Avenida Getúlio Vargas, 2212 - Machadinho D'Oeste, RO",
+    "telefones": [
+      "(69) 99228-2707"
+    ],
+    "email": "sindicatoruralmachadinho@gmail.com"
+  },
+  {
+    "nome": "Monte Negro",
+    "presidente": "Poliana Matos da Silva Parada",
+    "endereco": "Rua dos Buritís, no 2840, Monte Negro",
+    "telefones": [
+      "(69) 99266-8028"
+    ],
+    "email": "sindicatomontenegro@outlook.com.br"
+  },
+  {
+    "nome": "Nova Mamoré",
+    "presidente": "Natã Feliciano da Silva",
+    "endereco": "Avenida Sebastião João Clímaco, 6705 - Centro, Nova Mamoré",
+    "telefones": [
+      "(69) 99901-2667"
+    ],
+    "email": "sindicatoruralnm2010@hotmail.com"
+  },
+  {
+    "nome": "Novo Horizonte do Oeste e Nova Brasilândia d'Oeste",
+    "presidente": "José Severino Batista Juvino",
+    "endereco": "Av. Dr. Miguel Viêira Ferreira, 4821, Novo Horizonte do Oeste",
+    "telefones": [
+      "(69) 98464-2105"
+    ],
+    "email": "sindicatorural.nho.nbo@gmail.com"
+  },
+  {
+    "nome": "Ouro Preto do Oeste",
+    "presidente": "José Macedo Tavares",
+    "endereco": "Rua Euta Almeirinda, 05 - União, Ouro Preto do Oeste",
+    "telefones": [
+      "(69) 3461-3705"
+    ],
+    "email": "sinpropo@hotmail.com"
+  },
+  {
+    "nome": "Pimenta Bueno",
+    "presidente": "José de Carvalho Sobrinho",
+    "endereco": "R. Casemiro de Abreu, 395 - Pioneiros, Pimenta Bueno",
+    "telefones": [
+      "(69) 99904-6367"
+    ],
+    "email": "jose.carvalhosind@gmail.com"
+  },
+  {
+    "nome": "Porto Velho",
+    "presidente": "Lindinalva Pereira dos Santos",
+    "endereco": "Rua Henrique Dias, 307 - Centro, Porto Velho",
+    "telefones": [
+      "(69) 99291-3333"
+    ],
+    "email": "sindicatoruraldeportovelho@hotmail.com"
+  },
+  {
+    "nome": "Presidente Médici",
+    "presidente": "Jackson Aparecido Nogueira",
+    "endereco": "Rua Castelo Branco, 2702 - Centro, Presidente Médici",
+    "telefones": [
+      "(69) 99991-5101"
+    ],
+    "email": "sind.produtoresruraisp.medici@gmail.com"
+  },
+  {
+    "nome": "Rolim de Moura",
+    "presidente": "João Paulo da Silva Carneiro",
+    "endereco": "Avenida João Pessoa, 4807 - Centro, Rolim de Moura",
+    "telefones": [
+      "(69) 98436-3876"
+    ],
+    "email": "sindirolim22@gmail.com"
+  },
+  {
+    "nome": "São Francisco do Guaporé",
+    "presidente": "Charles Eiji Rosso",
+    "endereco": "Avenida Brasil, 4595, São Francisco do Guaporé",
+    "telefones": [
+      "(69) 98441-4443"
+    ],
+    "email": "sprsfg@outlook.com"
+  },
+  {
+    "nome": "São Miguel do Guaporé e Seringueiras",
+    "presidente": "Miguel Ramirez Bondezan",
+    "endereco": "Avenida São Paulo, no 501 - Centro, São Miguel do Guaporé",
+    "telefones": [
+      "(69) 98441-4548"
+    ],
+    "email": "sindicato.dosprodutores@hotmail.com"
+  },
+  {
+    "nome": "Theobroma",
+    "presidente": "Vanderlei Klamerick",
+    "endereco": "Avenida Treze de Fevereiro, 1297, Theobroma",
+    "telefones": [
+      "(69) 99253-7802"
+    ],
+    "email": "sprthro2021@gmail.com"
+  },
+  {
+    "nome": "Vale do Anari",
+    "presidente": "Jozimar Pacheco dos Santos",
+    "endereco": "Avenida Silvio de Farias, 4724, Vale do Anari",
+    "telefones": [
+      "(69) 98110-3727",
+      "(69) 99395-2408"
+    ],
+    "email": "sprvanari@gmail.com"
+  },
+  {
+    "nome": "Vilhena",
+    "presidente": "Gustavo José Sartor",
+    "endereco": "Avenida Rondônia, 4139 - Novo Tempo, Vilhena",
+    "telefones": [
+      "(69) 3322-5754"
+    ],
+    "email": "sindruralvha@gmail.com"
+  }
+]

@@ -23,7 +23,7 @@ export const INICIO = {
     descricoes: {
       "SENAR Rondônia": "Formação profissional e assistência técnica para produtores e trabalhadores rurais.",
       IPAGRO: "Conheça o IPAGRO e a atuação do instituto dentro do Sistema FAPERON.",
-      "Sindicatos Rurais": "Encontre no mapa o sindicato rural mais próximo de você, nos municípios de Rondônia.",
+      "Sindicatos Rurais": "Encontre o sindicato rural do seu município, com presidente, telefone, e-mail e endereço.",
       "Comissão Mulheres": "Ações e iniciativas da Comissão Mulheres FAPERON voltadas às mulheres do campo.",
     } as Record<string, string>,
   },

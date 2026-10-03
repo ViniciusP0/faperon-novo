@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { CENTRAL } from "./central";
@@ -101,7 +101,7 @@ describe("Sobre", () => {
 
   it("o Sistema FAPERON tem 4 entidades com link https e o calendário aponta para um PDF", () => {
     expect(SOBRE.sistema.entidades).toHaveLength(4);
-    for (const e of SOBRE.sistema.entidades) expect(e.url, e.nome).toMatch(/^https:\/\//);
+    for (const e of SOBRE.sistema.entidades) expect(e.url, e.nome).toMatch(/^(https:\/\/|\/[a-z-]+$)/);
     expect(SOBRE.sistema.calendario.url).toMatch(/^https:\/\/www\.faperon\.com\.br\/_files\/ugd\/cbbcc7_[0-9a-f]{32}\.pdf$/);
   });
 });
@@ -151,5 +151,28 @@ describe("Informativos Técnicos", () => {
         const [ano, mes] = i.data.split("-").map(Number) as [number, number];
         expect(i.titulo).toBe(`${MESES[mes - 1]}/${ano}`);
       }
+  });
+});
+
+describe("Sindicatos Rurais", () => {
+  it("tem os 34 cadastros do site atual, com telefone e e-mail válidos e sem repetição", async () => {
+    const { SINDICATOS } = await import("./sindicatos");
+    expect(SINDICATOS).toHaveLength(34);
+    expect(new Set(SINDICATOS.map((s) => s.nome)).size).toBe(34);
+    for (const s of SINDICATOS) {
+      expect(s.presidente.length, s.nome).toBeGreaterThan(3);
+      expect(s.email, s.nome).toMatch(/^[^\s@]+@[^\s@]+\.[a-z]+$/);
+      expect(s.telefones.length, s.nome).toBeGreaterThan(0);
+      for (const t of s.telefones) expect(t, s.nome).toMatch(/^\(\d{2}\) \d{4,5}-\d{4}$/);
+    }
+  });
+});
+
+describe("IPAGRO", () => {
+  it("o comunicado para download existe em public e é um PDF", async () => {
+    const { IPAGRO } = await import("./ipagro");
+    const arquivo = path.join(PUBLIC, IPAGRO.transparencia.arquivo.url);
+    expect(existsSync(arquivo)).toBe(true);
+    expect(readFileSync(arquivo).subarray(0, 5).toString()).toBe("%PDF-");
   });
 });
