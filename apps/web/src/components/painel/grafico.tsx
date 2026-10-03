@@ -4,7 +4,9 @@ import { BarChart, LineChart } from "echarts/charts";
 import { GridComponent, LegendComponent, TooltipComponent } from "echarts/components";
 import * as echarts from "echarts/core";
 import { SVGRenderer } from "echarts/renderers";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { comTemaEscuro } from "@/lib/chart-options";
+import { temaAtual } from "@/lib/tema";
 
 echarts.use([BarChart, LineChart, GridComponent, LegendComponent, TooltipComponent, SVGRenderer]);
 
@@ -17,6 +19,16 @@ interface GraficoProps {
 export function Grafico({ option, descricao, altura = 360 }: GraficoProps) {
   const ref = useRef<HTMLDivElement>(null);
   const chart = useRef<echarts.ECharts | null>(null);
+  const [escuro, setEscuro] = useState(false);
+
+  // Acompanha o tema do site (atributo data-theme em <html>), inclusive quando o visitante alterna com a página aberta.
+  useEffect(() => {
+    const ler = () => setEscuro(temaAtual() === "escuro");
+    ler();
+    const obs = new MutationObserver(ler);
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => obs.disconnect();
+  }, []);
 
   useEffect(() => {
     const el = ref.current;
@@ -33,8 +45,8 @@ export function Grafico({ option, descricao, altura = 360 }: GraficoProps) {
   }, []);
 
   useEffect(() => {
-    chart.current?.setOption(option, true);
-  }, [option]);
+    chart.current?.setOption(escuro ? comTemaEscuro(option) : option, true);
+  }, [option, escuro]);
 
   return <div ref={ref} role="img" aria-label={descricao} style={{ height: altura, width: "100%" }} data-testid="grafico" />;
 }

@@ -31,6 +31,44 @@
   --surface-alt: #f3f8f5;
   --line: #d3e1d8;
   --danger: #b42318;
+  --brand-fg: #00604e;
+  --brand-strong: #00463a;
+  --card: #ffffff;
+  --steel-soft: #e4edf3;
+  --warm: #fbf6e8;
+  --field: #647f71;
+  --danger-soft: #fdf2f1;
+  --danger-ink: #7a1810;
+  color-scheme: light;
+}
+
+/*
+ * Tema escuro. Superfícies em verde-grafite (nunca preto puro, para não cansar a vista e manter a identidade),
+ * com elevação por tom: surface < surface-alt < card. Contrastes pretendidos (WCAG AA: 4,5:1 texto, 3:1 controles):
+ *   ink #E8F0EC / surface #0E1915 ~15:1      ink-muted #A8BAB1 / card #172A23 ~7:1
+ *   brand-fg #6FD1B0 / surface ~9:1          brand-strong #D3ECE1 / card ~11:1
+ *   branco / brand #00604E (botões) 7,5:1    borda de campo #7F9A8C / surface ~6:1
+ * brand e brand-dark seguem escuros: só servem de preenchimento com texto branco. Texto de marca usa brand-fg e
+ * brand-strong, que clareiam no escuro.
+ */
+:root[data-theme="dark"] {
+  --surface: #0e1915;
+  --surface-alt: #13221c;
+  --card: #172a23;
+  --ink: #e8f0ec;
+  --ink-muted: #a8bab1;
+  --line: #2f453b;
+  --brand-soft: #1a3329;
+  --brand-fg: #6fd1b0;
+  --brand-strong: #d3ece1;
+  --steel: #86bde3;
+  --steel-soft: #172c3a;
+  --warm: #1f2318;
+  --field: #7f9a8c;
+  --danger: #ff9a90;
+  --danger-soft: #3a1714;
+  --danger-ink: #ffd5d1;
+  color-scheme: dark;
 }
 
 html {
@@ -76,7 +114,7 @@ body {
   font-weight: 600;
 }
 .prose-faperon a {
-  color: var(--brand);
+  color: var(--brand-fg);
   text-decoration: underline;
 }
 .prose-faperon ul {
@@ -324,4 +362,29 @@ body {
 }
 .livro-sm .livro__mes {
   font-size: 1.25em;
+}
+
+/*
+ * Entrada suave dos cards ao rolar a página: sobem 16px e ganham opacidade enquanto entram na tela (só opacity e
+ * transform, 400 a 600 ms, começando cedo). É melhoria progressiva: navegadores sem animation-timeline mostram o
+ * card parado e já visível, e quem pede menos movimento nunca vê a animação.
+ */
+@keyframes revela {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .revela {
+      animation: revela linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 30%;
+    }
+  }
 }

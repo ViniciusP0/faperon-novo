@@ -8,10 +8,10 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         primary: "bg-brand text-white hover:bg-brand-dark",
-        secondary: "bg-brand-soft text-brand-dark hover:bg-[#d3e9dc]",
-        outline: "border border-brand text-brand hover:bg-brand-soft",
+        secondary: "bg-brand-soft text-brand-strong hover:bg-line",
+        outline: "border border-brand-fg text-brand-fg hover:bg-brand-soft",
         light: "bg-white text-brand-dark hover:bg-brand-soft",
-        ghost: "text-brand hover:bg-brand-soft",
+        ghost: "text-brand-fg hover:bg-brand-soft",
       },
       size: {
         sm: "h-9 px-3 text-sm",

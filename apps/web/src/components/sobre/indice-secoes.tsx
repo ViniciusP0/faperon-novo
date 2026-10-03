@@ -31,7 +31,7 @@ export function IndiceSecoes({ secoes }: { secoes: SecaoIndice[] }) {
   return (
     <nav
       aria-label="Nesta página"
-      className="sticky top-[72px] z-20 min-w-0 border-b border-line bg-white py-2 lg:top-24 lg:self-start lg:border-0 lg:bg-transparent lg:pt-[4.5rem]"
+      className="sticky top-[72px] z-20 min-w-0 border-b border-line bg-card py-2 lg:top-24 lg:self-start lg:border-0 lg:bg-transparent lg:pt-[4.5rem]"
     >
       <h2 className="mb-3 hidden text-xs font-semibold uppercase tracking-wider text-ink-muted lg:block">Nesta página</h2>
       <ol className="flex gap-1 overflow-x-auto lg:flex-col lg:gap-0 lg:border-l lg:border-line">
@@ -41,8 +41,8 @@ export function IndiceSecoes({ secoes }: { secoes: SecaoIndice[] }) {
               href={`#${s.id}`}
               aria-current={ativa === s.id ? "true" : undefined}
               className={cn(
-                "block whitespace-nowrap border-b-[3px] border-transparent px-3 py-2 text-sm font-medium text-ink-muted hover:text-brand lg:-ml-px lg:border-b-0 lg:border-l-[3px] lg:px-3.5",
-                ativa === s.id && "border-brand-light text-brand",
+                "block whitespace-nowrap border-b-[3px] border-transparent px-3 py-2 text-sm font-medium text-ink-muted hover:text-brand-fg lg:-ml-px lg:border-b-0 lg:border-l-[3px] lg:px-3.5",
+                ativa === s.id && "border-brand-light text-brand-fg",
               )}
             >
               {s.titulo}

@@ -10,7 +10,7 @@ function Metrica({ rotulo, valor, detalhe }: { rotulo: string; valor: string; de
   return (
     <div className="rounded-xl border border-line p-4">
       <dt className="text-sm text-ink-muted">{rotulo}</dt>
-      <dd className="mt-1 text-2xl font-semibold tabular-nums text-brand-dark">{valor}</dd>
+      <dd className="mt-1 text-2xl font-semibold tabular-nums text-brand-strong">{valor}</dd>
       {detalhe && <dd className="text-xs text-ink-muted">{detalhe}</dd>}
     </div>
   );

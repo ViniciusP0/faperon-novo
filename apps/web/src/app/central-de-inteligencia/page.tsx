@@ -37,7 +37,7 @@ export default function CentralPage() {
           ))}
         </div>
         <aside aria-label="O que você encontra no painel" className="rounded-2xl bg-brand-soft p-6">
-          <h2 className="text-lg font-semibold text-brand-dark">No Painel Agro Analítico</h2>
+          <h2 className="text-lg font-semibold text-brand-strong">No Painel Agro Analítico</h2>
           <ul className="mt-4 space-y-4">
             {c.blocos.map((b) => (
               <li key={b.titulo} className="flex gap-3">

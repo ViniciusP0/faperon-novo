@@ -121,13 +121,13 @@ export function Comparacao({ filtros, municipios, produtos, onChange }: Props) {
       {selecionados.length > 0 && (
         <ul aria-label="Itens selecionados" className="mt-4 flex flex-wrap gap-2">
           {selecionados.map((id) => (
-            <li key={id} className="inline-flex items-center gap-1 rounded-full bg-brand-soft py-1 pl-3 pr-1 text-sm font-medium text-brand-dark">
+            <li key={id} className="inline-flex items-center gap-1 rounded-full bg-brand-soft py-1 pl-3 pr-1 text-sm font-medium text-brand-strong">
               {nomeDe(id)}
               <button
                 type="button"
                 aria-label={`Remover ${nomeDe(id)}`}
                 onClick={() => atualizarLista(selecionados.filter((s) => s !== id))}
-                className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-white"
+                className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-card"
               >
                 <X aria-hidden="true" className="h-4 w-4" />
               </button>

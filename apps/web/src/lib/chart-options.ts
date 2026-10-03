@@ -82,3 +82,34 @@ export function opcaoComparacao(anos: number[], series: SerieComparada[], unidad
     })),
   };
 }
+
+/** Paleta clareada para o fundo escuro (todas acima de 4,5:1 sobre o card escuro). */
+export const PALETA_ESCURA = ["#4cc9a6", "#f0a04b", "#7fb8e0", "#c89be0", "#a6d96a"];
+
+const ESCURO = { texto: "#e8f0ec", muted: "#a8bab1", linha: "#2f453b", card: "#172a23" };
+
+type Opcao = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+/** Aplica as cores do tema escuro sobre uma opção já montada (as opções-base seguem as cores do tema claro). */
+export function comTemaEscuro(option: EChartsCoreOption): EChartsCoreOption {
+  const o = option as Opcao;
+  const y = o.yAxis ?? {};
+  return {
+    ...o,
+    color: PALETA_ESCURA,
+    xAxis: { ...o.xAxis, axisLabel: { ...o.xAxis?.axisLabel, color: ESCURO.muted }, axisLine: { lineStyle: { color: ESCURO.linha } } },
+    yAxis: {
+      ...y,
+      nameTextStyle: { ...y.nameTextStyle, color: ESCURO.muted },
+      axisLabel: { ...y.axisLabel, color: ESCURO.muted },
+      splitLine: { lineStyle: { color: ESCURO.linha } },
+    },
+    ...(o.legend ? { legend: { ...o.legend, textStyle: { color: ESCURO.texto } } } : {}),
+    tooltip: { ...o.tooltip, backgroundColor: ESCURO.card, borderColor: ESCURO.linha, textStyle: { color: ESCURO.texto } },
+    series: (o.series as Opcao[]).map((s) =>
+      s.type === "line"
+        ? { ...s, lineStyle: { ...s.lineStyle, color: PALETA_ESCURA[1] }, itemStyle: { ...s.itemStyle, color: PALETA_ESCURA[1] } }
+        : s,
+    ),
+  };
+}

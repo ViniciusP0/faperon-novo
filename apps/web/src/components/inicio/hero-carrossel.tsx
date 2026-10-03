@@ -12,7 +12,7 @@ export interface SlideHero {
 }
 
 const seta =
-  "absolute bottom-4 z-10 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-ink shadow-lg ring-1 ring-black/10 transition-colors hover:bg-white focus-visible:outline-offset-2 xl:bottom-auto xl:top-1/2 xl:h-12 xl:w-12 xl:-translate-y-1/2";
+  "absolute bottom-4 z-10 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-[#14261f] shadow-lg ring-1 ring-black/10 transition-colors hover:bg-card focus-visible:outline-offset-2 xl:bottom-auto xl:top-1/2 xl:h-12 xl:w-12 xl:-translate-y-1/2";
 
 export function HeroCarrossel({ slides, rotulo }: { slides: SlideHero[]; rotulo: string }) {
   const total = slides.length;
@@ -84,7 +84,7 @@ export function HeroCarrossel({ slides, rotulo }: { slides: SlideHero[]; rotulo:
               ))}
               <button
                 type="button"
-                className="ml-1 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-ink shadow-md ring-1 ring-black/10 transition-colors hover:bg-brand-soft focus-visible:outline-offset-0"
+                className="ml-1 inline-flex h-9 w-9 items-center justify-center rounded-full bg-card text-ink shadow-md ring-1 ring-black/10 transition-colors hover:bg-brand-soft focus-visible:outline-offset-0"
                 aria-label={rotacaoLigada ? "Pausar rotação automática" : "Retomar rotação automática"}
                 onClick={alternarRotacao}
               >

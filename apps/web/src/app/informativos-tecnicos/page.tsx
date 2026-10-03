@@ -71,7 +71,7 @@ export default function InformativosPage() {
         <ArquivoInformativos categorias={inf.categorias} />
       </section>
 
-      <div className="mt-16 border-y border-line bg-gradient-to-br from-[#fbf6e8] to-surface-alt">
+      <div className="mt-16 border-y border-line bg-gradient-to-br from-warm to-surface-alt">
         <section id="boletins" aria-labelledby="boletins-titulo" className="container scroll-mt-24 py-16">
           <h2 id="boletins-titulo" className="text-[1.75rem] font-semibold tracking-tight">
             Boletins técnicos

@@ -13,7 +13,7 @@ export function NotaMetodologica({ meta }: { meta: Meta | null | undefined }) {
       {meta ? (
         <p className="mt-1">
           Fonte: {meta.fonte}. Tabela SIDRA{" "}
-          <a href={meta.url_fonte} target="_blank" rel="noopener noreferrer" className="font-medium text-brand underline">
+          <a href={meta.url_fonte} target="_blank" rel="noopener noreferrer" className="font-medium text-brand-fg underline">
             {meta.tabela_sidra}
             <span className="sr-only"> (abre em nova aba)</span>
           </a>
@@ -78,7 +78,7 @@ interface TabelaSerieProps {
 export function TabelaSeries({ legenda, unidade, anos, series }: TabelaSerieProps) {
   return (
     <details className="mt-4 rounded-xl border border-line">
-      <summary className="cursor-pointer rounded-xl px-4 py-3 text-sm font-medium text-brand-dark">Ver tabela de dados do gráfico</summary>
+      <summary className="cursor-pointer rounded-xl px-4 py-3 text-sm font-medium text-brand-strong">Ver tabela de dados do gráfico</summary>
       <div tabIndex={0} role="region" aria-label={`Tabela: ${legenda}`} className="max-h-96 overflow-auto px-4 pb-4">
         <table className="w-full text-sm">
           <caption className="py-2 text-left text-ink-muted">{legenda}</caption>

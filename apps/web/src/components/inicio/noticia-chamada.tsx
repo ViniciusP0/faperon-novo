@@ -13,7 +13,7 @@ export function NoticiaChamada({ noticia }: { noticia: Noticia }) {
           <Image src="/marca-faperon.png" alt="" width={96} height={96} className="absolute inset-0 m-auto h-24 w-24 opacity-60" />
         )}
       </div>
-      <h3 className="mt-3.5 text-lg font-semibold leading-snug group-hover:text-brand group-hover:underline">
+      <h3 className="mt-3.5 text-lg font-semibold leading-snug group-hover:text-brand-fg group-hover:underline">
         {noticia.titulo}
         {noticia.url_original && <ExternalLink aria-hidden="true" className="ml-1 inline h-3.5 w-3.5" />}
       </h3>

@@ -39,7 +39,7 @@ export function CtaDuplo({ principal, secundaria }: { principal: Chamada; secund
           className={cn(buttonVariants({ size: "lg" }), "mt-6 bg-brand-lime text-[#003329] hover:bg-[#9bdc60] focus-visible:outline-white")}
         />
       </section>
-      <aside aria-labelledby="cta-secundaria" className="bg-[#e4edf3] px-4 py-12 lg:pl-14 lg:pr-[max(1rem,calc((100vw-1200px)/2+1rem))]">
+      <aside aria-labelledby="cta-secundaria" className="bg-steel-soft px-4 py-12 lg:pl-14 lg:pr-[max(1rem,calc((100vw-1200px)/2+1rem))]">
         <h2 id="cta-secundaria" className="text-[1.4rem] font-semibold">
           {secundaria.titulo}
         </h2>

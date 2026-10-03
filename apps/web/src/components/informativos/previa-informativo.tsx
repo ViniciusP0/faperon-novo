@@ -18,7 +18,7 @@ interface PreviaProps {
 }
 
 const botaoVizinho =
-  "rounded-lg border border-line px-3 py-1 text-[0.8rem] text-ink-muted hover:border-brand disabled:opacity-40 disabled:hover:border-line";
+  "rounded-lg border border-line px-3 py-1 text-[0.8rem] text-ink-muted hover:border-brand-fg disabled:opacity-40 disabled:hover:border-line";
 
 /** Janela de pré-visualização: o livro girando, a ficha da edição e o botão de baixar o PDF. */
 export function PreviaInformativo({ livro, onFechar, anterior, proxima, onTrocar }: PreviaProps) {
@@ -46,7 +46,7 @@ export function PreviaInformativo({ livro, onFechar, anterior, proxima, onTrocar
       onClick={(e) => {
         if (e.target === ref.current) onFechar();
       }}
-      className="m-auto w-[min(880px,calc(100%-2rem))] overflow-visible rounded-2xl bg-white p-0 shadow-2xl backdrop:bg-[rgba(7,28,22,0.62)] backdrop:backdrop-blur-[3px]"
+      className="m-auto w-[min(880px,calc(100%-2rem))] overflow-visible rounded-2xl bg-card p-0 shadow-2xl backdrop:bg-[rgba(7,28,22,0.62)] backdrop:backdrop-blur-[3px]"
     >
       {livro && (
         <div className="relative grid min-h-[430px] md:grid-cols-2">
@@ -54,15 +54,15 @@ export function PreviaInformativo({ livro, onFechar, anterior, proxima, onTrocar
             type="button"
             onClick={onFechar}
             aria-label="Fechar pré-visualização"
-            className="absolute -right-2.5 -top-2.5 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white text-ink shadow-lg ring-1 ring-black/10 hover:bg-brand-soft"
+            className="absolute -right-2.5 -top-2.5 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full bg-card text-ink shadow-lg ring-1 ring-black/10 hover:bg-brand-soft"
           >
             <X aria-hidden="true" className="h-5 w-5" />
           </button>
-          <div className="vitrine-livro grid place-items-center overflow-hidden rounded-t-2xl bg-[radial-gradient(circle_at_50%_40%,#fff,var(--surface-alt)_70%)] px-5 py-8 [perspective:1400px] md:rounded-l-2xl md:rounded-tr-none">
+          <div className="vitrine-livro grid place-items-center overflow-hidden rounded-t-2xl bg-[radial-gradient(circle_at_50%_40%,var(--card),var(--surface-alt)_70%)] px-5 py-8 [perspective:1400px] md:rounded-l-2xl md:rounded-tr-none">
             <Livro key={livro.url} livro={livro} tamanho="lg" />
           </div>
           <div className="flex flex-col p-7 md:p-9">
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand">{ehBoletim ? "Boletim técnico" : "Informativo mensal"}</p>
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-fg">{ehBoletim ? "Boletim técnico" : "Informativo mensal"}</p>
             <h2 id="previa-titulo" className="mt-1.5 text-2xl font-semibold leading-tight">
               {ehBoletim ? livro.titulo : `${livro.categoria} – ${livro.titulo}`}
             </h2>

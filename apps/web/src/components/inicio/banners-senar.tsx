@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { useCarrossel } from "./use-carrossel";
 
 const seta =
-  "absolute top-1/2 z-10 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-ink shadow-lg ring-1 ring-black/10 transition-colors hover:bg-white focus-visible:outline-offset-2 md:h-12 md:w-12";
+  "absolute top-1/2 z-10 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-[#14261f] shadow-lg ring-1 ring-black/10 transition-colors hover:bg-card focus-visible:outline-offset-2 md:h-12 md:w-12";
 
 interface BannersSenarProps {
   banners: readonly BannerSenar[];

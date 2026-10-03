@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Ponto } from "./api-types";
-import { opcaoSerie } from "./chart-options";
+import { comTemaEscuro, opcaoSerie, PALETA_ESCURA } from "./chart-options";
 
 const p = (ano: number, valor: number | null): Ponto => ({ ano, valor, status: valor === null ? "sigiloso" : "ok" });
 
@@ -27,5 +27,15 @@ describe("opcaoSerie", () => {
     expect(html).toContain("Tendência linear");
     expect(html).toContain("20");
     expect(html).toContain("toneladas");
+  });
+});
+
+describe("tema escuro dos gráficos", () => {
+  it("troca paleta, eixos e legenda por cores legíveis no fundo escuro e mantém os dados", () => {
+    const claro = opcaoSerie("Soja", [p(2020, 1), p(2021, 2), p(2022, 3)], "t");
+    const escuro = comTemaEscuro(claro) as { color: string[]; legend: { textStyle: { color: string } }; series: Serie[] };
+    expect(escuro.color).toEqual(PALETA_ESCURA);
+    expect(escuro.legend.textStyle.color).toBe("#e8f0ec");
+    expect(series(escuro).map((s) => s.data)).toEqual(series(claro).map((s) => s.data));
   });
 });

@@ -16,8 +16,8 @@ const VISTAS: { id: Vista; rotulo: string }[] = [
   { id: "lista", rotulo: "Lista" },
 ];
 
-const chip = "rounded-full border border-line bg-white px-3.5 py-1.5 text-[0.85rem] font-medium text-ink-muted hover:border-brand";
-const chipAtivo = "border-brand bg-brand text-white hover:border-brand";
+const chip = "rounded-full border border-line bg-card px-3.5 py-1.5 text-[0.85rem] font-medium text-ink-muted hover:border-brand-fg";
+const chipAtivo = "border-brand bg-brand text-white hover:border-brand-fg";
 
 /** Estante dos informativos mensais: abas por categoria, filtro por ano e três formas de ver (capas, lombadas e lista). */
 export function ArquivoInformativos({ categorias }: { categorias: Categoria[] }) {
@@ -76,8 +76,8 @@ export function ArquivoInformativos({ categorias }: { categorias: Categoria[] })
               aria-controls={`${base}-painel`}
               onClick={() => escolherCategoria(c.id)}
               className={cn(
-                "border-b-[3px] border-transparent px-4 py-3 text-[0.95rem] font-medium text-ink-muted hover:text-brand",
-                c.id === categoria.id && "border-brand-light text-brand",
+                "border-b-[3px] border-transparent px-4 py-3 text-[0.95rem] font-medium text-ink-muted hover:text-brand-fg",
+                c.id === categoria.id && "border-brand-light text-brand-fg",
               )}
             >
               {c.curto}
@@ -99,7 +99,7 @@ export function ArquivoInformativos({ categorias }: { categorias: Categoria[] })
                 type="button"
                 aria-pressed={v.id === vista}
                 onClick={() => setVista(v.id)}
-                className={cn("bg-white px-3 py-1.5 text-[0.82rem] font-medium text-ink-muted hover:text-brand", v.id === vista && "bg-brand-soft text-brand")}
+                className={cn("bg-card px-3 py-1.5 text-[0.82rem] font-medium text-ink-muted hover:text-brand-fg", v.id === vista && "bg-brand-soft text-brand-fg")}
               >
                 {v.rotulo}
               </button>
@@ -188,7 +188,7 @@ export function ArquivoInformativos({ categorias }: { categorias: Categoria[] })
                       <time dateTime={item.data} className="text-sm text-ink-muted">
                         {formatDataCurta(item.data)}
                       </time>
-                      <span aria-hidden="true" className="rounded border border-brand px-1.5 text-[0.7rem] font-bold text-brand">
+                      <span aria-hidden="true" className="rounded border border-brand-fg px-1.5 text-[0.7rem] font-bold text-brand-fg">
                         PDF
                       </span>
                     </a>

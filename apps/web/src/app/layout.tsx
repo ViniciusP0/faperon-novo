@@ -15,15 +15,19 @@ export const metadata: Metadata = {
   openGraph: { siteName: "FAPERON", locale: "pt_BR", type: "website" },
 };
 
-export const viewport: Viewport = { themeColor: "#00604e", width: "device-width", initialScale: 1 };
+export const viewport: Viewport = {
+  themeColor: "#00604e",
+  width: "device-width",
+  initialScale: 1,
+};
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" data-theme="light" suppressHydrationWarning>
       <body className="flex min-h-screen flex-col">
         <a
           href="#conteudo"
-          className="sr-only-focusable fixed left-4 top-4 z-50 rounded-lg bg-white px-4 py-2 font-medium text-brand-dark shadow-lg"
+          className="sr-only-focusable fixed left-4 top-4 z-50 rounded-lg bg-card px-4 py-2 font-medium text-brand-strong shadow-lg"
         >
           Ir para o conteúdo
         </a>

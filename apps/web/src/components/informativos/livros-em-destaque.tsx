@@ -24,7 +24,7 @@ export function UltimasEdicoes({ edicoes }: { edicoes: LivroInfo[] }) {
             <Livro livro={l} tamanho="lg" className="mx-1 my-1.5" />
             <div>
               <span className="mb-2 inline-block rounded-full bg-brand-lime px-2.5 py-0.5 text-[0.68rem] font-bold uppercase tracking-[0.08em] text-brand-dark">Novo</span>
-              <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand">{l.categoria}</p>
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-fg">{l.categoria}</p>
               <h3 className="mt-1.5 text-[1.3rem] font-semibold leading-tight">Informativo Mensal, {l.titulo}</h3>
               <p className="mt-1.5 text-[0.95rem] text-ink-muted">
                 Publicado em <time dateTime={l.data}>{formatData(l.data)}</time>
@@ -74,7 +74,7 @@ export function BoletinsEmLivros({ boletins }: { boletins: LivroInfo[] }) {
               aria-haspopup="dialog"
               aria-label={`Pré-visualizar ${b.titulo}`}
               onClick={() => setAberto(b)}
-              className="livro-gatilho grid w-full items-center gap-7 rounded-2xl border border-line bg-white py-7 pl-9 pr-8 text-left [perspective:1200px] sm:grid-cols-[auto_1fr]"
+              className="livro-gatilho grid w-full items-center gap-7 rounded-2xl border border-line bg-card py-7 pl-9 pr-8 text-left [perspective:1200px] sm:grid-cols-[auto_1fr]"
             >
               <Livro livro={b} tamanho="sm" />
               <span>
@@ -82,7 +82,7 @@ export function BoletinsEmLivros({ boletins }: { boletins: LivroInfo[] }) {
                 <span className="mt-1 block text-sm text-ink-muted">
                   Publicado em <time dateTime={b.data}>{formatData(b.data)}</time>
                 </span>
-                <span className="mt-3 block text-sm font-semibold text-brand">
+                <span className="mt-3 block text-sm font-semibold text-brand-fg">
                   Pré-visualizar <span aria-hidden="true">→</span>
                 </span>
               </span>

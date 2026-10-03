@@ -24,7 +24,7 @@ export function Alert({
       role={erro ? "alert" : "status"}
       className={cn(
         "flex gap-3 rounded-xl border p-4 text-sm",
-        erro ? "border-danger/40 bg-[#fdf2f1] text-[#7a1810]" : "border-line bg-brand-soft text-brand-dark",
+        erro ? "border-danger/40 bg-danger-soft text-danger-ink" : "border-line bg-brand-soft text-brand-strong",
         className,
       )}
     >

@@ -5,9 +5,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { BotaoTema } from "@/components/site/botao-tema";
 import { buttonVariants } from "@/components/ui/button";
 import { MENU, ROTAS } from "@/lib/site";
 import { cn } from "@/lib/utils";
+
+/** Botão sólido; no escuro troca para lima, que destaca mais sobre o grafite. */
+const BOTAO_ACESSO = "dark:bg-brand-lime dark:text-brand-dark dark:hover:bg-[#a3df6a]";
 
 export function SiteHeader() {
   const pathname = usePathname();
@@ -16,12 +20,19 @@ export function SiteHeader() {
   const ativo = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-white">
-      <div className="container flex h-[72px] items-center justify-between gap-4">
+    <header className="sticky top-0 z-40 border-b border-line bg-card">
+      <div className="mx-auto flex h-[72px] w-full max-w-[1920px] items-center justify-between gap-4 px-4 md:px-6 xl:px-8">
         <Link href="/" aria-label="FAPERON – página inicial" className="flex shrink-0 items-center gap-1">
-          <Image src="/marca-faperon.png" alt="" width={56} height={56} priority className="-m-1.5 h-14 w-14" />
+          <Image
+            src="/marca-faperon.png"
+            alt=""
+            width={56}
+            height={56}
+            priority
+            className="-m-1.5 h-14 w-14 dark:m-0 dark:h-11 dark:w-11 dark:rounded-xl dark:bg-white dark:p-1"
+          />
           <span>
-            <span className="block text-[1.35rem] font-bold leading-none tracking-tight text-brand">FAPERON</span>
+            <span className="block text-[1.35rem] font-bold leading-none tracking-tight text-brand-fg">FAPERON</span>
             <span className="mt-0.5 block max-w-[11rem] text-[0.7rem] leading-tight text-ink-muted">
               Federação da Agricultura e Pecuária de Rondônia
             </span>
@@ -38,8 +49,8 @@ export function SiteHeader() {
                     {...(item.externo ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                     aria-current={!item.externo && ativo(item.href) ? "page" : undefined}
                     className={cn(
-                      "inline-flex items-center gap-1 whitespace-nowrap border-b-[3px] border-transparent px-3 py-2 text-sm font-medium text-ink hover:text-brand",
-                      !item.externo && ativo(item.href) && "border-brand-light text-brand",
+                      "inline-flex items-center gap-1 whitespace-nowrap border-b-[3px] border-transparent px-3 py-2 text-sm font-medium text-ink hover:text-brand-fg",
+                      !item.externo && ativo(item.href) && "border-brand-light text-brand-fg",
                     )}
                   >
                     {item.label}
@@ -55,26 +66,30 @@ export function SiteHeader() {
             </ul>
           </nav>
 
-          <Link href={ROTAS.login} className={cn(buttonVariants({ variant: "outline", size: "sm" }), "ml-2 shrink-0")}>
+          <Link href={ROTAS.login} className={cn(buttonVariants({ size: "sm" }), BOTAO_ACESSO, "ml-2 shrink-0")}>
             <LogIn aria-hidden="true" className="h-4 w-4" />
             Acessar o sistema
           </Link>
+          <BotaoTema className="ml-3" />
         </div>
 
-        <button
+        <div className="flex items-center gap-1 xl:hidden">
+          <BotaoTema />
+          <button
           type="button"
-          className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-ink hover:bg-brand-soft xl:hidden"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-ink hover:bg-brand-soft"
           aria-expanded={aberto}
           aria-controls="menu-mobile"
           aria-label={aberto ? "Fechar menu" : "Abrir menu"}
           onClick={() => setAberto((v) => !v)}
         >
           {aberto ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
-        </button>
+          </button>
+        </div>
       </div>
 
       {aberto && (
-        <nav id="menu-mobile" aria-label="Principal (móvel)" className="border-t border-line bg-white xl:hidden">
+        <nav id="menu-mobile" aria-label="Principal (móvel)" className="border-t border-line bg-card xl:hidden">
           <ul className="container flex flex-col py-2">
             {MENU.map((item) => (
               <li key={item.href}>
@@ -83,7 +98,7 @@ export function SiteHeader() {
                   onClick={() => setAberto(false)}
                   {...(item.externo ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                   aria-current={!item.externo && ativo(item.href) ? "page" : undefined}
-                  className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-medium hover:bg-brand-soft aria-[current=page]:bg-brand-soft aria-[current=page]:text-brand"
+                  className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-medium hover:bg-brand-soft aria-[current=page]:bg-brand-soft aria-[current=page]:text-brand-fg"
                 >
                   {item.label}
                   {item.externo && (
@@ -99,7 +114,7 @@ export function SiteHeader() {
               <Link
                 href={ROTAS.login}
                 onClick={() => setAberto(false)}
-                className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-medium text-brand hover:bg-brand-soft"
+                className={cn(buttonVariants(), BOTAO_ACESSO, "w-full justify-center")}
               >
                 <LogIn aria-hidden="true" className="h-4 w-4" />
                 Acessar o sistema

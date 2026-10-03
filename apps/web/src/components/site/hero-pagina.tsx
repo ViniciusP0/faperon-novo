@@ -39,7 +39,7 @@ export function HeroPagina({
         <nav aria-label="Você está em" className={cn("pt-5 text-[0.8rem] font-medium", comFoto ? "pt-14 text-white/85" : "text-ink-muted")}>
           <ol className="flex flex-wrap items-center gap-1.5">
             <li>
-              <Link href="/" className={cn("hover:underline", comFoto ? "text-white underline underline-offset-4" : "text-brand")}>
+              <Link href="/" className={cn("hover:underline", comFoto ? "text-white underline underline-offset-4" : "text-brand-fg")}>
                 Início
               </Link>
             </li>
@@ -66,5 +66,5 @@ export function HeroPagina({
 
 /** Trecho da manchete em destaque (verde e negrito). */
 export function Destaque({ children }: { children: ReactNode }) {
-  return <strong className="font-bold text-brand">{children}</strong>;
+  return <strong className="font-bold text-brand-fg">{children}</strong>;
 }

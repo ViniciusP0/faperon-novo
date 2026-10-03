@@ -61,7 +61,7 @@ export default function FaleConoscoPage() {
             <div className="mt-2 divide-y divide-line">
               <div className="grid gap-1 py-4">
                 <h3 className={rotuloCanal}>Telefone</h3>
-                <a href={c.telefone.href} className="font-medium hover:text-brand hover:underline">
+                <a href={c.telefone.href} className="font-medium hover:text-brand-fg hover:underline">
                   {c.telefone.texto}
                 </a>
               </div>
@@ -103,7 +103,7 @@ export default function FaleConoscoPage() {
                           href={rede.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3.5 py-1.5 text-sm font-medium text-brand hover:bg-brand hover:text-white"
+                          className="inline-flex items-center gap-1.5 rounded-full border border-line bg-card px-3.5 py-1.5 text-sm font-medium text-brand-fg hover:bg-brand hover:text-white"
                         >
                           <Icone aria-hidden="true" className="h-4 w-4" />
                           {rede.rotulo}
@@ -119,7 +119,7 @@ export default function FaleConoscoPage() {
         </div>
 
         <div className="container mt-14">
-          <div className="grid items-center gap-6 rounded-md bg-[#e4edf3] px-8 py-6 md:grid-cols-[1fr_auto]">
+          <div className="grid items-center gap-6 rounded-md bg-steel-soft px-8 py-6 md:grid-cols-[1fr_auto]">
             <div>
               <h2 className="text-lg font-semibold">Como chegar</h2>
               <p className="text-ink-muted">{c.endereco.linhas.join(", ")}</p>
