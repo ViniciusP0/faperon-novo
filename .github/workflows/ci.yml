@@ -30,7 +30,7 @@ jobs:
       - name: Ruff
         run: docker run --rm faperon-api ruff check .
       - name: mypy
-        run: docker run --rm faperon-api mypy .
+        run: docker run --rm -e DJANGO_SECRET_KEY faperon-api mypy .
       - name: Migrações (verificação) e testes
         run: |
           docker run --rm --network host \

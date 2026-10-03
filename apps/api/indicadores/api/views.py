@@ -11,6 +11,7 @@ from indicadores import servicos
 from indicadores.api import apresentacao as ap
 from indicadores.api import destaques
 from indicadores.api import serializers as sz
+from indicadores.api.parametros import lista_csv, validar_consulta
 from indicadores.erros import ConsultaInvalida
 from indicadores.models import Medicao, Municipio
 from indicadores.servicos import Recorte
@@ -23,20 +24,10 @@ ERROS = {
 }
 
 
-def _validar(serializer_class: type[sz.serializers.Serializer], request: Request) -> dict[str, Any]:
-    serializer = serializer_class(data=request.query_params)
-    serializer.is_valid(raise_exception=True)
-    return dict(serializer.validated_data)
-
-
 def resolver_consulta(dados: dict[str, Any]) -> tuple[Recorte, int, int]:
     recorte = servicos.obter_recorte(dados["produto"], dados["indicador"])
     inicio, fim = servicos.resolver_periodo(recorte, dados.get("inicio"), dados.get("fim"))
     return recorte, inicio, fim
-
-
-def _lista(texto: str | None) -> list[str]:
-    return [t.strip() for t in (texto or "").split(",") if t.strip()]
 
 
 class ProdutosView(APIView):
@@ -45,7 +36,7 @@ class ProdutosView(APIView):
         responses={200: sz.ProdutoSerializer(many=True), **ERROS},
     )
     def get(self, request: Request) -> Response:
-        dados = _validar(sz.ConsultaProdutosSerializer, request)
+        dados = validar_consulta(sz.ConsultaProdutosSerializer, request)
         produtos = servicos.listar_produtos(dados.get("segmento"), dados.get("q"))
         corpo = [
             {
@@ -65,7 +56,7 @@ class IndicadoresView(APIView):
         responses={200: sz.IndicadorSerializer(many=True), **ERROS},
     )
     def get(self, request: Request) -> Response:
-        dados = _validar(sz.ConsultaIndicadoresSerializer, request)
+        dados = validar_consulta(sz.ConsultaIndicadoresSerializer, request)
         produto = servicos.obter_produto(dados["produto"])
         corpo = [
             {
@@ -91,16 +82,14 @@ class MetaView(APIView):
     def get(self, request: Request) -> Response:
         cargas = []
         ultima = None
-        for tabela in sorted({c["tabela"] for c in Carga.objects.values("tabela")}):
-            carga = (
-                Carga.objects.filter(
-                    tabela=tabela, status__in=[Carga.Status.SUCESSO, Carga.Status.INALTERADA]
-                )
-                .order_by("-concluida_em")
-                .first()
-            )
-            if carga is None:
-                continue
+        # Uma consulta só: a carga mais recente de cada tabela (DISTINCT ON), em vez de uma consulta por tabela.
+        recentes = (
+            Carga.objects.filter(status__in=[Carga.Status.SUCESSO, Carga.Status.INALTERADA])
+            .order_by("tabela", "-concluida_em")
+            .distinct("tabela")
+        )
+        for carga in recentes:
+            tabela = carga.tabela
             if carga.concluida_em and (ultima is None or carga.concluida_em > ultima):
                 ultima = carga.concluida_em
             cargas.append(
@@ -128,7 +117,7 @@ class RankingView(APIView):
         responses={200: sz.RankingSerializer, **ERROS},
     )
     def get(self, request: Request) -> Response:
-        recorte, inicio, fim = resolver_consulta(_validar(sz.ConsultaSerializer, request))
+        recorte, inicio, fim = resolver_consulta(validar_consulta(sz.ConsultaSerializer, request))
         resultado = servicos.ranking(recorte, inicio, fim)
         itens = [
             {
@@ -159,7 +148,7 @@ class SerieView(APIView):
         responses={200: sz.SerieSerializer, **ERROS},
     )
     def get(self, request: Request) -> Response:
-        dados = _validar(sz.ConsultaSerieSerializer, request)
+        dados = validar_consulta(sz.ConsultaSerieSerializer, request)
         recorte, inicio, fim = resolver_consulta(dados)
         municipio = servicos.obter_municipio(dados["municipio"]) if dados.get("municipio") else None
         corpo = {
@@ -180,9 +169,9 @@ class ComparacaoView(APIView):
         responses={200: sz.ComparacaoSerializer, **ERROS},
     )
     def get(self, request: Request) -> Response:
-        dados = _validar(sz.ConsultaComparacaoSerializer, request)
-        codigos = _lista(dados.get("municipios"))
-        slugs = _lista(dados.get("produtos"))
+        dados = validar_consulta(sz.ConsultaComparacaoSerializer, request)
+        codigos = lista_csv(dados.get("municipios"))
+        slugs = lista_csv(dados.get("produtos"))
         if bool(codigos) == bool(slugs):
             raise ConsultaInvalida(
                 "Informe 'municipios' (com 'produto') ou 'produtos', mas não os dois",

@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -9,7 +11,10 @@ def env_bool(nome: str, padrao: bool = False) -> bool:
 
 
 DEBUG = env_bool("DJANGO_DEBUG")
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-insegura-troque-em-producao")
+SECRET_KEY_PADRAO = "dev-insegura-troque-em-producao"  # noqa: S105
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", SECRET_KEY_PADRAO)
+if not DEBUG and SECRET_KEY == SECRET_KEY_PADRAO:
+    raise ImproperlyConfigured("Defina DJANGO_SECRET_KEY: a chave padrão é pública e só vale com DJANGO_DEBUG=1.")
 ALLOWED_HOSTS = [h.strip() for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",") if h]
 CSRF_TRUSTED_ORIGINS = [
     o.strip() for o in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()
@@ -98,8 +103,9 @@ CACHES = {
 
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
+    # API pública e somente leitura: sem autenticação de propósito. Se surgir login, mude aqui, não view a view.
     "DEFAULT_AUTHENTICATION_CLASSES": [],
-    "DEFAULT_PERMISSION_CLASSES": [],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.AllowAny"],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_THROTTLE_RATES": {"pdf": os.environ.get("PDF_RATE_LIMIT", "10/min")},
     "EXCEPTION_HANDLER": "indicadores.api.erros.tratador_de_excecoes",

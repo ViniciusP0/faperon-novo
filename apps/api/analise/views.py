@@ -12,7 +12,8 @@ from rest_framework.views import APIView
 from analise import pdf, servico
 from indicadores.api import apresentacao as ap
 from indicadores.api import serializers as sz
-from indicadores.api.views import ERROS, _lista, _validar
+from indicadores.api.parametros import lista_csv, validar_consulta
+from indicadores.api.views import ERROS
 
 
 class TopMunicipioSerializer(serializers.Serializer):
@@ -55,7 +56,7 @@ class AnaliseView(APIView):
         responses={200: AnaliseSerializer, **ERROS},
     )
     def get(self, request: Request) -> Response:
-        dados = _validar(sz.ConsultaSerieSerializer, request)
+        dados = validar_consulta(sz.ConsultaSerieSerializer, request)
         r = servico.analisar(
             dados["produto"],
             dados["indicador"],
@@ -85,14 +86,14 @@ class RelatorioPdfView(APIView):
         },
     )
     def get(self, request: Request) -> HttpResponse:
-        dados: dict[str, Any] = _validar(ConsultaRelatorioSerializer, request)
+        dados: dict[str, Any] = validar_consulta(ConsultaRelatorioSerializer, request)
         conteudo, nome = pdf.gerar_relatorio(
             dados["produto"],
             dados["indicador"],
             dados.get("inicio"),
             dados.get("fim"),
             dados.get("municipio"),
-            _lista(dados.get("municipios")),
+            lista_csv(dados.get("municipios")),
         )
         resposta = HttpResponse(conteudo, content_type="application/pdf")
         resposta["Content-Disposition"] = f'attachment; filename="{nome}"'
