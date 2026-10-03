@@ -12,3 +12,5 @@ playwright-report/
 test-results/
 apps/web/tsconfig.tsbuildinfo
 infra/deploy.log
+
+.coverage

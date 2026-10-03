@@ -1,6 +1,6 @@
 # FAPERON — Novo site e Central de Inteligência Agropecuária
 
-Protótipo evolutivo: Início, Central de Inteligência e Painel Agro Analítico RO. Monorepo com Next.js (`apps/web`) e Django (`apps/api`). Plano completo em `Plano FAPERON.md`.
+Protótipo evolutivo: Início, Central de Inteligência e Painel Agro Analítico RO. Monorepo com Next.js (`apps/web`) e Django (`apps/api`). Plano completo em `docs/Plano FAPERON.md`.
 
 ## Rodar
 
