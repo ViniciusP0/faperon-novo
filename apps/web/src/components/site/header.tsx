@@ -33,13 +33,13 @@ export function SiteHeader() {
           />
           <span>
             <span className="block text-[1.35rem] font-bold leading-none tracking-tight text-brand-fg">FAPERON</span>
-            <span className="mt-0.5 block max-w-[11rem] text-[0.7rem] leading-tight text-ink-muted">
+            <span className="mt-0.5 hidden max-w-[11rem] xl:block text-[0.7rem] leading-tight text-ink-muted">
               Federação da Agricultura e Pecuária de Rondônia
             </span>
           </span>
         </Link>
 
-        <div className="hidden items-center gap-2 xl:flex">
+        <div className="hidden items-center gap-2 lg:flex">
           <nav aria-label="Principal">
             <ul className="flex items-center">
               {MENU.map((item) => (
@@ -49,7 +49,7 @@ export function SiteHeader() {
                     {...(item.externo ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                     aria-current={!item.externo && ativo(item.href) ? "page" : undefined}
                     className={cn(
-                      "inline-flex items-center gap-1 whitespace-nowrap border-b-[3px] border-transparent px-3 py-2 text-sm font-medium text-ink hover:text-brand-fg",
+                      "inline-flex items-center gap-1 whitespace-nowrap border-b-[3px] border-transparent px-2 py-2 xl:px-3 text-sm font-medium text-ink hover:text-brand-fg",
                       !item.externo && ativo(item.href) && "border-brand-light text-brand-fg",
                     )}
                   >
@@ -73,7 +73,7 @@ export function SiteHeader() {
           <BotaoTema className="ml-3" />
         </div>
 
-        <div className="flex items-center gap-1 xl:hidden">
+        <div className="flex items-center gap-1 lg:hidden">
           <BotaoTema />
           <button
             type="button"
@@ -89,7 +89,7 @@ export function SiteHeader() {
       </div>
 
       {aberto && (
-        <nav id="menu-mobile" aria-label="Principal (móvel)" className="border-t border-line bg-card xl:hidden">
+        <nav id="menu-mobile" aria-label="Principal (móvel)" className="border-t border-line bg-card lg:hidden">
           <ul className="container flex flex-col py-2">
             {MENU.map((item) => (
               <li key={item.href}>
