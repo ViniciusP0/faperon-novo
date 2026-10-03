@@ -4,6 +4,7 @@ import { FundoParallax } from "@/components/site/fundo-parallax";
 import { SiteFooter } from "@/components/site/footer";
 import { SiteHeader } from "@/components/site/header";
 import { SITE_URL } from "@/lib/site";
+import { SCRIPT_TEMA } from "@/lib/tema";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -24,6 +25,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="pt-BR" data-theme="light" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_TEMA }} />
+      </head>
       <body className="flex min-h-screen flex-col">
         <a
           href="#conteudo"

@@ -2,20 +2,21 @@
 
 import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
-import { aplicarTema, temaAtual, type Tema } from "@/lib/tema";
+import { aplicarTema, salvarTema, temaAtual, type Tema } from "@/lib/tema";
 import { cn } from "@/lib/utils";
 
 export function BotaoTema({ className }: { className?: string }) {
   const [tema, setTema] = useState<Tema | null>(null);
 
-  // O servidor sempre entrega o tema claro e a escolha do visitante não é salva (ver lib/tema.ts); o estado só é lido
-  // no navegador, depois da hidratação, para o botão não divergir do HTML do servidor.
+  // O servidor sempre entrega o tema claro; um script do <head> reaplica a escolha guardada (ver lib/tema.ts). O estado
+  // só é lido depois da hidratação, para o botão não divergir do HTML do servidor.
   useEffect(() => setTema(temaAtual()), []);
 
   const escuro = tema === "escuro";
   const alternar = () => {
     const proximo: Tema = escuro ? "claro" : "escuro";
     aplicarTema(proximo);
+    salvarTema(proximo);
     setTema(proximo);
   };
 
