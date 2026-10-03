@@ -104,7 +104,7 @@ export function FundoParallax() {
   useEffect(() => {
     const el = raiz.current;
     if (!el) return;
-    const figuras = Array.from(el.children) as HTMLElement[];
+    const figuras = (Array.from(el.children) as HTMLElement[]).map((f, i) => ({ f, item: ITENS[i]! }));
     const parado = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let quadro = 0;
     // Cada figura sobe a uma velocidade própria e, ao sair pelo topo, volta por baixo, então a tela nunca fica vazia.
@@ -112,8 +112,7 @@ export function FundoParallax() {
       quadro = 0;
       const altura = window.innerHeight;
       const rolagem = parado ? 0 : window.scrollY;
-      figuras.forEach((f, i) => {
-        const item = ITENS[i]!;
+      figuras.forEach(({ f, item }) => {
         const ciclo = altura + item.tamanho * 2;
         const base = (item.y / 100) * altura + item.tamanho;
         const y = ((((base - rolagem * item.velocidade) % ciclo) + ciclo) % ciclo) - item.tamanho;

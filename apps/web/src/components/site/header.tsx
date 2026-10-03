@@ -11,7 +11,7 @@ import { MENU, ROTAS } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 /** Botão sólido; no escuro troca para lima, que destaca mais sobre o grafite. */
-const BOTAO_ACESSO = "dark:bg-brand-lime dark:text-brand-dark dark:hover:bg-[#a3df6a]";
+const BOTAO_ACESSO = "dark:bg-brand-lime dark:text-brand-dark dark:hover:bg-brand-lime-hover";
 
 export function SiteHeader() {
   const pathname = usePathname();
@@ -29,7 +29,7 @@ export function SiteHeader() {
             width={56}
             height={56}
             priority
-            className="-m-1.5 h-14 w-14 dark:m-0 dark:h-11 dark:w-11 dark:rounded-xl dark:bg-white dark:p-1"
+            className="h-12 w-12 dark:rounded-xl dark:bg-white dark:p-1"
           />
           <span>
             <span className="block text-[1.35rem] font-bold leading-none tracking-tight text-brand-fg">FAPERON</span>
@@ -76,14 +76,14 @@ export function SiteHeader() {
         <div className="flex items-center gap-1 xl:hidden">
           <BotaoTema />
           <button
-          type="button"
-          className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-ink hover:bg-brand-soft"
-          aria-expanded={aberto}
-          aria-controls="menu-mobile"
-          aria-label={aberto ? "Fechar menu" : "Abrir menu"}
-          onClick={() => setAberto((v) => !v)}
-        >
-          {aberto ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
+            type="button"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-ink hover:bg-brand-soft"
+            aria-expanded={aberto}
+            aria-controls="menu-mobile"
+            aria-label={aberto ? "Fechar menu" : "Abrir menu"}
+            onClick={() => setAberto((v) => !v)}
+          >
+            {aberto ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
           </button>
         </div>
       </div>

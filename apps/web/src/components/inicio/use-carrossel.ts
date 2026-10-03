@@ -43,6 +43,9 @@ export function useCarrossel(total: number) {
     onTouchStart: (e: TouchEvent) => {
       toqueInicial.current = e.touches[0]?.clientX ?? null;
     },
+    onTouchCancel: () => {
+      toqueInicial.current = null;
+    },
     onTouchEnd: (e: TouchEvent) => {
       if (toqueInicial.current === null) return;
       const delta = (e.changedTouches[0]?.clientX ?? toqueInicial.current) - toqueInicial.current;

@@ -17,6 +17,9 @@
  *   borda de controle #647F71 / branco (ver ui/field.tsx) acima de 3:1
  * brand-light e brand-lime só servem de preenchimento decorativo ou texto sobre brand-dark (lima 5,7:1),
  * nunca de texto sobre branco.
+ * Pares que coincidem no claro (brand/brand-fg, brand-dark/brand-strong, surface/card) existem de propósito: no escuro
+ * brand e brand-dark seguem escuros (preenchimento), enquanto brand-fg, brand-strong e card clareiam (texto e elevação).
+ * Não unifique.
  */
 :root {
   --brand: #00604e;
@@ -39,6 +42,10 @@
   --field: #647f71;
   --danger-soft: #fdf2f1;
   --danger-ink: #7a1810;
+  /* Fixos nos dois temas: controles brancos sobre foto (setas do carrossel), indicador inativo e hover do botão lima. */
+  --on-light: #14261f;
+  --dot-off: #8a9c92;
+  --brand-lime-hover: #a3df6a;
   color-scheme: light;
 }
 

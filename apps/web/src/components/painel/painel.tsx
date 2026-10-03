@@ -220,6 +220,8 @@ function Abas({ aba, onChange }: { aba: Aba; onChange: (aba: Aba) => void }) {
 
 function CopiarLink() {
   const [copiado, setCopiado] = useState(false);
+  // Sem permissão de área de transferência, mostra o endereço num campo selecionável (em vez de um modal bloqueante).
+  const [manual, setManual] = useState<string | null>(null);
   return (
     <>
       <Button
@@ -227,16 +229,26 @@ function CopiarLink() {
         onClick={async () => {
           try {
             await navigator.clipboard.writeText(window.location.href);
+            setManual(null);
             setCopiado(true);
             setTimeout(() => setCopiado(false), 2500);
           } catch {
-            window.prompt("Copie o link da consulta:", window.location.href);
+            setManual(window.location.href);
           }
         }}
       >
         {copiado ? <Check aria-hidden="true" className="h-4 w-4" /> : <Link2 aria-hidden="true" className="h-4 w-4" />}
         Copiar link
       </Button>
+      {manual && (
+        <input
+          readOnly
+          value={manual}
+          aria-label="Link da consulta: selecione e copie"
+          onFocus={(e) => e.currentTarget.select()}
+          className="h-11 w-64 rounded-xl border border-field bg-card px-3 text-sm text-ink"
+        />
+      )}
       <span role="status" className="sr-only">
         {copiado ? "Link copiado" : ""}
       </span>

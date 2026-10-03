@@ -12,7 +12,7 @@ export interface SlideHero {
 }
 
 const seta =
-  "absolute bottom-4 z-10 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-[#14261f] shadow-lg ring-1 ring-black/10 transition-colors hover:bg-card focus-visible:outline-offset-2 xl:bottom-auto xl:top-1/2 xl:h-12 xl:w-12 xl:-translate-y-1/2";
+  "absolute bottom-4 z-10 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-on-light shadow-lg ring-1 ring-black/10 transition-colors hover:bg-card focus-visible:outline-offset-2 xl:bottom-auto xl:top-1/2 xl:h-12 xl:w-12 xl:-translate-y-1/2";
 
 export function HeroCarrossel({ slides, rotulo }: { slides: SlideHero[]; rotulo: string }) {
   const total = slides.length;
@@ -77,7 +77,7 @@ export function HeroCarrossel({ slides, rotulo }: { slides: SlideHero[]; rotulo:
                     aria-hidden="true"
                     className={cn(
                       "block h-3 rounded-full ring-2 ring-white shadow-sm transition-all group-hover:bg-brand-dark",
-                      i === atual ? "w-7 bg-brand" : "w-3 bg-[#8a9c92]",
+                      i === atual ? "w-7 bg-brand" : "w-3 bg-dot-off",
                     )}
                   />
                 </button>
