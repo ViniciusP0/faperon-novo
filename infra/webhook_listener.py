@@ -29,7 +29,14 @@ class Handler(BaseHTTPRequestHandler):
             self._reject(404)
             return
 
-        length = int(self.headers.get("Content-Length", 0))
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+        except ValueError:
+            self._reject(400)
+            return
+        if length < 0:
+            self._reject(400)
+            return
         if length > MAX_BODY_SIZE:
             self._reject(413)
             return
