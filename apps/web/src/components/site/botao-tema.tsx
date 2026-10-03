@@ -8,7 +8,8 @@ import { cn } from "@/lib/utils";
 export function BotaoTema({ className }: { className?: string }) {
   const [tema, setTema] = useState<Tema | null>(null);
 
-  // O tema real só é conhecido no navegador (script do <head>); até lá o botão renderiza neutro, sem divergir do servidor.
+  // O servidor sempre entrega o tema claro e a escolha do visitante não é salva (ver lib/tema.ts); o estado só é lido
+  // no navegador, depois da hidratação, para o botão não divergir do HTML do servidor.
   useEffect(() => setTema(temaAtual()), []);
 
   const escuro = tema === "escuro";

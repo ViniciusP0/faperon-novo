@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { FormularioLogin } from "@/components/login/formulario-login";
+import { Alert } from "@/components/ui/feedback";
 
 export const metadata: Metadata = {
   title: "Acessar o sistema",
@@ -17,6 +18,10 @@ export default function LoginPage() {
           <h1 className="mt-3 text-xl font-semibold text-ink">Acessar o sistema</h1>
           <p className="mt-1 text-sm text-ink-muted">Entre com seu e-mail e senha da FAPERON.</p>
         </div>
+
+        <Alert tone="info" className="mb-4">
+          O acesso ao sistema ainda está em desenvolvimento e abrirá em breve.
+        </Alert>
 
         <FormularioLogin />
 
