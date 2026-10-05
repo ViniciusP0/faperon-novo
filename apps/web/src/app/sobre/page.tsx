@@ -53,7 +53,7 @@ export default function SobrePage() {
           </>
         }
       >
-        <p>{s.quem_somos.paragrafos[0]}</p>
+        <p className="text-justify hyphens-auto">{s.quem_somos.paragrafos[0]}</p>
         <Link href={ROTAS.faleConosco} className={cn(buttonVariants({ size: "lg" }), "mt-4")}>
           Fale com a FAPERON
         </Link>
@@ -78,7 +78,9 @@ export default function SobrePage() {
             </h2>
             <div className="prose-faperon mt-5 max-w-[64ch] text-ink">
               {s.quem_somos.paragrafos.map((p) => (
-                <p key={p}>{p}</p>
+                <p key={p} className="text-justify hyphens-auto">
+                  {p}
+                </p>
               ))}
               <p className="font-semibold">Seus objetivos são:</p>
               <ul>
