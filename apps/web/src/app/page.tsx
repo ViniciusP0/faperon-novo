@@ -19,6 +19,7 @@ import { formatCompacto, formatNumero } from "@/lib/format";
 import { contarMunicipios, contarProdutos, destaques as buscarDestaques } from "@/lib/server-api";
 import { WIX_PAGINAS } from "@/lib/site";
 import { cn } from "@/lib/utils";
+import { NumeroAnimado } from "@/components/site/numero-animado";
 import { Revelar } from "@/components/site/revelar";
 
 export const dynamic = "force-dynamic";
@@ -201,7 +202,9 @@ export default async function InicioPage() {
             <ul className="mt-6 flex gap-8">
               {SOBRE.quem_somos.numeros.slice(1).map((n) => (
                 <li key={n.rotulo}>
-                  <p className="text-3xl font-bold tabular-nums text-brand-fg">{n.valor}</p>
+                  <p className="text-3xl font-bold tabular-nums text-brand-fg">
+                    <NumeroAnimado valor={n.valor} />
+                  </p>
                   <p className="mt-0.5 text-sm text-ink-muted">{n.rotulo}</p>
                 </li>
               ))}
@@ -327,7 +330,9 @@ export default async function InicioPage() {
           <ul className="mt-6 grid gap-10 md:grid-cols-3">
             {numeros.map((n) => (
               <li key={n.rotulo}>
-                <p className="text-3xl font-semibold tracking-tight text-brand-fg tabular-nums md:text-4xl">{n.valor}</p>
+                <p className="text-3xl font-semibold tracking-tight text-brand-fg tabular-nums md:text-4xl">
+                  <NumeroAnimado valor={n.valor} />
+                </p>
                 <h3 className="mt-2.5 text-lg font-semibold">{n.rotulo}</h3>
                 <p className="mt-1.5 max-w-[36ch] text-ink-muted">{n.texto}</p>
               </li>

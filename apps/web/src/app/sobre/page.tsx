@@ -64,8 +64,8 @@ export default function SobrePage() {
         rotulo="A FAPERON em números"
         itens={[
           { rotulo: "Fundação", valor: numeros[0]!.valor, detalhe: "mais de 40 anos de representação" },
-          { rotulo: "Sindicatos rurais", valor: numeros[1]!.valor, detalhe: "filiados à federação" },
-          { rotulo: "Municípios", valor: numeros[2]!.valor, detalhe: "com atuação em todo o estado" },
+          { rotulo: "Sindicatos rurais", valor: numeros[1]!.valor, detalhe: "filiados à federação", animar: true },
+          { rotulo: "Municípios", valor: numeros[2]!.valor, detalhe: "com atuação em todo o estado", animar: true },
         ]}
       />
 

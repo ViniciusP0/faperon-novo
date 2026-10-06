@@ -50,9 +50,9 @@ export default function InformativosPage() {
       <FaixaNumeros
         rotulo="Publicações"
         itens={[
-          { rotulo: corte!.titulo, valor: String(corte!.itens.length), detalhe: "informativos mensais" },
-          { rotulo: leite!.titulo, valor: String(leite!.itens.length), detalhe: "informativos mensais" },
-          { rotulo: "Boletins técnicos", valor: String(inf.boletins.length), detalhe: "edição 2024.2" },
+          { rotulo: corte!.titulo, valor: String(corte!.itens.length), detalhe: "informativos mensais", animar: true },
+          { rotulo: leite!.titulo, valor: String(leite!.itens.length), detalhe: "informativos mensais", animar: true },
+          { rotulo: "Boletins técnicos", valor: String(inf.boletins.length), detalhe: "edição 2024.2", animar: true },
         ]}
       />
 
