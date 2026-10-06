@@ -9,6 +9,7 @@ import { INFORMATIVOS as inf } from "@/content/informativos";
 import { livroDoBoletim, livroDoInformativo, maisRecente } from "@/lib/informativos";
 import { CNA_COMMODITIES_URL } from "@/lib/site";
 import { cn } from "@/lib/utils";
+import { Revelar } from "@/components/site/revelar";
 
 export const metadata: Metadata = {
   title: inf.seo.titulo,
@@ -55,30 +56,30 @@ export default function InformativosPage() {
         ]}
       />
 
-      <section aria-labelledby="ultimas-titulo" className="container pt-16">
+      <Revelar as="section" aria-labelledby="ultimas-titulo" className="container pt-16">
         <h2 id="ultimas-titulo" className="text-[1.75rem] font-semibold tracking-tight">
           Últimas edições
         </h2>
         <p className="mt-1 max-w-[60ch] text-ink-muted">As publicações mais recentes de cada categoria, em destaque.</p>
         <UltimasEdicoes edicoes={ultimas} />
-      </section>
+      </Revelar>
 
-      <section id="arquivo" aria-labelledby="arquivo-titulo" className="container scroll-mt-24 pt-16">
+      <Revelar as="section" id="arquivo" aria-labelledby="arquivo-titulo" className="container scroll-mt-24 pt-16">
         <h2 id="arquivo-titulo" className="text-[1.75rem] font-semibold tracking-tight">
           Estante de informativos
         </h2>
         <p className="mb-5 mt-1 max-w-[60ch] text-ink-muted">Todo o arquivo mensal. Escolha a categoria, o ano e a forma de visualizar.</p>
         <ArquivoInformativos categorias={inf.categorias} />
-      </section>
+      </Revelar>
 
       <div className="mt-16 border-y border-line bg-gradient-to-br from-warm to-surface-alt">
-        <section id="boletins" aria-labelledby="boletins-titulo" className="container scroll-mt-24 py-16">
+        <Revelar as="section" id="boletins" aria-labelledby="boletins-titulo" className="container scroll-mt-24 py-16">
           <h2 id="boletins-titulo" className="text-[1.75rem] font-semibold tracking-tight">
             Boletins técnicos
           </h2>
           <p className="mt-1 max-w-[60ch] text-ink-muted">Edições com mais profundidade que o informativo mensal.</p>
           <BoletinsEmLivros boletins={boletins} />
-        </section>
+        </Revelar>
       </div>
 
       <CtaDuplo

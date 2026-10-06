@@ -4,6 +4,7 @@ import { Destaque, HeroPagina } from "@/components/site/hero-pagina";
 import { ListaSindicatos } from "@/components/sistema/lista-sindicatos";
 import { Fontes, NavSistema } from "@/components/sistema/nav-sistema";
 import { SINDICATOS, SINDICATOS_TEXTO as c } from "@/content/sindicatos";
+import { Revelar } from "@/components/site/revelar";
 
 export const metadata: Metadata = {
   title: c.seo.titulo,
@@ -31,7 +32,7 @@ export default function SindicatosRuraisPage() {
       <NavSistema atual="Sindicatos Rurais" />
 
       <div className="container grid gap-14 pt-14">
-        <section aria-labelledby="lista-titulo">
+        <Revelar as="section" aria-labelledby="lista-titulo">
           <h2 id="lista-titulo" className={tituloSecao}>
             Sindicatos dos Produtores Rurais
           </h2>
@@ -40,9 +41,9 @@ export default function SindicatosRuraisPage() {
           </p>
           <ListaSindicatos sindicatos={SINDICATOS} />
           <Fontes fontes={[{ rotulo: "Site da FAPERON, Sindicatos Rurais", url: "https://www.faperon.com.br/mapa-sindicatos" }]} />
-        </section>
+        </Revelar>
 
-        <section aria-labelledby="acao-titulo" className="rounded-2xl bg-brand-dark p-7 text-white md:p-10">
+        <Revelar as="section" aria-labelledby="acao-titulo" className="rounded-2xl bg-brand-dark p-7 text-white md:p-10">
           <h2 id="acao-titulo" className="text-3xl font-semibold tracking-tight">
             {c.acao.titulo}
           </h2>
@@ -62,7 +63,7 @@ export default function SindicatosRuraisPage() {
               <span className="sr-only"> (abre em nova aba)</span>
             </a>
           </p>
-        </section>
+        </Revelar>
       </div>
 
       <CtaDuplo

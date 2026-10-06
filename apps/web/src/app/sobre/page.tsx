@@ -12,6 +12,7 @@ import { type Cargo, SOBRE as s } from "@/content/sobre";
 import { formatData } from "@/lib/format";
 import { ROTAS, WIX_PAGINAS } from "@/lib/site";
 import { cn } from "@/lib/utils";
+import { Revelar } from "@/components/site/revelar";
 
 export const metadata: Metadata = {
   title: s.seo.titulo,
@@ -72,7 +73,7 @@ export default function SobrePage() {
         <IndiceSecoes secoes={s.secoes} />
 
         <div className="min-w-0">
-          <section id="quem-somos" aria-labelledby="quem-somos-titulo" className="scroll-mt-32 pt-14 lg:pt-[4.5rem]">
+          <Revelar as="section" id="quem-somos" aria-labelledby="quem-somos-titulo" className="scroll-mt-32 pt-14 lg:pt-[4.5rem]">
             <h2 id="quem-somos-titulo" className={tituloSecao}>
               Quem somos
             </h2>
@@ -89,9 +90,9 @@ export default function SobrePage() {
                 ))}
               </ul>
             </div>
-          </section>
+          </Revelar>
 
-          <section id="missao-visao-valores" aria-labelledby="mvv-titulo" className="scroll-mt-32 pt-16">
+          <Revelar as="section" id="missao-visao-valores" aria-labelledby="mvv-titulo" className="scroll-mt-32 pt-16">
             <h2 id="mvv-titulo" className={tituloSecao}>
               Missão, visão e valores
             </h2>
@@ -115,9 +116,9 @@ export default function SobrePage() {
                 </ul>
               </article>
             </div>
-          </section>
+          </Revelar>
 
-          <section id="diretoria" aria-labelledby="diretoria-titulo" className="scroll-mt-32 pt-16">
+          <Revelar as="section" id="diretoria" aria-labelledby="diretoria-titulo" className="scroll-mt-32 pt-16">
             <div className="flex flex-wrap items-center gap-3">
               <h2 id="diretoria-titulo" className={tituloSecao}>
                 Diretoria
@@ -151,9 +152,9 @@ export default function SobrePage() {
                 </div>
               ))}
             </div>
-          </section>
+          </Revelar>
 
-          <section id="estatuto" aria-labelledby="estatuto-titulo" className="scroll-mt-32 pt-16">
+          <Revelar as="section" id="estatuto" aria-labelledby="estatuto-titulo" className="scroll-mt-32 pt-16">
             <h2 id="estatuto-titulo" className={tituloSecao}>
               Estatuto
             </h2>
@@ -195,9 +196,9 @@ export default function SobrePage() {
               </a>
               .
             </p>
-          </section>
+          </Revelar>
 
-          <section id="sistema" aria-labelledby="sistema-titulo" className="scroll-mt-32 pt-16">
+          <Revelar as="section" id="sistema" aria-labelledby="sistema-titulo" className="scroll-mt-32 pt-16">
             <h2 id="sistema-titulo" className={tituloSecao}>
               Sistema FAPERON
             </h2>
@@ -234,7 +235,7 @@ export default function SobrePage() {
                 <span className="sr-only"> (abre em nova aba)</span>
               </a>
             </div>
-          </section>
+          </Revelar>
         </div>
       </div>
 

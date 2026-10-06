@@ -19,6 +19,7 @@ import { formatCompacto, formatNumero } from "@/lib/format";
 import { contarMunicipios, contarProdutos, destaques as buscarDestaques } from "@/lib/server-api";
 import { WIX_PAGINAS } from "@/lib/site";
 import { cn } from "@/lib/utils";
+import { Revelar } from "@/components/site/revelar";
 
 export const dynamic = "force-dynamic";
 
@@ -184,7 +185,7 @@ export default async function InicioPage() {
         </div>
       </section>
 
-      <section aria-labelledby="sistema-titulo" className="relative mt-10 overflow-hidden border-y border-line bg-surface-alt/80 py-14 md:py-20">
+      <Revelar as="section" aria-labelledby="sistema-titulo" className="relative mt-10 overflow-hidden border-y border-line bg-surface-alt/80 py-14 md:py-20">
         <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-brand-lime/20 blur-3xl" />
         <div aria-hidden="true" className="pointer-events-none absolute -bottom-32 -left-16 h-80 w-80 rounded-full bg-brand/10 blur-3xl" />
         <div className="container relative grid gap-10">
@@ -208,8 +209,8 @@ export default async function InicioPage() {
           </div>
 
           <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {SOBRE.sistema.entidades.map((e) => (
-              <li key={e.nome} className="flex">
+            {SOBRE.sistema.entidades.map((e, i) => (
+              <Revelar as="li" indice={i} key={e.nome} className="flex">
                 <LinkAuto
                   href={e.url}
                   className="group flex w-full flex-col overflow-hidden rounded-2xl bg-brand-dark p-5 text-white transition-colors hover:bg-brand md:min-h-[19rem] motion-reduce:transition-none"
@@ -233,13 +234,13 @@ export default async function InicioPage() {
                     <ArrowUpRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                   </span>
                 </LinkAuto>
-              </li>
+              </Revelar>
             ))}
           </ul>
         </div>
-      </section>
+      </Revelar>
 
-      <section aria-label={commodities.titulo} className="container mt-10">
+      <Revelar as="section" aria-label={commodities.titulo} className="container mt-10">
         <Card className="mx-auto max-w-2xl border-transparent bg-brand-dark text-white shadow-md">
           <CardHeader className="flex-row items-center gap-2 pb-2">
             <TrendingUp aria-hidden="true" className="h-5 w-5 shrink-0 text-brand-lime" />
@@ -259,9 +260,9 @@ export default async function InicioPage() {
             </a>
           </CardContent>
         </Card>
-      </section>
+      </Revelar>
 
-      <section aria-labelledby="senar-titulo" className="container mt-16">
+      <Revelar as="section" aria-labelledby="senar-titulo" className="container mt-16">
         <div className="mb-6 flex items-baseline justify-between gap-4">
           <h2 id="senar-titulo" className="text-2xl font-semibold md:text-3xl">
             {SENAR.titulo}
@@ -278,9 +279,9 @@ export default async function InicioPage() {
           </a>
         </div>
         <BannersSenar banners={SENAR.banners} rotulo={SENAR.rotulo} url={SENAR.url} />
-      </section>
+      </Revelar>
 
-      <section aria-labelledby="noticias-titulo" className="container mt-16">
+      <Revelar as="section" aria-labelledby="noticias-titulo" className="container mt-16">
         <div className="mb-6 flex items-baseline justify-between gap-4">
           <h2 id="noticias-titulo" className="text-2xl font-semibold md:text-3xl">
             Notícias recentes
@@ -297,15 +298,15 @@ export default async function InicioPage() {
           </a>
         </div>
         <ul className="grid gap-8 md:grid-cols-3">
-          {noticias.map((n) => (
-            <li key={n.slug}>
+          {noticias.map((n, i) => (
+            <Revelar as="li" indice={i} key={n.slug}>
               <NoticiaChamada noticia={n} />
-            </li>
+            </Revelar>
           ))}
         </ul>
-      </section>
+      </Revelar>
 
-      <section aria-labelledby="central-titulo" className="mt-16 bg-brand-dark px-4 py-12 text-white md:px-6">
+      <Revelar as="section" aria-labelledby="central-titulo" className="mt-16 bg-brand-dark px-4 py-12 text-white md:px-6">
         <div className="container">
           <h2 id="central-titulo" className="max-w-[36ch] text-3xl font-semibold leading-tight tracking-tight">
             {central.titulo}
@@ -315,10 +316,10 @@ export default async function InicioPage() {
             {central.cta_texto}
           </Link>
         </div>
-      </section>
+      </Revelar>
 
       {numeros.length > 0 && (
-        <section aria-labelledby="nosso-agro-titulo" className="container mt-16">
+        <Revelar as="section" aria-labelledby="nosso-agro-titulo" className="container mt-16">
           <h2 id="nosso-agro-titulo" className="text-2xl font-semibold md:text-3xl">
             {nosso_agro.titulo}
           </h2>
@@ -332,7 +333,7 @@ export default async function InicioPage() {
               </li>
             ))}
           </ul>
-        </section>
+        </Revelar>
       )}
     </>
   );

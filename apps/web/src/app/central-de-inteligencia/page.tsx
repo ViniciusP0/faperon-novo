@@ -5,6 +5,7 @@ import { Icone } from "@/components/site/icone";
 import { buttonVariants } from "@/components/ui/button";
 import { CENTRAL as c } from "@/content/central";
 import { cn } from "@/lib/utils";
+import { Revelar } from "@/components/site/revelar";
 
 export const metadata: Metadata = {
   title: c.seo.titulo,
@@ -30,7 +31,7 @@ export default function CentralPage() {
         </div>
       </section>
 
-      <section className="container mt-12 grid gap-10 lg:grid-cols-[3fr_2fr]">
+      <Revelar as="section" className="container mt-12 grid gap-10 lg:grid-cols-[3fr_2fr]">
         <div className="prose-faperon max-w-none text-ink">
           {c.paragrafos.map((p) => (
             <p key={p}>{p}</p>
@@ -52,9 +53,9 @@ export default function CentralPage() {
             ))}
           </ul>
         </aside>
-      </section>
+      </Revelar>
 
-      <section className="container mt-12">
+      <Revelar as="section" className="container mt-12">
         <div className="rounded-2xl border border-line p-8 text-center">
           <h2 className="text-2xl font-semibold">Pronto para explorar os dados?</h2>
           <p className="mx-auto mt-2 max-w-xl text-ink-muted">
@@ -64,7 +65,7 @@ export default function CentralPage() {
             {c.cta_texto}
           </Link>
         </div>
-      </section>
+      </Revelar>
     </>
   );
 }

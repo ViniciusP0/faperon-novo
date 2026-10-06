@@ -3,6 +3,7 @@ import { CtaDuplo } from "@/components/site/cta-duplo";
 import { Destaque, HeroPagina } from "@/components/site/hero-pagina";
 import { Fontes, NavSistema } from "@/components/sistema/nav-sistema";
 import { MULHERES as c } from "@/content/comissao-mulheres";
+import { Revelar } from "@/components/site/revelar";
 
 export const metadata: Metadata = {
   title: c.seo.titulo,
@@ -30,7 +31,7 @@ export default function ComissaoMulheresPage() {
       <NavSistema atual="Comissão Mulheres" />
 
       <div className="container grid gap-14 pt-14">
-        <section aria-labelledby="atuacao-titulo">
+        <Revelar as="section" aria-labelledby="atuacao-titulo">
           <h2 id="atuacao-titulo" className={tituloSecao}>
             {c.atuacao.titulo}
           </h2>
@@ -43,9 +44,9 @@ export default function ComissaoMulheresPage() {
             ))}
           </ul>
           <Fontes fontes={[c.atuacao.fonte]} />
-        </section>
+        </Revelar>
 
-        <section aria-labelledby="lideranca-titulo" className="grid gap-6 rounded-2xl bg-surface-alt p-7 md:p-9 lg:grid-cols-[1fr_1.6fr] lg:gap-14">
+        <Revelar as="section" aria-labelledby="lideranca-titulo" className="grid gap-6 rounded-2xl bg-surface-alt p-7 md:p-9 lg:grid-cols-[1fr_1.6fr] lg:gap-14">
           <h2 id="lideranca-titulo" className={tituloSecao}>
             {c.lideranca.titulo}
           </h2>
@@ -53,9 +54,9 @@ export default function ComissaoMulheresPage() {
             <p className="leading-relaxed">{c.lideranca.texto}</p>
             <Fontes fontes={[c.lideranca.fonte]} />
           </div>
-        </section>
+        </Revelar>
 
-        <section aria-labelledby="nacional-titulo" className="rounded-2xl bg-brand-dark p-7 text-white md:p-10">
+        <Revelar as="section" aria-labelledby="nacional-titulo" className="rounded-2xl bg-brand-dark p-7 text-white md:p-10">
           <h2 id="nacional-titulo" className="text-3xl font-semibold tracking-tight">
             {c.nacional.titulo}
           </h2>
@@ -87,9 +88,9 @@ export default function ComissaoMulheresPage() {
               <span className="sr-only"> (abre em nova aba)</span>
             </a>
           </p>
-        </section>
+        </Revelar>
 
-        <section aria-labelledby="linha-titulo">
+        <Revelar as="section" aria-labelledby="linha-titulo">
           <h2 id="linha-titulo" className={tituloSecao}>
             {c.linhaDoTempo.titulo}
           </h2>
@@ -104,7 +105,7 @@ export default function ComissaoMulheresPage() {
               </li>
             ))}
           </ol>
-        </section>
+        </Revelar>
       </div>
 
       <CtaDuplo

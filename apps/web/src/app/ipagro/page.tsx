@@ -6,6 +6,7 @@ import { Fontes, NavSistema } from "@/components/sistema/nav-sistema";
 import { buttonVariants } from "@/components/ui/button";
 import { IPAGRO as c } from "@/content/ipagro";
 import { cn } from "@/lib/utils";
+import { Revelar } from "@/components/site/revelar";
 
 export const metadata: Metadata = {
   title: c.seo.titulo,
@@ -34,7 +35,7 @@ export default function IpagroPage() {
       <NavSistema atual="IPAGRO" />
 
       <div className="container grid gap-14 pt-14">
-        <section aria-labelledby="ficha-titulo" className="grid gap-8 lg:grid-cols-[1fr_1.5fr] lg:gap-14">
+        <Revelar as="section" aria-labelledby="ficha-titulo" className="grid gap-8 lg:grid-cols-[1fr_1.5fr] lg:gap-14">
           <div>
             <h2 id="ficha-titulo" className={tituloSecao}>
               Ficha institucional
@@ -50,9 +51,9 @@ export default function IpagroPage() {
               </div>
             ))}
           </dl>
-        </section>
+        </Revelar>
 
-        <section aria-labelledby="diagnostico-titulo" className="rounded-2xl bg-brand-dark p-7 text-white md:p-10">
+        <Revelar as="section" aria-labelledby="diagnostico-titulo" className="rounded-2xl bg-brand-dark p-7 text-white md:p-10">
           <p className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.18em] text-brand-lime">
             <FlaskConical aria-hidden="true" className="h-4 w-4" />
             {d.etiqueta}
@@ -90,9 +91,9 @@ export default function IpagroPage() {
               </ul>
             </div>
           </div>
-        </section>
+        </Revelar>
 
-        <section aria-labelledby="transparencia-titulo" className="rounded-2xl bg-steel-soft p-7 md:p-10">
+        <Revelar as="section" aria-labelledby="transparencia-titulo" className="rounded-2xl bg-steel-soft p-7 md:p-10">
           <h2 id="transparencia-titulo" className={tituloSecao}>
             {c.transparencia.titulo}
           </h2>
@@ -128,7 +129,7 @@ export default function IpagroPage() {
               </div>
             </div>
           </div>
-        </section>
+        </Revelar>
       </div>
 
       <CtaDuplo
