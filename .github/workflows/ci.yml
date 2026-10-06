@@ -27,6 +27,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build da imagem da API
         run: docker build --target dev -t faperon-api apps/api
+      - name: Build do estágio de produção da API
+        run: docker build --target prod -t faperon-api-prod apps/api
       - name: Ruff
         run: docker run --rm faperon-api ruff check .
       - name: mypy
