@@ -10,15 +10,19 @@ def env_bool(nome: str, padrao: bool = False) -> bool:
     return os.environ.get(nome, "1" if padrao else "0").lower() in {"1", "true", "yes", "on"}
 
 
+def env_lista(nome: str, padrao: str = "") -> list[str]:
+    return [item.strip() for item in os.environ.get(nome, padrao).split(",") if item.strip()]
+
+
 DEBUG = env_bool("DJANGO_DEBUG")
 SECRET_KEY_PADRAO = "dev-insegura-troque-em-producao"  # noqa: S105
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", SECRET_KEY_PADRAO)
 if not DEBUG and SECRET_KEY == SECRET_KEY_PADRAO:
     raise ImproperlyConfigured("Defina DJANGO_SECRET_KEY: a chave padrão é pública e só vale com DJANGO_DEBUG=1.")
-ALLOWED_HOSTS = [h.strip() for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",") if h]
-CSRF_TRUSTED_ORIGINS = [
-    o.strip() for o in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()
-]
+# "api" é o Host que o proxy do Next usa (API_INTERNAL_URL=http://api:8000); localhost serve o healthcheck.
+ALLOWED_HOSTS_PADRAO = "localhost,127.0.0.1,api"
+ALLOWED_HOSTS = env_lista("DJANGO_ALLOWED_HOSTS", ALLOWED_HOSTS_PADRAO)
+CSRF_TRUSTED_ORIGINS = env_lista("DJANGO_CSRF_TRUSTED_ORIGINS")
 
 INSTALLED_APPS = [
     "ingestao",
