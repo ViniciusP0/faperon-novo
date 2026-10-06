@@ -1,7 +1,9 @@
 name: faperon
 
 x-api: &api
-  build: ./apps/api
+  build:
+    context: ./apps/api
+    target: prod
   env_file: .env
   environment:
     POSTGRES_HOST: db
