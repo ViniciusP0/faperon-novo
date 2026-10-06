@@ -171,6 +171,42 @@ def test_comparacao_de_produtos_com_mesma_unidade(api: APIClient, milho_e_leite:
     ]
 
 
+def _produto_sem_medicoes(slug: str, codigo: str) -> Produto:
+    produto = Produto.objects.create(
+        slug=slug, codigo_ibge=codigo, nome=slug, segmento="agricultura", tabela_origem=5457
+    )
+    ProdutoIndicador.objects.create(
+        produto=produto,
+        indicador=Indicador.objects.get(slug="quantidade-produzida"),
+        unidade="Toneladas",
+    )
+    return produto
+
+
+def test_comparacao_de_produtos_com_um_sem_dados_nao_da_404(
+    api: APIClient, dados_soja: Produto
+) -> None:
+    _produto_sem_medicoes("trigo-em-grao", "40126")
+    status, corpo = get(
+        api, "comparacao?produtos=soja-em-grao,trigo-em-grao&indicador=quantidade-produzida"
+    )
+    assert status == 200
+    assert corpo["fim"] == 2024
+    series = {s["id"]: s["pontos"] for s in corpo["series"]}
+    assert set(series) == {"soja-em-grao", "trigo-em-grao"}
+    assert all(p["valor"] is None for p in series["trigo-em-grao"])
+
+
+def test_comparacao_de_produtos_todos_sem_dados_da_404(api: APIClient, dados_soja: Produto) -> None:
+    _produto_sem_medicoes("trigo-em-grao", "40126")
+    _produto_sem_medicoes("aveia-em-grao", "40127")
+    status, corpo = get(
+        api, "comparacao?produtos=trigo-em-grao,aveia-em-grao&indicador=quantidade-produzida"
+    )
+    assert status == 404
+    assert corpo["erro"] == "Não há dados publicados para este produto e indicador"
+
+
 def test_comparacao_bloqueia_unidades_diferentes(api: APIClient, milho_e_leite: None) -> None:
     status, corpo = get(
         api, "comparacao?produtos=soja-em-grao,leite&indicador=quantidade-produzida&fim=2024"

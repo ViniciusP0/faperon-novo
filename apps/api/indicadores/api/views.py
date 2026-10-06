@@ -12,7 +12,7 @@ from indicadores.api import apresentacao as ap
 from indicadores.api import destaques
 from indicadores.api import serializers as sz
 from indicadores.api.parametros import lista_csv, validar_consulta
-from indicadores.erros import ConsultaInvalida
+from indicadores.erros import ConsultaInvalida, NaoEncontrado
 from indicadores.models import Medicao, Municipio
 from indicadores.servicos import Recorte
 from ingestao.models import Carga
@@ -190,9 +190,15 @@ class ComparacaoView(APIView):
 
     def _por_produtos(self, dados: dict[str, Any], slugs: list[str]) -> dict[str, Any]:
         recortes = [servicos.obter_recorte(s, dados["indicador"]) for s in slugs]
-        periodos = [
-            servicos.resolver_periodo(r, dados.get("inicio"), dados.get("fim")) for r in recortes
-        ]
+        periodos: list[tuple[int, int]] = []
+        ultima_falha: NaoEncontrado | None = None
+        for r in recortes:
+            try:
+                periodos.append(servicos.resolver_periodo(r, dados.get("inicio"), dados.get("fim")))
+            except NaoEncontrado as falha:
+                ultima_falha = falha
+        if not dados.get("fim") and not periodos and ultima_falha is not None:
+            raise ultima_falha
         fim = dados.get("fim") or max(p[1] for p in periodos)
         inicio = dados.get("inicio") or fim - (servicos.JANELA_PADRAO - 1)
         municipio = servicos.obter_municipio(dados["municipio"]) if dados.get("municipio") else None
