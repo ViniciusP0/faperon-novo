@@ -121,9 +121,12 @@ test("comparação: municípios, produtos e bloqueio de unidades diferentes", as
   await expect(page.getByTestId("grafico").locator("svg")).toBeVisible();
   await expect(page.getByRole("list", { name: "Itens selecionados" }).getByRole("listitem")).toHaveCount(3);
 
-  // limite de 5
+  // limite de 5 (espera cada inclusão aparecer antes da próxima, senão sob carga a segunda seleção repete a primeira)
+  const selecionados = page.getByRole("list", { name: "Itens selecionados" }).getByRole("listitem");
   await page.getByLabel(/Adicionar município/).selectOption({ index: 1 });
+  await expect(selecionados).toHaveCount(4);
   await page.getByLabel(/Adicionar município/).selectOption({ index: 1 });
+  await expect(selecionados).toHaveCount(5);
   await expect(page.getByLabel(/Adicionar município/)).toBeDisabled();
 
   // produtos com unidades diferentes (Toneladas × Quilogramas) → 422
