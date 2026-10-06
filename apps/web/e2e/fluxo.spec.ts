@@ -28,15 +28,9 @@ test("jornada Início → Central → Painel → filtros → ranking → série 
   await semViolacoesSerias(page);
   await carrossel.getByRole("button", { name: /Ir para o slide 2/ }).click();
 
-  const abas = page.getByRole("tab");
-  await expect(abas).toHaveCount(6);
-  await expect(page.getByRole("tab", { selected: true })).toContainText("Soja");
-  await page.getByRole("tab", { name: /Leite/ }).click();
-  await expect(page.getByRole("tabpanel")).toContainText("Leite: produção de origem animal");
-  await expect(page.getByRole("tabpanel")).toContainText("litros");
-  await page.getByRole("tab", { name: /Leite/ }).press("ArrowRight");
-  await expect(page.getByRole("tab", { selected: true })).toContainText("Soja");
-  await expect(page.getByRole("tabpanel").getByRole("link", { name: /Ver os 52 municípios no painel/ })).toHaveAttribute("href", /\/painel\?segmento=agricultura&produto=soja-em-grao/);
+  // Nosso Agro: três números da agropecuária (substituíram as abas de produtos da home)
+  const nossoAgro = page.getByRole("region", { name: "Nosso Agro" });
+  await expect(nossoAgro.getByRole("listitem")).toHaveCount(3);
   await expect(page.getByRole("heading", { name: "Notícias recentes" })).toBeVisible();
 
   // Bloco SENAR fica acima das notícias e cada banner leva ao Sistema FAPERON/SENAR
@@ -48,7 +42,7 @@ test("jornada Início → Central → Painel → filtros → ranking → série 
   await expect(banners.getByRole("link", { name: /Transformando o campo/ })).toHaveAttribute("href", "https://sistemafaperon.org.br/");
   await banners.getByRole("button", { name: "Próximo banner" }).click();
   await expect(banners.getByRole("link", { name: /Processo Seletivo Senar e-Tec/ })).toBeVisible();
-  await expect(page.locator("main a[href*=\"faperon.com.br/post/\"]")).toHaveCount(3);
+  await expect(page.getByRole("region", { name: "Notícias recentes" }).locator("a[href*=\"faperon.com.br/post/\"]")).toHaveCount(3);
   await expect(page.getByRole("main").locator("img[src^=\"/noticias/\"]").first()).toBeVisible();
   const cna = page.getByRole("link", { name: /Confira os preços na CNA/ });
   await expect(cna).toHaveAttribute("href", /cnabrasil\.org\.br\/servicos\/precos-commodities/);
@@ -75,7 +69,7 @@ test("jornada Início → Central → Painel → filtros → ranking → série 
 
   // Ranking com 52 municípios e filtros na URL
   await expect(page.getByTestId("cartao-numero")).toHaveCount(4);
-  await expect(page.getByTestId("barra-item")).toHaveCount(10);
+  await expect(page.locator("#ranking").getByTestId("barra-item")).toHaveCount(10); // a seção Análise também tem barras (top 5)
   await page.getByText(/Ver os 52 municípios/).click();
   const tabela = page.getByRole("table").first();
   await expect(tabela.getByRole("row")).toHaveCount(53); // cabeçalho + 52
@@ -137,7 +131,7 @@ test("comparação: municípios, produtos e bloqueio de unidades diferentes", as
   await expect(page.getByLabel("Produtos", { exact: true })).toBeChecked();
   await page.getByLabel(/Adicionar produto/).selectOption({ label: "Cacau (em amêndoa)" });
   await expect(page.getByRole("alert").filter({ hasText: "Comparação bloqueada" })).toBeVisible();
-  await expect(page.getByTestId("grafico")).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "Comparação" }).getByTestId("grafico")).toHaveCount(0);
 
   // produtos com a mesma unidade → gráfico
   await page.getByRole("button", { name: "Remover Cacau (em amêndoa)" }).click();
