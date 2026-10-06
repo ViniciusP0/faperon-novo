@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, cast
 
 from django.http import HttpResponse
 from drf_spectacular.types import OpenApiTypes
@@ -82,7 +82,8 @@ class RelatorioPdfView(APIView):
         """Para no primeiro limite que recusa: pedido barrado por IP não gasta o teto global."""
         for throttle in self.get_throttles():
             if not throttle.allow_request(request, self):
-                self.throttled(request, throttle.wait())
+                # o stub do DRF exige float, mas o DRF aceita None (sem Retry-After)
+                self.throttled(request, cast(float, throttle.wait()))
 
     @extend_schema(
         parameters=[ConsultaRelatorioSerializer],
