@@ -138,7 +138,7 @@ export function Comparacao({ filtros, municipios, produtos, onChange }: Props) {
               <p className="mb-2 text-sm text-ink-muted">
                 {data.indicador.nome} — {data.unidade.toLowerCase()}, {data.inicio} a {data.fim}.
               </p>
-              <Grafico option={option} descricao={descreverComparacao(data.series, data.unidade)} altura={420} alturaMovel={320} />
+              <Grafico idEntrada="comparacao" option={option} descricao={descreverComparacao(data.series, data.unidade)} altura={420} alturaMovel={320} />
               <p className="mt-3 text-sm leading-relaxed">{descreverComparacao(data.series, data.unidade)}</p>
               <TabelaSeries
                 legenda={`Comparação de ${data.indicador.nome.toLowerCase()} entre ${data.series.map((s) => s.nome).join(", ")}`}

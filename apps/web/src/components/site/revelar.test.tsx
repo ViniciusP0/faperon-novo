@@ -1,33 +1,50 @@
 import { render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { definirMovimentoReduzido, instalarObserverFalso } from "@/test/mock-observer";
+import { definirMovimentoReduzido, definirTopoDosElementos, instalarObserverFalso } from "@/test/mock-observer";
 import { Revelar } from "./revelar";
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
 
 describe("Revelar", () => {
-  it("mantém o conteúdo oculto até entrar na tela e revela uma única vez", () => {
+  it("abaixo da dobra: fica pendente até entrar na tela, revela uma única vez e solta o observer", () => {
     const obs = instalarObserverFalso();
     render(<Revelar data-testid="r">Olá</Revelar>);
     const el = screen.getByTestId("r");
-    expect(el).toHaveClass("revelar");
-    expect(el).not.toHaveClass("revelar-visivel");
+    expect(el).toHaveClass("revelar", "revelar-pendente");
 
     obs.disparar();
-    expect(el).toHaveClass("revelar-visivel");
+    expect(el).not.toHaveClass("revelar-pendente");
     expect(obs.instancias[0]!.disconnect).toHaveBeenCalled();
   });
 
-  it("revela na hora quando o navegador não tem IntersectionObserver", () => {
+  it("já visível ao montar (acima da dobra): nunca esconde nem observa, para não piscar", () => {
+    const obs = instalarObserverFalso();
+    definirTopoDosElementos(200);
     render(<Revelar data-testid="r">Olá</Revelar>);
-    expect(screen.getByTestId("r")).toHaveClass("revelar-visivel");
+    expect(screen.getByTestId("r")).not.toHaveClass("revelar-pendente");
+    expect(obs.instancias).toHaveLength(0);
   });
 
-  it("revela na hora com movimento reduzido, sem criar observer", () => {
+  it("já rolado para além do elemento (link direto para uma âncora mais abaixo): não esconde", () => {
+    instalarObserverFalso();
+    definirTopoDosElementos(-800);
+    render(<Revelar data-testid="r">Olá</Revelar>);
+    expect(screen.getByTestId("r")).not.toHaveClass("revelar-pendente");
+  });
+
+  it("sem IntersectionObserver o conteúdo nunca fica pendente", () => {
+    render(<Revelar data-testid="r">Olá</Revelar>);
+    expect(screen.getByTestId("r")).not.toHaveClass("revelar-pendente");
+  });
+
+  it("com movimento reduzido nunca fica pendente e não cria observer", () => {
     definirMovimentoReduzido(true);
     const obs = instalarObserverFalso();
     render(<Revelar data-testid="r">Olá</Revelar>);
-    expect(screen.getByTestId("r")).toHaveClass("revelar-visivel");
+    expect(screen.getByTestId("r")).not.toHaveClass("revelar-pendente");
     expect(obs.instancias).toHaveLength(0);
   });
 

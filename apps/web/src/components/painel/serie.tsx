@@ -31,6 +31,7 @@ export function Serie({ filtros }: { filtros: Filtros }) {
             {nome} — {data.indicador.unidade.toLowerCase()}, {data.inicio} a {data.fim}.
           </p>
           <Grafico
+            idEntrada="serie"
             option={option}
             altura={420}
             alturaMovel={300}

@@ -12,13 +12,13 @@ interface RevelarProps extends HTMLAttributes<HTMLElement> {
 
 /** Revela o conteúdo com um fade curto ao entrar na tela. Sem JS ou com movimento reduzido ele já aparece normal. */
 export function Revelar({ as = "div", indice = 0, className, style, children, ...resto }: RevelarProps) {
-  const { ref, entrou } = useEntrouNaTela<HTMLElement>();
+  const { ref, pendente } = useEntrouNaTela<HTMLElement>();
   const Elemento = as as ElementType;
   const atraso = Math.min(indice, 3) * 60;
   return (
     <Elemento
       ref={ref}
-      className={cn("revelar", entrou && "revelar-visivel", className)}
+      className={cn("revelar", pendente && "revelar-pendente", className)}
       style={atraso ? { ...style, transitionDelay: `${atraso}ms` } : style}
       {...resto}
     >

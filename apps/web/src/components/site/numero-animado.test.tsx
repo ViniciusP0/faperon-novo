@@ -1,9 +1,12 @@
 import { act, render } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { definirMovimentoReduzido, instalarObserverFalso } from "@/test/mock-observer";
+import { definirMovimentoReduzido, definirTopoDosElementos, instalarObserverFalso } from "@/test/mock-observer";
 import { NumeroAnimado } from "./numero-animado";
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
 
 function instalarRaf() {
   const fila: FrameRequestCallback[] = [];
@@ -71,6 +74,17 @@ describe("NumeroAnimado", () => {
 
     raf.quadro(1500);
     expect(visivel(container)).toBe("3,4 mi");
+  });
+
+  it("já visível ao montar (logo abaixo do hero): mostra o valor final e não volta a 0", () => {
+    const obs = instalarObserverFalso();
+    const raf = instalarRaf();
+    definirTopoDosElementos(200);
+    const { container } = render(<NumeroAnimado valor="52" duracao={1000} />);
+    expect(visivel(container)).toBe("52");
+    expect(obs.instancias).toHaveLength(0);
+    raf.quadro(100);
+    expect(visivel(container)).toBe("52");
   });
 
   it("texto sem número (X, –) aparece como veio e não anima", () => {

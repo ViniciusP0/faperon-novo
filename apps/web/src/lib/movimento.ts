@@ -35,6 +35,3 @@ export function formatarNumeroPtBr(leitura: LeituraNumero, progresso: number): s
   });
   return `${leitura.prefixo}${numero}${leitura.sufixo}`;
 }
-
-/** Script inline do <head>: só com JS a revelação ao rolar esconde conteúdo; sem JS a página aparece inteira. */
-export const SCRIPT_JS_OK = `document.documentElement.classList.add("js-ok")`;

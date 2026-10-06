@@ -1,27 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { easeOutCubic, formatarNumeroPtBr, lerNumeroPtBr, reducaoDeMovimento, temObserver } from "@/lib/movimento";
+import { useEffect, useRef, useState } from "react";
+import { easeOutCubic, formatarNumeroPtBr, lerNumeroPtBr } from "@/lib/movimento";
 import { useEntrouNaTela } from "./use-entrou-na-tela";
 
-const podeAnimar = () => !reducaoDeMovimento() && temObserver();
-
 /**
- * Texto exibido de um número pt-BR já formatado: o valor final até a hidratação (SEO e sem JS), depois 0 e, ao
- * entrar na tela, a contagem até o valor. Texto sem número (X, –) nunca anima.
+ * Texto exibido de um número pt-BR já formatado. O valor final aparece desde o servidor; só um número que começa
+ * abaixo da dobra volta a 0 e conta até o valor ao entrar na tela. O que já está visível ao montar, texto sem
+ * número (X, –), movimento reduzido ou navegador sem IntersectionObserver ficam no valor final, sem piscar.
  */
 export function useContador(valor: string, duracao = 1200) {
-  const { ref, entrou } = useEntrouNaTela<HTMLSpanElement>();
+  const { ref, entrou, pendente } = useEntrouNaTela<HTMLSpanElement>();
   const [exibido, setExibido] = useState(valor);
+  const contar = useRef(false);
 
   useEffect(() => {
     const leitura = lerNumeroPtBr(valor);
-    if (leitura && podeAnimar()) setExibido(formatarNumeroPtBr(leitura, 0));
-  }, [valor]);
+    if (!pendente || !leitura) return;
+    contar.current = true;
+    setExibido(formatarNumeroPtBr(leitura, 0));
+  }, [pendente, valor]);
 
   useEffect(() => {
     const leitura = lerNumeroPtBr(valor);
-    if (!entrou || !leitura || !podeAnimar()) return;
+    if (!entrou || !contar.current || !leitura) return;
     let quadro = 0;
     let inicio: number | null = null;
     const passo = (agora: number) => {

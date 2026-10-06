@@ -120,17 +120,15 @@ body {
   --mov-easing: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* O estado oculto só vale com JS (a classe js-ok vem de um script no <head>); sem JS a página aparece inteira. */
-html.js-ok .revelar {
-  opacity: 0;
-  transform: translateY(12px);
+/* Só o que começa abaixo da dobra fica pendente (classe posta no navegador); nada se esconde antes da hidratação. */
+.revelar {
   transition:
     opacity var(--mov-base) var(--mov-easing),
     transform var(--mov-base) var(--mov-easing);
 }
-html.js-ok .revelar.revelar-visivel {
-  opacity: 1;
-  transform: none;
+.revelar.revelar-pendente {
+  opacity: 0;
+  transform: translateY(12px);
 }
 
 .card-elevar {
@@ -145,13 +143,16 @@ html.js-ok .revelar.revelar-visivel {
   box-shadow: 0 8px 20px -8px rgb(0 0 0 / 0.28);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  html.js-ok .revelar,
-  html.js-ok .revelar.revelar-visivel {
+@media (prefers-reduced-motion: reduce), print {
+  .revelar,
+  .revelar.revelar-pendente {
     opacity: 1;
     transform: none;
     transition: none;
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
   .card-elevar:hover,
   .card-elevar:focus-visible {
     transform: none;

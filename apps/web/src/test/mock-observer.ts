@@ -6,7 +6,26 @@ export interface Instancia {
   disconnect: ReturnType<typeof vi.fn>;
 }
 
-/** Instala um IntersectionObserver falso; `disparar()` simula o elemento entrando na tela. */
+/** Posição vertical (px a partir do topo da janela) que todo elemento reporta; o jsdom não tem layout. */
+export function definirTopoDosElementos(top: number) {
+  vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue({
+    top,
+    bottom: top + 100,
+    left: 0,
+    right: 100,
+    width: 100,
+    height: 100,
+    x: 0,
+    y: top,
+    toJSON: () => ({}),
+  });
+}
+
+/**
+ * Instala um IntersectionObserver falso; `disparar()` simula o elemento entrando na tela. Por padrão os elementos
+ * ficam bem abaixo da dobra (a revelação só se aplica a eles); use `definirTopoDosElementos` para mudar isso.
+ * Os testes devem chamar `vi.unstubAllGlobals()` e `vi.restoreAllMocks()` ao terminar.
+ */
 export function instalarObserverFalso() {
   const instancias: Instancia[] = [];
   class FalsoObserver {
@@ -25,6 +44,7 @@ export function instalarObserverFalso() {
     }
   }
   vi.stubGlobal("IntersectionObserver", FalsoObserver);
+  definirTopoDosElementos(10_000);
   return {
     instancias,
     disparar() {

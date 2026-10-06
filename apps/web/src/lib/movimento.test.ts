@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { definirMovimentoReduzido, instalarObserverFalso } from "@/test/mock-observer";
 import {
-  SCRIPT_JS_OK,
   easeOutCubic,
   formatarNumeroPtBr,
   lerNumeroPtBr,
@@ -9,7 +8,10 @@ import {
   temObserver,
 } from "./movimento";
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
 
 describe("lerNumeroPtBr", () => {
   it("lê inteiros", () => {
@@ -71,14 +73,5 @@ describe("detecção do ambiente", () => {
     expect(temObserver()).toBe(false);
     instalarObserverFalso();
     expect(temObserver()).toBe(true);
-  });
-});
-
-describe("SCRIPT_JS_OK", () => {
-  it("marca o <html> com js-ok", () => {
-    document.documentElement.classList.remove("js-ok");
-    new Function(SCRIPT_JS_OK)();
-    expect(document.documentElement.classList.contains("js-ok")).toBe(true);
-    document.documentElement.classList.remove("js-ok");
   });
 });
