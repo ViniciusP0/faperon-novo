@@ -271,3 +271,13 @@ def test_destaques_devolve_os_indicadores_da_home(api: APIClient, milho_e_leite:
 
     assert corpo["itens"][1]["variacao_percentual"] is None  # um único ano com dado
     assert corpo["meta"]["atualizado_em"] is not None
+
+
+@pytest.mark.parametrize("extra", ["", "&inicio=2015"])
+def test_recorte_sem_dados_responde_404_e_nao_inventa_periodo(
+    api: APIClient, soja: Produto, extra: str
+) -> None:
+    status, corpo = get(api, f"ranking?{Q}{extra}")
+    assert status == 404
+    assert corpo["erro"] == "Não há dados publicados para este produto e indicador"
+    assert corpo["campos"] == {}

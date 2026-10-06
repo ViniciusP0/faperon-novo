@@ -110,9 +110,11 @@ def anos_com_dados(recorte: Recorte) -> tuple[int, int] | None:
 
 def resolver_periodo(recorte: Recorte, inicio: int | None, fim: int | None) -> tuple[int, int]:
     """`fim` é o ano de referência do ranking; padrão: último ano com dados e 10 anos de janela."""
-    anos = anos_com_dados(recorte)
     if fim is None:
-        fim = anos[1] if anos else 0
+        anos = anos_com_dados(recorte)
+        if anos is None:
+            raise NaoEncontrado("Não há dados publicados para este produto e indicador")
+        fim = anos[1]
     if inicio is None:
         inicio = fim - (JANELA_PADRAO - 1)
     if inicio > fim:
