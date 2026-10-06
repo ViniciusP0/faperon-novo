@@ -120,11 +120,12 @@ def executar_carga(
             # Na mesma transação: se o REFRESH de mv_ranking falhar, os dados novos não ficam
             # publicados com o ranking antigo.
             carga_concluida.send(sender=Carga, carga=carga)
-        carga.status = Carga.Status.SUCESSO
-        carga.hash = digest if apenas is None else ""
-        carga.linhas = len(linhas)
-        carga.concluida_em = timezone.now()
-        carga.save()
+            # A baixa de SUCESSO também fica na transação: se ela falhar, a promoção é revertida.
+            carga.status = Carga.Status.SUCESSO
+            carga.hash = digest if apenas is None else ""
+            carga.linhas = len(linhas)
+            carga.concluida_em = timezone.now()
+            carga.save()
         return carga
     except Exception as exc:
         carga.status = Carga.Status.FALHA
