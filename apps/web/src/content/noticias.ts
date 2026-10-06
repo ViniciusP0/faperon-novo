@@ -10,6 +10,8 @@ export interface Noticia {
   imagem: string | null;
   /** Endereço da notícia no site Wix atual. */
   url_original: string | null;
+  /** Categorias do Wix ("Faperon", "Geral"), na ordem do feed; vazio quando a notícia não tem categoria. */
+  categorias: string[];
 }
 
 /** Da mais recente para a mais antiga. Regenerado por `npm run importar:noticias` (ADR 0018). */

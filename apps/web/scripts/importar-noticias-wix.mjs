@@ -2,7 +2,7 @@
 // Gera src/content/noticias.json e baixa as imagens para public/noticias/.
 // Uso:
 //   npm run importar:noticias                      lê o RSS do Wix (a home é a reserva)
-//   npm run importar:noticias -- --de=arquivo.json  reaproveita um JSON com { titulo, resumo, data, imagem_externa, url_original }
+//   npm run importar:noticias -- --de=arquivo.json  reaproveita um JSON com { titulo, resumo, data, imagem_externa, url_original, categorias? }
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -46,6 +46,12 @@ export function slugificar(titulo) {
   return base || "noticia";
 }
 
+/** Todas as <category> do item, sem repetição e sem vazias, na ordem do feed. */
+function categoriasDoItem(item) {
+  const nomes = [...item.matchAll(/<category[^>]*>([\s\S]*?)<\/category>/gi)].map((m) => textoLimpo(m[1])).filter(Boolean);
+  return [...new Set(nomes)];
+}
+
 function campo(item, tag) {
   const m = item.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, "i"));
   return m ? textoLimpo(m[1]) : "";
@@ -67,6 +73,7 @@ export function lerFeed(xml) {
         data: data.toISOString().slice(0, 10),
         imagem_externa: enclosure ? decodificar(enclosure[1]) : "",
         url_original: link,
+        categorias: categoriasDoItem(item),
       };
     })
     .filter(Boolean);
@@ -78,7 +85,7 @@ export function lerHome(html) {
     const href = decodificar(m[1]);
     const titulo = textoLimpo(m[2]) || decodeURIComponent(new URL(href, HOME_URL).pathname.split("/").pop() ?? "").replaceAll("-", " ");
     if (href && titulo && !vistos.has(href)) {
-      vistos.set(href, { titulo, resumo: "", data: new Date().toISOString().slice(0, 10), imagem_externa: "", url_original: href });
+      vistos.set(href, { titulo, resumo: "", data: new Date().toISOString().slice(0, 10), imagem_externa: "", url_original: href, categorias: [] });
     }
   }
   return [...vistos.values()];
@@ -143,7 +150,7 @@ async function principal() {
     for (let i = 2; usados.has(slug); i++) slug = `${base}-${i}`;
     usados.add(slug);
     const imagem = n.imagem_externa ? await baixarImagem(n.imagem_externa, slug) : null;
-    noticias.push({ slug, titulo: n.titulo, resumo: n.resumo, data: n.data, imagem, url_original: n.url_original || null });
+    noticias.push({ slug, titulo: n.titulo, resumo: n.resumo, data: n.data, imagem, url_original: n.url_original || null, categorias: n.categorias ?? [] });
   }
   noticias.sort((a, b) => b.data.localeCompare(a.data));
   await writeFile(JSON_SAIDA, `${JSON.stringify(noticias, null, 2)}\n`, "utf8");
