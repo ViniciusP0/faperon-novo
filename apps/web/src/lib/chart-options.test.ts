@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Ponto } from "./api-types";
-import { comTemaEscuro, opcaoComparacao, opcaoSerie, PALETA_ESCURA } from "./chart-options";
+import { comEntrada, comTemaEscuro, opcaoComparacao, opcaoSerie, PALETA_ESCURA } from "./chart-options";
 
 const p = (ano: number, valor: number | null): Ponto => ({ ano, valor, status: valor === null ? "sigiloso" : "ok" });
 
@@ -80,5 +80,16 @@ describe("tema escuro dos gráficos", () => {
     expect(escuro.color).toEqual(PALETA_ESCURA);
     expect(escuro.legend.textStyle.color).toBe("#e8f0ec");
     expect(series(escuro).map((s) => s.data)).toEqual(series(claro).map((s) => s.data));
+  });
+});
+
+describe("comEntrada", () => {
+  it("liga a animação curta de entrada sem alterar o resto da opção", () => {
+    const o = comEntrada({ color: ["#000"], series: [] }, true) as Record<string, unknown>;
+    expect(o).toMatchObject({ color: ["#000"], series: [], animation: true, animationDuration: 400, animationEasing: "cubicOut" });
+  });
+
+  it("desliga a animação quando não é a primeira renderização ou há movimento reduzido", () => {
+    expect((comEntrada({ series: [] }, false) as { animation: boolean }).animation).toBe(false);
   });
 });

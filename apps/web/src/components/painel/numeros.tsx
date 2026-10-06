@@ -4,7 +4,8 @@ import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 import type { Filtros } from "@/lib/filters";
 import { formatPercentual } from "@/lib/format";
 import { manchetePainel, medida } from "@/lib/manchete-painel";
-import { Carregando, Secao } from "./comuns";
+import { Skeleton } from "@/components/ui/feedback";
+import { Secao } from "./comuns";
 import { useAnalise, useRanking, useSerie } from "./consultas";
 
 interface CartaoProps {
@@ -45,7 +46,16 @@ export function Numeros({ filtros }: { filtros: Filtros }) {
   if (ranking.isPending || serie.isPending) {
     return (
       <Secao id="numeros" etiqueta="Números do recorte" titulo="Carregando os números…">
-        <Carregando rotulo="números do recorte" />
+        <div role="status" aria-live="polite">
+          <span className="sr-only">Carregando números do recorte…</span>
+          <ul aria-hidden="true" className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 xl:grid-cols-4">
+            {[0, 1, 2, 3].map((i) => (
+              <li key={i}>
+                <Skeleton className="h-36 w-full rounded-2xl min-[480px]:h-40 xl:h-[11.4rem]" />
+              </li>
+            ))}
+          </ul>
+        </div>
       </Secao>
     );
   }

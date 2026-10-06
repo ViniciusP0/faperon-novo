@@ -150,3 +150,8 @@ export function comTemaEscuro(option: EChartsCoreOption): EChartsCoreOption {
     }),
   };
 }
+
+/** Entrada curta só quando `animar`; filtros e troca de tema reaplicam a opção sem animar, para responder na hora. */
+export function comEntrada(option: EChartsCoreOption, animar: boolean): EChartsCoreOption {
+  return { ...option, animation: animar, animationDuration: 400, animationEasing: "cubicOut" };
+}
