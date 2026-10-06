@@ -47,6 +47,14 @@ services:
       api:
         condition: service_healthy
 
+  api-dev:
+    <<: *api
+    build:
+      context: ./apps/api
+      target: dev
+    profiles: ["dev"]
+    restart: "no"
+
   web:
     build: ./apps/web
     environment:

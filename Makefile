@@ -13,23 +13,23 @@ build:
 	docker compose build
 
 seed:
-	docker compose run --rm api python manage.py seed
+	docker compose run --rm api-dev python manage.py seed
 
 snapshot:
-	docker compose run --rm api python manage.py snapshot
+	docker compose run --rm api-dev python manage.py snapshot
 
 ingest:
-	docker compose run --rm api python manage.py ingest_sidra
+	docker compose run --rm api-dev python manage.py ingest_sidra
 
 test:
-	docker compose run --rm api pytest
+	docker compose run --rm api-dev pytest
 
 lint:
-	docker compose run --rm api ruff check .
+	docker compose run --rm api-dev ruff check .
 	cd apps/web && npm run lint
 
 typecheck:
-	docker compose run --rm api mypy .
+	docker compose run --rm api-dev mypy .
 	cd apps/web && npm run typecheck
 
 web-test:

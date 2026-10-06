@@ -26,7 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build da imagem da API
-        run: docker build -t faperon-api apps/api
+        run: docker build --target dev -t faperon-api apps/api
       - name: Ruff
         run: docker run --rm faperon-api ruff check .
       - name: mypy
