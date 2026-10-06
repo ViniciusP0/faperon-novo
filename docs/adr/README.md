@@ -23,3 +23,4 @@ Decisões de arquitetura no formato MADR (Contexto, Opções, Decisão, Consequ�
 - [0019](0019-inicio-com-faixa-de-indicadores-rondonia-em-numeros.md) — Início com faixa de indicadores "Rondônia em números"
 - [0020](0020-conteudo-editorial-no-codigo-sem-cms.md) — Conteúdo editorial no código, sem CMS
 - [0021](0021-deploy-automatico-no-dt-server-via-webhook-do-github.md) — Deploy automático no `dt-server` via webhook do GitHub
+- [0022](0022-painel-em-pagina-narrativa-em-vez-de-abas.md) — Painel em página narrativa em vez de abas
