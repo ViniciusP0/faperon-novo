@@ -5,7 +5,9 @@ from rest_framework.exceptions import Throttled, ValidationError
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
 
-from indicadores.erros import ConsultaInvalida, NaoEncontrado, RecorteIncompativel
+from indicadores.erros import ConsultaInvalida, NaoEncontrado, RecorteIncompativel, ServicoOcupado
+
+RETRY_AFTER_OCUPADO = 30  # segundos sugeridos ao cliente quando a renderização está ocupada
 
 
 def _campos(detalhe: Any) -> dict[str, str]:
@@ -30,6 +32,12 @@ def tratador_de_excecoes(exc: Exception, contexto: dict[str, Any]) -> Response |
         return Response(
             {"erro": str(exc), "campos": {}}, status=status.HTTP_422_UNPROCESSABLE_ENTITY
         )
+    if isinstance(exc, ServicoOcupado):
+        resposta_503 = Response(
+            {"erro": str(exc), "campos": {}}, status=status.HTTP_503_SERVICE_UNAVAILABLE
+        )
+        resposta_503["Retry-After"] = str(RETRY_AFTER_OCUPADO)
+        return resposta_503
     resposta = exception_handler(exc, contexto)
     if resposta is None:
         return None

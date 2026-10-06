@@ -12,3 +12,7 @@ class ConsultaInvalida(Exception):
 
 class RecorteIncompativel(Exception):
     """Comparação impossível, ex.: unidades diferentes (HTTP 422)."""
+
+
+class ServicoOcupado(Exception):
+    """Recurso ocupado além do tempo de espera, ex.: renderização de PDF (HTTP 503)."""

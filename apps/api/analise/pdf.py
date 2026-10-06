@@ -18,7 +18,7 @@ from analise.regras import formatar_numero
 from analise.servico import ResultadoAnalise, analisar
 from analise.tendencia import descrever_tendencia, tendencia_linear
 from indicadores import servicos
-from indicadores.erros import ConsultaInvalida
+from indicadores.erros import ConsultaInvalida, ServicoOcupado
 from indicadores.models import StatusValor
 from ingestao.models import Carga
 
@@ -28,11 +28,18 @@ MAX_RELATORIOS = 200  # teto de PDFs guardados por versão dos dados (~centenas 
 # Gunicorn gthread: várias threads por processo. Pango/fontconfig não são confiáveis em
 # renderizações simultâneas, e serializar deixa as outras threads livres para API e /saude.
 _RENDERIZACAO = threading.Lock()
+ESPERA_RENDERIZACAO = 30  # segundos que um pedido espera pela vez antes de responder 503
 
 
 def renderizar(html: str) -> bytes:
-    with _RENDERIZACAO:
+    # Espera limitada: se outra renderização travar, as demais respondem 503 em vez de
+    # empilhar para sempre (o --timeout do gthread não vigia as threads).
+    if not _RENDERIZACAO.acquire(timeout=ESPERA_RENDERIZACAO):
+        raise ServicoOcupado("Geração de PDF ocupada no momento; tente novamente em instantes")
+    try:
         pdf = HTML(string=html).write_pdf()
+    finally:
+        _RENDERIZACAO.release()
     assert pdf is not None
     return pdf
 

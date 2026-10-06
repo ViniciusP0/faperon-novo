@@ -90,6 +90,7 @@ class RelatorioPdfView(APIView):
         responses={
             (200, "application/pdf"): OpenApiTypes.BINARY,
             429: OpenApiResponse(sz.ErroSerializer, description="Limite de requisições"),
+            503: OpenApiResponse(sz.ErroSerializer, description="Geração de PDF ocupada"),
             **ERROS,
         },
     )

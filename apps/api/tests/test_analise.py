@@ -351,3 +351,36 @@ def test_renderizacao_de_pdf_e_serializada_por_processo(monkeypatch: pytest.Monk
     for t in threads:
         t.join()
     assert pico == 1
+
+
+def test_renderizacao_ocupada_demais_levanta_servico_ocupado(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from indicadores.erros import ServicoOcupado
+
+    monkeypatch.setattr(pdf, "ESPERA_RENDERIZACAO", 0.05)
+    assert pdf._RENDERIZACAO.acquire(blocking=False)
+    try:
+        with pytest.raises(ServicoOcupado):
+            pdf.renderizar("<p/>")
+    finally:
+        pdf._RENDERIZACAO.release()
+    # liberado o bloqueio, a renderização volta a funcionar
+    monkeypatch.setattr(pdf, "HTML", lambda string: type("H", (), {"write_pdf": lambda self: b"%PDF"})())
+    assert pdf.renderizar("<p/>") == b"%PDF"
+
+
+@pytest.mark.django_db
+def test_pdf_com_renderizacao_ocupada_responde_503_no_formato_da_api(
+    api: APIClient, dados_soja: Produto, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(pdf, "ESPERA_RENDERIZACAO", 0.05)
+    assert pdf._RENDERIZACAO.acquire(blocking=False)
+    try:
+        resposta = api.get(f"/api/v1/relatorio.pdf?{Q}")
+    finally:
+        pdf._RENDERIZACAO.release()
+    assert resposta.status_code == 503
+    assert set(resposta.json()) == {"erro", "campos"}
+    assert resposta["Retry-After"] == "30"
+    assert Relatorio.objects.count() == 0
