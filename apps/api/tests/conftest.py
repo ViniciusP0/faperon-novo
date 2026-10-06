@@ -137,3 +137,11 @@ def dados_soja(soja: Produto, municipios: list[Municipio], carga: Carga) -> Prod
     lancar(soja, "rendimento-medio", "1100023", 2024, 4000, carga)
     atualizar_views()
     return soja
+
+
+@pytest.fixture(autouse=True)
+def cache_limpo() -> None:
+    """O throttle por IP vive no cache em arquivo; sem limpar, vaza entre testes."""
+    from django.core.cache import cache
+
+    cache.clear()

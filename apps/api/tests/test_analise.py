@@ -238,3 +238,51 @@ def test_rate_limit_do_pdf(
     assert corpo.status_code == 429 and set(corpo.json()) == {"erro", "campos"}
     assert "Retry-After" in corpo
     cache.clear()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("lista", "esperado"),
+    [("9999999", 400), ("1100015", 400), ("1100015,9999999", 404)],
+)
+def test_pdf_rejeita_comparacao_invalida_sem_gerar_nada(
+    api: APIClient, dados_soja: Produto, lista: str, esperado: int
+) -> None:
+    resposta = api.get(f"/api/v1/relatorio.pdf?{Q}&municipios={lista}")
+    assert resposta.status_code == esperado
+    assert Relatorio.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_ordem_e_repeticao_dos_municipios_nao_criam_outro_pdf(
+    api: APIClient, dados_soja: Produto
+) -> None:
+    for municipios in ["1100015,1100023", "1100023,1100015", "1100023,1100015,1100023"]:
+        assert api.get(f"/api/v1/relatorio.pdf?{Q}&municipios={municipios}").status_code == 200
+    assert Relatorio.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_limpar_relatorios_apaga_versoes_antigas_e_respeita_o_teto(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(pdf, "MAX_RELATORIOS", 2)
+    Relatorio.objects.create(chave="velho", nome_arquivo="a.pdf", pdf=b"x", versao_dados="1")
+    for i in range(3):
+        Relatorio.objects.create(chave=f"novo{i}", nome_arquivo="b.pdf", pdf=b"x", versao_dados="2")
+    assert pdf.limpar_relatorios("2") == 2
+    assert set(Relatorio.objects.values_list("chave", flat=True)) == {"novo1", "novo2"}
+
+
+@pytest.mark.django_db
+def test_carga_concluida_limpa_pdfs_da_versao_anterior(
+    api: APIClient, dados_soja: Produto, carga: Carga
+) -> None:
+    from ingestao.signals import carga_concluida
+
+    assert api.get(f"/api/v1/relatorio.pdf?{Q}").status_code == 200
+    nova = Carga.objects.create(
+        tabela=5457, iniciada_em=carga.iniciada_em, status=Carga.Status.SUCESSO
+    )
+    carga_concluida.send(sender=Carga, carga=nova)
+    assert Relatorio.objects.count() == 0

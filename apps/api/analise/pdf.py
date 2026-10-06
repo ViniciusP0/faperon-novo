@@ -17,10 +17,12 @@ from analise.regras import formatar_numero
 from analise.servico import ResultadoAnalise, analisar
 from analise.tendencia import descrever_tendencia, tendencia_linear
 from indicadores import servicos
+from indicadores.erros import ConsultaInvalida
 from indicadores.models import StatusValor
 from ingestao.models import Carga
 
 VERSAO_TEMPLATE = "3"
+MAX_RELATORIOS = 200  # teto de PDFs guardados por versão dos dados (~centenas de KB cada)
 
 
 def versao_dos_dados() -> str:
@@ -35,6 +37,37 @@ def chave_do_recorte(parametros: dict[str, Any]) -> str:
         ensure_ascii=True,
     )
     return hashlib.sha256(base.encode()).hexdigest()
+
+
+def normalizar_comparacao(codigos: list[str]) -> list[str]:
+    """Valida antes de gerar: códigos inexistentes ou fora de 2..5 nunca viram chave de cache."""
+    if not codigos:
+        return []
+    unicos = sorted(set(codigos))
+    if not servicos.MIN_COMPARACAO <= len(unicos) <= servicos.MAX_COMPARACAO:
+        raise ConsultaInvalida(
+            f"Informe de {servicos.MIN_COMPARACAO} a {servicos.MAX_COMPARACAO} municípios para comparar",
+            {
+                "municipios": f"esperado de {servicos.MIN_COMPARACAO} a {servicos.MAX_COMPARACAO} itens"
+            },
+        )
+    for codigo in unicos:
+        servicos.obter_municipio(codigo)
+    return unicos
+
+
+def limpar_relatorios(versao_atual: str) -> int:
+    """Apaga PDFs de outras versões dos dados e mantém só os MAX_RELATORIOS mais recentes."""
+    apagados, _ = Relatorio.objects.exclude(versao_dados=versao_atual).delete()
+    manter = Relatorio.objects.order_by("-criado_em", "-id").values_list("id", flat=True)[
+        :MAX_RELATORIOS
+    ]
+    excedentes, _ = Relatorio.objects.exclude(id__in=list(manter)).delete()
+    return apagados + excedentes
+
+
+def limpar_ao_concluir_carga(*args: object, carga: Carga, **kwargs: object) -> None:
+    limpar_relatorios(str(carga.pk))
 
 
 def _numero(valor: Any) -> str:
@@ -118,7 +151,9 @@ def gerar_relatorio(
     comparacao: list[str],
 ) -> tuple[bytes, str]:
     """Retorna (pdf, nome). Mesmo recorte na mesma versão dos dados devolve o mesmo PDF."""
+    comparacao = normalizar_comparacao(comparacao)
     r = analisar(produto, indicador, inicio, fim, municipio)
+    versao = versao_dos_dados()
     chave = chave_do_recorte(
         {
             "produto": produto,
@@ -136,5 +171,8 @@ def gerar_relatorio(
     pdf = HTML(string=html).write_pdf()
     assert pdf is not None
     nome = nome_do_arquivo(r)
-    Relatorio.objects.update_or_create(chave=chave, defaults={"nome_arquivo": nome, "pdf": pdf})
+    Relatorio.objects.update_or_create(
+        chave=chave, defaults={"nome_arquivo": nome, "pdf": pdf, "versao_dados": versao}
+    )
+    limpar_relatorios(versao)
     return pdf, nome
