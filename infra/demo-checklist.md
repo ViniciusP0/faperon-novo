@@ -27,6 +27,7 @@ Operação:
 - `make funnel-off` desliga só a porta 3000 (site); o webhook fica em outra porta e continua no ar (antes usava `tailscale funnel reset`, que derrubava os dois)
 - O `.env` do servidor precisa ter `DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,api` (desde 06/10/2026 o padrão deixou de ser `*`). Sem `api`, o Next recebe 400 do Django em todas as páginas.
 - `make seed`, `make snapshot` e `make ingest` usam o serviço `api-dev` (imagem de dev, roda como root); a primeira execução no servidor constrói essa imagem.
+- O `.env` do servidor precisa de `SITE_URL=https://dt-server.tail3fe9ce.ts.net`. Ele entra no build do web (sitemap, robots, OpenGraph); depois de mudar, rode `docker compose up -d --build web`.
 
 Validação ponta a ponta (2026-09-28): os commits de teste anteriores foram feitos e empurrados a partir do próprio `dt-server`, então `deploy.sh` sempre encontrou `HEAD` já igual a `origin/main` (log só mostra `already up to date`, nunca `new commits found, deploying`). Este commit foi feito e empurrado de uma máquina diferente do `dt-server` para exercitar de fato o caminho de rebuild.
 

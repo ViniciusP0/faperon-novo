@@ -6,6 +6,9 @@ RUN npm ci --no-audit --no-fund
 FROM node:22-alpine AS build
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
+# robots.txt, sitemap.xml e metadataBase são pré-renderizados no build: a URL pública tem de existir aqui.
+ARG SITE_URL=http://localhost:3000
+ENV SITE_URL=$SITE_URL
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN mkdir -p public && npm run build
@@ -16,6 +19,8 @@ ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     HOSTNAME=0.0.0.0 \
     PORT=3000
+ARG SITE_URL=http://localhost:3000
+ENV SITE_URL=$SITE_URL
 RUN addgroup -S app && adduser -S app -G app
 COPY --from=build --chown=app:app /app/.next/standalone ./
 COPY --from=build --chown=app:app /app/.next/static ./.next/static
