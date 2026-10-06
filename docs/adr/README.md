@@ -27,3 +27,4 @@ Decisões de arquitetura no formato MADR (Contexto, Opções, Decisão, Consequ�
 - [0023](0023-ip-do-cliente-pelo-ultimo-x-forwarded-for-e-teto-global-de-pdf.md) — IP do cliente pelo último X-Forwarded-For e teto global de PDF
 - [0024](0024-imagem-da-api-em-dois-estagios-producao-sem-root-e-sem-ferramentas-.md) — Imagem da API em dois estágios; produção sem root e sem ferramentas de dev
 - [0025](0025-gunicorn-com-threads-e-renderizacao-de-pdf-serializada-com-espera-.md) — Gunicorn com threads e renderização de PDF serializada com espera limitada
+- [0026](0026-animacoes-sutis-com-css-e-intersectionobserver.md) — Animações sutis com CSS e IntersectionObserver
