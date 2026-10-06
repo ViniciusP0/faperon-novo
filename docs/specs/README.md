@@ -10,3 +10,4 @@ Cada funcionalidade tem uma Spec com critérios de aceite em Gherkin. O mesmo te
 - [SPEC-06](spec-06-analise-estrategica.md) — Análise estratégica
 - [SPEC-07](spec-07-relatorio-pdf.md) — Relatório PDF
 - [SPEC-08](spec-08-nota-metodologica.md) — Nota metodológica
+- [SPEC-09](spec-09-painel-narrativo.md) — Painel Agro Analítico em página narrativa
