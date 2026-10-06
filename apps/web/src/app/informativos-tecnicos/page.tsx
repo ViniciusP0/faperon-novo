@@ -26,7 +26,8 @@ export default function InformativosPage() {
       <HeroPagina
         id="informativos-titulo"
         atual="Informativos Técnicos"
-        imagem={{ src: "/hero/campo-rondonia.jpg", posicao: "50% 68%" }}
+        // Foto: Scott Bauer, USDA ARS (domínio público), rebanho Gyr (raça zebuína leiteira) no Brasil.
+        imagem={{ src: "/hero/rebanho-gyr.jpg", posicao: "50% 55%" }}
         titulo={
           <>
             Informativos mensais do <Destaque>agro de Rondônia</Destaque>, em um só lugar.
