@@ -302,3 +302,21 @@ def test_teto_global_do_pdf_vale_mesmo_com_ip_trocado(
     ]
     assert codigos == [200, 200, 429]
     cache.clear()
+
+
+@pytest.mark.django_db
+def test_recusa_por_ip_nao_consome_o_teto_global(
+    api: APIClient, dados_soja: Produto, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    taxas = {"pdf": "2/min", "pdf_global": "3/min"}
+    monkeypatch.setattr(SimpleRateThrottle, "THROTTLE_RATES", taxas)
+    monkeypatch.setattr(ScopedRateThrottle, "THROTTLE_RATES", taxas)
+    cache.clear()
+
+    def pedir(ip: str) -> int:
+        return api.get(f"/api/v1/relatorio.pdf?{Q}", HTTP_X_FORWARDED_FOR=ip).status_code
+
+    assert [pedir("198.51.100.1") for _ in range(6)] == [200, 200, 429, 429, 429, 429]
+    assert pedir("198.51.100.2") == 200
+    assert pedir("198.51.100.2") == 429
+    cache.clear()

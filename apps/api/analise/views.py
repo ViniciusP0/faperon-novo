@@ -78,6 +78,12 @@ class RelatorioPdfView(APIView):
     throttle_classes = [ScopedRateThrottle, PdfGlobalThrottle]
     throttle_scope = "pdf"
 
+    def check_throttles(self, request: Request) -> None:
+        """Para no primeiro limite que recusa: pedido barrado por IP não gasta o teto global."""
+        for throttle in self.get_throttles():
+            if not throttle.allow_request(request, self):
+                self.throttled(request, throttle.wait())
+
     @extend_schema(
         parameters=[ConsultaRelatorioSerializer],
         responses={

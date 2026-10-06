@@ -16,6 +16,14 @@ describe("proxyParaApi", () => {
     expect(enviados.get("x-forwarded-for")).toBe("203.0.113.9");
   });
 
+  it("sem x-forwarded-for na entrada, não inventa o header na saída", async () => {
+    const fetchFalso = vi.fn().mockResolvedValue(new Response("{}", { status: 200 }));
+    vi.stubGlobal("fetch", fetchFalso);
+    await proxyParaApi(new Request("http://site.test/api/v1/relatorio.pdf"));
+    const enviados = fetchFalso.mock.calls[0]![1].headers as Headers;
+    expect(enviados.has("x-forwarded-for")).toBe(false);
+  });
+
   it("ipDoCliente pega o último valor não vazio", () => {
     expect(ipDoCliente("1.1.1.1, 2.2.2.2")).toBe("2.2.2.2");
     expect(ipDoCliente(" 2.2.2.2 ,")).toBe("2.2.2.2");
