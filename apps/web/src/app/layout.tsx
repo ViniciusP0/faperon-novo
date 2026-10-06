@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { FundoParallax } from "@/components/site/fundo-parallax";
 import { SiteFooter } from "@/components/site/footer";
 import { SiteHeader } from "@/components/site/header";
+import { SCRIPT_JS_OK } from "@/lib/movimento";
 import { SITE_URL } from "@/lib/site";
 import { SCRIPT_TEMA } from "@/lib/tema";
 import { Providers } from "./providers";
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="pt-BR" data-theme="light" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_TEMA }} />
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_JS_OK }} />
       </head>
       <body className="flex min-h-screen flex-col">
         <a

@@ -113,6 +113,51 @@ body {
   }
 }
 
+/* ---- Movimento sutil: tokens, revelação ao rolar e elevação de cards ---- */
+:root {
+  --mov-rapido: 150ms;
+  --mov-base: 400ms;
+  --mov-easing: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* O estado oculto só vale com JS (a classe js-ok vem de um script no <head>); sem JS a página aparece inteira. */
+html.js-ok .revelar {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity var(--mov-base) var(--mov-easing),
+    transform var(--mov-base) var(--mov-easing);
+}
+html.js-ok .revelar.revelar-visivel {
+  opacity: 1;
+  transform: none;
+}
+
+.card-elevar {
+  transition:
+    transform var(--mov-rapido) var(--mov-easing),
+    box-shadow var(--mov-rapido) var(--mov-easing),
+    background-color var(--mov-rapido) var(--mov-easing);
+}
+.card-elevar:hover,
+.card-elevar:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -8px rgb(0 0 0 / 0.28);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.js-ok .revelar,
+  html.js-ok .revelar.revelar-visivel {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .card-elevar:hover,
+  .card-elevar:focus-visible {
+    transform: none;
+  }
+}
+
 .prose-faperon p {
   margin-bottom: 1rem;
   line-height: 1.75;
