@@ -7,12 +7,13 @@ import { LINKS_INSTITUCIONAIS, MENU, ROTAS, WIX_PAGINAS } from "./site";
 const APP = path.resolve(__dirname, "../app");
 
 describe("páginas institucionais internas", () => {
-  it("Sobre, Informativos Técnicos e Fale Conosco são rotas internas do menu", () => {
+  it("Sobre, Informativos Técnicos, Notícias e Fale Conosco são rotas internas do menu", () => {
     expect(MENU.map((i) => [i.label, i.href])).toEqual([
       ["Início", "/"],
       ["Central de Inteligência", "/central-de-inteligencia"],
       ["Sobre", "/sobre"],
       ["Informativos Técnicos", "/informativos-tecnicos"],
+      ["Notícias", "/noticias"],
       ["Fale Conosco", "/fale-conosco"],
     ]);
     expect(MENU.some((i) => i.externo)).toBe(false);
@@ -36,7 +37,6 @@ describe("páginas institucionais internas", () => {
 describe("links que continuam no site atual (Wix)", () => {
   it("usam os endereços reais conferidos no Wix", () => {
     expect(WIX_PAGINAS).toEqual({
-      noticias: "https://www.faperon.com.br/blog",
       transparencia: "https://www.faperon.com.br/portaldatranspar%C3%AAncia",
     });
     expect(LINKS_INSTITUCIONAIS.map((i) => i.href)).toContain(WIX_PAGINAS.transparencia);

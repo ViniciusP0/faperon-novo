@@ -3,7 +3,8 @@ import Image from "next/image";
 import type { Noticia } from "@/content/noticias";
 import { formatData } from "@/lib/format";
 
-export function NoticiaChamada({ noticia }: { noticia: Noticia }) {
+/** Cartão de notícia. `mostrarCategorias` (página de notícias) acrescenta as etiquetas de categoria; no Início fica desligado. */
+export function NoticiaChamada({ noticia, mostrarCategorias = false }: { noticia: Noticia; mostrarCategorias?: boolean }) {
   const corpo = (
     <>
       <div className="relative aspect-[3/2] overflow-hidden rounded bg-brand-soft">
@@ -20,6 +21,15 @@ export function NoticiaChamada({ noticia }: { noticia: Noticia }) {
       <time dateTime={noticia.data} className="mt-2 block text-sm text-ink-muted">
         {formatData(noticia.data)}
       </time>
+      {mostrarCategorias && noticia.categorias.length > 0 && (
+        <ul data-testid="categorias" className="mt-2 flex flex-wrap gap-1.5">
+          {noticia.categorias.map((nome) => (
+            <li key={nome} className="rounded-full bg-brand-soft px-2.5 py-0.5 text-xs font-semibold text-brand-strong">
+              {nome}
+            </li>
+          ))}
+        </ul>
+      )}
     </>
   );
 

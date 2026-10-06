@@ -5,6 +5,10 @@ const nextConfig = {
   output: "standalone",
   poweredByHeader: false,
   skipTrailingSlashRedirect: true,
+  async redirects() {
+    // O endereço da lista de notícias no Wix (ADR 0012 cobre o resto dos endereços na Fase 2).
+    return [{ source: "/blog", destination: "/noticias", permanent: true }];
+  },
   async headers() {
     return [
       {

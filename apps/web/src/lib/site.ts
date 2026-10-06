@@ -3,7 +3,6 @@ export const WIX_URL = "https://www.faperon.com.br";
 
 /** Endereços reais de páginas que continuam só no site atual (Wix). Conferidos em 24/09/2026; o Wix usa nomes como /blank-6, então não dá para deduzir. */
 export const WIX_PAGINAS = {
-  noticias: `${WIX_URL}/blog`,
   transparencia: `${WIX_URL}/portaldatranspar%C3%AAncia`,
 } as const;
 export const CNA_COMMODITIES_URL = "https://www.cnabrasil.org.br/servicos/precos-commodities";
@@ -12,6 +11,7 @@ export const CNA_COMMODITIES_URL = "https://www.cnabrasil.org.br/servicos/precos
 export const ROTAS = {
   sobre: "/sobre",
   informativos: "/informativos-tecnicos",
+  noticias: "/noticias",
   faleConosco: "/fale-conosco",
   login: "/login",
 } as const;
@@ -27,6 +27,7 @@ export const MENU: ItemMenu[] = [
   { label: "Central de Inteligência", href: "/central-de-inteligencia" },
   { label: "Sobre", href: ROTAS.sobre },
   { label: "Informativos Técnicos", href: ROTAS.informativos },
+  { label: "Notícias", href: ROTAS.noticias },
   { label: "Fale Conosco", href: ROTAS.faleConosco },
 ];
 

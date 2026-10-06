@@ -1,4 +1,4 @@
-import { ArrowUpRight, ExternalLink, TrendingUp } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ExternalLink, TrendingUp } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BannersSenar } from "@/components/inicio/banners-senar";
@@ -17,7 +17,7 @@ import type { Destaque } from "@/lib/api-types";
 import { manchete, normalizarDestaque } from "@/lib/destaques";
 import { formatCompacto, formatNumero } from "@/lib/format";
 import { contarMunicipios, contarProdutos, destaques as buscarDestaques } from "@/lib/server-api";
-import { WIX_PAGINAS } from "@/lib/site";
+import { ROTAS } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import { NumeroAnimado } from "@/components/site/numero-animado";
 import { Revelar } from "@/components/site/revelar";
@@ -173,16 +173,10 @@ export default async function InicioPage() {
               {itemTicker(noticiasTicker, true)}
             </ul>
           </div>
-          <a
-            href={WIX_PAGINAS.noticias}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex shrink-0 items-center gap-1 font-medium text-brand-fg hover:underline"
-          >
+          <Link href={ROTAS.noticias} className="inline-flex shrink-0 items-center gap-1 font-medium text-brand-fg hover:underline">
             Ver todas as notícias
-            <ExternalLink aria-hidden="true" className="h-3.5 w-3.5" />
-            <span className="sr-only"> (abre o site atual em nova aba)</span>
-          </a>
+            <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
+          </Link>
         </div>
       </section>
 
@@ -289,16 +283,10 @@ export default async function InicioPage() {
           <h2 id="noticias-titulo" className="text-2xl font-semibold md:text-3xl">
             Notícias recentes
           </h2>
-          <a
-            href={WIX_PAGINAS.noticias}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 font-medium text-brand-fg hover:underline"
-          >
+          <Link href={ROTAS.noticias} className="inline-flex items-center gap-1 font-medium text-brand-fg hover:underline">
             Ver todas as notícias
-            <ExternalLink aria-hidden="true" className="h-3.5 w-3.5" />
-            <span className="sr-only"> (abre o site atual em nova aba)</span>
-          </a>
+            <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
+          </Link>
         </div>
         <ul className="grid gap-8 md:grid-cols-3">
           {noticias.map((n, i) => (
