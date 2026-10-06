@@ -20,6 +20,6 @@ O PDF é gerado de forma síncrona no servidor ([0008](0008-pdf-no-servidor-com-
 
 ## Consequências
 
-- Uma renderização que trave de verdade continua presa naquela thread até o container reiniciar. O efeito agora é limitado: os pedidos de PDF desse worker respondem 503 depois de 30 segundos, e o resto da API continua de pé. Se isso acontecer na prática, o próximo passo é renderizar em subprocesso com timeout.
-- Dois PDFs nunca renderizam ao mesmo tempo no mesmo processo; sob pico, o segundo espera até 30 segundos pelo primeiro.
+- Uma renderização que trave de verdade continua presa naquela thread até o container reiniciar. O efeito agora é limitado: os outros workers seguem normais, e no worker afetado os pedidos de PDF respondem 503 depois de 30 segundos (enquanto esperam, ocupam threads, então pedidos comuns daquele worker podem atrasar). Se isso acontecer na prática, o próximo passo é renderizar em subprocesso com timeout.
+- Dois PDFs nunca renderizam ao mesmo tempo no mesmo processo; sob pico, quem espera pela vez aguarda até 30 segundos, e a ordem de atendimento dos que esperam não é garantida.
 - A mudança do timeout de 120 para 60 segundos vale para pedidos comuns; renderizações longas dependem do limite de 30 segundos de espera, não do timeout do Gunicorn.
