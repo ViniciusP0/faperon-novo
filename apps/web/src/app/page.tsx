@@ -212,17 +212,17 @@ export default async function InicioPage() {
               <li key={e.nome} className="flex">
                 <LinkAuto
                   href={e.url}
-                  className="group flex w-full flex-col overflow-hidden rounded-2xl border-b-4 border-brand-lime bg-brand-dark p-5 text-white shadow-md transition-all hover:-translate-y-1 hover:bg-brand hover:shadow-xl md:min-h-[19rem] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+                  className="group flex w-full flex-col overflow-hidden rounded-2xl bg-brand-dark p-5 text-white transition-colors hover:bg-brand md:min-h-[19rem] motion-reduce:transition-none"
                 >
-                  <span className="flex h-24 items-center justify-center rounded-xl bg-white px-4">
+                  <span className="flex h-24 items-center justify-center rounded-xl bg-white px-3">
                     {LOGOS_SISTEMA[e.nome] ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={LOGOS_SISTEMA[e.nome]} alt={`Logo ${e.nome}`} className="max-h-14 w-auto max-w-full object-contain" />
+                      <img src={LOGOS_SISTEMA[e.nome]} alt={`Logo ${e.nome}`} className="h-10 w-auto max-w-full object-contain" />
                     ) : (
-                      <span className="flex items-center gap-2.5">
+                      <span className="flex h-[45px] max-w-full items-center justify-center gap-2">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src="/sistema/simbolo.png" alt="" aria-hidden="true" className="h-11 w-auto" />
-                        <span className="text-left text-base font-bold uppercase leading-tight text-brand-dark">{e.nome}</span>
+                        <img src="/sistema/simbolo.png" alt="" aria-hidden="true" className="h-[45px] w-auto shrink-0" />
+                        <span className="w-min text-left text-[0.9rem] font-bold uppercase leading-tight text-brand-dark">{e.nome}</span>
                       </span>
                     )}
                   </span>
