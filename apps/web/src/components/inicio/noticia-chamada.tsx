@@ -8,7 +8,7 @@ export function NoticiaChamada({ noticia }: { noticia: Noticia }) {
     <>
       <div className="relative aspect-[3/2] overflow-hidden rounded bg-brand-soft">
         {noticia.imagem ? (
-          <Image src={noticia.imagem} alt="" fill unoptimized className="object-cover" sizes="(min-width: 768px) 33vw, 100vw" />
+          <Image src={noticia.imagem} alt="" fill unoptimized className="object-cover transition-transform duration-500 group-hover:scale-[1.03]" sizes="(min-width: 768px) 33vw, 100vw" />
         ) : (
           <Image src="/marca-faperon.png" alt="" width={96} height={96} className="absolute inset-0 m-auto h-24 w-24 opacity-60" />
         )}

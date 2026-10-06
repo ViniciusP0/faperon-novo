@@ -216,7 +216,7 @@ export default async function InicioPage() {
               <Revelar as="li" indice={i} key={e.nome} className="flex">
                 <LinkAuto
                   href={e.url}
-                  className="group flex w-full flex-col overflow-hidden rounded-2xl bg-brand-dark p-5 text-white transition-colors hover:bg-brand md:min-h-[19rem] motion-reduce:transition-none"
+                  className="group flex w-full flex-col overflow-hidden rounded-2xl bg-brand-dark p-5 text-white card-elevar hover:bg-brand md:min-h-[19rem]"
                 >
                   <span className="flex h-24 items-center justify-center rounded-xl bg-white px-3">
                     {LOGOS_SISTEMA[e.nome] ? (

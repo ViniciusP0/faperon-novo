@@ -163,7 +163,7 @@ export default function SobrePage() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`${s.estatuto.titulo} (PDF, abre em nova aba)`}
-              className="mt-6 grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-md border border-l-4 border-line border-l-steel px-6 py-5 hover:bg-steel-soft"
+              className="mt-6 grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-md border border-l-4 border-line border-l-steel px-6 py-5 card-elevar hover:bg-steel-soft"
             >
               <span aria-hidden="true" className="grid h-14 w-11 place-items-center rounded bg-steel text-white">
                 <FileText className="h-6 w-6" />
@@ -207,7 +207,7 @@ export default function SobrePage() {
                 <li key={e.nome} className="flex">
                   <LinkAuto
                     href={e.url}
-                    className="flex w-full flex-col gap-1.5 rounded-md border border-t-4 border-line border-t-brand-light p-5 hover:bg-surface-alt"
+                    className="flex w-full flex-col gap-1.5 rounded-md border border-t-4 border-line border-t-brand-light p-5 card-elevar hover:bg-surface-alt"
                   >
                     <span className="font-semibold">{e.nome}</span>
                     <span className="text-sm text-ink-muted">{e.descricao}</span>

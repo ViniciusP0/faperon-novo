@@ -120,10 +120,10 @@ export default function IpagroPage() {
                   href={c.transparencia.portal.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-fg underline underline-offset-2 hover:no-underline"
+                  className="group inline-flex items-center gap-1.5 text-sm font-medium text-brand-fg underline underline-offset-2 hover:no-underline"
                 >
                   {c.transparencia.portal.rotulo}
-                  <ArrowUpRight aria-hidden="true" className="h-4 w-4" />
+                  <ArrowUpRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                   <span className="sr-only"> (abre em nova aba)</span>
                 </a>
               </div>
