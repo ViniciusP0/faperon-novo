@@ -27,7 +27,11 @@ case "$mode" in
     python manage.py migrate --noinput
     python manage.py collectstatic --noinput
     python manage.py seed --if-empty
-    exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120
+    exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 \
+      --worker-class gthread \
+      --workers "${GUNICORN_WORKERS:-3}" \
+      --threads "${GUNICORN_THREADS:-4}" \
+      --timeout "${GUNICORN_TIMEOUT:-60}"
     ;;
   scheduler)
     wait_for_db

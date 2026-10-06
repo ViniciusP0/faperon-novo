@@ -320,3 +320,34 @@ def test_recusa_por_ip_nao_consome_o_teto_global(
     assert pedir("198.51.100.2") == 200
     assert pedir("198.51.100.2") == 429
     cache.clear()
+
+
+def test_renderizacao_de_pdf_e_serializada_por_processo(monkeypatch: pytest.MonkeyPatch) -> None:
+    import threading
+    import time
+
+    ativos = 0
+    pico = 0
+    trava = threading.Lock()
+
+    class HtmlFalso:
+        def __init__(self, string: str) -> None:
+            pass
+
+        def write_pdf(self) -> bytes:
+            nonlocal ativos, pico
+            with trava:
+                ativos += 1
+                pico = max(pico, ativos)
+            time.sleep(0.05)
+            with trava:
+                ativos -= 1
+            return b"%PDF"
+
+    monkeypatch.setattr(pdf, "HTML", HtmlFalso)
+    threads = [threading.Thread(target=pdf.renderizar, args=("<p/>",)) for _ in range(4)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert pico == 1

@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import threading
 from datetime import datetime
 from typing import Any
 
@@ -23,6 +24,17 @@ from ingestao.models import Carga
 
 VERSAO_TEMPLATE = "3"
 MAX_RELATORIOS = 200  # teto de PDFs guardados por versão dos dados (~centenas de KB cada)
+
+# Gunicorn gthread: várias threads por processo. Pango/fontconfig não são confiáveis em
+# renderizações simultâneas, e serializar deixa as outras threads livres para API e /saude.
+_RENDERIZACAO = threading.Lock()
+
+
+def renderizar(html: str) -> bytes:
+    with _RENDERIZACAO:
+        pdf = HTML(string=html).write_pdf()
+    assert pdf is not None
+    return pdf
 
 
 def versao_dos_dados() -> str:
@@ -168,8 +180,7 @@ def gerar_relatorio(
     if existente is not None:
         return bytes(existente.pdf), existente.nome_arquivo
     html = render_to_string("analise/relatorio.html", _contexto(r, comparacao))
-    pdf = HTML(string=html).write_pdf()
-    assert pdf is not None
+    pdf = renderizar(html)
     nome = nome_do_arquivo(r)
     Relatorio.objects.update_or_create(
         chave=chave, defaults={"nome_arquivo": nome, "pdf": pdf, "versao_dados": versao}
