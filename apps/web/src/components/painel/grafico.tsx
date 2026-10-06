@@ -1,22 +1,24 @@
 "use client";
 
 import { BarChart, LineChart } from "echarts/charts";
-import { GridComponent, LegendComponent, TooltipComponent } from "echarts/components";
+import { GridComponent, LegendComponent, MarkPointComponent, TooltipComponent } from "echarts/components";
 import * as echarts from "echarts/core";
 import { SVGRenderer } from "echarts/renderers";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { comTemaEscuro } from "@/lib/chart-options";
 import { temaAtual } from "@/lib/tema";
 
-echarts.use([BarChart, LineChart, GridComponent, LegendComponent, TooltipComponent, SVGRenderer]);
+echarts.use([BarChart, LineChart, GridComponent, LegendComponent, MarkPointComponent, TooltipComponent, SVGRenderer]);
 
 interface GraficoProps {
   option: echarts.EChartsCoreOption;
   descricao: string;
   altura?: number;
+  /** Altura no celular; por padrão, a mesma do desktop. */
+  alturaMovel?: number;
 }
 
-export function Grafico({ option, descricao, altura = 360 }: GraficoProps) {
+export function Grafico({ option, descricao, altura = 360, alturaMovel = altura }: GraficoProps) {
   const ref = useRef<HTMLDivElement>(null);
   const chart = useRef<echarts.ECharts | null>(null);
   const [escuro, setEscuro] = useState(false);
@@ -48,5 +50,12 @@ export function Grafico({ option, descricao, altura = 360 }: GraficoProps) {
     chart.current?.setOption(escuro ? comTemaEscuro(option) : option, true);
   }, [option, escuro]);
 
-  return <div ref={ref} role="img" aria-label={descricao} style={{ height: altura, width: "100%" }} data-testid="grafico" />;
+  return <div
+      ref={ref}
+      role="img"
+      aria-label={descricao}
+      className="h-[var(--h-movel)] w-full md:h-[var(--h-desktop)]"
+      style={{ "--h-movel": `${alturaMovel}px`, "--h-desktop": `${altura}px` } as CSSProperties}
+      data-testid="grafico"
+    />;
 }

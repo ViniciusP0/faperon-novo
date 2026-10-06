@@ -74,6 +74,9 @@ test("jornada Início → Central → Painel → filtros → ranking → série 
   await page.getByLabel("Produto", { exact: true }).selectOption({ label: "Soja (em grão)" });
 
   // Ranking com 52 municípios e filtros na URL
+  await expect(page.getByTestId("cartao-numero")).toHaveCount(4);
+  await expect(page.getByTestId("barra-item")).toHaveCount(10);
+  await page.getByText(/Ver os 52 municípios/).click();
   const tabela = page.getByRole("table").first();
   await expect(tabela.getByRole("row")).toHaveCount(53); // cabeçalho + 52
   await expect(page).toHaveURL(/produto=soja-em-grao/);
@@ -84,13 +87,13 @@ test("jornada Início → Central → Painel → filtros → ranking → série 
   await semViolacoesSerias(page);
 
   // Série histórica
-  await page.getByRole("tab", { name: "Série histórica" }).click();
+  await page.getByRole("navigation", { name: "Seções do painel" }).getByRole("link", { name: "Evolução" }).click();
   await expect(page).toHaveURL(/aba=serie/);
   await expect(page.getByTestId("grafico").locator("svg")).toBeVisible();
   await expect(page.getByTestId("serie-descricao")).toContainText("Rondônia (total)");
   await expect(page.getByTestId("serie-tendencia")).toContainText(/Linha de tendência .* (crescimento médio|queda média) de [+−][\d.,]+ .* por ano \(R² = \d,\d\d\)/);
   await expect(page.getByTestId("grafico")).toHaveAttribute("aria-label", /Linha de tendência/);
-  await page.getByLabel("Recorte territorial").selectOption({ label: "Vilhena" });
+  await page.getByLabel("Território").selectOption({ label: "Vilhena" });
   await expect(page.getByTestId("serie-descricao")).toContainText("Vilhena");
   await page.getByText("Ver tabela de dados do gráfico").click();
   await expect(page.getByRole("table", { name: /Série histórica/ })).toBeVisible();
@@ -110,7 +113,6 @@ test("o link da consulta reproduz os mesmos filtros", async ({ page }) => {
   await expect(page.getByLabel("Produto", { exact: true })).toHaveValue("leite");
   await expect(page.getByLabel("Ano inicial")).toHaveValue("2018");
   await expect(page.getByLabel("Ano final")).toHaveValue("2022");
-  await expect(page.getByRole("tab", { name: "Análise estratégica" })).toHaveAttribute("aria-selected", "true");
   await expect(page.getByRole("heading", { name: "Análise estratégica" })).toBeVisible();
   await expect(page.getByText(/Leite — Valor da produção, 2018–2022/)).toBeVisible();
   await expect(page.getByRole("heading", { name: "Cinco maiores municípios" })).toBeVisible();
@@ -145,13 +147,14 @@ test("comparação: municípios, produtos e bloqueio de unidades diferentes", as
   await semViolacoesSerias(page);
 });
 
-test("teclado: abas do painel navegam com setas", async ({ page }) => {
+test("teclado: a navegação de seções é alcançável e leva à seção", async ({ page }) => {
   await page.goto("/painel?produto=soja-em-grao&indicador=area-plantada&inicio=2015&fim=2024");
-  const primeira = page.getByRole("tab", { name: "Ranking" });
-  await primeira.focus();
-  await page.keyboard.press("ArrowRight");
-  await expect(page.getByRole("tab", { name: "Série histórica" })).toBeFocused();
-  await expect(page).toHaveURL(/aba=serie/);
+  await expect(page.getByTestId("grafico").locator("svg")).toBeVisible(); // conteúdo carregado: as seções não se deslocam mais
+  const link = page.getByRole("navigation", { name: "Seções do painel" }).getByRole("link", { name: "Comparação" });
+  await link.focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/aba=comparacao/);
+  await expect(page.getByRole("heading", { name: "Comparação" })).toBeInViewport();
 });
 
 test("navegação e páginas auxiliares", async ({ page, request }) => {

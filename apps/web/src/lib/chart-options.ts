@@ -38,6 +38,25 @@ function tooltip(unidade: string, pontosPorSerie: Ponto[][]): EChartsCoreOption[
 }
 
 export const NOME_TENDENCIA = "Tendência linear";
+
+const gradienteArea = (cor: string) => ({
+  color: { type: "linear", x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: `${cor}66` }, { offset: 1, color: `${cor}08` }] },
+});
+
+/** Anota o pico e o último ano com dado (um só ponto quando coincidem). */
+function marcas(pontos: Ponto[]) {
+  const validos = pontos.filter((p): p is Ponto & { valor: number } => p.valor !== null);
+  if (validos.length === 0) return undefined;
+  const pico = validos.reduce((a, b) => (b.valor > a.valor ? b : a));
+  const ultimo = validos[validos.length - 1]!;
+  const alvos = pico.ano === ultimo.ano ? [pico] : [pico, ultimo];
+  return {
+    symbol: "pin",
+    symbolSize: 54,
+    label: { color: "#fff", fontSize: 11, formatter: (p: { value: number }) => formatCompacto(p.value) },
+    data: alvos.map((p) => ({ coord: [String(p.ano), p.valor] as [string, number], value: p.valor })),
+  };
+}
 const COR_TENDENCIA = PALETA[1]!;
 
 export function opcaoSerie(nome: string, pontos: Ponto[], unidade: string): EChartsCoreOption {
@@ -45,15 +64,26 @@ export function opcaoSerie(nome: string, pontos: Ponto[], unidade: string): ECha
   const tendencia = tendenciaLinear(pontos);
   const reta = tendencia ? pontosDaTendencia(pontos, tendencia) : null;
 
-  const barras = { type: "bar", name: nome, data: pontos.map((p) => p.valor), itemStyle: { borderRadius: [4, 4, 0, 0] }, barMaxWidth: 44 };
-  if (!reta) return { ...base(unidade, anos), tooltip: tooltip(unidade, [pontos]), series: [barras] };
+  const area = {
+    type: "line",
+    name: nome,
+    data: pontos.map((p) => p.valor),
+    smooth: 0.15,
+    symbol: "circle",
+    symbolSize: 7,
+    lineStyle: { width: 3, color: PALETA[0] },
+    itemStyle: { color: PALETA[0] },
+    areaStyle: gradienteArea(PALETA[0]!),
+    markPoint: marcas(pontos),
+  };
+  if (!reta) return { ...base(unidade, anos), tooltip: tooltip(unidade, [pontos]), series: [area] };
 
   return {
     ...base(unidade, anos),
     legend: { top: 0, right: 0, icon: "roundRect", textStyle: { color: "#14261f" } },
     tooltip: tooltip(unidade, [pontos, reta]),
     series: [
-      barras,
+      area,
       {
         type: "line",
         name: NOME_TENDENCIA,
@@ -67,19 +97,20 @@ export function opcaoSerie(nome: string, pontos: Ponto[], unidade: string): ECha
   };
 }
 
+/** Acima disso, colunas agrupadas ficam ilegíveis e a comparação passa para linhas. */
+const ANOS_MAXIMO_COLUNAS = 6;
+
 export function opcaoComparacao(anos: number[], series: SerieComparada[], unidade: string): EChartsCoreOption {
   return {
     ...base(unidade, anos),
     grid: { left: 8, right: 16, top: 72, bottom: 8, containLabel: true },
     legend: { top: 0, left: 0, icon: "roundRect", textStyle: { color: "#14261f" } },
     tooltip: tooltip(unidade, series.map((s) => s.pontos)),
-    series: series.map((s) => ({
-      type: "bar",
-      name: s.nome,
-      data: s.pontos.map((p) => p.valor),
-      itemStyle: { borderRadius: [3, 3, 0, 0] },
-      barMaxWidth: 28,
-    })),
+    series: series.map((s) =>
+      anos.length > ANOS_MAXIMO_COLUNAS
+        ? { type: "line", name: s.nome, data: s.pontos.map((p) => p.valor), smooth: 0.15, symbol: "circle", symbolSize: 6, lineStyle: { width: 3 } }
+        : { type: "bar", name: s.nome, data: s.pontos.map((p) => p.valor), itemStyle: { borderRadius: [3, 3, 0, 0] }, barMaxWidth: 28 },
+    ),
   };
 }
 
@@ -106,10 +137,16 @@ export function comTemaEscuro(option: EChartsCoreOption): EChartsCoreOption {
     },
     ...(o.legend ? { legend: { ...o.legend, textStyle: { color: ESCURO.texto } } } : {}),
     tooltip: { ...o.tooltip, backgroundColor: ESCURO.card, borderColor: ESCURO.linha, textStyle: { color: ESCURO.texto } },
-    series: (o.series as Opcao[]).map((s) =>
-      s.type === "line"
-        ? { ...s, lineStyle: { ...s.lineStyle, color: PALETA_ESCURA[1] }, itemStyle: { ...s.itemStyle, color: PALETA_ESCURA[1] } }
-        : s,
-    ),
+    series: (o.series as Opcao[]).map((s) => {
+      if (s.type !== "line") return s;
+      if (s.areaStyle) {
+        const cor = PALETA_ESCURA[0]!;
+        return { ...s, lineStyle: { ...s.lineStyle, color: cor }, itemStyle: { ...s.itemStyle, color: cor }, areaStyle: gradienteArea(cor) };
+      }
+      if (s.name === NOME_TENDENCIA) {
+        return { ...s, lineStyle: { ...s.lineStyle, color: PALETA_ESCURA[1] }, itemStyle: { ...s.itemStyle, color: PALETA_ESCURA[1] } };
+      }
+      return s; // linhas da comparação seguem a paleta escura do option.color
+    }),
   };
 }

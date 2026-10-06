@@ -44,13 +44,25 @@ describe("Ranking", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ranking }));
     render(<Ranking filtros={filtros} />, { wrapper });
 
-    const tabela = await screen.findByRole("table");
-    const linhas = within(tabela).getAllByRole("row").slice(1);
+    const detalhes = await screen.findByText("Ver os 3 municípios");
+    expect(detalhes.closest("details")).not.toHaveAttribute("open");
+    const tabela = screen.getByRole("table", { hidden: true });
+    const linhas = within(tabela).getAllByRole("row", { hidden: true }).slice(1);
     expect(linhas).toHaveLength(3);
     expect(within(linhas[0]!).getByText("Corumbiara")).toBeInTheDocument();
     expect(within(linhas[2]!).getByText("X")).toBeInTheDocument();
     expect(screen.getByText("60,00%")).toBeInTheDocument();
-    expect(screen.getByRole("complementary", { name: "Nota metodológica" })).toHaveTextContent("Tabela SIDRA 5457");
+  });
+
+  it("mostra os maiores em barras, só os com valor, com o líder em primeiro", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ranking }));
+    render(<Ranking filtros={filtros} />, { wrapper });
+
+    const lista = await screen.findByRole("list", { name: /Dez maiores municípios/ });
+    const barras = within(lista).getAllByTestId("barra-item");
+    expect(barras).toHaveLength(2); // Cabixi é sigiloso: só aparece na tabela
+    expect(within(barras[0]!).getByText("Corumbiara")).toBeInTheDocument();
+    expect(within(barras[0]!).getByText("1º")).toBeInTheDocument();
   });
 
   it("mostra erro tratado quando a API falha", async () => {

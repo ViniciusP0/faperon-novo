@@ -30,6 +30,35 @@ export function NotaMetodologica({ meta }: { meta: Meta | null | undefined }) {
   );
 }
 
+interface SecaoProps {
+  id: string;
+  /** Etiqueta pequena em caixa alta acima do título. */
+  etiqueta: string;
+  titulo: React.ReactNode;
+  /** Intercala o fundo das seções. */
+  alternada?: boolean;
+  children: React.ReactNode;
+}
+
+/** Faixa da página com título no padrão da home; `id` é a âncora da navegação. */
+export function Secao({ id, etiqueta, titulo, alternada = false, children }: SecaoProps) {
+  return (
+    <section
+      id={id}
+      aria-labelledby={`${id}-titulo`}
+      className={`scroll-mt-28 border-b border-line py-10 md:py-14 ${alternada ? "bg-surface-alt" : "bg-card"}`}
+    >
+      <div className="container">
+        <p className="text-sm font-bold uppercase tracking-wide text-brand-fg">{etiqueta}</p>
+        <h2 id={`${id}-titulo`} className="mt-1 max-w-[52ch] text-2xl font-bold leading-tight tracking-tight text-brand-strong md:text-3xl">
+          {titulo}
+        </h2>
+        <div className="mt-6">{children}</div>
+      </div>
+    </section>
+  );
+}
+
 export function Carregando({ rotulo }: { rotulo: string }) {
   return (
     <div role="status" aria-live="polite" className="space-y-3">

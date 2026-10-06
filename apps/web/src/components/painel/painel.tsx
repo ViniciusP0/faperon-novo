@@ -1,27 +1,20 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { Check, FileDown, Link2 } from "lucide-react";
+import { useIsFetching, useQuery } from "@tanstack/react-query";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
-import { buttonVariants, Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { api, relatorioUrl } from "@/lib/api";
-import { ABAS, parseFiltros, recorteParams, serializeFiltros, type Aba, type Filtros } from "@/lib/filters";
-import { cn } from "@/lib/utils";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { SECOES } from "@/content/painel";
+import { api } from "@/lib/api";
+import { parseFiltros, recorteParams, serializeFiltros, type Aba, type Filtros } from "@/lib/filters";
 import { Analise } from "./analise";
 import { Comparacao } from "./comparacao";
 import { NotaMetodologica, Vazio } from "./comuns";
-import { FiltrosPainel } from "./filtros";
+import { BarraRecorte } from "./barra-recorte";
+import { useRanking } from "./consultas";
+import { Numeros } from "./numeros";
+import { SeletorProduto } from "./seletor-produto";
 import { Ranking } from "./ranking";
 import { Serie } from "./serie";
-
-const ROTULO_ABA: Record<Aba, string> = {
-  ranking: "Ranking",
-  serie: "Série histórica",
-  comparacao: "Comparação",
-  analise: "Análise estratégica",
-};
 
 export function Painel() {
   const router = useRouter();
@@ -90,168 +83,105 @@ export function Painel() {
     paramsPdf.set("municipios", filtros.municipios.join(","));
   }
 
+  // Link antigo com `aba`: ao abrir o recorte, rola até a seção equivalente (uma vez).
+  // Espera as consultas terminarem: com o conteúdo acima ainda carregando, a seção se deslocaria depois da rolagem.
+  const rolou = useRef(false);
+  const consultasAbertas = useIsFetching();
+  useEffect(() => {
+    if (!pronto || consultasAbertas > 0 || rolou.current) return;
+    rolou.current = true;
+    const alvo = SECOES.find((sec) => sec.aba === filtros.aba && sec.id !== "numeros" && sec.id !== "ranking");
+    if (alvo) requestAnimationFrame(() => document.getElementById(alvo.id)?.scrollIntoView());
+  }, [pronto, consultasAbertas, filtros.aba]);
+
   return (
     <>
       <section aria-labelledby="painel-titulo" className="bg-gradient-to-br from-brand-dark to-brand text-white">
         <div className="container py-10 md:py-14">
-          <h1 id="painel-titulo" className="text-3xl font-bold md:text-4xl">
+          <h1 id="painel-titulo" className="text-3xl font-bold md:text-5xl">
             Painel Agro Analítico RO
           </h1>
-          <p className="mt-2 max-w-2xl text-white/90">
-            Lavouras e rebanhos dos 52 municípios de Rondônia, com dados oficiais do IBGE. Todos os filtros ficam no endereço da página:
-            copie o link para compartilhar a consulta.
+          <p className="mt-3 max-w-2xl text-lg text-white/90">
+            Lavouras e rebanhos dos 52 municípios de Rondônia, com dados oficiais do IBGE. Escolha um produto e veja quem lidera, como evoluiu e
+            como se compara.
           </p>
+          <div className="mt-8">
+            <SeletorProduto filtros={filtros} segmento={segmento} produtos={produtos} carregandoProdutos={produtosQ.isPending} onChange={navegar} />
+            {produtosQ.isError && (
+              <p role="alert" className="mt-3 rounded-lg bg-white px-3 py-2 text-sm text-danger-ink">
+                Não foi possível carregar o catálogo de produtos.{" "}
+                <button type="button" className="underline" onClick={() => produtosQ.refetch()}>
+                  Tentar novamente
+                </button>
+              </p>
+            )}
+          </div>
         </div>
       </section>
 
-      <div className="container py-8">
-        <Card className="p-5">
-          <FiltrosPainel
-            filtros={filtros}
-            segmento={segmento}
-            produtos={produtos}
-            indicadores={indicadores}
-            anos={metaQ.data?.anos}
-            carregandoProdutos={produtosQ.isPending}
-            onChange={navegar}
-          />
-          {produtosQ.isError && (
-            <p role="alert" className="mt-3 text-sm text-danger">
-              Não foi possível carregar o catálogo de produtos.{" "}
-              <button type="button" className="underline" onClick={() => produtosQ.refetch()}>
-                Tentar novamente
-              </button>
-            </p>
-          )}
-        </Card>
-
-        {!pronto ? (
-          <div className="mt-8">
-            <Vazio>
-              {filtros.produto
-                ? "Carregando os indicadores do produto…"
-                : "Escolha um segmento e um produto para ver o ranking, a série histórica, a comparação e a análise."}
-            </Vazio>
-            <NotaMetodologica meta={null} />
+      {!pronto ? (
+        <div className="container py-8">
+          <Vazio>
+            {filtros.produto
+              ? "Carregando os indicadores do produto…"
+              : "Escolha um segmento e um produto para ver os números, o ranking, a evolução, a comparação e a análise."}
+          </Vazio>
+          <NotaMetodologica meta={null} />
+        </div>
+      ) : (
+        <>
+          <div className="z-30 border-b border-line bg-card/95 backdrop-blur lg:sticky lg:top-[var(--altura-header,4.5rem)]">
+            <BarraRecorte
+              filtros={filtros}
+              indicadores={indicadores}
+              municipios={municipios}
+              anos={metaQ.data?.anos}
+              paramsPdf={paramsPdf.toString()}
+              onChange={navegar}
+            />
+            <NavSecoes onIr={(aba) => navegar({ aba })} />
           </div>
-        ) : (
-          <div className="mt-8">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <Abas aba={filtros.aba} onChange={(aba) => navegar({ aba })} />
-              <div className="flex flex-wrap gap-2">
-                <CopiarLink />
-                <a
-                  href={relatorioUrl(paramsPdf.toString())}
-                  className={cn(buttonVariants({ variant: "primary", size: "md" }))}
-                  download
-                >
-                  <FileDown aria-hidden="true" className="h-4 w-4" />
-                  Gerar PDF
-                </a>
-              </div>
-            </div>
 
-            <div
-              role="tabpanel"
-              id={`painel-${filtros.aba}`}
-              aria-labelledby={`aba-${filtros.aba}`}
-              tabIndex={0}
-              className="mt-6"
-            >
-              {filtros.aba === "ranking" && <Ranking filtros={filtros} />}
-              {filtros.aba === "serie" && (
-                <Serie filtros={filtros} municipios={municipios} onMunicipio={(municipio) => navegar({ municipio })} />
-              )}
-              {filtros.aba === "comparacao" && (
-                <Comparacao filtros={filtros} municipios={municipios} produtos={produtos} onChange={navegar} />
-              )}
-              {filtros.aba === "analise" && <Analise filtros={filtros} />}
-            </div>
+          <Numeros filtros={filtros} />
+          <Ranking filtros={filtros} />
+          <Serie filtros={filtros} />
+          <Comparacao filtros={filtros} municipios={municipios} produtos={produtos} onChange={navegar} />
+          <Analise filtros={filtros} />
+
+          <div className="container pb-12">
+            <NotaDoRecorte filtros={filtros} />
           </div>
-        )}
-      </div>
-    </>
-  );
-}
-
-function Abas({ aba, onChange }: { aba: Aba; onChange: (aba: Aba) => void }) {
-  const refs = useRef<Record<string, HTMLButtonElement | null>>({});
-
-  const aoTeclar = (e: KeyboardEvent<HTMLButtonElement>, i: number) => {
-    let destino: number | null = null;
-    if (e.key === "ArrowRight") destino = (i + 1) % ABAS.length;
-    if (e.key === "ArrowLeft") destino = (i - 1 + ABAS.length) % ABAS.length;
-    if (e.key === "Home") destino = 0;
-    if (e.key === "End") destino = ABAS.length - 1;
-    if (destino === null) return;
-    e.preventDefault();
-    const nova = ABAS[destino]!;
-    onChange(nova);
-    refs.current[nova]?.focus();
-  };
-
-  return (
-    <div role="tablist" aria-label="Visualizações do painel" className="flex flex-wrap gap-1 rounded-xl bg-surface-alt p-1">
-      {ABAS.map((a, i) => (
-        <button
-          key={a}
-          ref={(el) => {
-            refs.current[a] = el;
-          }}
-          role="tab"
-          type="button"
-          id={`aba-${a}`}
-          aria-selected={aba === a}
-          aria-controls={`painel-${a}`}
-          tabIndex={aba === a ? 0 : -1}
-          onClick={() => onChange(a)}
-          onKeyDown={(e) => aoTeclar(e, i)}
-          className={cn(
-            "rounded-lg px-4 py-2.5 text-sm font-medium transition-colors",
-            aba === a ? "bg-brand text-white shadow-sm" : "text-ink hover:bg-brand-soft",
-          )}
-        >
-          {ROTULO_ABA[a]}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function CopiarLink() {
-  const [copiado, setCopiado] = useState(false);
-  // Sem permissão de área de transferência, mostra o endereço num campo selecionável (em vez de um modal bloqueante).
-  const [manual, setManual] = useState<string | null>(null);
-  return (
-    <>
-      <Button
-        variant="outline"
-        onClick={async () => {
-          try {
-            await navigator.clipboard.writeText(window.location.href);
-            setManual(null);
-            setCopiado(true);
-            setTimeout(() => setCopiado(false), 2500);
-          } catch {
-            setManual(window.location.href);
-          }
-        }}
-      >
-        {copiado ? <Check aria-hidden="true" className="h-4 w-4" /> : <Link2 aria-hidden="true" className="h-4 w-4" />}
-        Copiar link
-      </Button>
-      {manual && (
-        <input
-          readOnly
-          value={manual}
-          aria-label="Link da consulta: selecione e copie"
-          onFocus={(e) => e.currentTarget.select()}
-          className="h-11 w-64 rounded-xl border border-field bg-card px-3 text-sm text-ink"
-        />
+        </>
       )}
-      <span role="status" className="sr-only">
-        {copiado ? "Link copiado" : ""}
-      </span>
     </>
+  );
+}
+
+function NotaDoRecorte({ filtros }: { filtros: Filtros }) {
+  const { data } = useRanking(filtros);
+  return <NotaMetodologica meta={data?.meta} />;
+}
+
+function NavSecoes({ onIr }: { onIr: (aba: Aba) => void }) {
+  return (
+    <nav aria-label="Seções do painel" className="container pb-2">
+      <ul className="flex flex-wrap gap-1">
+        {SECOES.map((sec) => (
+          <li key={sec.id}>
+            <a
+              href={`#${sec.id}`}
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById(sec.id)?.scrollIntoView();
+                onIr(sec.aba);
+              }}
+              className="inline-block rounded-lg px-3.5 py-2 text-sm font-medium text-ink hover:bg-brand-soft"
+            >
+              {sec.rotulo}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
   );
 }
