@@ -8,7 +8,7 @@ Registro cronológico por área, atualizado em 24/09/2026. Cada entrada tem sint
 
 - **Sintoma:** `python` abre a Microsoft Store; `pytest`, `ruff` e `mypy` não rodam no host.
 - **Causa:** o Windows do notebook não tem Python instalado, e o backend não deve depender disso (ADR 0010).
-- **Solução:** todo o backend roda em Docker. Para testar sem subir o compose inteiro: `docker compose run --rm --no-deps -v "$(pwd -W)/apps/api:/app" api pytest`. O volume monta o código atual por cima da imagem.
+- **Solução:** todo o backend roda em Docker. Para testar sem subir o compose inteiro: `docker compose run --rm --no-deps -v "$(pwd -W)/apps/api:/app" api-dev pytest`. O volume monta o código atual por cima da imagem.
 - **Status:** contornado.
 
 ### `make` não existe no Windows
