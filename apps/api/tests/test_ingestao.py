@@ -9,6 +9,7 @@ from indicadores.models import Indicador, Medicao, Produto, ProdutoIndicador
 from ingestao.models import Carga, StagingMedicao
 from ingestao.servico import CargaFalhou, executar_carga
 from ingestao.sidra import BASE_URL, ErroSidra, SidraCliente
+from ingestao.signals import carga_concluida
 from tests.conftest import ClienteFalso, carregar_fixture
 
 pytestmark = pytest.mark.django_db
@@ -212,3 +213,27 @@ def test_cliente_classificacao_inexistente() -> None:
     cliente, _ = _cliente_http()
     with pytest.raises(ErroSidra, match="Classificação 999"):
         cliente.categorias(5457, 999)
+
+
+def test_falha_no_refresh_desfaz_a_promocao_e_marca_falha(cliente_soja: ClienteFalso) -> None:
+    executar_carga(5457, cliente_soja)
+    estado = _estado()
+    resposta = carregar_fixture("sidra_5457_soja_quantidade_2023_2024.json")
+    for serie in resposta[0]["resultados"][0]["series"]:
+        if serie["localidade"]["id"] == "1100072":
+            serie["serie"]["2024"] = "190000"
+    revisado = ClienteFalso([("40124", "Soja (em grão)")], {"40124": resposta})
+
+    def quebra(**_: object) -> None:
+        raise RuntimeError("refresh travou")
+
+    carga_concluida.connect(quebra, dispatch_uid="teste.quebra")
+    try:
+        with pytest.raises(CargaFalhou):
+            executar_carga(5457, revisado)
+    finally:
+        carga_concluida.disconnect(dispatch_uid="teste.quebra")
+    ultima = Carga.objects.order_by("-id").first()
+    assert ultima is not None and ultima.status == Carga.Status.FALHA
+    assert "refresh travou" in ultima.erro
+    assert _estado() == estado

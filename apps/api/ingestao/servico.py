@@ -117,12 +117,14 @@ def executar_carga(
             StagingMedicao.objects.bulk_create(linhas, batch_size=LOTE)
             promover_staging(carga, cfg.segmento, municipios)
             StagingMedicao.objects.filter(carga=carga).delete()
+            # Na mesma transação: se o REFRESH de mv_ranking falhar, os dados novos não ficam
+            # publicados com o ranking antigo.
+            carga_concluida.send(sender=Carga, carga=carga)
         carga.status = Carga.Status.SUCESSO
         carga.hash = digest if apenas is None else ""
         carga.linhas = len(linhas)
         carga.concluida_em = timezone.now()
         carga.save()
-        carga_concluida.send(sender=Carga, carga=carga)
         return carga
     except Exception as exc:
         carga.status = Carga.Status.FALHA
