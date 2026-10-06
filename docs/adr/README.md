@@ -24,3 +24,6 @@ Decisões de arquitetura no formato MADR (Contexto, Opções, Decisão, Consequ�
 - [0020](0020-conteudo-editorial-no-codigo-sem-cms.md) — Conteúdo editorial no código, sem CMS
 - [0021](0021-deploy-automatico-no-dt-server-via-webhook-do-github.md) — Deploy automático no `dt-server` via webhook do GitHub
 - [0022](0022-painel-em-pagina-narrativa-em-vez-de-abas.md) — Painel em página narrativa em vez de abas
+- [0023](0023-ip-do-cliente-pelo-ultimo-x-forwarded-for-e-teto-global-de-pdf.md) — IP do cliente pelo último X-Forwarded-For e teto global de PDF
+- [0024](0024-imagem-da-api-em-dois-estagios-producao-sem-root-e-sem-ferramentas-.md) — Imagem da API em dois estágios; produção sem root e sem ferramentas de dev
+- [0025](0025-gunicorn-com-threads-e-renderizacao-de-pdf-serializada-com-espera-.md) — Gunicorn com threads e renderização de PDF serializada com espera limitada
