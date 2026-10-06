@@ -31,7 +31,7 @@ export function HeroPagina({
           <Image src={imagem.src} alt="" fill priority unoptimized sizes="100vw" className="object-cover" style={{ objectPosition: imagem.posicao }} />
           <div
             aria-hidden="true"
-            className="absolute inset-0 bg-brand-dark/88 md:bg-transparent md:[background-image:linear-gradient(90deg,rgba(0,70,58,.94)_0%,rgba(0,70,58,.78)_38%,rgba(0,70,58,.12)_72%,rgba(0,70,58,0)_100%)]"
+            className="absolute inset-0 bg-[rgba(0,70,58,0.88)] md:bg-transparent md:[background-image:linear-gradient(90deg,rgba(0,70,58,.94)_0%,rgba(0,70,58,.78)_38%,rgba(0,70,58,.12)_72%,rgba(0,70,58,0)_100%)]"
           />
         </>
       )}
