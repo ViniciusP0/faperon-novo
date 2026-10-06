@@ -15,7 +15,7 @@ A demo dependia do notebook de um desenvolvedor (ADR 0010, decisão 15 do plano)
 
 `infra/webhook_listener.py` roda como serviço systemd (`faperon-webhook`, ver `infra/faperon-webhook.service`), escutando só em `127.0.0.1:9001`. O Tailscale Funnel expõe essa porta publicamente em `:10000` (Funnel só aceita 443, 8443 ou 10000; 443 é o site e 8443 já está em uso por outro serviço no `dt-server`).
 
-No evento `push` em `main`, o listener valida `X-Hub-Signature-256` contra `GITHUB_WEBHOOK_SECRET` e roda `infra/deploy.sh` em background (`subprocess.Popen`, resposta `202` imediata). O script usa `flock` para não rodar dois deploys ao mesmo tempo, só reconstrói se houver commit novo em `origin/main`, e registra cada execução em `infra/deploy.log`.
+No evento `push` em `main`, o listener valida `X-Hub-Signature-256` contra `GITHUB_WEBHOOK_SECRET` e roda `infra/deploy.sh` em background (`subprocess.Popen`, resposta `202` imediata). O script usa `flock -w 1800`: um push que chega durante um deploy espera ele terminar e então publica o próprio commit (atualizado em 06/10/2026; antes era `flock -n`, que descartava esse push), só reconstrói se houver commit novo em `origin/main`, e registra cada execução em `infra/deploy.log`.
 
 Corpo da requisição limitado a 5 MB antes da leitura, para não deixar uma requisição com `Content-Length` arbitrário esgotar memória do listener exposto publicamente.
 

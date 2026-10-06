@@ -23,7 +23,7 @@ Operação:
 
 - Ver se está no ar: `systemctl status faperon-webhook`
 - Log de cada deploy: `infra/deploy.log` (ou `journalctl -u faperon-webhook -f` para o listener)
-- `deploy.sh` só reconstrói quando há commit novo em `origin/main`; usa `flock` para não rodar dois deploys ao mesmo tempo
+- `deploy.sh` só reconstrói quando há commit novo em `origin/main`; usa `flock -w 1800`: deploys concorrentes entram em fila (até 30 min), nenhum é descartado
 - `make funnel-off` desliga só a porta 3000 (site); o webhook fica em outra porta e continua no ar (antes usava `tailscale funnel reset`, que derrubava os dois)
 - O `.env` do servidor precisa ter `DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,api` (desde 06/10/2026 o padrão deixou de ser `*`). Sem `api`, o Next recebe 400 do Django em todas as páginas.
 - `make seed`, `make snapshot` e `make ingest` usam o serviço `api-dev` (imagem de dev, roda como root); a primeira execução no servidor constrói essa imagem.
