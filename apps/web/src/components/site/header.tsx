@@ -68,7 +68,10 @@ export function SiteHeader() {
 
           <Link href={ROTAS.login} className={cn(buttonVariants({ size: "sm" }), BOTAO_ACESSO, "ml-2 shrink-0")}>
             <LogIn aria-hidden="true" className="h-4 w-4" />
-            Acessar o sistema
+            {/* Entre 1024 e 1099 px o menu de 6 itens não deixa espaço: o rótulo encurta, e o nome acessível continua inteiro. */}
+            <span>
+              Acessar<span className="sr-only min-[1100px]:not-sr-only"> o sistema</span>
+            </span>
           </Link>
           <BotaoTema className="ml-3" />
         </div>
