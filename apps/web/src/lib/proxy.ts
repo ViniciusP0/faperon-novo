@@ -2,6 +2,12 @@ const REPASSAR = ["content-type", "content-disposition", "cache-control", "retry
 
 const PERMITIDOS = ["/api/v1/"];
 
+/** Último item do X-Forwarded-For: o que o Funnel (único proxy confiável) acrescentou. O resto pode ter vindo do cliente. */
+export function ipDoCliente(valor: string | null): string | null {
+  const itens = (valor ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  return itens.at(-1) ?? null;
+}
+
 /** Encaminha ao Django só a API pública (schema e docs ficam fora do Funnel), lendo API_INTERNAL_URL em runtime (rewrites do next.config são fixados no build). */
 export async function proxyParaApi(req: Request): Promise<Response> {
   const base = process.env.API_INTERNAL_URL ?? "http://localhost:8000";
@@ -16,7 +22,7 @@ export async function proxyParaApi(req: Request): Promise<Response> {
     const valor = req.headers.get(nome);
     if (valor) headers.set(nome, valor);
   }
-  const ip = req.headers.get("x-forwarded-for");
+  const ip = ipDoCliente(req.headers.get("x-forwarded-for"));
   if (ip) headers.set("x-forwarded-for", ip);
 
   try {

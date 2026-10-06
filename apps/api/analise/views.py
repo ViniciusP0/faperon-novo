@@ -10,6 +10,7 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from analise import pdf, servico
+from analise.throttles import PdfGlobalThrottle
 from indicadores.api import apresentacao as ap
 from indicadores.api import serializers as sz
 from indicadores.api.parametros import lista_csv, validar_consulta
@@ -74,7 +75,7 @@ class AnaliseView(APIView):
 
 
 class RelatorioPdfView(APIView):
-    throttle_classes = [ScopedRateThrottle]
+    throttle_classes = [ScopedRateThrottle, PdfGlobalThrottle]
     throttle_scope = "pdf"
 
     @extend_schema(

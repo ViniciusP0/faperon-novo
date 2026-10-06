@@ -111,7 +111,10 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.AllowAny"],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    "DEFAULT_THROTTLE_RATES": {"pdf": os.environ.get("PDF_RATE_LIMIT", "10/min")},
+    "DEFAULT_THROTTLE_RATES": {
+        "pdf": os.environ.get("PDF_RATE_LIMIT", "10/min"),
+        "pdf_global": os.environ.get("PDF_GLOBAL_RATE_LIMIT", "30/min"),
+    },
     "EXCEPTION_HANDLER": "indicadores.api.erros.tratador_de_excecoes",
     "NUM_PROXIES": int(os.environ.get("NUM_PROXIES", "1")),
 }

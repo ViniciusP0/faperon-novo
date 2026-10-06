@@ -5,7 +5,7 @@ from django.core.cache import cache
 from hypothesis import given
 from hypothesis import strategies as st
 from rest_framework.test import APIClient
-from rest_framework.throttling import ScopedRateThrottle
+from rest_framework.throttling import ScopedRateThrottle, SimpleRateThrottle
 
 from analise import graficos, pdf, regras
 from analise.models import Relatorio
@@ -286,3 +286,19 @@ def test_carga_concluida_limpa_pdfs_da_versao_anterior(
     )
     carga_concluida.send(sender=Carga, carga=nova)
     assert Relatorio.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_teto_global_do_pdf_vale_mesmo_com_ip_trocado(
+    api: APIClient, dados_soja: Produto, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    taxas = {"pdf": "100/min", "pdf_global": "2/min"}
+    monkeypatch.setattr(SimpleRateThrottle, "THROTTLE_RATES", taxas)
+    monkeypatch.setattr(ScopedRateThrottle, "THROTTLE_RATES", taxas)
+    cache.clear()
+    codigos = [
+        api.get(f"/api/v1/relatorio.pdf?{Q}", HTTP_X_FORWARDED_FOR=f"198.51.100.{i}").status_code
+        for i in range(3)
+    ]
+    assert codigos == [200, 200, 429]
+    cache.clear()

@@ -1,9 +1,28 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { proxyParaApi } from "./proxy";
+import { ipDoCliente, proxyParaApi } from "./proxy";
 
 afterEach(() => vi.unstubAllGlobals());
 
 describe("proxyParaApi", () => {
+  it("repassa ao Django só o IP que o Funnel acrescentou, nunca a cadeia forjada", async () => {
+    const fetchFalso = vi.fn().mockResolvedValue(new Response("{}", { status: 200 }));
+    vi.stubGlobal("fetch", fetchFalso);
+    await proxyParaApi(
+      new Request("http://site.test/api/v1/relatorio.pdf", {
+        headers: { "x-forwarded-for": "6.6.6.6, 7.7.7.7, 203.0.113.9" },
+      }),
+    );
+    const enviados = fetchFalso.mock.calls[0]![1].headers as Headers;
+    expect(enviados.get("x-forwarded-for")).toBe("203.0.113.9");
+  });
+
+  it("ipDoCliente pega o último valor não vazio", () => {
+    expect(ipDoCliente("1.1.1.1, 2.2.2.2")).toBe("2.2.2.2");
+    expect(ipDoCliente(" 2.2.2.2 ,")).toBe("2.2.2.2");
+    expect(ipDoCliente("")).toBeNull();
+    expect(ipDoCliente(null)).toBeNull();
+  });
+
   it("só encaminha /api/v1/ e nunca expõe schema, docs ou admin do Django", async () => {
     const fetchFalso = vi.fn();
     vi.stubGlobal("fetch", fetchFalso);
