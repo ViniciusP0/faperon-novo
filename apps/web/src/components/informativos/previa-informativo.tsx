@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { formatData } from "@/lib/format";
@@ -18,7 +18,7 @@ interface PreviaProps {
 }
 
 const botaoVizinho =
-  "rounded-lg border border-line px-3 py-1 text-[0.8rem] text-ink-muted hover:border-brand-fg disabled:opacity-40 disabled:hover:border-line";
+  "inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-1 text-[0.8rem] text-ink-muted hover:border-brand-fg disabled:opacity-40 disabled:hover:border-line";
 
 /** Janela de pré-visualização: o livro girando, a ficha da edição e o botão de baixar o PDF. */
 export function PreviaInformativo({ livro, onFechar, anterior, proxima, onTrocar }: PreviaProps) {
@@ -85,7 +85,7 @@ export function PreviaInformativo({ livro, onFechar, anterior, proxima, onTrocar
                   onClick={() => anterior && onTrocar(anterior)}
                   className={botaoVizinho}
                 >
-                  <span aria-hidden="true">← </span>
+                  <ArrowLeft aria-hidden="true" className="h-3.5 w-3.5" />
                   Edição anterior
                 </button>
                 <button
@@ -96,7 +96,7 @@ export function PreviaInformativo({ livro, onFechar, anterior, proxima, onTrocar
                   className={botaoVizinho}
                 >
                   Próxima edição
-                  <span aria-hidden="true"> →</span>
+                  <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
                 </button>
               </div>
             )}

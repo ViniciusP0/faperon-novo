@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { formatData } from "@/lib/format";
@@ -82,8 +83,9 @@ export function BoletinsEmLivros({ boletins }: { boletins: LivroInfo[] }) {
                 <span className="mt-1 block text-sm text-ink-muted">
                   Publicado em <time dateTime={b.data}>{formatData(b.data)}</time>
                 </span>
-                <span className="mt-3 block text-sm font-semibold text-brand-fg">
-                  Pré-visualizar <span aria-hidden="true">→</span>
+                <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-fg">
+                  Pré-visualizar
+                  <ArrowRight aria-hidden="true" className="h-4 w-4" />
                 </span>
               </span>
             </button>

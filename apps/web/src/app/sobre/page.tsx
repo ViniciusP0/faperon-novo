@@ -1,4 +1,4 @@
-import { Download, FileText } from "lucide-react";
+import { ArrowRight, Download, FileText } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CtaDuplo } from "@/components/site/cta-duplo";
@@ -211,7 +211,10 @@ export default function SobrePage() {
                   >
                     <span className="font-semibold">{e.nome}</span>
                     <span className="text-sm text-ink-muted">{e.descricao}</span>
-                    <span className="mt-auto pt-2.5 text-sm font-semibold text-brand-fg">{e.acao} →</span>
+                    <span className="mt-auto inline-flex items-center gap-1.5 pt-2.5 text-sm font-semibold text-brand-fg">
+                      {e.acao}
+                      <ArrowRight aria-hidden="true" className="h-4 w-4" />
+                    </span>
                   </LinkAuto>
                 </li>
               ))}
