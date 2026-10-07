@@ -52,21 +52,28 @@ def manchete_crescimento(cultura: str, inicio: int, fim: int, d: Decomposicao | 
         )
     if d.estavel or d.parte_area_pct is None or d.parte_rendimento_pct is None:
         return f"A produção de {cultura} ficou estável entre {inicio} e {fim}."
-    if d.variacao_producao_pct > 0:
+    area, rend = d.parte_area_pct, d.parte_rendimento_pct
+    cresceu = d.variacao_producao_pct > 0
+    abertura = (
+        f"A produção de {cultura} {'cresceu' if cresceu else 'caiu'} "
+        f"{_pct(abs(d.variacao_producao_pct))} entre {inicio} e {fim}"
+    )
+    if rend < 0 or area < 0:
+        # Forças opostas: as partes saem de [0, 100] e não cabem como percentuais.
+        if cresceu:
+            if rend < 0:
+                return abertura + ", puxada pela expansão de área, enquanto a produtividade recuou."
+            return abertura + ", puxada por ganho de produtividade, enquanto a área colhida recuou."
+        if area < 0:
+            return abertura + ": a queda de produtividade mais que compensou a expansão de área."
+        return abertura + ": a redução de área mais que compensou o ganho de produtividade."
+    if cresceu:
         return (
-            f"A produção de {cultura} cresceu {_pct(d.variacao_producao_pct)} entre {inicio} e {fim}; "
-            f"{_pct(d.parte_rendimento_pct)} desse aumento veio de ganho de produtividade "
-            f"e {_pct(d.parte_area_pct)} de expansão de área."
+            abertura + f"; {_pct(rend)} desse aumento veio de ganho de produtividade "
+            f"e {_pct(area)} de expansão de área."
         )
-    causa = (
-        "queda de produtividade"
-        if d.parte_rendimento_pct >= d.parte_area_pct
-        else "redução de área"
-    )
-    return (
-        f"A produção de {cultura} caiu {_pct(abs(d.variacao_producao_pct))} entre {inicio} e {fim}, "
-        f"puxada principalmente pela {causa}."
-    )
+    causa = "queda de produtividade" if rend >= area else "redução de área"
+    return abertura + f", puxada principalmente pela {causa}."
 
 
 def manchete_territorio(
@@ -109,10 +116,19 @@ def manchete_pecuaria(
 
 def como_ler(bloco: str, ano_ref: int | None) -> list[str]:
     precos = f"a preços de {ano_ref}" if ano_ref else "sem correção monetária"
+    if ano_ref:
+        valores = (
+            f"Os valores estão corrigidos pelo IPCA médio anual e expressos {precos}; "
+            "assim, a variação mostrada é real, não efeito da inflação."
+        )
+    else:
+        valores = (
+            "Os valores são mostrados sem correção monetária, pois não há IPCA disponível para o período; "
+            "a variação inclui o efeito da inflação."
+        )
     textos = {
         "panorama": [
-            f"Os valores estão corrigidos pelo IPCA médio anual e expressos {precos}; "
-            "assim, a variação mostrada é real, não efeito da inflação.",
+            valores,
             "O retângulo de cada item é proporcional à sua participação no valor total do ano. "
             "Mudanças de participação mostram para onde a economia agrícola do estado está se deslocando.",
         ],

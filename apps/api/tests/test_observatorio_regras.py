@@ -63,3 +63,93 @@ def test_avisos_e_como_ler() -> None:
     for bloco in ("panorama", "crescimento", "territorio", "pecuaria"):
         assert 2 <= len(r.como_ler(bloco, 2024)) <= 3
     assert "a preços de 2024" in " ".join(r.como_ler("panorama", 2024))
+
+
+def test_crescimento_forcas_opostas_crescimento() -> None:
+    p = "A produção de Soja cresceu 20,0% entre 2015 e 2024"
+    assert r.manchete_crescimento(
+        "Soja", 2015, 2024, Decomposicao(D(20), D("130"), D("-30"), False)
+    ) == (p + ", puxada pela expansão de área, enquanto a produtividade recuou.")
+    assert r.manchete_crescimento(
+        "Soja", 2015, 2024, Decomposicao(D(20), D("-30"), D("130"), False)
+    ) == (p + ", puxada por ganho de produtividade, enquanto a área colhida recuou.")
+
+
+def test_crescimento_forcas_opostas_queda() -> None:
+    p = "A produção de Soja caiu 20,0% entre 2015 e 2024"
+    assert r.manchete_crescimento(
+        "Soja", 2015, 2024, Decomposicao(D(-20), D("-30"), D("130"), False)
+    ) == (p + ": a queda de produtividade mais que compensou a expansão de área.")
+    assert r.manchete_crescimento(
+        "Soja", 2015, 2024, Decomposicao(D(-20), D("130"), D("-30"), False)
+    ) == (p + ": a redução de área mais que compensou o ganho de produtividade.")
+
+
+def test_crescimento_estavel_e_queda_por_area() -> None:
+    assert r.manchete_crescimento("Soja", 2015, 2024, Decomposicao(D("0.5"), None, None, True)) == (
+        "A produção de Soja ficou estável entre 2015 e 2024."
+    )
+    assert r.manchete_crescimento("Soja", 2015, 2024, Decomposicao(D("5"), None, None, False)) == (
+        "A produção de Soja ficou estável entre 2015 e 2024."
+    )
+    assert r.manchete_crescimento(
+        "Soja", 2015, 2024, Decomposicao(D(-20), D("70"), D("30"), False)
+    ) == (
+        "A produção de Soja caiu 20,0% entre 2015 e 2024, puxada principalmente pela redução de área."
+    )
+
+
+def test_territorio_ramos() -> None:
+    base = (
+        "Em 2024, os cinco maiores municípios concentraram 72,5% da área colhida "
+        "(concentração alta); Ariquemes é o principal polo."
+    )
+    assert r.manchete_territorio("area", 2024, D("72.5"), "Ariquemes", 0) == base
+    assert r.manchete_territorio("area", 2024, D("72.5"), "Ariquemes", 1) == (
+        base + " 1 município depende de uma só cultura para mais da metade do valor agrícola."
+    )
+    assert r.manchete_territorio("area", 2024, None, "Ariquemes", 0) == r.AVISO_SEM_DADOS
+    assert r.manchete_territorio("area", 2024, D("72.5"), None, 0) == r.AVISO_SEM_DADOS
+
+
+def test_pecuaria_ramos() -> None:
+    assert r.manchete_pecuaria("Bovino", 2015, 2024, D("-10"), "Ariquemes", None) == (
+        "O rebanho bovino caiu 10,0% entre 2015 e 2024; Ariquemes é o principal polo."
+    )
+    assert r.manchete_pecuaria("Bovino", 2015, 2024, D("0"), "Ariquemes", D("-5")) == (
+        "O rebanho bovino ficou estável entre 2015 e 2024; Ariquemes é o principal polo. "
+        "A produtividade do leite variou -5,0% no período."
+    )
+    assert r.manchete_pecuaria("Bovino", 2015, 2024, None, "Ariquemes", None) == r.AVISO_SEM_DADOS
+
+
+def test_panorama_ramos() -> None:
+    base = "Em 2024, Soja respondeu por 38,2% do valor da produção agropecuária de Rondônia"
+    assert r.manchete_panorama(2024, 2024, "Soja", D("38.2"), None, D("2.1")) == base + "."
+    assert r.manchete_panorama(2024, 2024, "Soja", D("38.2"), D("-2.1"), D("-2.1")) == (
+        base + ", -2,1 p.p. em relação ao início do período."
+    )
+    assert r.manchete_panorama(2024, 2024, "Soja", D("38.2"), D("-0.3"), D("-0.8")) == (
+        base + "; a composição ficou estável no período (nenhum item variou 1 p.p. ou mais)."
+    )
+
+
+def test_como_ler_sem_ano_ref_e_avisos() -> None:
+    assert r.como_ler("panorama", None)[0] == (
+        "Os valores são mostrados sem correção monetária, pois não há IPCA disponível para o período; "
+        "a variação inclui o efeito da inflação."
+    )
+    for bloco in ("panorama", "crescimento", "territorio", "pecuaria"):
+        textos = r.como_ler(bloco, None)
+        assert 2 <= len(textos) <= 3
+        assert "a preços de" not in " ".join(textos)
+        assert "None" not in " ".join(textos)
+    assert r.como_ler("crescimento", None)[2] == (
+        "A perda de lavoura é a parte da área plantada que não foi colhida; "
+        "o valor por hectare está sem correção monetária."
+    )
+    assert r.AVISO_SEM_CARNE == (
+        "O valor da produção soma lavouras (PAM) e produtos de origem animal (PPM); "
+        "não inclui carne bovina nem abate, que a PPM não publica."
+    )
+    assert r.AVISO_SEM_DADOS == "Não há dados publicados pelo IBGE para este recorte."
