@@ -7,14 +7,14 @@ from observatorio.calculos import Decomposicao
 def test_manchete_panorama_com_mudanca() -> None:
     assert r.manchete_panorama(2024, 2024, "Soja (em grão)", D("38.2"), D("2.1"), D("2.1")) == (
         "Em 2024, Soja (em grão) respondeu por 38,2% do valor da produção agropecuária de Rondônia, "
-        "+2,1 p.p. em relação ao início do período."
+        "2,1 pontos percentuais a mais em relação ao início do período."
     )
 
 
 def test_manchete_panorama_estavel() -> None:
     assert r.manchete_panorama(2024, 2024, "Soja (em grão)", D("38.2"), D("0.3"), D("0.8")) == (
         "Em 2024, Soja (em grão) respondeu por 38,2% do valor da produção agropecuária de Rondônia; "
-        "a composição ficou estável no período (nenhum item variou 1 p.p. ou mais)."
+        "a composição ficou estável no período (nenhum item variou 1 ponto percentual ou mais)."
     )
 
 
@@ -128,10 +128,32 @@ def test_panorama_ramos() -> None:
     base = "Em 2024, Soja respondeu por 38,2% do valor da produção agropecuária de Rondônia"
     assert r.manchete_panorama(2024, 2024, "Soja", D("38.2"), None, D("2.1")) == base + "."
     assert r.manchete_panorama(2024, 2024, "Soja", D("38.2"), D("-2.1"), D("-2.1")) == (
-        base + ", -2,1 p.p. em relação ao início do período."
+        base + ", 2,1 pontos percentuais a menos em relação ao início do período."
     )
     assert r.manchete_panorama(2024, 2024, "Soja", D("38.2"), D("-0.3"), D("-0.8")) == (
-        base + "; a composição ficou estável no período (nenhum item variou 1 p.p. ou mais)."
+        base + "; a composição ficou estável no período (nenhum item variou 1 ponto percentual ou mais)."
+    )
+
+
+def test_panorama_pontos_percentuais_singular_zero_e_exemplo_real() -> None:
+    base = "Em 2025, Soja (em grão) respondeu por 33,9% do valor da produção agropecuária de Rondônia"
+    # o caso que motivou a mudança: queda de 6,5 pontos, antes escrita como "-6,5 p.p."
+    assert r.manchete_panorama(2025, 2025, "Soja (em grão)", D("33.9"), D("-6.5"), D("-6.5")) == (
+        base + ", 6,5 pontos percentuais a menos em relação ao início do período."
+    )
+    assert r.manchete_panorama(2025, 2025, "Soja (em grão)", D("33.9"), D("6.5"), D("6.5")) == (
+        base + ", 6,5 pontos percentuais a mais em relação ao início do período."
+    )
+    # abaixo de 2 o substantivo fica no singular
+    assert r.manchete_panorama(2025, 2025, "Soja (em grão)", D("33.9"), D("1.5"), D("1.5")) == (
+        base + ", 1,5 ponto percentual a mais em relação ao início do período."
+    )
+    assert r.manchete_panorama(2025, 2025, "Soja (em grão)", D("33.9"), D("-1.2"), D("-1.2")) == (
+        base + ", 1,2 ponto percentual a menos em relação ao início do período."
+    )
+    # a líder quase não mudou, mas outro item variou 1 ponto ou mais: não escreve "0,0 ponto"
+    assert r.manchete_panorama(2025, 2025, "Soja (em grão)", D("33.9"), D("0.04"), D("3.0")) == (
+        base + ", sem variação relevante em relação ao início do período."
     )
 
 

@@ -1,6 +1,6 @@
 """Textos do Observatório por regras determinísticas (ADR 0007): mesma entrada, mesmo texto."""
 
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from analise.regras import classificar_concentracao, formatar_numero
 from observatorio.calculos import Decomposicao
@@ -29,8 +29,13 @@ def _pct(v: Decimal, sinal: bool = False) -> str:
     return f"{prefixo}{formatar_numero(v, 1)}%"
 
 
-def _pp(v: Decimal) -> str:
-    return f"{'+' if v > 0 else ''}{formatar_numero(v, 1)} p.p."
+def _pontos(v: Decimal) -> str | None:
+    """'6,5 pontos percentuais a menos'; None quando a mudança arredonda para 0,0."""
+    n = abs(v).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+    if n == 0:
+        return None
+    unidade = "ponto percentual" if n < 2 else "pontos percentuais"
+    return f"{formatar_numero(n, 1)} {unidade} a {'mais' if v > 0 else 'menos'}"
 
 
 def manchete_panorama(
@@ -43,10 +48,13 @@ def manchete_panorama(
 ) -> str:
     base = f"Em {ano}, {lider} respondeu por {_pct(participacao)} do valor da produção agropecuária de Rondônia"
     if maior_delta_pp is not None and abs(maior_delta_pp) < LIMIAR_ESTABILIDADE_PP:
-        return base + "; a composição ficou estável no período (nenhum item variou 1 p.p. ou mais)."
+        return base + "; a composição ficou estável no período (nenhum item variou 1 ponto percentual ou mais)."
     if delta_pp is None:
         return base + "."
-    return base + f", {_pp(delta_pp)} em relação ao início do período."
+    mudanca = _pontos(delta_pp)
+    if mudanca is None:
+        return base + ", sem variação relevante em relação ao início do período."
+    return base + f", {mudanca} em relação ao início do período."
 
 
 def manchete_crescimento(cultura: str, inicio: int, fim: int, d: Decomposicao | None) -> str:
