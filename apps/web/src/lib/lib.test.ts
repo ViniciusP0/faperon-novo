@@ -49,6 +49,14 @@ describe("filtros na URL", () => {
     expect(f.municipios).toHaveLength(5);
   });
 
+  it("descarta municípios e produtos repetidos antes de limitar a 5", () => {
+    const f = parseFiltros(new URLSearchParams("municipios=1,1,2,1,3&produtos=a,b,a,a,a,a,a,a"));
+    expect(f.municipios).toEqual(["1", "2", "3"]);
+    expect(f.produtos).toEqual(["a", "b"]);
+    const g = parseFiltros(new URLSearchParams("municipios=1,1,2,3,4,5,6"));
+    expect(g.municipios).toEqual(["1", "2", "3", "4", "5"]);
+  });
+
   it("recorteParams omite período ausente", () => {
     const p = recorteParams({ produto: "leite", indicador: "efetivo", inicio: null, fim: 2024 });
     expect(p.toString()).toBe("produto=leite&indicador=efetivo&fim=2024");

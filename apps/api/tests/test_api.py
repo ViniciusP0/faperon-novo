@@ -355,3 +355,19 @@ def test_comparacao_de_mais_de_cinco_produtos_distintos_da_400_sem_consultar(
         status, corpo = get(api, f"comparacao?produtos={seis}&indicador=quantidade-produzida")
     assert status == 400
     assert corpo["campos"] == {"produtos": "esperado de 2 a 5 itens"}
+
+
+def test_comparacao_de_municipios_repetidos_conta_so_os_distintos(
+    api: APIClient, dados_soja: Produto
+) -> None:
+    status, corpo = get(
+        api, f"comparacao?{Q}&inicio=2022&fim=2024&municipios=1100015,1100023,1100015"
+    )
+    assert status == 200
+    assert [s["id"] for s in corpo["series"]] == ["1100015", "1100023"]
+
+
+def test_comparacao_de_municipios_so_repetidos_da_400(api: APIClient, dados_soja: Produto) -> None:
+    status, corpo = get(api, f"comparacao?{Q}&municipios=1100015,1100015")
+    assert status == 400
+    assert corpo["campos"] == {"municipios": "esperado de 2 a 5 itens"}

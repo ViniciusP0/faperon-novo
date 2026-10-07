@@ -253,6 +253,7 @@ def serie(
 def comparacao_municipios(
     recorte: Recorte, inicio: int, fim: int, codigos: list[str]
 ) -> list[SerieNomeada]:
+    codigos = list(dict.fromkeys(codigos))
     validar_quantidade(codigos, "municipios")
     resultado = []
     for codigo in codigos:

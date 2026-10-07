@@ -25,11 +25,7 @@ const intOrNull = (v: string | null): number | null => {
 
 const lista = (v: string | null): string[] =>
   v
-    ? v
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean)
-        .slice(0, MAX_COMPARACAO)
+    ? [...new Set(v.split(",").map((s) => s.trim()).filter(Boolean))].slice(0, MAX_COMPARACAO)
     : [];
 
 export function parseFiltros(sp: URLSearchParams): Filtros {
