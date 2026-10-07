@@ -160,3 +160,65 @@ def cache_limpo() -> None:
     from django.core.cache import cache
 
     cache.clear()
+
+
+@pytest.fixture
+def dados_observatorio(municipios: list[Municipio], carga: Carga) -> dict[str, Produto]:
+    """PAM: soja e café em 2 anos; PPM: bovino, leite e vacas. Cabixi sigiloso na soja 2024."""
+    from indicadores.models import IndicePreco
+
+    garantir_indicadores()
+
+    def produto(slug: str, nome: str, tabela: int, segmento: str, codigo: str) -> Produto:
+        return Produto.objects.create(
+            slug=slug, codigo_ibge=codigo, nome=nome, segmento=segmento, tabela_origem=tabela
+        )
+
+    soja = produto("soja-em-grao", "Soja (em grão)", 5457, "agricultura", "40124")
+    cafe = produto("cafe-em-grao-canephora", "Café canéfora", 5457, "agricultura", "40139")
+    bovino = produto("bovino", "Bovino", 3939, "pecuaria", "2670")
+    leite = produto("leite", "Leite", 74, "pecuaria", "2682")
+    vacas = produto("vacas-ordenhadas", "Vacas ordenhadas", 94, "pecuaria", "107")
+    unidades = {
+        "area-plantada": "Hectares", "area-colhida": "Hectares",
+        "quantidade-produzida": "Toneladas", "valor-da-producao": "Mil Reais",
+    }
+    for p in (soja, cafe):
+        for slug, unidade in unidades.items():
+            ProdutoIndicador.objects.create(produto=p, indicador=Indicador.objects.get(slug=slug), unidade=unidade)
+    ProdutoIndicador.objects.create(produto=bovino, indicador=Indicador.objects.get(slug="efetivo"), unidade="Cabeças")
+    ProdutoIndicador.objects.create(produto=leite, indicador=Indicador.objects.get(slug="producao-de-origem-animal"), unidade="Mil litros")
+    ProdutoIndicador.objects.create(produto=leite, indicador=Indicador.objects.get(slug="valor-da-producao"), unidade="Mil Reais")
+    ProdutoIndicador.objects.create(produto=vacas, indicador=Indicador.objects.get(slug="vacas-ordenhadas"), unidade="Cabeças")
+
+    af, ari, cab, cac = "1100015", "1100023", "1100031", "1100049"
+    # (produto, indicador, município, ano, valor)
+    linhas = [
+        (soja, "area-plantada", af, 2015, 110), (soja, "area-colhida", af, 2015, 100),
+        (soja, "quantidade-produzida", af, 2015, 300), (soja, "valor-da-producao", af, 2015, 400),
+        (soja, "area-plantada", af, 2024, 120), (soja, "area-colhida", af, 2024, 110),
+        (soja, "quantidade-produzida", af, 2024, 660), (soja, "valor-da-producao", af, 2024, 1200),
+        (soja, "area-colhida", ari, 2024, 1000), (soja, "quantidade-produzida", ari, 2024, 3000),
+        (soja, "valor-da-producao", ari, 2024, 3000),
+        (soja, "area-plantada", ari, 2024, 1000),
+        (soja, "valor-da-producao", af, 1996, 500),
+        (cafe, "area-plantada", ari, 2015, 50), (cafe, "area-colhida", ari, 2015, 50),
+        (cafe, "quantidade-produzida", ari, 2015, 50), (cafe, "valor-da-producao", ari, 2015, 200),
+        (cafe, "area-plantada", ari, 2024, 50), (cafe, "area-colhida", ari, 2024, 50),
+        (cafe, "quantidade-produzida", ari, 2024, 100), (cafe, "valor-da-producao", ari, 2024, 600),
+        (cafe, "area-colhida", cac, 2024, 2000), (cafe, "valor-da-producao", cac, 2024, 900),
+        (bovino, "efetivo", af, 2015, 1000), (bovino, "efetivo", af, 2024, 1500),
+        (bovino, "efetivo", ari, 2024, 500),
+        (leite, "producao-de-origem-animal", af, 2015, 1000), (leite, "producao-de-origem-animal", af, 2024, 2000),
+        (leite, "valor-da-producao", af, 2015, 100), (leite, "valor-da-producao", af, 2024, 300),
+        (vacas, "vacas-ordenhadas", af, 2015, 1000), (vacas, "vacas-ordenhadas", af, 2024, 800),
+    ]
+    for p, ind, mun, ano, valor in linhas:
+        lancar(p, ind, mun, ano, valor, carga)
+    lancar(soja, "valor-da-producao", cab, 2024, None, carga, "sigiloso")
+    for ano, indice in {1995: "1000", 1996: "1200", 2015: "4000", 2024: "6000", 2025: "6300"}.items():
+        IndicePreco.objects.create(ano=ano, indice_medio=Decimal(indice), carga=carga)
+    Municipio.objects.filter(codigo_ibge__in=[af, ari]).update(microrregiao="Cacoal")
+    Municipio.objects.filter(codigo_ibge__in=[cab, cac]).update(microrregiao="Vilhena")
+    atualizar_views()
+    return {"soja": soja, "cafe": cafe, "bovino": bovino, "leite": leite, "vacas": vacas}
