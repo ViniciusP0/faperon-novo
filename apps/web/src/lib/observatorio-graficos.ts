@@ -11,6 +11,12 @@ export const CORES_CATEGORIA = [...PALETA, "#a3324b", "#0f7c8c", "#8a6d1f", "#7a
 export const CORES_CATEGORIA_ESCURA = [...PALETA_ESCURA, "#e58aa0", "#5ec7d6", "#d9bf63", "#a9b8b1"];
 const ESCALA = ["#e6f2ec", "#9fd0b5", "#3f9a73", "#00604e", "#003329"];
 const ESCALA_ESCURA = ["#2a5a49", "#3f8f72", "#4cc9a6", "#8fe3c8", "#d4f7ea"];
+/**
+ * Quanto a longitude é encurtada em relação à latitude no mapa. O ECharts usa 0,75 (latitudes médias), o que deixava
+ * Rondônia estreita e alta (0,92 de largura/altura). O estado fica a cerca de 11° Sul, onde o fator é cos(11°) ≈ 0,98
+ * e a proporção real é de 1,21 (mais largo que alto).
+ */
+export const ASPECTO_MAPA = 0.98;
 /** Como o ECharts mostra um valor de série: pt-BR, e traço (nunca zero) quando não há dado. */
 export type FormatoValor = { eixo: (v: number) => string; valor: (v: number) => string };
 
@@ -195,7 +201,7 @@ export function optionMapa(municipios: MunicipioMapa[], unidade: string, categor
         inRange: { color: escuro ? ESCALA_ESCURA : ESCALA }, text: ["Maior", "Menor"], calculable: false, left: 0, bottom: 0, textStyle: t.texto_,
       },
     series: [{
-      type: "map", map: "rondonia", nameProperty: "codigo_ibge", roam: false, data: dados,
+      type: "map", map: "rondonia", nameProperty: "codigo_ibge", roam: false, data: dados, aspectScale: ASPECTO_MAPA,
       itemStyle: { borderColor: t.borda, borderWidth: 0.8 },
       emphasis: { label: { show: false }, itemStyle: { borderColor: t.texto, borderWidth: 1.5 } },
       select: { disabled: true },

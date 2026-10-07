@@ -56,6 +56,40 @@ function caminhosComCor(svg: string, cor: string): string[] {
   return regioes(svg).filter((p) => p.toLowerCase().includes(`fill="${cor.toLowerCase()}"`));
 }
 
+describe("proporção do mapa", () => {
+  /** Largura/altura do estado na malha, com a longitude encurtada pelo cosseno da latitude central (o que a Terra tem de fato). */
+  function proporcaoGeografica(): number {
+    const xs: number[] = [];
+    const ys: number[] = [];
+    const percorrer = (c: unknown): void => {
+      if (Array.isArray(c) && typeof c[0] === "number") { xs.push(c[0] as number); ys.push(c[1] as number); } else (c as unknown[]).forEach(percorrer);
+    };
+    (malha as unknown as { features: { geometry: { coordinates: unknown } }[] }).features.forEach((f) => percorrer(f.geometry.coordinates));
+    const latCentral = (Math.min(...ys) + Math.max(...ys)) / 2;
+    return ((Math.max(...xs) - Math.min(...xs)) * Math.cos((latCentral * Math.PI) / 180)) / (Math.max(...ys) - Math.min(...ys));
+  }
+
+  /** Largura/altura do que o ECharts realmente desenhou: junta todos os pontos dos caminhos das 52 regiões. */
+  function proporcaoDesenhada(svg: string): number {
+    const xs: number[] = [];
+    const ys: number[] = [];
+    for (const tag of regioes(svg)) {
+      const numeros = (/ d="([^"]+)"/.exec(tag)?.[1] ?? "").match(/-?\d+(?:\.\d+)?/g)?.map(Number) ?? [];
+      for (let i = 0; i + 1 < numeros.length; i += 2) { xs.push(numeros[i]!); ys.push(numeros[i + 1]!); }
+    }
+    return (Math.max(...xs) - Math.min(...xs)) / (Math.max(...ys) - Math.min(...ys));
+  }
+
+  it("desenha Rondônia com a proporção real (mais larga que alta), não esticada na vertical", () => {
+    const municipios = malha.features.map((f) => m(f.properties.codigo_ibge, 1, "ok"));
+    const esperada = proporcaoGeografica();
+    expect(esperada).toBeGreaterThan(1.1); // o estado é mais largo que alto
+    const desenhada = proporcaoDesenhada(renderizar(optionMapa(municipios, "Mil Reais", [])));
+    expect(desenhada).toBeCloseTo(esperada, 1); // tolerância de ±0,05 (o ECharts simplifica e arredonda)
+    expect(Math.abs(desenhada - esperada) / esperada).toBeLessThan(0.03);
+  });
+});
+
 describe("options do Observatório", () => {
   it("treemap usa as participações e ignora valores nulos", () => {
     const o = optionTreemap([
