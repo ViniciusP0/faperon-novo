@@ -386,3 +386,136 @@ def test_territorio_aviso_sigilo_parcial_so_com_sigilo(
     Medicao.objects.filter(status_valor="sigiloso").delete()
     _, limpo = get(api, "territorio")
     assert limpo["qualidade"]["avisos"] == []
+
+
+def test_pecuaria_padrao(api: APIClient, dados_observatorio: dict) -> None:
+    status, corpo = get(api, "pecuaria")
+    assert status == 200
+    assert corpo["filtros"]["valores"] == {"rebanho": "bovino", "inicio": 2015, "fim": 2024}
+    m = corpo["metricas"]
+    assert m["efetivo_final"] == 2000.0 and m["variacao_pct"] == 100.0
+    # leite 2015: 1000 mil L / 1000 vacas = 1000 L; 2024: 2000/800 = 2500 L → +150%
+    assert m["leite"]["produtividade_l_vaca"] == 2500.0
+    assert m["leite"]["variacao_produtividade_pct"] == 150.0
+    assert m["leite"]["valor_real"] == 300.0
+    assert m["leite"]["volume_mil_litros"] == 2000.0
+    assert m["top5_pct"] == 100.0
+    assert corpo["series"]["leite_polos"][0]["codigo_ibge"] == "1100015"
+    assert corpo["series"]["leite_polos"][0]["produtividade"] == 2500.0
+    assert corpo["texto"]["manchete"].startswith("O rebanho bovino cresceu 100,0%")
+    assert corpo["qualidade"]["municipios_sigilosos"] == 0
+    efetivo = corpo["series"]["efetivo"]
+    assert len(efetivo) == 10 and efetivo[0] == {"ano": 2015, "valor": 1000.0}
+    assert efetivo[-1] == {"ano": 2024, "valor": 2000.0} and efetivo[1]["valor"] is None
+    assert [(i["slug"], i["valor"], i["participacao"]) for i in corpo["series"]["composicao"]] == [
+        ("bovino", 2000.0, 100.0)
+    ]
+
+
+def test_pecuaria_rebanho_inexistente(api: APIClient, dados_observatorio: dict) -> None:
+    assert get(api, "pecuaria?rebanho=dinossauro")[0] == 404
+
+
+def test_pecuaria_inicio_maior_que_fim(api: APIClient, dados_observatorio: dict) -> None:
+    status, corpo = get(api, "pecuaria?inicio=2024&fim=2015")
+    assert status == 400 and "inicio" in corpo["campos"]
+
+
+def test_pecuaria_fim_padrao_e_ultimo_ano_com_efetivo(
+    api: APIClient, dados_observatorio: dict
+) -> None:
+    _, corpo = get(api, "pecuaria?fim=2015")
+    assert corpo["filtros"]["valores"] == {"rebanho": "bovino", "inicio": 2006, "fim": 2015}
+    assert corpo["metricas"]["efetivo_final"] == 1000.0
+    assert corpo["metricas"]["variacao_pct"] is None
+
+
+def test_pecuaria_composicao_exclui_subtotais(
+    api: APIClient, dados_observatorio: dict, carga: Carga
+) -> None:
+    for slug, nome, codigo in [
+        ("galinaceos-total", "Galináceos - total", "2681"),
+        ("suino-matrizes-de-suinos", "Matrizes de suínos", "32794"),
+        ("galinhas", "Galinhas", "2675"),
+    ]:
+        p = Produto.objects.create(
+            slug=slug, codigo_ibge=codigo, nome=nome, segmento="pecuaria", tabela_origem=3939
+        )
+        lancar(p, "efetivo", "1100015", 2024, 1000 if slug == "galinhas" else 5000, carga)
+    _, corpo = get(api, "pecuaria")
+    comp = corpo["series"]["composicao"]
+    assert [(i["slug"], i["valor"], i["participacao"]) for i in comp] == [
+        ("bovino", 2000.0, 66.7),
+        ("galinhas", 1000.0, 33.3),
+    ]
+
+
+def test_pecuaria_sem_dados(api: APIClient, db: None) -> None:
+    status, corpo = get(api, "pecuaria")
+    assert status == 200
+    assert corpo["series"].get("efetivo", []) == []
+    assert corpo["texto"]["manchete"] == r.AVISO_SEM_DADOS
+    assert r.AVISO_SEM_DADOS in corpo["qualidade"]["avisos"]
+
+
+def test_pecuaria_sem_ipca_so_degrada_valor_real(
+    api: APIClient, dados_observatorio: dict
+) -> None:
+    IndicePreco.objects.all().delete()
+    status, corpo = get(api, "pecuaria")
+    assert status == 200
+    m = corpo["metricas"]
+    assert m["leite"]["valor_real"] is None
+    assert m["leite"]["produtividade_l_vaca"] == 2500.0 and m["efetivo_final"] == 2000.0
+    assert corpo["series"]["leite_polos"][0]["codigo_ibge"] == "1100015"
+    assert corpo["qualidade"]["avisos"] == [r.AVISO_SEM_IPCA]
+    assert corpo["qualidade"]["ano_ref_monetario"] is None
+
+
+def test_pecuaria_produtividade_so_em_municipios_comuns(
+    api: APIClient, dados_observatorio: dict, carga: Carga
+) -> None:
+    leite, vacas = dados_observatorio["leite"], dados_observatorio["vacas"]
+    lancar(leite, "producao-de-origem-animal", "1100023", 2024, 500, carga)  # sem vacas
+    lancar(vacas, "vacas-ordenhadas", "1100031", 2024, 100, carga)  # sem leite
+    lancar(vacas, "vacas-ordenhadas", "1100023", 2015, 1, carga)  # sem leite em 2015
+    _, corpo = get(api, "pecuaria")
+    lt = corpo["metricas"]["leite"]
+    # só Alta Floresta tem os dois valores: 2015 = 1000, 2024 = 2500 (o ingênuo daria 2777)
+    assert lt["volume_mil_litros"] == 2500.0
+    assert lt["produtividade_l_vaca"] == 2500.0
+    assert lt["variacao_produtividade_pct"] == 150.0
+    polos = {p["codigo_ibge"]: p for p in corpo["series"]["leite_polos"]}
+    assert polos["1100015"]["produtividade"] == 2500.0
+    assert polos["1100023"]["volume"] == 500.0 and polos["1100023"]["produtividade"] is None
+
+
+def test_pecuaria_produtividade_sem_municipio_comum_e_none(
+    api: APIClient, dados_observatorio: dict
+) -> None:
+    Medicao.objects.filter(
+        produto=dados_observatorio["vacas"], ano=2024, municipio_id="1100015"
+    ).delete()
+    _, corpo = get(api, "pecuaria")
+    lt = corpo["metricas"]["leite"]
+    assert lt["volume_mil_litros"] == 2000.0
+    assert lt["produtividade_l_vaca"] is None and lt["variacao_produtividade_pct"] is None
+    assert "variou" not in corpo["texto"]["manchete"]
+
+
+def test_pecuaria_sigilo_fica_fora_e_e_avisado(
+    api: APIClient, dados_observatorio: dict, carga: Carga
+) -> None:
+    lancar(dados_observatorio["bovino"], "efetivo", "1100031", 2024, None, carga, "sigiloso")
+    lancar(dados_observatorio["leite"], "producao-de-origem-animal", "1100031", 2024, None, carga, "sigiloso")
+    _, corpo = get(api, "pecuaria")
+    assert corpo["metricas"]["efetivo_final"] == 2000.0
+    assert corpo["qualidade"]["municipios_sigilosos"] == 1
+    assert "1100031" not in [m["codigo_ibge"] for m in corpo["series"]["municipios"]]
+    assert "1100031" not in [p["codigo_ibge"] for p in corpo["series"]["leite_polos"]]
+    assert corpo["qualidade"]["avisos"] == [
+        "1 município com dado sigiloso no rebanho fica fora dos totais e do ranking; "
+        "o principal polo pode ser outro.",
+        "1 município com dado sigiloso no leite fica fora dos totais e do ranking; "
+        "o principal polo pode ser outro.",
+    ]

@@ -177,3 +177,12 @@ def aviso_sigilo_parcial(n: int) -> str:
         f"{sujeito} para alguma cultura {verbo} sem cultura dominante "
         "e fora da lista de dependentes."
     )
+
+
+def aviso_sigilo_pecuaria(n: int, tema: str) -> str:
+    sujeito = "1 município com dado sigiloso" if n == 1 else f"{n} municípios com dado sigiloso"
+    verbo = "fica" if n == 1 else "ficam"
+    return (
+        f"{sujeito} no {tema} {verbo} fora dos totais e do ranking; "
+        "o principal polo pode ser outro."
+    )

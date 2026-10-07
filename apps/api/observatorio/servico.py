@@ -450,3 +450,149 @@ def territorio(metrica: str, cultura: str | None, ano: int | None) -> dict[str, 
         },
         "meta": meta(tabelas),
     }
+
+
+SUBTOTAIS_REBANHO = {"galinaceos-total", "suino-matrizes-de-suinos"}
+POLOS_LEITE = 5
+
+
+def _estadual_tabela(
+    indicador: str, tabela: int, slug: str, inicio: int, fim: int
+) -> dict[int, Decimal]:
+    return leitura.totais_por_produto(indicador, tabela, inicio, fim).get(slug, {})
+
+
+def _produtividade_comum(volume: dict[str, Decimal], vacas: dict[str, Decimal]) -> Decimal | None:
+    """L/vaca só sobre municípios com volume E vacas OK (nunca dois totais independentes)."""
+    comuns = volume.keys() & vacas.keys()
+    if not comuns:
+        return None
+    return c.produtividade_leite(
+        sum((volume[m] for m in comuns), Decimal(0)), sum((vacas[m] for m in comuns), Decimal(0))
+    )
+
+
+def pecuaria(rebanho: str | None, inicio: int | None, fim: int | None) -> dict[str, Any]:
+    tabelas = [3939, 74, 94, 1737]
+    rebanhos = leitura.produtos(3939)
+    rebanho = rebanho or "bovino"
+    if rebanhos and rebanho not in rebanhos:
+        raise NaoEncontrado(f"Rebanho '{rebanho}' não existe")
+    anos = leitura.anos_disponiveis("efetivo", 3939)
+    opcoes = {"rebanhos": [{"slug": s, "nome": n} for s, n in rebanhos.items()], "anos": anos}
+    if not anos:
+        valores_vazios = {"rebanho": rebanho, "inicio": inicio, "fim": fim}
+        return _vazio("pecuaria", {"valores": valores_vazios, "opcoes": opcoes}, tabelas)
+    fim = fim if fim is not None else anos[-1]
+    inicio = inicio if inicio is not None else fim - 9
+    if inicio > fim:
+        raise ConsultaInvalida(
+            "O ano inicial não pode ser maior que o ano final", {"inicio": "maior que fim"}
+        )
+
+    efetivo = _estadual_tabela("efetivo", 3939, rebanho, inicio, fim)
+    anos_janela = list(range(inicio, fim + 1))
+    ini, fin = efetivo.get(inicio), efetivo.get(fim)
+    variacao = (fin - ini) / ini * 100 if ini and fin is not None else None
+    por_mun = leitura.por_municipio("efetivo", 3939, fim, rebanho)
+    nomes_mun = {cod: nome for cod, nome, _ in leitura.municipios()}
+    ordenados = sorted(por_mun.items(), key=lambda kv: (-kv[1], kv[0]))
+    total = sum(por_mun.values(), Decimal(0))
+    top5_pct = sum((v for _, v in ordenados[:5]), Decimal(0)) / total * 100 if total else None
+    composicao_bruta = {
+        s: v[fim]
+        for s, v in leitura.totais_por_produto("efetivo", 3939, fim, fim).items()
+        if s not in SUBTOTAIS_REBANHO and v.get(fim) is not None
+    }
+    partes = c.participacoes(composicao_bruta)
+    composicao = [
+        {
+            "slug": s,
+            "nome": rebanhos[s],
+            "valor": f(v, 0),
+            "participacao": f(partes.get(s), 1),
+        }
+        for s, v in sorted(composicao_bruta.items(), key=lambda kv: (-kv[1], kv[0]))
+    ]
+
+    # Só o valor real do leite precisa do IPCA; rebanho, polos e produtividade seguem sem ele.
+    indices = leitura.indices_ipca()
+    ano_ref, avisos = referencia_monetaria(fim, indices)
+    if ano_ref is None:
+        avisos.append(r.AVISO_SEM_IPCA)
+    volume = _estadual_tabela("producao-de-origem-animal", 74, "leite", fim, fim)
+    valor_leite = _estadual_tabela(VALOR, 74, "leite", fim, fim).get(fim)
+    vol_janela = leitura.por_municipio_na_janela(
+        "producao-de-origem-animal", 74, "leite", inicio, fim
+    )
+    vac_janela = leitura.por_municipio_na_janela(
+        "vacas-ordenhadas", 94, "vacas-ordenhadas", inicio, fim
+    )
+    prod_ini = _produtividade_comum(vol_janela.get(inicio, {}), vac_janela.get(inicio, {}))
+    prod_fim = _produtividade_comum(vol_janela.get(fim, {}), vac_janela.get(fim, {}))
+    var_prod = (prod_fim - prod_ini) / prod_ini * 100 if prod_ini and prod_fim is not None else None
+    leite = None
+    if volume.get(fim) is not None:
+        real = c.deflacionar(valor_leite, fim, ano_ref, indices) if ano_ref is not None else None
+        leite = {
+            "volume_mil_litros": f(volume[fim], 0),
+            "valor_real": f(real),
+            "produtividade_l_vaca": f(prod_fim, 0),
+            "variacao_produtividade_pct": f(var_prod, 1),
+        }
+    vol_mun = vol_janela.get(fim, {})
+    vacas_mun = vac_janela.get(fim, {})
+    polos = [
+        {
+            "codigo_ibge": cod,
+            "nome": nomes_mun.get(cod, cod),
+            "volume": f(v, 0),
+            "produtividade": f(c.produtividade_leite(v, vacas_mun.get(cod)), 0),
+        }
+        for cod, v in sorted(vol_mun.items(), key=lambda kv: (-kv[1], kv[0]))[:POLOS_LEITE]
+    ]
+
+    sig_rebanho = leitura.sigilosos("efetivo", 3939, fim, rebanho)
+    sig_leite = len(
+        set(leitura.codigos_sigilosos("producao-de-origem-animal", 74, fim, "leite"))
+        | set(leitura.codigos_sigilosos("vacas-ordenhadas", 94, fim, "vacas-ordenhadas"))
+    )
+    if sig_rebanho:
+        avisos.append(r.aviso_sigilo_pecuaria(sig_rebanho, "rebanho"))
+    if sig_leite:
+        avisos.append(r.aviso_sigilo_pecuaria(sig_leite, "leite"))
+    return {
+        "filtros": {"valores": {"rebanho": rebanho, "inicio": inicio, "fim": fim}, "opcoes": opcoes},
+        "metricas": {
+            "efetivo_final": f(fin, 0),
+            "variacao_pct": f(variacao, 1),
+            "top5_pct": f(top5_pct, 1),
+            "leite": leite,
+        },
+        "series": {
+            "efetivo": [{"ano": a, "valor": f(efetivo.get(a), 0)} for a in anos_janela],
+            "municipios": [
+                {"codigo_ibge": cod, "nome": nomes_mun.get(cod, cod), "valor": f(v, 0)}
+                for cod, v in ordenados
+            ],
+            "composicao": composicao,
+            "leite_polos": polos,
+        },
+        "texto": {
+            "manchete": r.manchete_pecuaria(
+                rebanhos.get(rebanho, rebanho),
+                inicio,
+                fim,
+                variacao,
+                nomes_mun.get(ordenados[0][0]) if ordenados else None,
+                var_prod,
+            ),
+            "como_ler": r.como_ler("pecuaria", ano_ref),
+        },
+        "qualidade": {
+            "municipios_sigilosos": sig_rebanho,
+            "ano_ref_monetario": ano_ref,
+            "avisos": avisos,
+        },
+        "meta": meta(tabelas),
+    }

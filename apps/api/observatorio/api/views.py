@@ -43,5 +43,11 @@ class TerritorioView(APIView):
 
 
 class PecuariaView(APIView):
+    @extend_schema(
+        parameters=[sz.ConsultaPecuariaSerializer],
+        responses={200: sz.PecuariaSerializer, **ERROS},
+    )
     def get(self, request: Request) -> Response:
-        return Response(status=501)
+        d = validar_consulta(sz.ConsultaPecuariaSerializer, request)
+        resultado = servico.pecuaria(d.get("rebanho"), d.get("inicio"), d.get("fim"))
+        return Response(sz.PecuariaSerializer(resultado).data)

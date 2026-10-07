@@ -224,3 +224,62 @@ class TerritorioSerializer(serializers.Serializer):
     texto = TextoSerializer()
     qualidade = QualidadeSerializer()
     meta = MetaObservatorioSerializer()
+
+
+class ConsultaPecuariaSerializer(serializers.Serializer):
+    rebanho = serializers.SlugField(required=False)
+    inicio = serializers.IntegerField(required=False, min_value=1974)
+    fim = serializers.IntegerField(required=False, min_value=1974)
+
+
+class PecuariaValoresSerializer(serializers.Serializer):
+    rebanho = serializers.CharField()
+    inicio = serializers.IntegerField(allow_null=True)
+    fim = serializers.IntegerField(allow_null=True)
+
+
+class PecuariaOpcoesSerializer(serializers.Serializer):
+    rebanhos = OpcaoSerializer(many=True)
+    anos = serializers.ListField(child=serializers.IntegerField())
+
+
+class PecuariaFiltrosSerializer(serializers.Serializer):
+    valores = PecuariaValoresSerializer()
+    opcoes = PecuariaOpcoesSerializer()
+
+
+class LeiteSerializer(serializers.Serializer):
+    volume_mil_litros = serializers.FloatField(allow_null=True)
+    valor_real = serializers.FloatField(allow_null=True)
+    produtividade_l_vaca = serializers.FloatField(allow_null=True)
+    variacao_produtividade_pct = serializers.FloatField(allow_null=True)
+
+
+class PecuariaMetricasSerializer(serializers.Serializer):
+    efetivo_final = serializers.FloatField(required=False, allow_null=True)
+    variacao_pct = serializers.FloatField(required=False, allow_null=True)
+    top5_pct = serializers.FloatField(required=False, allow_null=True)
+    leite = LeiteSerializer(required=False, allow_null=True)
+
+
+class PoloLeiteSerializer(serializers.Serializer):
+    codigo_ibge = serializers.CharField()
+    nome = serializers.CharField()
+    volume = serializers.FloatField(allow_null=True)
+    produtividade = serializers.FloatField(allow_null=True)
+
+
+class PecuariaSeriesSerializer(serializers.Serializer):
+    efetivo = AnoValorSerializer(many=True, required=False)
+    municipios = MunicipioValorSerializer(many=True, required=False)
+    composicao = ItemValorSerializer(many=True, required=False)
+    leite_polos = PoloLeiteSerializer(many=True, required=False)
+
+
+class PecuariaSerializer(serializers.Serializer):
+    filtros = PecuariaFiltrosSerializer()
+    metricas = PecuariaMetricasSerializer()
+    series = PecuariaSeriesSerializer()
+    texto = TextoSerializer()
+    qualidade = QualidadeSerializer()
+    meta = MetaObservatorioSerializer()
