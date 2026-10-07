@@ -1,5 +1,7 @@
 """Escrita no modelo de leitura a partir do staging da Ingestão (interface publicada do núcleo)."""
 
+from decimal import Decimal
+
 from django.db import connection
 from django.utils.text import slugify
 
@@ -79,3 +81,14 @@ def atualizar_views(*args: object, **kwargs: object) -> None:
     """Handler de CargaConcluida: reconstrói a leitura de ranking."""
     with connection.cursor() as cursor:
         cursor.execute("REFRESH MATERIALIZED VIEW mv_ranking")
+
+
+def gravar_indices_preco(carga: Carga, medias: dict[int, Decimal]) -> int:
+    """Upsert do IPCA médio anual (interface publicada do núcleo para a Ingestão)."""
+    from indicadores.models import IndicePreco
+
+    for ano, indice in medias.items():
+        IndicePreco.objects.update_or_create(
+            ano=ano, defaults={"indice_medio": indice, "carga": carga}
+        )
+    return len(medias)

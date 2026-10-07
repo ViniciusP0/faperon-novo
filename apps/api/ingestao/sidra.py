@@ -81,3 +81,10 @@ class SidraCliente:
         if not isinstance(resposta, list):
             raise ErroSidraDefinitivo(f"Resposta inesperada para {url}")
         return resposta
+
+    def serie_nacional(self, tabela: int, variavel: str) -> list[dict[str, Any]]:
+        url = f"{BASE_URL}/{tabela}/periodos/all/variaveis/{variavel}?localidades=N1[all]"
+        resposta = self._get(url)
+        if not isinstance(resposta, list):
+            raise ErroSidraDefinitivo(f"Resposta inesperada para {url}")
+        return resposta

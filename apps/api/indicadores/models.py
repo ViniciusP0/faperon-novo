@@ -106,3 +106,15 @@ class Medicao(models.Model):
             ),
         ]
         indexes = [models.Index(fields=["produto", "indicador", "ano"], name="medicao_recorte")]
+
+
+class IndicePreco(models.Model):
+    """IPCA médio do ano (média dos 12 números-índice mensais). Ano incompleto não é gravado."""
+
+    ano = models.PositiveSmallIntegerField(primary_key=True)
+    indice_medio = models.DecimalField(max_digits=22, decimal_places=6)
+    carga = models.ForeignKey("ingestao.Carga", on_delete=models.PROTECT, related_name="indices")
+
+    class Meta:
+        db_table = "dim_indice_preco"
+        ordering = ["ano"]

@@ -21,13 +21,24 @@ def carregar_fixture(nome: str) -> Any:
 class ClienteFalso:
     """Substitui o SidraCliente: devolve respostas gravadas, sem rede."""
 
-    def __init__(self, categorias: list[tuple[str, str]], respostas: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        categorias: list[tuple[str, str]],
+        respostas: dict[str, Any],
+        serie: Any = None,
+    ) -> None:
+        self._serie = serie
         self._categorias = categorias
         self._respostas = respostas
         self.chamadas = 0
 
     def categorias(self, tabela: int, classificacao: int) -> list[tuple[str, str]]:
         return self._categorias
+
+    def serie_nacional(self, tabela: int, variavel: str) -> Any:
+        if isinstance(self._serie, Exception):
+            raise self._serie
+        return self._serie
 
     def dados(
         self, tabela: int, variaveis: tuple[str, ...], classificacao: int | None, categoria: str
@@ -49,7 +60,11 @@ def seed_isolado(settings: Any, tmp_path: Path) -> None:
 def cliente_soja() -> ClienteFalso:
     """Resposta real da tabela 5457: soja, quantidade produzida, 2023 e 2024."""
     resposta = carregar_fixture("sidra_5457_soja_quantidade_2023_2024.json")
-    return ClienteFalso([("0", "Total"), ("40124", "Soja (em grão)")], {"40124": resposta})
+    return ClienteFalso(
+        [("0", "Total"), ("40124", "Soja (em grão)")],
+        {"40124": resposta},
+        carregar_fixture("sidra_1737_ipca_2024_2025.json"),
+    )
 
 
 @pytest.fixture

@@ -9,8 +9,9 @@ from django.utils import timezone
 from ingestao.agendador import precisa_ingerir
 from ingestao.models import Carga
 from ingestao.servico import CargaFalhou, executar_carga
+from ingestao.servico_indice import executar_carga_ipca
 from ingestao.sidra import SidraCliente
-from ingestao.tabelas import TABELAS
+from ingestao.tabelas import TABELA_IPCA, TABELAS
 
 log = logging.getLogger(__name__)
 VERIFICACAO_A_CADA = 3600  # segundos
@@ -19,7 +20,7 @@ VERIFICACAO_A_CADA = 3600  # segundos
 def rodar_ciclo(cliente: SidraCliente) -> int:
     """Uma passada por todas as tabelas. Retorna quantas cargas foram tentadas."""
     tentadas = 0
-    for tabela in sorted(TABELAS):
+    for tabela in sorted([*TABELAS, TABELA_IPCA]):
         agora = timezone.now()
         concluida = (
             Carga.objects.filter(
@@ -39,7 +40,11 @@ def rodar_ciclo(cliente: SidraCliente) -> int:
             continue
         tentadas += 1
         try:
-            carga = executar_carga(tabela, cliente)
+            carga = (
+                executar_carga_ipca(cliente)
+                if tabela == TABELA_IPCA
+                else executar_carga(tabela, cliente)
+            )
             log.info("scheduler: tabela %s -> %s", tabela, carga.status)
         except CargaFalhou as exc:
             log.error("scheduler: tabela %s falhou: %s", tabela, exc)

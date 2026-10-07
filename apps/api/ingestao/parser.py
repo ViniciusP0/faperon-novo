@@ -76,3 +76,27 @@ def parsear_dados(
                         valor=valor,
                         status=status,
                     )
+
+
+MESES_NO_ANO = 12
+
+
+def parsear_indice_mensal(resposta: list[dict[str, Any]]) -> dict[int, list[Decimal]]:
+    """Série nacional mensal ('AAAAMM' → valor) agrupada por ano; meses sem valor são ignorados."""
+    por_ano: dict[int, list[Decimal]] = {}
+    for variavel in resposta:
+        for resultado in variavel["resultados"]:
+            for serie in resultado["series"]:
+                for periodo, token in sorted(serie["serie"].items()):
+                    valor, status = interpretar_valor(token)
+                    if status == StatusValor.OK and valor is not None:
+                        por_ano.setdefault(int(periodo[:4]), []).append(valor)
+    return por_ano
+
+
+def medias_anuais(mensal: dict[int, list[Decimal]]) -> dict[int, Decimal]:
+    return {
+        ano: sum(valores, Decimal(0)) / MESES_NO_ANO
+        for ano, valores in mensal.items()
+        if len(valores) == MESES_NO_ANO
+    }

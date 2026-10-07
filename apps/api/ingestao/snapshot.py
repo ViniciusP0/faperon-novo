@@ -9,7 +9,14 @@ from django.core.management.color import no_style
 from django.db import connection, transaction
 
 from indicadores.aplicacao import atualizar_views
-from indicadores.models import Indicador, Medicao, Municipio, Produto, ProdutoIndicador
+from indicadores.models import (
+    Indicador,
+    IndicePreco,
+    Medicao,
+    Municipio,
+    Produto,
+    ProdutoIndicador,
+)
 from ingestao.models import Carga
 
 VERSAO = 1
@@ -33,6 +40,7 @@ def gerar(destino: Path) -> dict[str, int]:
         )
         if ultima is not None:
             ids.add(ultima.pk)
+    ids |= set(IndicePreco.objects.values_list("carga_id", flat=True))
     cargas = Carga.objects.filter(pk__in=ids).order_by("id")
     conteudo = {
         "versao": VERSAO,
@@ -60,6 +68,12 @@ def gerar(destino: Path) -> dict[str, int]:
                 "codigo_ibge", "nome", "microrregiao"
             )
         ),
+        "indices_preco": [
+            [i[0], str(i[1]), i[2]]
+            for i in IndicePreco.objects.order_by("ano").values_list(
+                "ano", "indice_medio", "carga_id"
+            )
+        ],
         "medicoes": [
             [m[0], m[1], m[2], m[3], None if m[4] is None else str(m[4]), m[5], m[6]]
             for m in Medicao.objects.order_by("produto_id", "indicador_id", "municipio_id", "ano")
@@ -94,6 +108,7 @@ def _resetar_sequencias(*modelos: Any) -> None:
 
 
 def _apagar_dados() -> None:
+    IndicePreco.objects.all().delete()
     Medicao.objects.all().delete()
     ProdutoIndicador.objects.all().delete()
     Produto.objects.all().delete()
@@ -160,6 +175,12 @@ def restaurar(origem: Path, *, forcar: bool = False) -> dict[str, int]:
                 ProdutoIndicador(id=v[0], produto_id=v[1], indicador_id=v[2], unidade=v[3])
                 for v in dados["produto_indicadores"]
             ],
+        )
+        IndicePreco.objects.bulk_create(
+            [
+                IndicePreco(ano=i[0], indice_medio=i[1], carga_id=i[2])
+                for i in dados.get("indices_preco", [])
+            ]
         )
         lote: list[Medicao] = []
         for m in dados["medicoes"]:
