@@ -67,7 +67,9 @@ def por_municipio_e_produto(indicador: str, tabela: int, ano: int) -> dict[str, 
     return saida
 
 
-def sigilosos(indicador: str, tabela: int, ano: int, produto: str | None = None) -> int:
+def codigos_sigilosos(
+    indicador: str, tabela: int, ano: int, produto: str | None = None
+) -> list[str]:
     qs = Medicao.objects.filter(
         indicador__slug=indicador,
         produto__tabela_origem=tabela,
@@ -76,7 +78,11 @@ def sigilosos(indicador: str, tabela: int, ano: int, produto: str | None = None)
     )
     if produto:
         qs = qs.filter(produto__slug=produto)
-    return qs.values("municipio_id").distinct().count()
+    return sorted(set(qs.values_list("municipio_id", flat=True)))
+
+
+def sigilosos(indicador: str, tabela: int, ano: int, produto: str | None = None) -> int:
+    return len(codigos_sigilosos(indicador, tabela, ano, produto))
 
 
 def produtos(tabela: int) -> dict[str, str]:

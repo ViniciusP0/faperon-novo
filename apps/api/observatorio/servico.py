@@ -3,6 +3,7 @@
 from decimal import Decimal
 from typing import Any
 
+from analise.regras import classificar_concentracao
 from indicadores.catalogo import FONTES
 from indicadores.erros import ConsultaInvalida, NaoEncontrado
 from indicadores.servicos import formatar_data
@@ -292,6 +293,154 @@ def crescimento(cultura: str | None, inicio: int | None, fim: int | None) -> dic
         },
         "qualidade": {
             "municipios_sigilosos": leitura.sigilosos("quantidade-produzida", 5457, fim, cultura),
+            "ano_ref_monetario": ano_ref,
+            "avisos": avisos,
+        },
+        "meta": meta(tabelas),
+    }
+
+
+METRICAS_TERRITORIO = {
+    "valor": ("Valor da produção", "Mil Reais"),
+    "area": ("Área colhida", "Hectares"),
+    "rebanho": ("Rebanho bovino", "Cabeças"),
+    "dominante": ("Cultura dominante", ""),
+}
+MAX_CATEGORIAS = 8
+
+
+def _corrigir(
+    base: dict[str, Decimal], ano: int, ano_ref: int | None, indices: dict[int, Decimal]
+) -> dict[str, Decimal]:
+    """Valores a preços de ano_ref; o que não pode ser corrigido sai (nunca vira nominal)."""
+    if ano_ref is None:
+        return {}
+    corrigidos = {m: c.deflacionar(v, ano, ano_ref, indices) for m, v in base.items()}
+    return {m: v for m, v in corrigidos.items() if v is not None}
+
+
+def territorio(metrica: str, cultura: str | None, ano: int | None) -> dict[str, Any]:
+    tabelas = [5457, 3939, 1737]
+    culturas = leitura.produtos(5457)
+    if cultura is not None and cultura not in culturas:
+        raise NaoEncontrado(f"Cultura '{cultura}' não existe")
+    if metrica in ("rebanho", "dominante"):
+        cultura = None
+    fonte = (
+        ("efetivo", 3939)
+        if metrica == "rebanho"
+        else ("area-colhida", 5457)
+        if metrica == "area"
+        else (VALOR, 5457)
+    )
+    anos = leitura.anos_disponiveis(*fonte)
+    opcoes = {
+        "metricas": [
+            {"slug": s, "nome": n, "unidade": u} for s, (n, u) in METRICAS_TERRITORIO.items()
+        ],
+        "culturas": [{"slug": s, "nome": n} for s, n in culturas.items()],
+        "anos": anos,
+    }
+    if not anos:
+        valores_filtro = {"metrica": metrica, "cultura": cultura, "ano": ano}
+        return _vazio("territorio", {"valores": valores_filtro, "opcoes": opcoes}, tabelas)
+    ano = anos[-1] if ano is None else ano
+    _validar_ano(ano, anos)
+    filtros = {"valores": {"metrica": metrica, "cultura": cultura, "ano": ano}, "opcoes": opcoes}
+
+    # Só o mapa de valores em reais precisa do deflator. Área, rebanho, participações e
+    # dominância comparam números do mesmo ano e seguem sem IPCA.
+    monetaria = metrica in ("valor", "dominante")
+    indices = leitura.indices_ipca()
+    ano_ref, avisos = referencia_monetaria(ano, indices) if monetaria else (None, [])
+    produto = "bovino" if metrica == "rebanho" else cultura
+    base = leitura.por_municipio(fonte[0], fonte[1], ano, produto)
+    valores = _corrigir(base, ano, ano_ref, indices) if monetaria else base
+    if monetaria and base and not valores:  # há dado, mas não há como corrigi-lo
+        if metrica == "valor":
+            return _vazio("territorio", filtros, tabelas, None, r.AVISO_SEM_IPCA, avisos)
+        ano_ref, avisos = None, [*avisos, r.AVISO_SEM_IPCA]
+
+    por_produto = leitura.por_municipio_e_produto(VALOR, 5457, ano)
+    dominantes = {m: c.cultura_dominante(v) for m, v in por_produto.items()}
+    frequencia: dict[str, int] = {}
+    for d in dominantes.values():
+        if d:
+            frequencia[d] = frequencia.get(d, 0) + 1
+    ranking = sorted(frequencia.items(), key=lambda kv: (-kv[1], kv[0]))
+    principais = [s for s, _ in ranking[:MAX_CATEGORIAS]]
+
+    lista_municipios = leitura.municipios()
+    nomes_mun = {cod: nome for cod, nome, _ in lista_municipios}
+    micro_de = {cod: micro for cod, _, micro in lista_municipios}
+    codigos_sigilosos = set(leitura.codigos_sigilosos(fonte[0], fonte[1], ano, produto))
+    municipios_saida = []
+    for cod, nome, micro in lista_municipios:
+        status = "ok" if cod in base else ("sigiloso" if cod in codigos_sigilosos else "sem_dado")
+        dom = dominantes.get(cod)
+        categoria = (dom if dom in principais else "outras") if (metrica == "dominante" and dom) else None
+        municipios_saida.append(
+            {
+                "codigo_ibge": cod,
+                "nome": nome,
+                "microrregiao": micro,
+                "valor": f(valores.get(cod)),
+                "status": status,
+                "categoria": categoria,
+            }
+        )
+    soma_micro = c.somar_por_grupo(valores, micro_de)
+    microrregioes = [
+        {"nome": n, "valor": f(v)}
+        for n, v in sorted(soma_micro.items(), key=lambda kv: (-kv[1], kv[0]))
+    ]
+    dependentes: list[dict[str, Any]] = []
+    for cod, vals in por_produto.items():
+        dep = c.dependencia(vals)
+        if dep:
+            dependentes.append(
+                {
+                    "codigo_ibge": cod,
+                    "nome": nomes_mun.get(cod, cod),
+                    "cultura": culturas.get(dep[0], dep[0]),
+                    "participacao": f(dep[1], 1),
+                }
+            )
+    dependentes.sort(key=lambda d: (-float(d["participacao"] or 0), d["nome"]))
+
+    # Participações só sobre valores OK; o fator de correção é constante no ano e não as altera.
+    total_base = sum(base.values(), Decimal(0)) if base else None
+    ordenados = sorted(base.items(), key=lambda kv: (-kv[1], kv[0]))
+    top5 = sum((v for _, v in ordenados[:5]), Decimal(0)) if ordenados else None
+    top5_pct = top5 / total_base * 100 if top5 is not None and total_base else None
+    polo = nomes_mun.get(ordenados[0][0]) if ordenados else None
+    total = sum(valores.values(), Decimal(0)) if valores else None
+    categorias = []
+    if metrica == "dominante":
+        categorias = [{"slug": s, "nome": culturas[s]} for s in principais]
+        if any(m["categoria"] == "outras" for m in municipios_saida):
+            categorias.append({"slug": "outras", "nome": "Outras"})
+    return {
+        "filtros": filtros,
+        "metricas": {
+            "unidade": METRICAS_TERRITORIO[metrica][1],
+            "total": f(total),
+            "top5_pct": f(top5_pct, 1),
+            "hhi": f(c.hhi(base), 0),
+            "concentracao": classificar_concentracao(top5_pct) if top5_pct is not None else None,
+        },
+        "series": {
+            "municipios": municipios_saida,
+            "microrregioes": microrregioes,
+            "dependentes": dependentes,
+            "categorias": categorias,
+        },
+        "texto": {
+            "manchete": r.manchete_territorio(metrica, ano, top5_pct, polo, len(dependentes)),
+            "como_ler": r.como_ler("territorio", ano_ref),
+        },
+        "qualidade": {
+            "municipios_sigilosos": len(codigos_sigilosos),
             "ano_ref_monetario": ano_ref,
             "avisos": avisos,
         },

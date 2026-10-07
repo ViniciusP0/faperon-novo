@@ -224,3 +224,139 @@ def test_crescimento_perda_sem_municipio_em_comum(
     lancar(soja, "area-colhida", "1100023", 2020, 90, carga)
     _, corpo = get(api, "crescimento?cultura=soja-em-grao")
     assert _perda(corpo)[2020] is None
+
+
+def test_territorio_valor(api: APIClient, dados_observatorio: dict) -> None:
+    status, corpo = get(api, "territorio")
+    assert status == 200
+    assert corpo["filtros"]["valores"] == {"metrica": "valor", "cultura": None, "ano": 2024}
+    muns = {m["codigo_ibge"]: m for m in corpo["series"]["municipios"]}
+    assert len(muns) == 4
+    assert muns["1100031"]["status"] == "sigiloso" and muns["1100031"]["valor"] is None
+    assert muns["1100023"]["valor"] == 3600.0
+    assert {m["nome"]: m["valor"] for m in corpo["series"]["microrregioes"]} == {
+        "Cacoal": 4800.0,
+        "Vilhena": 900.0,
+    }
+    assert corpo["metricas"]["top5_pct"] == 100.0
+    assert corpo["qualidade"]["municipios_sigilosos"] == 1
+    # Alta Floresta: só soja (100%); Cacoal: só café (100%); Ariquemes: soja 83%
+    assert {d["codigo_ibge"] for d in corpo["series"]["dependentes"]} == {
+        "1100015",
+        "1100023",
+        "1100049",
+    }
+
+
+def test_territorio_dominante_e_rebanho(api: APIClient, dados_observatorio: dict) -> None:
+    _, dom = get(api, "territorio?metrica=dominante")
+    cats = {m["codigo_ibge"]: m["categoria"] for m in dom["series"]["municipios"]}
+    assert cats["1100023"] == "soja-em-grao" and cats["1100049"] == "cafe-em-grao-canephora"
+    assert cats["1100031"] is None
+    _, reb = get(api, "territorio?metrica=rebanho")
+    assert reb["metricas"]["unidade"] == "Cabeças"
+    assert reb["filtros"]["valores"]["cultura"] is None
+
+
+def test_territorio_metrica_invalida(api: APIClient, dados_observatorio: dict) -> None:
+    assert get(api, "territorio?metrica=chuva")[0] == 400
+    assert get(api, "territorio?cultura=inexistente")[0] == 404
+
+
+def test_territorio_ano_indisponivel_para_a_metrica(
+    api: APIClient, dados_observatorio: dict
+) -> None:
+    assert get(api, "territorio?ano=2010")[0] == 400
+    # 1996 existe para valor, mas não para o efetivo bovino
+    assert get(api, "territorio?metrica=rebanho&ano=1996")[0] == 400
+
+
+def test_territorio_rebanho_ignora_cultura(api: APIClient, dados_observatorio: dict) -> None:
+    _, corpo = get(api, "territorio?metrica=rebanho&cultura=soja-em-grao")
+    assert corpo["filtros"]["valores"]["cultura"] is None
+    muns = {m["codigo_ibge"]: m for m in corpo["series"]["municipios"]}
+    assert muns["1100015"]["valor"] == 1500.0 and muns["1100023"]["valor"] == 500.0
+    assert muns["1100049"]["status"] == "sem_dado" and muns["1100049"]["valor"] is None
+    assert corpo["metricas"]["total"] == 2000.0
+
+
+def test_territorio_valor_por_cultura_marca_sigiloso_e_sem_dado(
+    api: APIClient, dados_observatorio: dict
+) -> None:
+    _, soja = get(api, "territorio?cultura=soja-em-grao")
+    assert soja["metricas"]["total"] == 4200.0
+    ms = {m["codigo_ibge"]: m["status"] for m in soja["series"]["municipios"]}
+    assert ms == {"1100015": "ok", "1100023": "ok", "1100031": "sigiloso", "1100049": "sem_dado"}
+    _, cafe = get(api, "territorio?cultura=cafe-em-grao-canephora")
+    cs = {m["codigo_ibge"]: m["status"] for m in cafe["series"]["municipios"]}
+    assert cs["1100031"] == "sem_dado" and cafe["qualidade"]["municipios_sigilosos"] == 0
+
+
+def test_territorio_area_sem_ipca_funciona(api: APIClient, dados_observatorio: dict) -> None:
+    IndicePreco.objects.all().delete()
+    status, corpo = get(api, "territorio?metrica=area")
+    assert status == 200
+    muns = {m["codigo_ibge"]: m["valor"] for m in corpo["series"]["municipios"]}
+    assert muns == {"1100015": 110.0, "1100023": 1050.0, "1100031": None, "1100049": 2000.0}
+    assert corpo["metricas"]["total"] == 3160.0
+    assert corpo["qualidade"]["ano_ref_monetario"] is None
+    assert r.AVISO_SEM_IPCA not in corpo["qualidade"]["avisos"]
+    assert len(corpo["series"]["dependentes"]) == 3
+
+
+def test_territorio_valor_sem_ipca_bloco_vazio(api: APIClient, dados_observatorio: dict) -> None:
+    IndicePreco.objects.all().delete()
+    status, corpo = get(api, "territorio")
+    assert status == 200
+    assert corpo["series"].get("municipios", []) == []
+    assert r.AVISO_SEM_IPCA in corpo["qualidade"]["avisos"]
+
+
+def test_territorio_dominante_sem_ipca_mantem_categorias_e_dependentes(
+    api: APIClient, dados_observatorio: dict
+) -> None:
+    IndicePreco.objects.all().delete()
+    status, corpo = get(api, "territorio?metrica=dominante")
+    assert status == 200
+    cats = {m["codigo_ibge"]: m["categoria"] for m in corpo["series"]["municipios"]}
+    assert cats == {
+        "1100015": "soja-em-grao",
+        "1100023": "soja-em-grao",
+        "1100031": None,
+        "1100049": "cafe-em-grao-canephora",
+    }
+    assert [c["slug"] for c in corpo["series"]["categorias"]] == [
+        "soja-em-grao",
+        "cafe-em-grao-canephora",
+    ]
+    assert len(corpo["series"]["dependentes"]) == 3
+    assert corpo["metricas"]["total"] is None
+    assert r.AVISO_SEM_IPCA in corpo["qualidade"]["avisos"]
+
+
+def test_territorio_dominante_agrupa_em_outras_e_desempata_por_slug(
+    api: APIClient, dados_observatorio: dict, carga: Carga
+) -> None:
+    # 9 culturas extras, cada uma dominante em um município novo (empate 1 a 1 -> ordem do slug)
+    from indicadores.models import Indicador, Municipio, ProdutoIndicador
+
+    ind = Indicador.objects.get(slug="valor-da-producao")
+    for i in range(9):
+        p = Produto.objects.create(
+            slug=f"cultura-{i}",
+            codigo_ibge=f"9{i}",
+            nome=f"Cultura {i}",
+            segmento="agricultura",
+            tabela_origem=5457,
+        )
+        ProdutoIndicador.objects.create(produto=p, indicador=ind, unidade="Mil Reais")
+        cod = f"11001{i}0"
+        Municipio.objects.create(codigo_ibge=cod, nome=f"Mun {i}")
+        lancar(p, "valor-da-producao", cod, 2024, 10 + i, carga)
+    _, corpo = get(api, "territorio?metrica=dominante")
+    slugs = [c["slug"] for c in corpo["series"]["categorias"]]
+    assert len(slugs) == 9 and slugs[-1] == "outras"
+    assert slugs[:2] == ["soja-em-grao", "cafe-em-grao-canephora"]
+    assert slugs[2:8] == [f"cultura-{i}" for i in range(6)]
+    cats = {m["nome"]: m["categoria"] for m in corpo["series"]["municipios"]}
+    assert cats["Mun 8"] == "outras" and cats["Mun 0"] == "cultura-0"

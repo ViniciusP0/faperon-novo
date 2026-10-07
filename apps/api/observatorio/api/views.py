@@ -32,8 +32,14 @@ class CrescimentoView(APIView):
 
 
 class TerritorioView(APIView):
+    @extend_schema(
+        parameters=[sz.ConsultaTerritorioSerializer],
+        responses={200: sz.TerritorioSerializer, **ERROS},
+    )
     def get(self, request: Request) -> Response:
-        return Response(status=501)
+        d = validar_consulta(sz.ConsultaTerritorioSerializer, request)
+        resultado = servico.territorio(d["metrica"], d.get("cultura"), d.get("ano"))
+        return Response(sz.TerritorioSerializer(resultado).data)
 
 
 class PecuariaView(APIView):

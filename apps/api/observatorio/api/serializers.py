@@ -150,3 +150,77 @@ class CrescimentoSerializer(serializers.Serializer):
     texto = TextoSerializer()
     qualidade = QualidadeSerializer()
     meta = MetaObservatorioSerializer()
+
+
+class ConsultaTerritorioSerializer(serializers.Serializer):
+    metrica = serializers.ChoiceField(
+        choices=["valor", "area", "rebanho", "dominante"], required=False, default="valor"
+    )
+    cultura = serializers.SlugField(required=False)
+    ano = serializers.IntegerField(required=False)
+
+
+class MetricaOpcaoSerializer(OpcaoSerializer):
+    unidade = serializers.CharField(allow_blank=True)
+
+
+class TerritorioValoresSerializer(serializers.Serializer):
+    metrica = serializers.CharField()
+    cultura = serializers.CharField(allow_null=True)
+    ano = serializers.IntegerField(allow_null=True)
+
+
+class TerritorioOpcoesSerializer(serializers.Serializer):
+    metricas = MetricaOpcaoSerializer(many=True)
+    culturas = OpcaoSerializer(many=True)
+    anos = serializers.ListField(child=serializers.IntegerField())
+
+
+class TerritorioFiltrosSerializer(serializers.Serializer):
+    valores = TerritorioValoresSerializer()
+    opcoes = TerritorioOpcoesSerializer()
+
+
+class TerritorioMetricasSerializer(serializers.Serializer):
+    unidade = serializers.CharField(required=False, allow_blank=True)
+    total = serializers.FloatField(required=False, allow_null=True)
+    top5_pct = serializers.FloatField(required=False, allow_null=True)
+    hhi = serializers.FloatField(required=False, allow_null=True)
+    concentracao = serializers.CharField(required=False, allow_null=True)
+
+
+class MunicipioMapaSerializer(serializers.Serializer):
+    codigo_ibge = serializers.CharField()
+    nome = serializers.CharField()
+    microrregiao = serializers.CharField(allow_blank=True)
+    valor = serializers.FloatField(allow_null=True)
+    status = serializers.ChoiceField(choices=["ok", "sigiloso", "sem_dado"])
+    categoria = serializers.CharField(allow_null=True)
+
+
+class GrupoValorSerializer(serializers.Serializer):
+    nome = serializers.CharField()
+    valor = serializers.FloatField(allow_null=True)
+
+
+class DependenteSerializer(serializers.Serializer):
+    codigo_ibge = serializers.CharField()
+    nome = serializers.CharField()
+    cultura = serializers.CharField()
+    participacao = serializers.FloatField(allow_null=True)
+
+
+class TerritorioSeriesSerializer(serializers.Serializer):
+    municipios = MunicipioMapaSerializer(many=True, required=False)
+    microrregioes = GrupoValorSerializer(many=True, required=False)
+    dependentes = DependenteSerializer(many=True, required=False)
+    categorias = OpcaoSerializer(many=True, required=False)
+
+
+class TerritorioSerializer(serializers.Serializer):
+    filtros = TerritorioFiltrosSerializer()
+    metricas = TerritorioMetricasSerializer()
+    series = TerritorioSeriesSerializer()
+    texto = TextoSerializer()
+    qualidade = QualidadeSerializer()
+    meta = MetaObservatorioSerializer()
