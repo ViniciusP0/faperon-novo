@@ -6,7 +6,7 @@ import { useBlocoObservatorio, useFiltrosLembrados } from "./consultas";
 import { GraficoObservatorio } from "./grafico-observatorio";
 import { Seletor } from "./seletor";
 import { TabelaDados } from "./tabela-dados";
-import { opcoesPeriodo, useFiltrosBloco } from "./use-filtros-bloco";
+import { anoValido, opcoesPeriodo, useFiltrosBloco } from "./use-filtros-bloco";
 import type { CrescimentoResposta } from "@/lib/api-types";
 import { optionBarrasHorizontais, optionDecomposicao, optionIndices, optionLinha } from "@/lib/observatorio-graficos";
 
@@ -37,13 +37,15 @@ export function BlocoCrescimento() {
   const lembrados = useFiltrosLembrados(consulta.data?.filtros);
   const v = lembrados?.valores;
   const o = lembrados?.opcoes;
-  const periodo = o && v ? opcoesPeriodo(o.anos, v.inicio, v.fim) : null;
+  const inicio = o && v ? anoValido(f.exibido("inicio", String(v.inicio ?? "")), o.anos, v.inicio) : null;
+  const fim = o && v ? anoValido(f.exibido("fim", String(v.fim ?? "")), o.anos, v.fim) : null;
+  const periodo = o ? opcoesPeriodo(o.anos, inicio, fim) : null;
   const filtros = v && o && periodo && (
     <>
-      <Seletor rotulo="Cultura" valor={v.cultura ?? ""} onChange={(x) => f.definir("cultura", x, ["inicio", "fim"])}
+      <Seletor rotulo="Cultura" valor={f.exibido("cultura", v.cultura ?? "")} onChange={(x) => f.definir("cultura", x, ["inicio", "fim"])}
         opcoes={o.culturas.map((c) => ({ valor: c.slug, rotulo: c.nome }))} />
-      <Seletor rotulo="De" valor={String(v.inicio ?? "")} onChange={(x) => f.definir("inicio", x)} opcoes={periodo.de} />
-      <Seletor rotulo="Até" valor={String(v.fim ?? "")} onChange={(x) => f.definir("fim", x)} opcoes={periodo.ate} />
+      <Seletor rotulo="De" valor={f.exibido("inicio", String(v.inicio ?? ""))} onChange={(x) => f.definir("inicio", x)} opcoes={periodo.de} />
+      <Seletor rotulo="Até" valor={f.exibido("fim", String(v.fim ?? ""))} onChange={(x) => f.definir("fim", x)} opcoes={periodo.ate} />
     </>
   );
   return (

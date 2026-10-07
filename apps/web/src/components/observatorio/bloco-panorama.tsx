@@ -49,8 +49,8 @@ export function BlocoPanorama() {
   const o = lembrados?.opcoes;
   const filtros = v && o && (
     <>
-      <Seletor rotulo="Ano" valor={String(v.ano ?? "")} onChange={(x) => f.definir("ano", x)} opcoes={opcoesAnos(o.anos)} />
-      <Seletor rotulo="Janela" valor={String(v.janela)} onChange={(x) => f.definir("janela", x)}
+      <Seletor rotulo="Ano" valor={f.exibido("ano", String(v.ano ?? ""))} onChange={(x) => f.definir("ano", x)} opcoes={opcoesAnos(o.anos)} />
+      <Seletor rotulo="Janela" valor={f.exibido("janela", String(v.janela))} onChange={(x) => f.definir("janela", x)}
         opcoes={o.janelas.map((j) => ({ valor: String(j), rotulo: `${j} anos` }))} />
     </>
   );

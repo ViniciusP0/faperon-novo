@@ -13,8 +13,11 @@ export function useFiltrosBloco(bloco: BlocoObservatorio) {
     router.replace(s ? `${pathname}?${s}` : pathname, { scroll: false });
   };
   const atual = new URLSearchParams(sp.toString());
+  const daUrl = parametrosDoBloco(atual, bloco);
   return {
-    qs: parametrosDoBloco(atual, bloco).toString(),
+    /** Valor mostrado no seletor: a escolha na URL, ou o padrão resolvido pelo backend quando a URL não tem o parâmetro. */
+    exibido: (chave: string, doBackend: string): string => daUrl.get(chave) ?? doBackend,
+    qs: daUrl.toString(),
     // `limpar`: filtros dependentes do alterado, que perdem o sentido com o novo valor.
     definir: (chave: string, valor: string | null, limpar: string[] = []) => {
       let novo = comFiltro(atual, bloco, chave, valor);
@@ -36,4 +39,10 @@ export function opcoesPeriodo(anos: number[], inicio: number | null, fim: number
     de: opcoesAnos(anos.filter((a) => fim === null || a <= fim)),
     ate: opcoesAnos(anos.filter((a) => inicio === null || a >= inicio)),
   };
+}
+
+/** Ano exibido se for um ano oferecido; senão o do backend (evita esvaziar as listas De/Até com um valor inválido). */
+export function anoValido(exibido: string, anos: number[], doBackend: number | null): number | null {
+  const n = Number(exibido);
+  return exibido !== "" && anos.includes(n) ? n : doBackend;
 }

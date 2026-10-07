@@ -52,9 +52,9 @@ export function Bloco<R extends Resposta>({ id, etiqueta, titulo, consulta, filt
       ) : null}
 
       {d && (
-        <>
+        <div data-testid="conteudo-bloco" aria-busy={consulta.isPlaceholderData ? "true" : undefined} className={consulta.isPlaceholderData ? "opacity-60 transition-opacity" : undefined}>
           <p data-testid="manchete" className="mt-6 max-w-[70ch] text-lg font-medium leading-relaxed">{d.texto.manchete}</p>
-          <div data-testid="conteudo-bloco" aria-busy={consulta.isPlaceholderData ? "true" : undefined} className={consulta.isPlaceholderData ? "mt-6 opacity-60 transition-opacity" : "mt-6"}>
+          <div className="mt-6">
             <div className="mb-2 flex justify-end">
               <Button variant="outline" size="sm" aria-pressed={comoTabela} onClick={() => setComoTabela((v) => !v)}>
                 {comoTabela ? "Ver como gráfico" : "Ver como tabela"}
@@ -95,7 +95,7 @@ export function Bloco<R extends Resposta>({ id, etiqueta, titulo, consulta, filt
               )}
             </aside>
           </div>
-        </>
+        </div>
       )}
     </section>
   );

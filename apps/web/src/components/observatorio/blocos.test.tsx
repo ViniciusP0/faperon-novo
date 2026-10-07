@@ -404,3 +404,94 @@ describe("filtros dependentes e seletores coerentes", () => {
     expect((screen.getByLabelText("De") as HTMLSelectElement).selectedOptions[0]).toHaveTextContent("Padrão");
   });
 });
+
+describe("valor exibido nos seletores vem da URL", () => {
+  function clienteEstavel() {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    function Estavel({ children }: { children: ReactNode }) {
+      return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+    }
+    return Estavel;
+  }
+  const ok = (corpo: unknown) => ({ ok: true, json: async () => corpo });
+  const erro400 = { ok: false, status: 400, json: async () => ({ erro: "Parâmetros inválidos", campos: { fim: "Ano final inválido." } }) };
+  const valor = (rotulo: string) => (screen.getByLabelText(rotulo) as HTMLSelectElement).value;
+  const texto = (rotulo: string) => (screen.getByLabelText(rotulo) as HTMLSelectElement).selectedOptions[0]!.textContent;
+
+  it("(d) URL sem parâmetros mostra os padrões resolvidos pelo backend", async () => {
+    busca = "";
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(ok(pecuaria)));
+    render(<BlocoPecuaria />, { wrapper: clienteEstavel() });
+    await screen.findByTestId("manchete");
+    expect([valor("Rebanho"), valor("De"), valor("Até")]).toEqual(["bovino", "2020", "2022"]);
+  });
+
+  it("(a)(b) a escolha do usuário permanece no seletor enquanto carrega e depois da resposta", async () => {
+    busca = "";
+    let resolver!: (v: unknown) => void;
+    const segunda = new Promise((r) => { resolver = r; });
+    const f = vi.fn().mockResolvedValueOnce(ok(pecuaria)).mockReturnValueOnce(segunda);
+    vi.stubGlobal("fetch", f);
+    const { rerender } = render(<BlocoPecuaria />, { wrapper: clienteEstavel() });
+    await screen.findByTestId("manchete");
+    await userEvent.selectOptions(screen.getByLabelText("Até"), "2021");
+    busca = "pec_fim=2021";
+    rerender(<BlocoPecuaria />);
+    await vi.waitFor(() => expect(f).toHaveBeenCalledTimes(2));
+    expect(f.mock.calls[1]![0]).toBe("/api/v1/observatorio/pecuaria?fim=2021");
+    expect(screen.getByTestId("conteudo-bloco")).toHaveAttribute("aria-busy", "true");
+    expect(valor("Até")).toBe("2021");
+    expect(screen.getByLabelText("Até")).toBeEnabled();
+    resolver(ok({ ...pecuaria, filtros: { ...pecuaria.filtros, valores: { rebanho: "bovino", inicio: 2020, fim: 2021 } } }));
+    await vi.waitFor(() => expect(screen.getByTestId("conteudo-bloco")).not.toHaveAttribute("aria-busy"));
+    expect(valor("Até")).toBe("2021");
+  });
+
+  it("(c) valor inválido na URL: após o 400 o seletor mostra o valor cru marcado como inválido e 'Voltar ao padrão' restaura os padrões", async () => {
+    busca = "";
+    const padroes = { ...pecuaria, filtros: { ...pecuaria.filtros, valores: { rebanho: "bovino", inicio: 2019, fim: 2022 } } };
+    const f = vi.fn().mockResolvedValueOnce(ok(pecuaria)).mockResolvedValueOnce(erro400).mockResolvedValueOnce(ok(padroes));
+    vi.stubGlobal("fetch", f);
+    const { rerender } = render(<BlocoPecuaria />, { wrapper: clienteEstavel() });
+    await screen.findByTestId("manchete");
+    busca = "pec_fim=1900";
+    rerender(<BlocoPecuaria />);
+    await userEvent.click(await screen.findByRole("button", { name: "Voltar ao padrão" }));
+    expect(valor("Até")).toBe("1900");
+    expect(texto("Até")).toBe("1900 (valor inválido)");
+    expect(valor("De")).toBe("2020");
+    busca = "";
+    rerender(<BlocoPecuaria />);
+    await vi.waitFor(() => expect([valor("Rebanho"), valor("De"), valor("Até")]).toEqual(["bovino", "2019", "2022"]));
+    expect(f.mock.calls[2]![0]).toBe("/api/v1/observatorio/pecuaria");
+  });
+
+  it("(c) Panorama com janela inválida na URL", async () => {
+    busca = "";
+    const f = vi.fn().mockResolvedValueOnce(ok(panorama)).mockResolvedValueOnce(erro400);
+    vi.stubGlobal("fetch", f);
+    const { rerender } = render(<BlocoPanorama />, { wrapper: clienteEstavel() });
+    await screen.findByTestId("manchete");
+    expect(valor("Janela")).toBe("10");
+    busca = "pan_janela=7";
+    rerender(<BlocoPanorama />);
+    await screen.findByRole("button", { name: "Voltar ao padrão" });
+    expect(valor("Janela")).toBe("7");
+    expect(texto("Janela")).toBe("7 (valor inválido)");
+  });
+
+  it("a manchete fica dentro da região marcada como ocupada", async () => {
+    busca = "";
+    let resolver!: (v: unknown) => void;
+    const f = vi.fn().mockResolvedValueOnce(ok(pecuaria)).mockReturnValueOnce(new Promise((r) => { resolver = r; }));
+    vi.stubGlobal("fetch", f);
+    const { rerender } = render(<BlocoPecuaria />, { wrapper: clienteEstavel() });
+    await screen.findByTestId("manchete");
+    busca = "pec_rebanho=ovino";
+    rerender(<BlocoPecuaria />);
+    await vi.waitFor(() => expect(screen.getByTestId("conteudo-bloco")).toHaveAttribute("aria-busy", "true"));
+    expect(screen.getByTestId("conteudo-bloco")).toContainElement(screen.getByTestId("manchete"));
+    expect(screen.getByTestId("conteudo-bloco")).toContainElement(screen.getByRole("link", { name: /Ver no Painel/ }));
+    resolver(ok(pecuaria));
+  });
+});

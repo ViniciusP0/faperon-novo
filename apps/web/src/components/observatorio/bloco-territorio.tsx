@@ -52,15 +52,16 @@ export function BlocoTerritorio() {
   const lembrados = useFiltrosLembrados(consulta.data?.filtros);
   const v = lembrados?.valores;
   const o = lembrados?.opcoes;
+  const metrica = v ? f.exibido("metrica", v.metrica) : "";
   const filtros = v && o && (
     <>
-      <Seletor rotulo="Métrica" valor={v.metrica} onChange={(x) => f.definir("metrica", x, x === "valor" || x === "area" ? [] : ["cultura"])}
+      <Seletor rotulo="Métrica" valor={metrica} onChange={(x) => f.definir("metrica", x, x === "valor" || x === "area" ? [] : ["cultura"])}
         opcoes={o.metricas.map((m) => ({ valor: m.slug, rotulo: m.nome }))} />
-      {(v.metrica === "valor" || v.metrica === "area") && (
-        <Seletor rotulo="Cultura" valor={v.cultura ?? ""} onChange={(x) => f.definir("cultura", x || null)}
+      {(metrica === "valor" || metrica === "area") && (
+        <Seletor rotulo="Cultura" valor={f.exibido("cultura", v.cultura ?? "")} onChange={(x) => f.definir("cultura", x || null)}
           opcoes={[{ valor: "", rotulo: "Todas as culturas" }, ...o.culturas.map((c) => ({ valor: c.slug, rotulo: c.nome }))]} />
       )}
-      <Seletor rotulo="Ano" valor={String(v.ano ?? "")} onChange={(x) => f.definir("ano", x)} opcoes={opcoesAnos(o.anos)} />
+      <Seletor rotulo="Ano" valor={f.exibido("ano", String(v.ano ?? ""))} onChange={(x) => f.definir("ano", x)} opcoes={opcoesAnos(o.anos)} />
     </>
   );
   return (
