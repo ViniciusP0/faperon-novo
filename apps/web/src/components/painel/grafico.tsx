@@ -20,9 +20,11 @@ interface GraficoProps {
   alturaMovel?: number;
   /** Identifica o gráfico; a animação de entrada toca uma única vez por identificador, mesmo que ele remonte. */
   idEntrada?: string;
+  /** A opção já traz as cores do tema escuro (o Observatório): não aplica comTemaEscuro, que presume eixos e uma única área. */
+  temaProprio?: boolean;
 }
 
-export function Grafico({ option, descricao, altura = 360, alturaMovel = altura, idEntrada }: GraficoProps) {
+export function Grafico({ option, descricao, altura = 360, alturaMovel = altura, idEntrada, temaProprio = false }: GraficoProps) {
   const ref = useRef<HTMLDivElement>(null);
   const chart = useRef<echarts.ECharts | null>(null);
   const desenhou = useRef(false);
@@ -52,11 +54,11 @@ export function Grafico({ option, descricao, altura = 360, alturaMovel = altura,
   }, []);
 
   useEffect(() => {
-    const base = escuro ? comTemaEscuro(option) : option;
+    const base = escuro && !temaProprio ? comTemaEscuro(option) : option;
     // Só a primeira renderização anima; filtros e troca de tema reaplicam a opção na hora.
     chart.current?.setOption(comEntrada(base, !desenhou.current && consumirEntrada(idEntrada) && !reducaoDeMovimento()), true);
     desenhou.current = true;
-  }, [option, escuro, idEntrada]);
+  }, [option, escuro, idEntrada, temaProprio]);
 
   return <div
       ref={ref}

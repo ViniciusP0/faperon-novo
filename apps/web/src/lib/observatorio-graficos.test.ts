@@ -1,14 +1,17 @@
 // @vitest-environment node
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { MapChart } from "echarts/charts";
 import { TooltipComponent, VisualMapComponent } from "echarts/components";
 import * as echarts from "echarts/core";
 import { SVGRenderer } from "echarts/renderers";
 import { describe, expect, it } from "vitest";
+import { PALETA_ESCURA } from "./chart-options";
 import type { MunicipioMapa } from "./api-types";
 import {
   COR_SEM_DADO,
+  COR_SEM_DADO_ESCURO,
   CORES_CATEGORIA,
   optionAreaEmpilhada,
   optionBarrasHorizontais,
@@ -27,12 +30,12 @@ const m = (codigo: string, valor: number | null, status: MunicipioMapa["status"]
 type DadoMapa = { name: string; value: number | string | null; itemStyle?: { areaColor: string } };
 type OpcaoMapa = {
   series: { nameProperty: string; map: string; data: DadoMapa[] }[];
-  visualMap: { type: string; min?: number; max?: number; categories?: string[]; inRange: { color: string[] } };
+  visualMap: { type: string; min?: number; max?: number; pieces?: { value: number; label: string; color: string }[]; inRange: { color: string[] } };
   tooltip: { formatter: (p: unknown) => string };
 };
 
 const malha = JSON.parse(
-  readFileSync(resolve(process.cwd(), "public/geo/ro-municipios.json"), "utf8"),
+  readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../public/geo/ro-municipios.json"), "utf8"),
 ) as { features: { properties: { codigo_ibge: string } }[] };
 
 function renderizar(option: object): string {
@@ -42,6 +45,14 @@ function renderizar(option: object): string {
   const svg = chart.renderToSVGString();
   chart.dispose();
   return svg;
+}
+
+/** Só os caminhos das regiões do mapa (os da legenda não têm ecmeta_data_index). */
+function regioes(svg: string): string[] {
+  return (svg.match(/<path[^>]*>/g) ?? []).filter((p) => p.includes("ecmeta_data_index"));
+}
+function caminhosComCor(svg: string, cor: string): string[] {
+  return regioes(svg).filter((p) => p.toLowerCase().includes(`fill="${cor.toLowerCase()}"`));
 }
 
 describe("options do Observatório", () => {
@@ -83,7 +94,7 @@ describe("options do Observatório", () => {
     const unico = optionMapa([m("1", 5, "ok")], "", []) as unknown as OpcaoMapa;
     expect(unico.visualMap.max!).toBeGreaterThan(unico.visualMap.min!);
     const cat = optionMapa([], "", [{ slug: "soja", nome: "Soja" }]) as unknown as OpcaoMapa;
-    expect(cat.visualMap.categories).toEqual(["Soja"]);
+    expect(cat.visualMap.pieces).toEqual([{ value: 0, label: "Soja", color: CORES_CATEGORIA[0] }]);
     expect(cat.series[0]!.data).toEqual([]);
   });
 
@@ -94,17 +105,18 @@ describe("options do Observatório", () => {
       [{ slug: "soja", nome: "Soja" }, { slug: "outras", nome: "Outras" }],
     ) as unknown as OpcaoMapa;
     expect(o.visualMap.type).toBe("piecewise");
-    expect(o.visualMap.categories).toEqual(["Soja", "Outras"]);
-    expect(o.visualMap.inRange.color).toEqual([CORES_CATEGORIA[0], CORES_CATEGORIA[8]]);
+    expect(o.visualMap.pieces!.map((p) => p.label)).toEqual(["Soja", "Outras"]);
+    expect(o.visualMap.pieces!.map((p) => p.color)).toEqual([CORES_CATEGORIA[0], CORES_CATEGORIA[8]]);
     const dados = o.series[0]!.data;
-    expect(dados.map((d) => d.value)).toEqual(["Soja", "Outras", null]);
+    expect(dados.map((d) => d.value)).toEqual([0, 1, null]);
     expect(dados[2]!.itemStyle!.areaColor).toBe(COR_SEM_DADO);
   });
 
   it("mapa por categoria tem uma cor para cada categoria, mesmo com mais de nove", () => {
     const cats = Array.from({ length: 12 }, (_, i) => ({ slug: `c${i}`, nome: `C${i}` }));
     const o = optionMapa([], "", cats) as unknown as OpcaoMapa;
-    expect(o.visualMap.inRange.color).toHaveLength(12);
+    expect(o.visualMap.pieces).toHaveLength(12);
+    expect(o.visualMap.pieces!.every((p) => typeof p.color === "string")).toBe(true);
   });
 
   it("tooltip diz sigiloso, sem dado ou o valor", () => {
@@ -128,14 +140,17 @@ describe("options do Observatório", () => {
   it("malha real: o ECharts renderiza o município sigiloso em cinza (nameProperty)", () => {
     const codigos = malha.features.map((f) => f.properties.codigo_ibge);
     const svg = renderizar(optionMapa(codigos.map((c, i) => m(c, i === 0 ? null : 10 + i, i === 0 ? "sigiloso" : "ok")), "", []));
-    expect(svg.toLowerCase()).toContain(COR_SEM_DADO);
-    expect(svg.match(/<path/g)!.length).toBeGreaterThanOrEqual(52);
+    expect(caminhosComCor(svg, COR_SEM_DADO)).toHaveLength(1);
+    const coloridas = regioes(svg).filter((p) => /fill="rgb\((?!0,0,0)/.test(p));
+    expect(coloridas).toHaveLength(51);
+    expect(new Set(coloridas.map((p) => p.match(/fill="([^"]*)"/)![1])).size).toBeGreaterThan(10);
   });
 
   it("malha real: o ECharts aplica a cor da categoria", () => {
     const codigos = malha.features.map((f) => f.properties.codigo_ibge);
     const svg = renderizar(optionMapa(codigos.map((c) => m(c, 1, "ok", "soja")), "", [{ slug: "soja", nome: "Soja" }]));
-    expect(svg.toLowerCase()).toContain(CORES_CATEGORIA[0]!.toLowerCase());
+    expect(regioes(svg).filter((p) => p.includes("rgb(0,0,0)"))).toHaveLength(0);
+    expect(caminhosComCor(svg, CORES_CATEGORIA[0]!)).toHaveLength(52);
   });
 
   it("decomposição tem duas barras que somam 100", () => {
@@ -169,5 +184,50 @@ describe("options do Observatório", () => {
     expect(l.xAxis.data).toEqual(["2020", "2021"]);
     expect(l.series[0]).toMatchObject({ name: "N", data: [5, null] });
     expect((optionLinha([], "N", "u") as { series: { data: unknown[] }[] }).series[0]!.data).toEqual([]);
+  });
+
+  it("tema escuro: área empilhada tem uma cor distinta por série", () => {
+    const ev = { anos: [2020], itens: [1, 2, 3].map((n) => ({ nome: `S${n}`, valores: [n] })) };
+    const o = optionAreaEmpilhada(ev, "x", true) as { color: string[]; series: unknown[] };
+    expect(new Set(o.color.slice(0, 3)).size).toBe(3);
+    expect(o.color.slice(0, 5)).toEqual(PALETA_ESCURA);
+  });
+
+  it("tema escuro: mapa e treemap não têm eixos e o texto da legenda é legível", () => {
+    const mapa = optionMapa([m("1", 1, "ok")], "", [], true) as unknown as Record<string, unknown> & OpcaoMapa & { visualMap: { textStyle: { color: string } } };
+    expect(mapa.xAxis).toBeUndefined();
+    expect(mapa.yAxis).toBeUndefined();
+    expect(mapa.visualMap.textStyle.color).toBe("#e8f0ec");
+    const claro = optionMapa([m("1", 1, "ok")], "", []) as unknown as { visualMap: { textStyle: { color: string } } };
+    expect(claro.visualMap.textStyle.color).not.toBe("#e8f0ec");
+    const tm = optionTreemap([{ slug: "a", nome: "A", valor: 1, participacao: 1 }], "", true) as Record<string, unknown> & { color: string[] };
+    expect(tm.xAxis).toBeUndefined();
+    expect(tm.color.slice(0, 5)).toEqual(PALETA_ESCURA);
+  });
+
+  it("tema escuro: escala clara o bastante, borda do card e cinza de sem dado distinto da escala", () => {
+    const e = optionMapa([m("1", 1, "ok"), m("2", null, "sigiloso")], "", [], true) as unknown as OpcaoMapa & { series: { itemStyle: { borderColor: string } }[] };
+    expect(e.visualMap.inRange.color).not.toContain("#003329");
+    expect(e.visualMap.inRange.color).not.toContain(COR_SEM_DADO_ESCURO);
+    expect(e.series[0]!.data[1]!.itemStyle!.areaColor).toBe(COR_SEM_DADO_ESCURO);
+    expect(e.series[0]!.itemStyle.borderColor).not.toBe("#444");
+    const c = optionMapa([m("1", 1, "ok")], "", []) as unknown as OpcaoMapa;
+    expect(c.visualMap.inRange.color).not.toContain(COR_SEM_DADO);
+    expect(COR_SEM_DADO_ESCURO).not.toBe(COR_SEM_DADO);
+  });
+
+  it("tooltips escapam HTML dos nomes", () => {
+    const o = optionMapa([{ ...m("1", 5, "ok"), nome: "<img src=x>" }], "", []) as unknown as OpcaoMapa;
+    const html = o.tooltip.formatter({ data: { ...o.series[0]!.data[0], nome: "<img src=x>", status: "ok" } });
+    expect(html).not.toContain("<img");
+    expect(html).toContain("&lt;img");
+    const t = optionTreemap([], "") as { tooltip: { formatter: (p: unknown) => string } };
+    expect(t.tooltip.formatter({ name: "<b>", value: 1 })).not.toContain("<b>");
+  });
+
+  it("decomposição com entradas inválidas não gera NaN", () => {
+    const o = optionDecomposicao(Number.NaN, 50) as { series: { data: unknown[] }[] };
+    expect(o.series.every((s) => s.data.length === 0)).toBe(true);
+    expect(JSON.stringify(o)).not.toContain("NaN");
   });
 });
