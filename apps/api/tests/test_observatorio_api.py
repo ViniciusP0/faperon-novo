@@ -1,3 +1,4 @@
+import math
 from decimal import Decimal as D
 
 import pytest
@@ -180,6 +181,46 @@ def test_crescimento_sem_ipca(api: APIClient, dados_observatorio: dict) -> None:
     IndicePreco.objects.all().delete()
     status, corpo = get(api, "crescimento")
     assert status == 200
-    assert corpo["texto"]["manchete"] == r.AVISO_SEM_IPCA
+    m = corpo["metricas"]
+    ln_p, ln_a = math.log(3660 / 300), math.log(1110 / 100)
+    assert m["variacao_producao_pct"] == pytest.approx(1120.0, abs=0.01)
+    assert m["parte_area_pct"] == pytest.approx(ln_a / ln_p * 100, abs=0.01)
+    assert m["parte_rendimento_pct"] == pytest.approx(100 - ln_a / ln_p * 100, abs=0.01)
+    p15, p24 = (110 - 100) / 110 * 100, (1120 - 1110) / 1120 * 100
+    assert m["perda_ultimo_ano_pct"] == pytest.approx(p24, abs=0.01)
+    assert m["perda_media_pct"] == pytest.approx((p15 + p24) / 2, abs=0.01)
+    assert corpo["series"]["indices"]["producao"][0] == 100.0
+    assert len(corpo["series"]["perda"]) == 10
+    assert corpo["series"]["valor_por_hectare"] == []
     assert corpo["qualidade"]["ano_ref_monetario"] is None
-    assert corpo["series"].get("valor_por_hectare", []) == []
+    assert r.AVISO_SEM_IPCA in corpo["qualidade"]["avisos"]
+    assert corpo["texto"]["manchete"].startswith("A produção de Soja (em grão) cresceu")
+    assert corpo["texto"]["como_ler"] == r.como_ler("crescimento", None)
+
+
+def _perda(corpo: dict) -> dict[int, float | None]:
+    return {i["ano"]: i["valor"] for i in corpo["series"]["perda"]}
+
+
+def test_crescimento_perda_so_com_municipios_em_comum(
+    api: APIClient, dados_observatorio: dict
+) -> None:
+    # café 2024: cac tem área colhida 2000 sem plantada; só ari (50/50) conta
+    _, corpo = get(api, "crescimento?cultura=cafe-em-grao-canephora")
+    perda = _perda(corpo)
+    assert perda[2024] == 0.0
+    assert perda[2015] == 0.0
+    assert corpo["metricas"]["perda_ultimo_ano_pct"] == 0.0
+    # soja 2024: af e ari têm os dois valores
+    _, corpo = get(api, "crescimento?cultura=soja-em-grao")
+    assert _perda(corpo)[2024] == pytest.approx((1120 - 1110) / 1120 * 100, abs=0.01)
+
+
+def test_crescimento_perda_sem_municipio_em_comum(
+    api: APIClient, dados_observatorio: dict, carga: Carga
+) -> None:
+    soja = dados_observatorio["soja"]
+    lancar(soja, "area-plantada", "1100015", 2020, 100, carga)
+    lancar(soja, "area-colhida", "1100023", 2020, 90, carga)
+    _, corpo = get(api, "crescimento?cultura=soja-em-grao")
+    assert _perda(corpo)[2020] is None

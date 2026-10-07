@@ -37,3 +37,11 @@ def test_sigilosos_produtos_e_municipios(dados_observatorio: dict) -> None:
     assert list(l.produtos(5457)) == ["cafe-em-grao-canephora", "soja-em-grao"]
     assert ("1100015", "Alta Floresta D'Oeste", "Cacoal") in l.municipios()
     assert l.atualizado_em([5457]) is not None
+
+
+def test_por_municipio_na_janela(dados_observatorio: dict) -> None:
+    t = l.por_municipio_na_janela("area-plantada", 5457, "cafe-em-grao-canephora", 2015, 2024)
+    assert t == {2015: {"1100023": D(50)}, 2024: {"1100023": D(50)}}
+    t = l.por_municipio_na_janela("area-colhida", 5457, "soja-em-grao", 2024, 2024)
+    assert t == {2024: {"1100015": D(110), "1100023": D(1000)}}
+    assert l.por_municipio_na_janela("area-colhida", 5457, "soja-em-grao", 2000, 2010) == {}

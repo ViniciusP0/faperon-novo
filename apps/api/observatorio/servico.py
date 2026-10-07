@@ -193,6 +193,17 @@ def panorama(ano: int | None, janela: int) -> dict[str, Any]:
 AREA_MINIMA_RANKING = Decimal(1000)
 
 
+def _perda_comum(plantada: dict[str, Decimal], colhida: dict[str, Decimal]) -> Decimal | None:
+    """Perda só sobre municípios que têm área plantada E colhida (evita totais descasados)."""
+    comuns = plantada.keys() & colhida.keys()
+    if not comuns:
+        return None
+    return c.perda_lavoura(
+        sum((plantada[m] for m in comuns), Decimal(0)),
+        sum((colhida[m] for m in comuns), Decimal(0)),
+    )
+
+
 def _estadual(indicador: str, slug: str, inicio: int, fim: int) -> dict[int, Decimal]:
     return leitura.totais_por_produto(indicador, 5457, inicio, fim).get(slug, {})
 
@@ -224,18 +235,19 @@ def crescimento(cultura: str | None, inicio: int | None, fim: int | None) -> dic
 
     indices = leitura.indices_ipca()
     ano_ref, avisos = referencia_monetaria(fim, indices)
-    if ano_ref is None:  # o R$/ha depende do IPCA; sem ele o bloco inteiro degrada
-        return _vazio("crescimento", filtros, tabelas, None, r.AVISO_SEM_IPCA, avisos)
+    if ano_ref is None:  # só o R$/ha precisa do deflator; o resto do bloco segue normal
+        avisos.append(r.AVISO_SEM_IPCA)
 
     area = _estadual("area-colhida", cultura, inicio, fim)
-    plantada = _estadual("area-plantada", cultura, inicio, fim)
     producao = _estadual("quantidade-produzida", cultura, inicio, fim)
     anos_janela = list(range(inicio, fim + 1))
     rendimento = {a: producao[a] / area[a] for a in anos_janela if a in producao and area.get(a)}
     d = c.decompor_crescimento(
         area.get(inicio), area.get(fim), producao.get(inicio), producao.get(fim)
     )
-    perdas = [(a, c.perda_lavoura(plantada.get(a), area.get(a))) for a in anos_janela]
+    plant_mun = leitura.por_municipio_na_janela("area-plantada", 5457, cultura, inicio, fim)
+    colh_mun = leitura.por_municipio_na_janela("area-colhida", 5457, cultura, inicio, fim)
+    perdas = [(a, _perda_comum(plant_mun.get(a, {}), colh_mun.get(a, {}))) for a in anos_janela]
     perdas_ok = [p for _, p in perdas if p is not None]
 
     valores_fim = leitura.totais_por_produto(VALOR, 5457, fim, fim)
@@ -243,7 +255,7 @@ def crescimento(cultura: str | None, inicio: int | None, fim: int | None) -> dic
     rph: list[dict[str, Any]] = []
     for slug, nome in culturas.items():
         a = areas_fim.get(slug, {}).get(fim)
-        if a is None or a < AREA_MINIMA_RANKING:
+        if ano_ref is None or a is None or a < AREA_MINIMA_RANKING:
             continue
         real = c.deflacionar(valores_fim.get(slug, {}).get(fim), fim, ano_ref, indices)
         vph = c.valor_por_hectare(real, a)

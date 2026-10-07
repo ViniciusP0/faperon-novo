@@ -93,3 +93,19 @@ def atualizado_em(tabelas: Sequence[int]) -> datetime | None:
     return Carga.objects.filter(
         tabela__in=tabelas, status__in=[Carga.Status.SUCESSO, Carga.Status.INALTERADA]
     ).aggregate(m=Max("concluida_em"))["m"]
+
+
+def por_municipio_na_janela(
+    indicador: str, tabela: int, produto: str, inicio: int, fim: int
+) -> dict[int, dict[str, Decimal]]:
+    """{ano: {município: valor}} de um produto em UMA consulta; só valores OK e presentes."""
+    saida: dict[int, dict[str, Decimal]] = {}
+    linhas = (
+        _ok(indicador, tabela)
+        .filter(produto__slug=produto, ano__range=(inicio, fim), valor__isnull=False)
+        .values_list("ano", "municipio_id", "valor")
+    )
+    for ano, mun, valor in linhas:
+        if valor is not None:
+            saida.setdefault(int(ano), {})[mun] = valor
+    return saida
