@@ -13,7 +13,7 @@ import {
   COR_SEM_DADO,
   COR_SEM_DADO_ESCURO,
   CORES_CATEGORIA,
-  optionAreaEmpilhada,
+  optionLinhasEmpilhadas,
   optionBarrasHorizontais,
   optionDecomposicao,
   optionIndices,
@@ -21,7 +21,7 @@ import {
   optionMapa,
   optionTreemap,
 } from "./observatorio-graficos";
-import { formatBilhoesEixo, formatMilReais } from "./format";
+import { formatBilhoesEixo, formatCompacto, formatMilReais } from "./format";
 
 echarts.use([MapChart, TooltipComponent, VisualMapComponent, SVGRenderer]);
 
@@ -159,14 +159,38 @@ describe("options do Observatório", () => {
     expect(o.series.map((s) => s.data[0])).toEqual([30, 70]);
   });
 
+  it("evolução empilhada: só linhas sólidas, sem preenchimento, e a linha de cima rotulada como a soma", () => {
+    const ev = { anos: [2023, 2024], itens: [{ nome: "Soja", valores: [1000, 2000] }, { nome: "Café", valores: [500, null] }, { nome: "Leite", valores: [250, 300] }] };
+    type S = { type: string; stack: string; areaStyle?: unknown; lineStyle: { width: number }; endLabel?: { show: boolean; formatter: () => string } };
+    const o = optionLinhasEmpilhadas(ev, "R$ bilhões", false, { eixo: formatBilhoesEixo, valor: formatMilReais }) as unknown as { series: S[] };
+    expect(o.series).toHaveLength(3);
+    for (const s of o.series) {
+      expect(s.type).toBe("line");
+      expect(s.stack).toBe("total");
+      expect(s.areaStyle).toBeUndefined();
+      expect(s.lineStyle.width).toBeGreaterThanOrEqual(2);
+    }
+    // só a última série (a linha de cima do empilhamento) leva o rótulo, com a soma do último ano: 2000 + 300 (o nulo não entra)
+    expect(o.series.slice(0, 2).map((s) => s.endLabel?.show ?? false)).toEqual([false, false]);
+    expect(o.series[2]!.endLabel?.show).toBe(true);
+    expect(o.series[2]!.endLabel?.formatter()).toBe("Soma: R$ 2,3 mi");
+  });
+
+  it("evolução empilhada sem formatador usa o compacto e não rotula quando o último ano não tem dado", () => {
+    const com = optionLinhasEmpilhadas({ anos: [2024], itens: [{ nome: "A", valores: [1500] }] }, "x") as unknown as { series: { endLabel: { formatter: () => string } }[] };
+    expect(com.series[0]!.endLabel.formatter()).toBe("Soma: " + formatCompacto(1500));
+    const sem = optionLinhasEmpilhadas({ anos: [2024], itens: [{ nome: "A", valores: [null] }] }, "x") as unknown as { series: { endLabel?: { show: boolean } }[] };
+    expect(sem.series[0]!.endLabel?.show ?? false).toBe(false);
+  });
+
   it("área empilhada e índices mapeiam séries e anos, inclusive vazios", () => {
-    const a = optionAreaEmpilhada({ anos: [2020, 2021], itens: [{ nome: "Soja", valores: [1, null] }] }, "x") as {
+    const a = optionLinhasEmpilhadas({ anos: [2020, 2021], itens: [{ nome: "Soja", valores: [1, null] }] }, "x") as {
       xAxis: { data: string[] };
       series: { name: string; stack: string; data: (number | null)[] }[];
     };
     expect(a.xAxis.data).toEqual(["2020", "2021"]);
     expect(a.series[0]).toMatchObject({ name: "Soja", stack: "total", data: [1, null] });
-    expect((optionAreaEmpilhada({ anos: [], itens: [] }, "") as { series: unknown[] }).series).toEqual([]);
+    expect((optionLinhasEmpilhadas({ anos: [], itens: [] }, "") as { series: unknown[] }).series).toEqual([]);
     const i = optionIndices({ anos: [2020], area: [100], rendimento: [100], producao: [100] }) as { series: { name: string }[] };
     expect(i.series.map((s) => s.name)).toEqual(["Produção", "Área colhida", "Rendimento"]);
   });
@@ -189,7 +213,7 @@ describe("options do Observatório", () => {
 
   it("tema escuro: área empilhada tem uma cor distinta por série", () => {
     const ev = { anos: [2020], itens: [1, 2, 3].map((n) => ({ nome: `S${n}`, valores: [n] })) };
-    const o = optionAreaEmpilhada(ev, "x", true) as { color: string[]; series: unknown[] };
+    const o = optionLinhasEmpilhadas(ev, "x", true) as { color: string[]; series: unknown[] };
     expect(new Set(o.color.slice(0, 3)).size).toBe(3);
     expect(o.color.slice(0, 5)).toEqual(PALETA_ESCURA);
   });
@@ -239,7 +263,7 @@ describe("formatação pt-BR e rótulos legíveis (F4, F5, F13)", () => {
 
   it("todos os gráficos de eixo formatam o tooltip em pt-BR, nunca 12,935,713.5", () => {
     const opcoes = [
-      optionAreaEmpilhada({ anos: [2020], itens: [{ nome: "S", valores: [1] }] }, "x"),
+      optionLinhasEmpilhadas({ anos: [2020], itens: [{ nome: "S", valores: [1] }] }, "x"),
       optionIndices({ anos: [2020], area: [1], rendimento: [1], producao: [1] }),
       optionDecomposicao(30, 70),
       optionBarrasHorizontais([{ nome: "A", valor: 1 }], "u"),
@@ -263,7 +287,7 @@ describe("formatação pt-BR e rótulos legíveis (F4, F5, F13)", () => {
   });
 
   it("área empilhada em mil R$ usa bilhões no eixo e R$ por extenso no tooltip", () => {
-    const o = optionAreaEmpilhada({ anos: [2020], itens: [{ nome: "S", valores: [1] }] }, "R$ bilhões", false, {
+    const o = optionLinhasEmpilhadas({ anos: [2020], itens: [{ nome: "S", valores: [1] }] }, "R$ bilhões", false, {
       eixo: formatBilhoesEixo,
       valor: formatMilReais,
     }) as unknown as { yAxis: { name: string; axisLabel: { formatter: (v: number) => string } } } & Tip;

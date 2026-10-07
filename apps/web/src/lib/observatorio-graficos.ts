@@ -62,15 +62,28 @@ export function optionTreemap(itens: ItemValor[], unidade: string, escuro = fals
   };
 }
 
-export function optionAreaEmpilhada(evolucao: { anos: number[]; itens: { nome: string; valores: (number | null)[] }[] }, unidade: string, escuro = false, formato?: FormatoValor): EChartsCoreOption {
+/**
+ * Evolução ano a ano em linhas sólidas, sem preenchimento. As linhas são empilhadas: cada uma soma o seu item aos de baixo,
+ * então a de cima (extremidade direita) é a soma de todos os itens, e é ela que leva o rótulo "Soma: …".
+ */
+export function optionLinhasEmpilhadas(evolucao: { anos: number[]; itens: { nome: string; valores: (number | null)[] }[] }, unidade: string, escuro = false, formato?: FormatoValor): EChartsCoreOption {
   const t = tema(escuro);
+  const ultimo = evolucao.anos.length - 1;
+  const valoresDoUltimo = evolucao.itens.map((i) => i.valores[ultimo]).filter((v): v is number => typeof v === "number");
+  const somaFinal = valoresDoUltimo.length > 0 ? valoresDoUltimo.reduce((a, b) => a + b, 0) : null;
+  const ponta = evolucao.itens.length - 1;
   return {
     color: t.cores, textStyle: t.texto_,
     tooltip: { ...t.tooltip, trigger: "axis", ...(formato ? { valueFormatter: (v: unknown) => (typeof v === "number" ? formato.valor(v) : "–") } : {}) }, legend: { type: "scroll", top: 0, ...t.legenda },
     grid: { left: 8, right: 16, top: 48, bottom: 8, containLabel: true },
     xAxis: { type: "category", data: evolucao.anos.map(String), boundaryGap: false, ...t.eixoX },
     yAxis: { type: "value", name: unidade, ...t.eixoY, axisLabel: { ...t.eixoY.axisLabel, formatter: (v: number) => (formato ? formato.eixo(v) : formatCompacto(v)) } },
-    series: evolucao.itens.map((i) => ({ type: "line", name: i.nome, stack: "total", areaStyle: {}, symbol: "none", data: i.valores })),
+    series: evolucao.itens.map((i, idx) => ({
+      type: "line", name: i.nome, stack: "total", symbol: "none", data: i.valores, lineStyle: { width: 2 },
+      ...(idx === ponta && somaFinal !== null
+        ? { endLabel: { show: true, position: "top", align: "right", distance: 6, color: t.texto, fontWeight: 600, formatter: () => `Soma: ${formato ? formato.valor(somaFinal) : formatCompacto(somaFinal)}` } }
+        : {}),
+    })),
   };
 }
 

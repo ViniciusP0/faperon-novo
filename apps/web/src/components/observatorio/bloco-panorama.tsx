@@ -9,9 +9,17 @@ import { GrupoTabela, TabelaDados } from "./tabela-dados";
 import { opcoesAnos, useFiltrosBloco } from "./use-filtros-bloco";
 import type { PanoramaResposta } from "@/lib/api-types";
 import { formatBilhoesEixo, formatMilReais, formatNumero } from "@/lib/format";
-import { optionAreaEmpilhada, optionTreemap } from "@/lib/observatorio-graficos";
+import { optionLinhasEmpilhadas, optionTreemap } from "@/lib/observatorio-graficos";
 
 const FORMATO_MIL_REAIS = { eixo: formatBilhoesEixo, valor: formatMilReais };
+const LEGENDA_SOMA =
+  "As linhas estão empilhadas: cada uma soma o valor do seu item ao dos itens abaixo dela. A linha mais alta, na ponta direita do gráfico, é a soma de todos os itens apresentados (incluindo os demais produtos), ou seja, o valor total da produção em cada ano.";
+
+/** Soma dos itens de um ano; null quando nenhum item tem dado (nunca zero). */
+function somaDoAno(itens: { valores: (number | null)[] }[], idx: number): number | null {
+  const valores = itens.map((i) => i.valores[idx]).filter((v): v is number => typeof v === "number");
+  return valores.length > 0 ? valores.reduce((a, b) => a + b, 0) : null;
+}
 
 function Kpis({ d }: { d: PanoramaResposta }) {
   const kpis: [string, string][] = [
@@ -48,8 +56,9 @@ function Tabelas({ d }: { d: PanoramaResposta }) {
         <GrupoTabela titulo="Evolução do valor da produção, ano a ano">
           <TabelaDados legenda="Evolução do valor da produção, ano a ano" colunas={[
             { chave: "ano", rotulo: "Ano" }, ...itens.map((i) => ({ chave: i.slug, rotulo: i.nome, numerico: true })),
+            { chave: "__soma", rotulo: "Soma", numerico: true },
           ]} linhas={evolucao.anos.map((ano, idx) => ({
-            ano: String(ano), ...Object.fromEntries(itens.map((i) => [i.slug, i.valores[idx] ?? null])),
+            ano: String(ano), ...Object.fromEntries(itens.map((i) => [i.slug, i.valores[idx] ?? null])), __soma: somaDoAno(itens, idx),
           }))} />
         </GrupoTabela>
       )}
@@ -61,14 +70,17 @@ function Conteudo({ d }: { d: PanoramaResposta }) {
   const composicao = d.series.composicao;
   const evolucao = d.series.evolucao;
   const treemap = useCallback((e: boolean) => optionTreemap(composicao ?? [], "Mil Reais", e, formatMilReais), [composicao]);
-  const area = useCallback((e: boolean) => optionAreaEmpilhada(evolucao ?? { anos: [], itens: [] }, "R$ bilhões", e, FORMATO_MIL_REAIS), [evolucao]);
+  const area = useCallback((e: boolean) => optionLinhasEmpilhadas(evolucao ?? { anos: [], itens: [] }, "R$ bilhões", e, FORMATO_MIL_REAIS), [evolucao]);
   return (
     <div className="space-y-8">
       {(composicao?.length ?? 0) > 0 && (
         <GraficoObservatorio option={treemap} descricao={`Composição do valor da produção: ${d.texto.manchete}`} altura={340} />
       )}
       {(evolucao?.anos?.length ?? 0) > 0 && (
-        <GraficoObservatorio option={area} descricao="Evolução da composição do valor da produção, ano a ano" />
+        <figure className="space-y-2">
+          <GraficoObservatorio option={area} descricao="Evolução do valor da produção, ano a ano, em linhas empilhadas; a linha mais alta é a soma de todos os itens" />
+          <figcaption className="text-sm leading-relaxed text-ink-muted">{LEGENDA_SOMA}</figcaption>
+        </figure>
       )}
     </div>
   );

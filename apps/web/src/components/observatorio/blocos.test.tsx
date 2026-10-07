@@ -495,6 +495,21 @@ describe("valor exibido nos seletores vem da URL", () => {
   });
 });
 
+describe("Panorama: evolução em linhas empilhadas explica que a linha de cima é a soma", () => {
+  it("mostra, junto do gráfico, que a linha mais alta (à direita) é a soma de todos os itens", async () => {
+    vi.stubGlobal("fetch", roteador());
+    render(<BlocoPanorama />, { wrapper });
+    await screen.findByTestId("manchete");
+    expect(screen.getByText(/As linhas estão empilhadas/)).toHaveTextContent(
+      "As linhas estão empilhadas: cada uma soma o valor do seu item ao dos itens abaixo dela. A linha mais alta, na ponta direita do gráfico, é a soma de todos os itens apresentados (incluindo os demais produtos), ou seja, o valor total da produção em cada ano.",
+    );
+    // o gráfico é simulado neste arquivo: o que o componente entrega é o rótulo acessível
+    expect(screen.getByLabelText(/linhas empilhadas.*soma de todos os itens/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Ver como tabela" }));
+    expect(screen.queryByText(/As linhas estão empilhadas/)).not.toBeInTheDocument();
+  });
+});
+
 describe("visão em tabela: uma tabela por gráfico e KPIs sempre visíveis (F6)", () => {
   const tabela = (nome: string | RegExp) => screen.getByRole("table", { name: nome });
   const alternar = () => userEvent.click(screen.getByRole("button", { name: "Ver como tabela" }));
@@ -514,6 +529,9 @@ describe("visão em tabela: uma tabela por gráfico e KPIs sempre visíveis (F6)
     expect(within(evolucao).getAllByRole("row")).toHaveLength(3);
     expect(within(evolucao).getByRole("columnheader", { name: "Soja (em grão)" })).toBeInTheDocument();
     expect(within(evolucao).getByText("2024").closest("tr")).toHaveTextContent("2");
+    // a coluna Soma repete, na tabela, o que a linha de cima do gráfico mostra: o total de todos os itens em cada ano
+    expect(within(evolucao).getByRole("columnheader", { name: "Soma" })).toBeInTheDocument();
+    expect(within(evolucao).getByText("2024").closest("tr")!.lastElementChild).toHaveTextContent("2");
     expect(screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual(expect.arrayContaining(["Composição do valor da produção", "Evolução do valor da produção, ano a ano"]));
   });
 
