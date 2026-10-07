@@ -12,6 +12,11 @@ from tests.conftest import lancar
 
 pytestmark = pytest.mark.django_db
 
+AVISO_BASE_1_1 = (
+    "A variação do rebanho foi calculada sobre o 1 município com dado nos dois anos; "
+    "1 município ficou de fora."
+)
+
 
 def test_referencia_monetaria() -> None:
     indices = {2024: D(1), 2025: D(2)}
@@ -393,7 +398,7 @@ def test_pecuaria_padrao(api: APIClient, dados_observatorio: dict) -> None:
     assert status == 200
     assert corpo["filtros"]["valores"] == {"rebanho": "bovino", "inicio": 2015, "fim": 2024}
     m = corpo["metricas"]
-    assert m["efetivo_final"] == 2000.0 and m["variacao_pct"] == 100.0
+    assert m["efetivo_final"] == 2000.0 and m["variacao_pct"] == 50.0
     # leite 2015: 1000 mil L / 1000 vacas = 1000 L; 2024: 2000/800 = 2500 L → +150%
     assert m["leite"]["produtividade_l_vaca"] == 2500.0
     assert m["leite"]["variacao_produtividade_pct"] == 150.0
@@ -402,7 +407,7 @@ def test_pecuaria_padrao(api: APIClient, dados_observatorio: dict) -> None:
     assert m["top5_pct"] == 100.0
     assert corpo["series"]["leite_polos"][0]["codigo_ibge"] == "1100015"
     assert corpo["series"]["leite_polos"][0]["produtividade"] == 2500.0
-    assert corpo["texto"]["manchete"].startswith("O rebanho bovino cresceu 100,0%")
+    assert corpo["texto"]["manchete"].startswith("O rebanho bovino cresceu 50,0%")
     assert corpo["qualidade"]["municipios_sigilosos"] == 0
     efetivo = corpo["series"]["efetivo"]
     assert len(efetivo) == 10 and efetivo[0] == {"ano": 2015, "valor": 1000.0}
@@ -468,7 +473,7 @@ def test_pecuaria_sem_ipca_so_degrada_valor_real(
     assert m["leite"]["valor_real"] is None
     assert m["leite"]["produtividade_l_vaca"] == 2500.0 and m["efetivo_final"] == 2000.0
     assert corpo["series"]["leite_polos"][0]["codigo_ibge"] == "1100015"
-    assert corpo["qualidade"]["avisos"] == [r.AVISO_SEM_IPCA]
+    assert corpo["qualidade"]["avisos"] == [r.AVISO_SEM_IPCA, AVISO_BASE_1_1]
     assert corpo["qualidade"]["ano_ref_monetario"] is None
 
 
@@ -507,15 +512,77 @@ def test_pecuaria_sigilo_fica_fora_e_e_avisado(
     api: APIClient, dados_observatorio: dict, carga: Carga
 ) -> None:
     lancar(dados_observatorio["bovino"], "efetivo", "1100031", 2024, None, carga, "sigiloso")
-    lancar(dados_observatorio["leite"], "producao-de-origem-animal", "1100031", 2024, None, carga, "sigiloso")
+    lancar(
+        dados_observatorio["leite"],
+        "producao-de-origem-animal",
+        "1100031",
+        2024,
+        None,
+        carga,
+        "sigiloso",
+    )
     _, corpo = get(api, "pecuaria")
     assert corpo["metricas"]["efetivo_final"] == 2000.0
     assert corpo["qualidade"]["municipios_sigilosos"] == 1
     assert "1100031" not in [m["codigo_ibge"] for m in corpo["series"]["municipios"]]
     assert "1100031" not in [p["codigo_ibge"] for p in corpo["series"]["leite_polos"]]
     assert corpo["qualidade"]["avisos"] == [
+        AVISO_BASE_1_1,
         "1 município com dado sigiloso no rebanho fica fora dos totais e do ranking; "
         "o principal polo pode ser outro.",
         "1 município com dado sigiloso no leite fica fora dos totais e do ranking; "
         "o principal polo pode ser outro.",
     ]
+
+
+def test_pecuaria_padrao_avisa_base_comum(api: APIClient, dados_observatorio: dict) -> None:
+    _, corpo = get(api, "pecuaria")
+    assert corpo["qualidade"]["avisos"] == [AVISO_BASE_1_1]
+
+
+def test_aviso_variacao_base_comum_singular_e_plural() -> None:
+    assert r.aviso_variacao_base_comum(1, 1) == AVISO_BASE_1_1
+    assert r.aviso_variacao_base_comum(3, 2) == (
+        "A variação do rebanho foi calculada sobre os 3 municípios com dado nos dois anos; "
+        "2 municípios ficaram de fora."
+    )
+
+
+def test_pecuaria_variacao_exclui_sigiloso_em_apenas_um_ano(
+    api: APIClient, dados_observatorio: dict, carga: Carga
+) -> None:
+    b = dados_observatorio["bovino"]
+    # Cabixi: OK em 2015, sigiloso em 2024. Cacoal: sigiloso em 2015, OK em 2024.
+    lancar(b, "efetivo", "1100031", 2015, 9000, carga)
+    lancar(b, "efetivo", "1100031", 2024, None, carga, "sigiloso")
+    lancar(b, "efetivo", "1100049", 2015, None, carga, "sigiloso")
+    lancar(b, "efetivo", "1100049", 2024, 7000, carga)
+    _, corpo = get(api, "pecuaria")
+    # comum = Alta Floresta (1000 -> 1500); Cabixi, Cacoal e Ariquemes ficam de fora
+    assert corpo["metricas"]["variacao_pct"] == 50.0
+    assert corpo["metricas"]["efetivo_final"] == 9000.0  # 1500 + 500 + 7000
+    assert corpo["series"]["efetivo"][0]["valor"] == 10000.0  # 1000 + 9000
+    assert (
+        "A variação do rebanho foi calculada sobre o 1 município com dado nos dois anos; "
+        "3 municípios ficaram de fora."
+    ) in corpo["qualidade"]["avisos"]
+
+
+def test_pecuaria_variacao_sem_aviso_quando_todos_nos_dois_anos(
+    api: APIClient, dados_observatorio: dict, carga: Carga
+) -> None:
+    lancar(dados_observatorio["bovino"], "efetivo", "1100023", 2015, 500, carga)
+    _, corpo = get(api, "pecuaria")
+    assert corpo["metricas"]["variacao_pct"] == 33.3  # 1500 -> 2000, igual ao total
+    assert corpo["qualidade"]["avisos"] == []
+
+
+def test_pecuaria_variacao_none_sem_municipio_comum(
+    api: APIClient, dados_observatorio: dict
+) -> None:
+    Medicao.objects.filter(
+        produto=dados_observatorio["bovino"], ano=2015, municipio_id="1100015"
+    ).update(municipio_id="1100031")
+    _, corpo = get(api, "pecuaria")
+    assert corpo["metricas"]["variacao_pct"] is None
+    assert corpo["metricas"]["efetivo_final"] == 2000.0

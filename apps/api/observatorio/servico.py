@@ -492,8 +492,16 @@ def pecuaria(rebanho: str | None, inicio: int | None, fim: int | None) -> dict[s
 
     efetivo = _estadual_tabela("efetivo", 3939, rebanho, inicio, fim)
     anos_janela = list(range(inicio, fim + 1))
-    ini, fin = efetivo.get(inicio), efetivo.get(fim)
-    variacao = (fin - ini) / ini * 100 if ini and fin is not None else None
+    fin = efetivo.get(fim)
+    # A variação só compara municípios com valor OK nos dois anos; quem some de um lado
+    # (sigilo ou ausência) não pode inventar crescimento nem queda.
+    mun_janela = leitura.por_municipio_na_janela("efetivo", 3939, rebanho, inicio, fim)
+    em_inicio, em_fim = mun_janela.get(inicio, {}), mun_janela.get(fim, {})
+    comuns = em_inicio.keys() & em_fim.keys()
+    soma_ini = sum((em_inicio[m] for m in comuns), Decimal(0))
+    soma_fim = sum((em_fim[m] for m in comuns), Decimal(0))
+    variacao = (soma_fim - soma_ini) / soma_ini * 100 if comuns and soma_ini > 0 else None
+    fora_da_base = len(em_inicio.keys() | em_fim.keys()) - len(comuns)
     por_mun = leitura.por_municipio("efetivo", 3939, fim, rebanho)
     nomes_mun = {cod: nome for cod, nome, _ in leitura.municipios()}
     ordenados = sorted(por_mun.items(), key=lambda kv: (-kv[1], kv[0]))
@@ -552,6 +560,8 @@ def pecuaria(rebanho: str | None, inicio: int | None, fim: int | None) -> dict[s
         for cod, v in sorted(vol_mun.items(), key=lambda kv: (-kv[1], kv[0]))[:POLOS_LEITE]
     ]
 
+    if comuns and fora_da_base:
+        avisos.append(r.aviso_variacao_base_comum(len(comuns), fora_da_base))
     sig_rebanho = leitura.sigilosos("efetivo", 3939, fim, rebanho)
     sig_leite = len(
         set(leitura.codigos_sigilosos("producao-de-origem-animal", 74, fim, "leite"))

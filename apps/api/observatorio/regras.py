@@ -186,3 +186,12 @@ def aviso_sigilo_pecuaria(n: int, tema: str) -> str:
         f"{sujeito} no {tema} {verbo} fora dos totais e do ranking; "
         "o principal polo pode ser outro."
     )
+
+
+def aviso_variacao_base_comum(n_comum: int, n_fora: int) -> str:
+    comuns = "o 1 município" if n_comum == 1 else f"os {n_comum} municípios"
+    fora = "1 município ficou" if n_fora == 1 else f"{n_fora} municípios ficaram"
+    return (
+        f"A variação do rebanho foi calculada sobre {comuns} com dado nos dois anos; "
+        f"{fora} de fora."
+    )
