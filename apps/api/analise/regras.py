@@ -123,17 +123,22 @@ def gerar_titulo(ctx: Contexto) -> str:
 
 def gerar_paragrafos(ctx: Contexto, m: Metricas) -> list[str]:
     indicador = ctx.indicador[:1].lower() + ctx.indicador[1:]
+    # PPM 94: produto e indicador têm o mesmo nome ("Vacas ordenhadas"); sem isto sairia "vacas ordenhadas de Vacas ordenhadas".
+    if ctx.indicador.casefold() == ctx.produto.casefold():
+        assunto = f"efetivo de {ctx.produto.lower()}"
+    else:
+        assunto = f"{indicador} de {ctx.produto}"
     u = ctx.unidade
     paragrafos: list[str] = []
 
     if m.valor_inicial is None or m.valor_final is None:
         paragrafos.append(
-            f"Não há dados publicados de {indicador} de {ctx.produto} em {ctx.escopo} "
+            f"Não há dados publicados de {assunto} em {ctx.escopo} "
             f"entre {ctx.inicio} e {ctx.fim}."
         )
     elif m.ano_inicial == m.ano_final:
         paragrafos.append(
-            f"Em {ctx.escopo}, o único ano com dados de {indicador} de {ctx.produto} no período "
+            f"Em {ctx.escopo}, o único ano com dados de {assunto} no período "
             f"é {m.ano_final}: {formatar_numero(m.valor_final)} {u}."
         )
     else:
@@ -157,7 +162,7 @@ def gerar_paragrafos(ctx: Contexto, m: Metricas) -> list[str]:
             if direcao == "estabilidade":
                 resumo = f"estabilidade ({formatar_numero(pct, 1)}%)"
         paragrafos.append(
-            f"Em {ctx.escopo}, {indicador} de {ctx.produto} passou de {ini} para {fim}, {resumo}."
+            f"Em {ctx.escopo}, {assunto} passou de {ini} para {fim}, {resumo}."
         )
         if m.cagr_percentual is not None:
             paragrafos.append(
@@ -177,16 +182,21 @@ def gerar_paragrafos(ctx: Contexto, m: Metricas) -> list[str]:
             if t.percentual is not None:
                 parte += f", {formatar_numero(t.percentual, 1)}% do total"
             itens.append(parte + ")")
-        quantidade = (
-            "cinco maiores municípios"
-            if len(m.top5) == 5
-            else f"{len(m.top5)} municípios com dados"
-        )
-        paragrafos.append(f"Em {ctx.fim}, os {quantidade} foram: {'; '.join(itens)}.")
+        n = len(m.top5)
+        if n == 5:
+            quantidade = "os cinco maiores municípios foram"
+        elif n == 1:
+            quantidade = "o único município com dados foi"
+        else:
+            quantidade = f"os {n} municípios com dados foram"
+        paragrafos.append(f"Em {ctx.fim}, {quantidade}: {'; '.join(itens)}.")
         if m.concentracao_top5_percentual is not None:
             conc = m.concentracao_top5_percentual
+            sujeito = {1: "O único município com dados responde", 5: "Juntos, os cinco maiores respondem"}.get(
+                n, f"Juntos, os {n} maiores respondem"
+            )
             paragrafos.append(
-                f"Juntos, os cinco maiores respondem por {formatar_numero(conc, 1)}% do total estadual, "
+                f"{sujeito} por {formatar_numero(conc, 1)}% do total estadual, "
                 f"o que indica concentração {classificar_concentracao(conc)} da produção."
             )
     return paragrafos

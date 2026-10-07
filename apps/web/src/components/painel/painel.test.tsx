@@ -83,6 +83,19 @@ describe("ErroConsulta", () => {
 describe("NotaMetodologica", () => {
   it("funciona sem meta (nenhum produto escolhido)", () => {
     render(<NotaMetodologica meta={null} />);
-    expect(screen.getByText(/tabelas 3939 e 74/)).toBeInTheDocument();
+    expect(screen.getByText(/tabelas 3939, 74 e 94/)).toBeInTheDocument();
+  });
+
+  it("cita a tabela 94 quando o produto vem dela (vacas ordenhadas)", () => {
+    const meta94 = {
+      fonte: "IBGE – Pesquisa da Pecuária Municipal (PPM)",
+      tabela_sidra: 94,
+      url_fonte: "https://sidra.ibge.gov.br/tabela/94",
+      atualizado_em: "2026-09-24T14:00:00Z",
+    };
+    render(<NotaMetodologica meta={meta94} />);
+    const link = screen.getByRole("link", { name: /94/ });
+    expect(link).toHaveAttribute("href", "https://sidra.ibge.gov.br/tabela/94");
+    expect(screen.getByText(/Pesquisa da Pecuária Municipal \(PPM\)/)).toBeInTheDocument();
   });
 });

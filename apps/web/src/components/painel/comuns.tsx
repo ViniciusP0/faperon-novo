@@ -22,7 +22,7 @@ export function NotaMetodologica({ meta }: { meta: Meta | null | undefined }) {
         </p>
       ) : (
         <p className="mt-1">
-          Fonte: IBGE – Pesquisa Agrícola Municipal (SIDRA, tabela 5457) e Pesquisa da Pecuária Municipal (SIDRA, tabelas 3939 e 74).
+          Fonte: IBGE – Pesquisa Agrícola Municipal (SIDRA, tabela 5457) e Pesquisa da Pecuária Municipal (SIDRA, tabelas 3939, 74 e 94).
           Selecione um produto para ver a data da última atualização.
         </p>
       )}

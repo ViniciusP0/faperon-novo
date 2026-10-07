@@ -428,3 +428,50 @@ def test_pdf_sem_sigilosos_nao_mostra_a_nota(dados_soja: Produto) -> None:
 def test_frase_de_sigilosos_no_singular_e_no_plural() -> None:
     assert pdf.frase_sigilosos(1) == "1 município com dado sigiloso fica fora dos totais."
     assert pdf.frase_sigilosos(3) == "3 municípios com dado sigiloso ficam fora dos totais."
+
+
+def _texto_com_top(*valores: int | None) -> list[str]:
+    pontos = [(2015, D(1000)), (2019, D(1500)), (2024, D(2000))]
+    m = regras.calcular_metricas(pontos, ranking(*valores), D(100), "soma")
+    return regras.gerar_paragrafos(CTX, m)
+
+
+def test_concentracao_com_cinco_municipios_diz_os_cinco_maiores() -> None:
+    texto = _texto_com_top(60, 20, 10, 5, 3)
+    assert "Em 2024, os cinco maiores municípios foram:" in texto[3]
+    assert texto[4].startswith("Juntos, os cinco maiores respondem por 98,0% do total estadual")
+
+
+def test_concentracao_com_tres_municipios_usa_a_contagem_real() -> None:
+    texto = _texto_com_top(60, 20, 10)
+    assert "Em 2024, os 3 municípios com dados foram:" in texto[3]
+    assert texto[4].startswith("Juntos, os 3 maiores respondem por 90,0% do total estadual")
+    assert "cinco" not in texto[3] + texto[4]
+
+
+def test_concentracao_com_um_municipio_fala_no_singular() -> None:
+    texto = _texto_com_top(60)
+    assert "Em 2024, o único município com dados foi: M1 (60 Toneladas, 6,0% do total)." == texto[3]
+    assert texto[4].startswith("O único município com dados responde por 60,0% do total estadual")
+    assert "cinco" not in texto[3] + texto[4]
+
+
+def test_produto_igual_ao_indicador_nao_repete_o_nome_na_frase() -> None:
+    """PPM 94: o produto e o indicador se chamam "Vacas ordenhadas"."""
+    ctx = regras.Contexto(
+        "Vacas ordenhadas", "Vacas ordenhadas", "Cabeças", "Rondônia", 2015, 2024
+    )
+    pontos = [(2015, D(1000)), (2024, D(2000))]
+    texto = regras.gerar_paragrafos(ctx, regras.calcular_metricas(pontos, [], None, "soma"))
+    assert texto[0] == (
+        "Em Rondônia, efetivo de vacas ordenhadas passou de 1.000 Cabeças em 2015 "
+        "para 2.000 Cabeças em 2024, um crescimento de 100,0% (+1.000 Cabeças)."
+    )
+    sem_dados = regras.gerar_paragrafos(ctx, regras.calcular_metricas([], [], None, "soma"))
+    assert sem_dados[0] == (
+        "Não há dados publicados de efetivo de vacas ordenhadas em Rondônia entre 2015 e 2024."
+    )
+    unico = regras.gerar_paragrafos(ctx, regras.calcular_metricas([(2024, D(9))], [], None, "soma"))
+    assert unico == [
+        "Em Rondônia, o único ano com dados de efetivo de vacas ordenhadas no período é 2024: 9 Cabeças."
+    ]
