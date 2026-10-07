@@ -17,7 +17,7 @@ A demo dependia do notebook de um desenvolvedor (ADR 0010, decisão 15 do plano)
 
 No evento `push` em `main`, o listener valida `X-Hub-Signature-256` contra `GITHUB_WEBHOOK_SECRET` e roda `infra/deploy.sh` em background (`subprocess.Popen`, resposta `202` imediata). O script usa `flock -w 1800`: um push que chega durante um deploy espera ele terminar e então publica o próprio commit (atualizado em 06/10/2026; antes era `flock -n`, que descartava esse push), só reconstrói se houver commit novo em `origin/main`, e registra cada execução em `infra/deploy.log`.
 
-Corpo da requisição limitado a 5 MB antes da leitura, para não deixar uma requisição com `Content-Length` arbitrário esgotar memória do listener exposto publicamente.
+Limites contra abuso, já que a porta é pública: corpo da requisição de no máximo 1 MB, checado antes da leitura (um push do GitHub tem poucos KB; antes o teto era 5 MB); timeout de socket de 10 s por conexão, que corta cliente lento; e no máximo 8 conexões simultâneas, com 503 para o excedente. Sem isso, algumas conexões abertas e paradas esgotavam threads e memória do `dt-server`, que também roda a demo, e o deploy automático parava. Os testes estão em `infra/test_webhook_listener.py` (`python -m unittest discover -s infra`).
 
 Instalação e operação documentadas em `infra/demo-checklist.md`.
 
