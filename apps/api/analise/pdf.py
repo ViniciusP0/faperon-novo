@@ -89,6 +89,13 @@ def limpar_ao_concluir_carga(*args: object, carga: Carga, **kwargs: object) -> N
     limpar_relatorios(str(carga.pk))
 
 
+def frase_sigilosos(n: int) -> str:
+    """Mesma frase do Painel e do Observatório: o total soma só os municípios com dado publicado."""
+    if n == 1:
+        return "1 município com dado sigiloso fica fora dos totais."
+    return f"{n} municípios com dado sigiloso ficam fora dos totais."
+
+
 def _numero(valor: Any) -> str:
     return "X" if valor is None else formatar_numero(valor)
 
@@ -130,6 +137,8 @@ def _contexto(r: ResultadoAnalise, codigos_comparacao: list[str]) -> dict[str, A
                 ),
             }
         )
+    media_ponderada = r.recorte.indicador.agregacao == "media_ponderada"
+    sigilosos = sum(1 for item in r.ranking if item.status == StatusValor.SIGILOSO)
     atualizado: datetime | None = meta["atualizado_em"]
     return {
         "titulo": r.titulo,
@@ -147,6 +156,9 @@ def _contexto(r: ResultadoAnalise, codigos_comparacao: list[str]) -> dict[str, A
         "paragrafos": r.paragrafos,
         "ranking": linhas,
         "total_estadual": None if r.total_estadual is None else formatar_numero(r.total_estadual),
+        "rotulo_total": "Média de Rondônia" if media_ponderada else "Total de Rondônia",
+        "mostra_percentual_total": not media_ponderada,
+        "nota_sigilosos": frase_sigilosos(sigilosos) if sigilosos else None,
         "fonte": meta["fonte"],
         "tabela_sidra": meta["tabela_sidra"],
         "url_fonte": meta["url_fonte"],

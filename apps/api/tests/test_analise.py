@@ -384,3 +384,47 @@ def test_pdf_com_renderizacao_ocupada_responde_503_no_formato_da_api(
     assert set(resposta.json()) == {"erro", "campos"}
     assert resposta["Retry-After"] == "30"
     assert Relatorio.objects.count() == 0
+
+
+def _html_do_relatorio(indicador: str) -> str:
+    from django.template.loader import render_to_string
+
+    from analise.servico import analisar
+
+    r = analisar("soja-em-grao", indicador, 2022, 2024, None)
+    return render_to_string("analise/relatorio.html", pdf._contexto(r, []))
+
+
+@pytest.mark.django_db
+def test_pdf_de_soma_mostra_total_de_rondonia_com_100_por_cento(dados_soja: Produto) -> None:
+    html = _html_do_relatorio("quantidade-produzida")
+    assert "<strong>Total de Rondônia</strong>" in html
+    assert "Média de Rondônia" not in html
+    assert '<td class="num">100,0%</td>' in html
+
+
+@pytest.mark.django_db
+def test_pdf_de_media_ponderada_mostra_media_sem_percentual_do_total(dados_soja: Produto) -> None:
+    html = _html_do_relatorio("rendimento-medio")
+    assert "<strong>Média de Rondônia</strong>" in html
+    assert "<strong>3.500</strong>" in html  # (2000 x 50 + 4000 x 150) / 200
+    assert "Total de Rondônia" not in html
+    assert "100,0%" not in html
+
+
+@pytest.mark.django_db
+def test_pdf_avisa_municipios_sigilosos_fora_do_total(dados_soja: Produto) -> None:
+    # Cabixi é sigiloso em 2024 na quantidade produzida
+    html = _html_do_relatorio("quantidade-produzida")
+    assert "1 município com dado sigiloso fica fora dos totais." in html
+
+
+@pytest.mark.django_db
+def test_pdf_sem_sigilosos_nao_mostra_a_nota(dados_soja: Produto) -> None:
+    html = _html_do_relatorio("area-colhida")
+    assert "dado sigiloso" not in html
+
+
+def test_frase_de_sigilosos_no_singular_e_no_plural() -> None:
+    assert pdf.frase_sigilosos(1) == "1 município com dado sigiloso fica fora dos totais."
+    assert pdf.frase_sigilosos(3) == "3 municípios com dado sigiloso ficam fora dos totais."
