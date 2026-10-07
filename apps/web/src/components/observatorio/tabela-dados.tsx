@@ -8,7 +8,7 @@ export interface ColunaTabela {
 
 export function TabelaDados({ legenda, colunas, linhas }: { legenda: string; colunas: ColunaTabela[]; linhas: Record<string, string | number | null>[] }) {
   return (
-    <div className="max-h-[420px] overflow-auto rounded-md border border-line">
+    <div role="region" tabIndex={0} aria-label={`Tabela: ${legenda}`} className="max-h-[420px] overflow-auto rounded-md border border-line focus-visible:outline-brand">
       <table className="w-full text-sm" aria-label={legenda}>
         <caption className="sr-only">{legenda}</caption>
         <thead className="sticky top-0 bg-surface-alt">

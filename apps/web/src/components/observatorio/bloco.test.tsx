@@ -47,6 +47,8 @@ describe("Bloco do Observatório", () => {
     const fonte = screen.getByRole("link", { name: /IBGE – PAM/ });
     expect(fonte).toHaveAttribute("href", "https://sidra.ibge.gov.br/Tabela/5457");
     expect(fonte).toHaveAttribute("target", "_blank");
+    expect(fonte).toHaveTextContent("IBGE – PAM (tabela 5457)");
+    expect(screen.getByText(/Atualizado em/)).toBeInTheDocument();
     expect(fonte.getAttribute("rel")).toContain("noopener");
     expect(screen.getByRole("link", { name: /Ver no Painel/ })).toHaveAttribute("href", "/painel?segmento=agricultura");
     expect(screen.getByTestId("grafico-falso")).toBeInTheDocument();
@@ -89,6 +91,7 @@ describe("Bloco do Observatório", () => {
       </Bloco>,
     );
     expect(screen.getByText("Parâmetros inválidos")).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("Parâmetros inválidos");
     await userEvent.click(screen.getByRole("button", { name: "Voltar ao padrão" }));
     expect(onPadrao).toHaveBeenCalled();
   });
@@ -120,5 +123,14 @@ describe("TabelaDados", () => {
     expect(screen.getByRole("table", { name: "Teste" })).toBeInTheDocument();
     expect(screen.getByText("–")).toBeInTheDocument();
     expect(screen.queryByText("0")).not.toBeInTheDocument();
+  });
+
+  it("o contêiner rolável é uma região focável e nomeada, com uma única tabela", () => {
+    render(<TabelaDados legenda="Teste" colunas={[{ chave: "m", rotulo: "Município" }]} linhas={[{ m: "A" }]} />);
+    const regiao = screen.getByRole("region", { name: "Tabela: Teste" });
+    expect(regiao).toHaveAttribute("tabindex", "0");
+    expect(screen.getAllByRole("region")).toHaveLength(1);
+    expect(screen.getAllByRole("table")).toHaveLength(1);
+    expect(screen.getByRole("table", { name: "Teste" })).toBeInTheDocument();
   });
 });

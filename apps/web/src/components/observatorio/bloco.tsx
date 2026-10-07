@@ -66,20 +66,20 @@ export function Bloco<R extends Resposta>({ id, etiqueta, titulo, consulta, filt
             <div>
               <h3 id={`${id}-como-ler`} className="text-sm font-semibold uppercase tracking-wider text-ink-muted">Como ler</h3>
               <ul aria-labelledby={`${id}-como-ler`} className="mt-2 space-y-2 leading-relaxed text-ink-muted">
-                {d.texto.como_ler.map((t) => <li key={t}>{t}</li>)}
+                {d.texto.como_ler.map((t, i) => <li key={i}>{t}</li>)}
               </ul>
             </div>
             <aside aria-label="Fonte e qualidade do dado" className="rounded-md bg-surface-alt p-4 text-sm">
               {(d.qualidade.avisos.length > 0 || d.qualidade.municipios_sigilosos > 0) && (
                 <ul aria-label="Avisos de qualidade do dado" className="space-y-1.5 text-ink-muted">
-                  {d.qualidade.avisos.map((a) => <li key={a}>{a}</li>)}
+                  {d.qualidade.avisos.map((a, i) => <li key={i}>{a}</li>)}
                   {d.qualidade.municipios_sigilosos > 0 && <li>{fraseSigilosos(d.qualidade.municipios_sigilosos)}</li>}
                 </ul>
               )}
               <p className="mt-3">
                 Fonte:{" "}
                 {d.meta.fontes.map((fte, i) => (
-                  <span key={fte.tabela_sidra}>
+                  <span key={i}>
                     {i > 0 && "; "}
                     <a href={fte.url_fonte} target="_blank" rel="noopener noreferrer" className="font-medium text-brand-fg underline">
                       {fte.fonte} (tabela {fte.tabela_sidra})
