@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useId, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Bloco } from "./bloco";
 import { useBlocoObservatorio, useFiltrosLembrados } from "./consultas";
 import { GraficoObservatorio } from "./grafico-observatorio";
@@ -24,17 +25,29 @@ function Kpis({ d }: { d: TerritorioResposta }) {
   );
 }
 
+/** Quantos municípios dependentes aparecem antes do "Ver mais"; a lista real pode ter dezenas. */
+export const LIMITE_DEPENDENTES = 6;
+
 function Dependentes({ d }: { d: TerritorioResposta }) {
+  const [expandida, setExpandida] = useState(false);
+  const idLista = useId();
   const dependentes = d.series.dependentes ?? [];
   if (dependentes.length === 0) return null;
+  const restantes = dependentes.length - LIMITE_DEPENDENTES;
+  const visiveis = expandida ? dependentes : dependentes.slice(0, LIMITE_DEPENDENTES);
   return (
     <div>
       <h3 className="text-sm font-semibold">Municípios dependentes de uma cultura</h3>
-      <ul className="mt-2 space-y-1 text-sm text-ink-muted">
-        {dependentes.map((x) => (
+      <ul id={idLista} aria-label="Municípios dependentes de uma cultura" className="mt-2 space-y-1 text-sm text-ink-muted">
+        {visiveis.map((x) => (
           <li key={`${x.codigo_ibge}-${x.cultura}`}>{x.nome}: {x.cultura} ({x.participacao != null ? `${formatNumero(x.participacao)}%` : "–"})</li>
         ))}
       </ul>
+      {restantes > 0 && (
+        <Button variant="ghost" size="sm" className="mt-1 px-2" aria-expanded={expandida} aria-controls={idLista} onClick={() => setExpandida((v) => !v)}>
+          {expandida ? "Ver menos" : `Ver mais (${restantes})`}
+        </Button>
+      )}
     </div>
   );
 }
@@ -49,7 +62,7 @@ function Conteudo({ d }: { d: TerritorioResposta }) {
         descricao={`Mapa dos municípios de Rondônia: ${d.texto.manchete}`} />
       <div className="space-y-6">
         {(micro?.length ?? 0) > 0 && <GraficoObservatorio option={microOpt} descricao="Total por microrregião" altura={280} />}
-        <Dependentes d={d} />
+        <Dependentes key={`${d.filtros.valores.metrica}|${d.filtros.valores.cultura}|${d.filtros.valores.ano}`} d={d} />
       </div>
     </div>
   );

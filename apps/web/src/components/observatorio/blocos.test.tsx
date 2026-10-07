@@ -563,6 +563,53 @@ describe("visão em tabela: uma tabela por gráfico e KPIs sempre visíveis (F6)
     expect(within(tabela("Municípios dependentes de uma cultura")).getByText("Ariquemes").closest("tr")).toHaveTextContent("Soja83,3");
   });
 
+  describe("Território: municípios dependentes mostram 6 e expandem com 'Ver mais'", () => {
+    const nomes = ["Ariquemes", "Cacoal", "Jaru", "Vilhena", "Ji-Paraná", "Pimenta Bueno", "Rolim de Moura", "Buritis"];
+    const comDependentes = (n: number) => ({
+      ...territorio,
+      series: { ...territorio.series, dependentes: nomes.slice(0, n).map((nome, i) => ({ codigo_ibge: `11000${i}`, nome, cultura: "Soja", participacao: 90 - i })) },
+    });
+    const renderizar = async (n: number) => {
+      const resp = comDependentes(n);
+      vi.stubGlobal("fetch", vi.fn(async (url: string) => (url.startsWith("/geo/") ? { ok: true, json: async () => ({ type: "FeatureCollection", features: [] }) } : { ok: true, json: async () => resp })));
+      render(<BlocoTerritorio />, { wrapper });
+      await screen.findByTestId("manchete");
+      return screen.getByRole("list", { name: "Municípios dependentes de uma cultura" });
+    };
+
+    it("com 8 municípios mostra os 6 primeiros e o botão 'Ver mais (2)'", async () => {
+      const lista = await renderizar(8);
+      expect(within(lista).getAllByRole("listitem").map((li) => li.textContent?.split(":")[0])).toEqual(nomes.slice(0, 6));
+      const botao = screen.getByRole("button", { name: "Ver mais (2)" });
+      expect(botao).toHaveAttribute("aria-expanded", "false");
+      expect(botao).toHaveAttribute("aria-controls", lista.id);
+    });
+
+    it("'Ver mais' expande todos e vira 'Ver menos', que recolhe de volta para 6", async () => {
+      const lista = await renderizar(8);
+      await userEvent.click(screen.getByRole("button", { name: "Ver mais (2)" }));
+      expect(within(lista).getAllByRole("listitem")).toHaveLength(8);
+      const menos = screen.getByRole("button", { name: "Ver menos" });
+      expect(menos).toHaveAttribute("aria-expanded", "true");
+      await userEvent.click(menos);
+      expect(within(lista).getAllByRole("listitem")).toHaveLength(6);
+      expect(screen.getByRole("button", { name: "Ver mais (2)" })).toHaveAttribute("aria-expanded", "false");
+    });
+
+    it("com 6 ou menos não há botão", async () => {
+      const lista = await renderizar(6);
+      expect(within(lista).getAllByRole("listitem")).toHaveLength(6);
+      expect(screen.queryByRole("button", { name: /Ver mais|Ver menos/ })).not.toBeInTheDocument();
+    });
+
+    it("a tabela alternativa continua com todos os municípios", async () => {
+      await renderizar(8);
+      await userEvent.click(screen.getByRole("button", { name: "Ver como tabela" }));
+      const linhas = within(screen.getByRole("table", { name: "Municípios dependentes de uma cultura" })).getAllByRole("row");
+      expect(linhas).toHaveLength(9); // cabeçalho + 8
+    });
+  });
+
   it("Pecuária: KPIs de leite visíveis, efetivo, municípios, composição e polos em tabelas", async () => {
     vi.stubGlobal("fetch", roteador());
     render(<BlocoPecuaria />, { wrapper });
