@@ -1,3 +1,4 @@
+import logging
 import os
 from pathlib import Path
 
@@ -19,6 +20,19 @@ SECRET_KEY_PADRAO = "dev-insegura-troque-em-producao"  # noqa: S105
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", SECRET_KEY_PADRAO)
 if not DEBUG and SECRET_KEY == SECRET_KEY_PADRAO:
     raise ImproperlyConfigured("Defina DJANGO_SECRET_KEY: a chave padrão é pública e só vale com DJANGO_DEBUG=1.")
+SECRET_KEY_EXEMPLO = "troque-por-uma-chave-longa-e-aleatoria"  # noqa: S105
+
+
+def avisar_chave_fraca(chave: str, *, debug: bool) -> None:
+    """Uma linha de aviso (sem o valor) se a chave for o placeholder público do .env.example."""
+    if not debug and chave == SECRET_KEY_EXEMPLO:
+        logging.getLogger(__name__).warning(
+            "DJANGO_SECRET_KEY está com o placeholder do .env.example; defina uma chave própria e aleatória."
+        )
+
+
+avisar_chave_fraca(SECRET_KEY, debug=DEBUG)
+
 # "api" é o Host que o proxy do Next usa (API_INTERNAL_URL=http://api:8000); localhost serve o healthcheck.
 ALLOWED_HOSTS_PADRAO = "localhost,127.0.0.1,api"
 ALLOWED_HOSTS = env_lista("DJANGO_ALLOWED_HOSTS", ALLOWED_HOSTS_PADRAO)
