@@ -21,6 +21,7 @@ import {
   optionMapa,
   optionTreemap,
 } from "./observatorio-graficos";
+import { formatBilhoesEixo, formatMilReais } from "./format";
 
 echarts.use([MapChart, TooltipComponent, VisualMapComponent, SVGRenderer]);
 
@@ -229,5 +230,71 @@ describe("options do Observatório", () => {
     const o = optionDecomposicao(Number.NaN, 50) as { series: { data: unknown[] }[] };
     expect(o.series.every((s) => s.data.length === 0)).toBe(true);
     expect(JSON.stringify(o)).not.toContain("NaN");
+  });
+});
+
+describe("formatação pt-BR e rótulos legíveis (F4, F5, F13)", () => {
+  type Tip = { tooltip: { valueFormatter: (v: unknown) => string } };
+  const fmt = (o: unknown) => (o as Tip).tooltip.valueFormatter;
+
+  it("todos os gráficos de eixo formatam o tooltip em pt-BR, nunca 12,935,713.5", () => {
+    const opcoes = [
+      optionAreaEmpilhada({ anos: [2020], itens: [{ nome: "S", valores: [1] }] }, "x"),
+      optionIndices({ anos: [2020], area: [1], rendimento: [1], producao: [1] }),
+      optionDecomposicao(30, 70),
+      optionBarrasHorizontais([{ nome: "A", valor: 1 }], "u"),
+      optionLinha([{ ano: 2020, valor: 1 }], "N", "u"),
+    ];
+    for (const o of opcoes) {
+      expect(fmt(o)(12935713.5)).toBe("12.935.714");
+      expect(fmt(o)(84.06)).toBe("84,06");
+      expect(fmt(o)(null)).toBe("–");
+    }
+  });
+
+  it("decomposição escreve percentuais com vírgula e uma casa decimal", () => {
+    const o = optionDecomposicao(84.06, 15.94) as unknown as {
+      series: { label: { formatter: (p: { value: number }) => string } }[];
+      tooltip: { formatter: (p: { seriesName: string; value: number }) => string };
+    };
+    expect(o.series[0]!.label.formatter({ value: 84.06 })).toBe("84,1%");
+    expect(o.series[1]!.label.formatter({ value: 15.94 })).toBe("15,9%");
+    expect(o.tooltip.formatter({ seriesName: "Expansão de área", value: 84.06 })).toContain("84,1%");
+  });
+
+  it("área empilhada em mil R$ usa bilhões no eixo e R$ por extenso no tooltip", () => {
+    const o = optionAreaEmpilhada({ anos: [2020], itens: [{ nome: "S", valores: [1] }] }, "R$ bilhões", false, {
+      eixo: formatBilhoesEixo,
+      valor: formatMilReais,
+    }) as unknown as { yAxis: { name: string; axisLabel: { formatter: (v: number) => string } } } & Tip;
+    expect(o.yAxis.name).toBe("R$ bilhões");
+    expect(o.yAxis.axisLabel.formatter(15_000_000)).toBe("15");
+    expect(fmt(o)(12_935_713)).toBe("R$ 12,9 bi");
+  });
+
+  it("treemap com formatador mostra o valor por extenso no tooltip", () => {
+    const o = optionTreemap([{ slug: "a", nome: "Soja", valor: 4_200_000, participacao: 70 }], "Mil Reais", false, formatMilReais) as unknown as {
+      tooltip: { formatter: (p: { name: string; value: number }) => string };
+    };
+    expect(o.tooltip.formatter({ name: "Soja", value: 4_200_000 })).toContain("R$ 4,2 bi");
+  });
+
+  it("rótulos de eixo têm folga: nada de Contribuição, cidades ou unidade cortados", () => {
+    const d = optionDecomposicao(30, 70) as unknown as { grid: { left: number; right: number; containLabel: boolean } };
+    expect(d.grid.containLabel).toBe(true);
+    expect(d.grid.left).toBeGreaterThanOrEqual(16);
+    expect(d.grid.right).toBeGreaterThanOrEqual(32);
+    const b = optionBarrasHorizontais([{ nome: "Colorado do Oeste", valor: 2 }], "R$/ha") as unknown as {
+      grid: { left: number; right: number; bottom: number; containLabel: boolean };
+      xAxis: { nameLocation: string };
+      yAxis: { axisLabel: { overflow: string; width: number } };
+    };
+    expect(b.grid.containLabel).toBe(true);
+    expect(b.grid.left).toBeGreaterThanOrEqual(16);
+    expect(b.grid.right).toBeGreaterThanOrEqual(32);
+    expect(b.xAxis.nameLocation).toBe("middle");
+    expect(b.grid.bottom).toBeGreaterThanOrEqual(32);
+    expect(b.yAxis.axisLabel.overflow).toBe("break");
+    expect(b.yAxis.axisLabel.width).toBeGreaterThanOrEqual(100);
   });
 });

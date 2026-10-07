@@ -1,7 +1,7 @@
 import type { EChartsCoreOption } from "echarts/core";
 import type { AnoValor, ItemValor, MunicipioMapa, Opcao } from "./api-types";
 import { PALETA, PALETA_ESCURA } from "./chart-options";
-import { formatCompacto, formatNumero } from "./format";
+import { formatCompacto, formatNumero, formatPercentual } from "./format";
 
 /** Bege neutro: matiz e luminosidade distintos de toda a escala verde, no tema claro e no escuro. */
 export const COR_SEM_DADO = "#c2b8a8";
@@ -11,6 +11,14 @@ export const CORES_CATEGORIA = [...PALETA, "#a3324b", "#0f7c8c", "#8a6d1f", "#7a
 export const CORES_CATEGORIA_ESCURA = [...PALETA_ESCURA, "#e58aa0", "#5ec7d6", "#d9bf63", "#a9b8b1"];
 const ESCALA = ["#e6f2ec", "#9fd0b5", "#3f9a73", "#00604e", "#003329"];
 const ESCALA_ESCURA = ["#2a5a49", "#3f8f72", "#4cc9a6", "#8fe3c8", "#d4f7ea"];
+/** Como o ECharts mostra um valor de série: pt-BR, e traço (nunca zero) quando não há dado. */
+export type FormatoValor = { eixo: (v: number) => string; valor: (v: number) => string };
+
+function valorPtBr(v: unknown): string {
+  if (typeof v === "number") return formatNumero(v);
+  return v === null || v === undefined || Array.isArray(v) ? "–" : String(v);
+}
+
 const fonte = { fontFamily: "Poppins, system-ui, sans-serif" };
 
 const CLARO = { texto: "#14261f", muted: "#46564f", linha: "#d3e1d8", card: "#ffffff", borda: "#ffffff", rotuloTreemap: "#ffffff" };
@@ -25,7 +33,7 @@ function tema(escuro: boolean) {
     paleta: escuro ? PALETA_ESCURA : PALETA,
     semDado: escuro ? COR_SEM_DADO_ESCURO : COR_SEM_DADO,
     texto_: { ...fonte, color: t.texto },
-    tooltip: { backgroundColor: t.card, borderColor: t.linha, textStyle: { color: t.texto } },
+    tooltip: { backgroundColor: t.card, borderColor: t.linha, textStyle: { color: t.texto }, valueFormatter: valorPtBr },
     legenda: { textStyle: { color: t.texto } },
     eixoX: { axisLabel: { color: t.muted }, axisLine: { lineStyle: { color: t.linha } } },
     eixoY: { nameTextStyle: { color: t.muted, align: "left" }, axisLabel: { color: t.muted }, splitLine: { lineStyle: { color: t.linha } } },
@@ -37,12 +45,14 @@ export function escapar(texto: string): string {
 }
 
 
-export function optionTreemap(itens: ItemValor[], unidade: string, escuro = false): EChartsCoreOption {
+export function optionTreemap(itens: ItemValor[], unidade: string, escuro = false, formatar?: (v: number) => string): EChartsCoreOption {
   const t = tema(escuro);
   return {
     color: t.cores,
     textStyle: t.texto_,
-    tooltip: { ...t.tooltip, formatter: (p: { name: string; value: number }) => `${escapar(p.name)}: <strong>${formatNumero(p.value)}</strong> ${escapar(unidade.toLowerCase())}` },
+    tooltip: { ...t.tooltip, formatter: (p: { name: string; value: number }) => formatar
+      ? `${escapar(p.name)}: <strong>${escapar(formatar(p.value))}</strong>`
+      : `${escapar(p.name)}: <strong>${formatNumero(p.value)}</strong> ${escapar(unidade.toLowerCase())}` },
     series: [{
       type: "treemap", roam: false, nodeClick: false, breadcrumb: { show: false },
       label: { formatter: "{b}", color: t.rotuloTreemap },
@@ -52,14 +62,14 @@ export function optionTreemap(itens: ItemValor[], unidade: string, escuro = fals
   };
 }
 
-export function optionAreaEmpilhada(evolucao: { anos: number[]; itens: { nome: string; valores: (number | null)[] }[] }, unidade: string, escuro = false): EChartsCoreOption {
+export function optionAreaEmpilhada(evolucao: { anos: number[]; itens: { nome: string; valores: (number | null)[] }[] }, unidade: string, escuro = false, formato?: FormatoValor): EChartsCoreOption {
   const t = tema(escuro);
   return {
     color: t.cores, textStyle: t.texto_,
-    tooltip: { ...t.tooltip, trigger: "axis" }, legend: { type: "scroll", top: 0, ...t.legenda },
+    tooltip: { ...t.tooltip, trigger: "axis", ...(formato ? { valueFormatter: (v: unknown) => (typeof v === "number" ? formato.valor(v) : "–") } : {}) }, legend: { type: "scroll", top: 0, ...t.legenda },
     grid: { left: 8, right: 16, top: 48, bottom: 8, containLabel: true },
     xAxis: { type: "category", data: evolucao.anos.map(String), boundaryGap: false, ...t.eixoX },
-    yAxis: { type: "value", name: unidade, ...t.eixoY, axisLabel: { ...t.eixoY.axisLabel, formatter: (v: number) => formatCompacto(v) } },
+    yAxis: { type: "value", name: unidade, ...t.eixoY, axisLabel: { ...t.eixoY.axisLabel, formatter: (v: number) => (formato ? formato.eixo(v) : formatCompacto(v)) } },
     series: evolucao.itens.map((i) => ({ type: "line", name: i.nome, stack: "total", areaStyle: {}, symbol: "none", data: i.valores })),
   };
 }
@@ -84,13 +94,13 @@ export function optionDecomposicao(parteArea: number, parteRendimento: number, e
   const valido = Number.isFinite(parteArea) && Number.isFinite(parteRendimento);
   return {
     color: [t.paleta[2]!, t.paleta[0]!], textStyle: t.texto_, legend: { top: 0, ...t.legenda },
-    tooltip: { ...t.tooltip, formatter: (p: { seriesName: string; value: number }) => `${escapar(p.seriesName)}: <strong>${formatNumero(p.value)}%</strong>` },
-    grid: { left: 8, right: 16, top: 40, bottom: 8, containLabel: true },
+    tooltip: { ...t.tooltip, formatter: (p: { seriesName: string; value: number }) => `${escapar(p.seriesName)}: <strong>${formatPercentual(p.value)}</strong>` },
+    grid: { left: 16, right: 40, top: 40, bottom: 8, containLabel: true },
     xAxis: { type: "value", ...t.eixoY, axisLabel: { ...t.eixoY.axisLabel, formatter: "{value}%" } },
     yAxis: { type: "category", data: ["Contribuição"], ...t.eixoX },
     series: [
-      { type: "bar", name: "Expansão de área", stack: "c", data: valido ? [parteArea] : [], label: { show: true, formatter: "{c}%" } },
-      { type: "bar", name: "Ganho de produtividade", stack: "c", data: valido ? [parteRendimento] : [], label: { show: true, formatter: "{c}%" } },
+      { type: "bar", name: "Expansão de área", stack: "c", data: valido ? [parteArea] : [], label: { show: true, formatter: (p: { value: number }) => formatPercentual(p.value) } },
+      { type: "bar", name: "Ganho de produtividade", stack: "c", data: valido ? [parteRendimento] : [], label: { show: true, formatter: (p: { value: number }) => formatPercentual(p.value) } },
     ],
   };
 }
@@ -100,9 +110,10 @@ export function optionBarrasHorizontais(itens: { nome: string; valor: number | n
   const ordenados = [...itens].filter((i) => i.valor !== null).reverse();
   return {
     color: t.paleta, textStyle: t.texto_, tooltip: { ...t.tooltip, trigger: "axis", axisPointer: { type: "shadow" } },
-    grid: { left: 8, right: 24, top: 8, bottom: 8, containLabel: true },
-    xAxis: { type: "value", name: unidade, ...t.eixoY, axisLabel: { ...t.eixoY.axisLabel, formatter: (v: number) => formatCompacto(v) } },
-    yAxis: { type: "category", data: ordenados.map((i) => i.nome), ...t.eixoX },
+    grid: { left: 16, right: 40, top: 8, bottom: 40, containLabel: true },
+    xAxis: { type: "value", name: unidade, nameLocation: "middle", nameGap: 28, ...t.eixoY, nameTextStyle: { color: t.muted }, axisLabel: { ...t.eixoY.axisLabel, formatter: (v: number) => formatCompacto(v) } },
+    // Nomes longos de município quebram em linhas em vez de serem cortados.
+    yAxis: { type: "category", data: ordenados.map((i) => i.nome), ...t.eixoX, axisLabel: { ...t.eixoX.axisLabel, width: 130, overflow: "break" } },
     series: [{ type: "bar", data: ordenados.map((i) => i.valor) }],
   };
 }
