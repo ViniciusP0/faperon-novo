@@ -315,3 +315,92 @@ describe("isolamento de erro", () => {
     expect(replace.mock.calls[0]![0]).toContain("pan_ano=2024");
   });
 });
+
+describe("troca de filtro mantém a tela", () => {
+  function clienteEstavel() {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    function Estavel({ children }: { children: ReactNode }) {
+      return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+    }
+    return Estavel;
+  }
+  function adiado() {
+    let resolver!: (v: unknown) => void;
+    const promessa = new Promise((r) => { resolver = r; });
+    return { promessa, resolver };
+  }
+  const ok = (corpo: unknown) => ({ ok: true, json: async () => corpo });
+
+  it("mantém manchete e todos os seletores (aria-busy) enquanto a nova consulta carrega e depois troca", async () => {
+    busca = "pec_rebanho=bovino";
+    const segunda = adiado();
+    const f = vi.fn().mockResolvedValueOnce(ok(pecuaria)).mockReturnValueOnce(segunda.promessa);
+    vi.stubGlobal("fetch", f);
+    const W = clienteEstavel();
+    const { rerender } = render(<BlocoPecuaria />, { wrapper: W });
+    expect(await screen.findByTestId("manchete")).toHaveTextContent("Manchete do bloco.");
+    expect(screen.getByTestId("conteudo-bloco")).not.toHaveAttribute("aria-busy");
+
+    busca = "pec_rebanho=ovino";
+    rerender(<BlocoPecuaria />);
+    await vi.waitFor(() => expect(f).toHaveBeenCalledTimes(2));
+    expect(f.mock.calls[1]![0]).toBe("/api/v1/observatorio/pecuaria?rebanho=ovino");
+    expect(screen.getByTestId("manchete")).toHaveTextContent("Manchete do bloco.");
+    for (const r of ["Rebanho", "De", "Até"]) expect(screen.getByLabelText(r)).toBeEnabled();
+    expect(screen.getByTestId("conteudo-bloco")).toHaveAttribute("aria-busy", "true");
+    expect(screen.queryByText(/Carregando/)).not.toBeInTheDocument();
+
+    segunda.resolver(ok({ ...pecuaria, texto: { ...pecuaria.texto, manchete: "Nova manchete." } }));
+    expect(await screen.findByText("Nova manchete.")).toBeInTheDocument();
+    expect(screen.getByTestId("conteudo-bloco")).not.toHaveAttribute("aria-busy");
+  });
+
+  it("erro 400 após a troca mantém os seletores e oferece 'Voltar ao padrão'", async () => {
+    busca = "pec_rebanho=bovino";
+    const f = vi.fn().mockResolvedValueOnce(ok(pecuaria)).mockResolvedValueOnce({ ok: false, status: 400, json: async () => ({ erro: "Parâmetros inválidos", campos: { fim: "Ano final inválido." } }) });
+    vi.stubGlobal("fetch", f);
+    const W = clienteEstavel();
+    const { rerender } = render(<BlocoPecuaria />, { wrapper: W });
+    await screen.findByTestId("manchete");
+    busca = "pec_rebanho=ovino&pec_fim=1900";
+    rerender(<BlocoPecuaria />);
+    expect(await screen.findByRole("button", { name: "Voltar ao padrão" })).toBeInTheDocument();
+    expect(screen.queryByTestId("manchete")).not.toBeInTheDocument();
+    for (const r of ["Rebanho", "De", "Até"]) expect(screen.getByLabelText(r)).toBeEnabled();
+    await userEvent.click(screen.getByRole("button", { name: "Voltar ao padrão" }));
+    expect(replace).toHaveBeenCalledWith("/central-de-inteligencia/observatorio", { scroll: false });
+  });
+});
+
+describe("filtros dependentes e seletores coerentes", () => {
+  it("Território: trocar a métrica para rebanho remove ter_cultura; para área mantém", async () => {
+    busca = "ter_metrica=valor&ter_cultura=soja-em-grao";
+    vi.stubGlobal("fetch", roteador());
+    render(<BlocoTerritorio />, { wrapper });
+    await screen.findByTestId("manchete");
+    await userEvent.selectOptions(screen.getByLabelText("Métrica"), "rebanho");
+    expect(replace).toHaveBeenLastCalledWith("/central-de-inteligencia/observatorio?ter_metrica=rebanho", { scroll: false });
+    await userEvent.selectOptions(screen.getByLabelText("Métrica"), "area");
+    expect(replace).toHaveBeenLastCalledWith("/central-de-inteligencia/observatorio?ter_metrica=area&ter_cultura=soja-em-grao", { scroll: false });
+  });
+
+  it("Crescimento: trocar a cultura remove cre_inicio e cre_fim", async () => {
+    busca = "cre_cultura=soja-em-grao&cre_inicio=2020&cre_fim=2022";
+    vi.stubGlobal("fetch", roteador());
+    render(<BlocoCrescimento />, { wrapper });
+    await screen.findByTestId("manchete");
+    await userEvent.selectOptions(screen.getByLabelText("Cultura"), "milho-em-grao");
+    expect(replace).toHaveBeenLastCalledWith("/central-de-inteligencia/observatorio?cre_cultura=milho-em-grao", { scroll: false });
+  });
+
+  it("seletor com valor nulo mostra a opção 'Padrão' em vez de divergir do estado", async () => {
+    const semCultura = { ...crescimento, filtros: { ...crescimento.filtros, valores: { cultura: null, inicio: null, fim: null } } };
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, json: async () => semCultura })));
+    render(<BlocoCrescimento />, { wrapper });
+    await screen.findByTestId("manchete");
+    const cultura = screen.getByLabelText("Cultura") as HTMLSelectElement;
+    expect(cultura.value).toBe("");
+    expect(cultura.selectedOptions[0]).toHaveTextContent("Padrão");
+    expect((screen.getByLabelText("De") as HTMLSelectElement).selectedOptions[0]).toHaveTextContent("Padrão");
+  });
+});

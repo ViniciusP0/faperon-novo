@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import { Bloco } from "./bloco";
-import { useBlocoObservatorio } from "./consultas";
+import { useBlocoObservatorio, useFiltrosLembrados } from "./consultas";
 import { GraficoObservatorio } from "./grafico-observatorio";
 import { MapaMunicipios } from "./mapa-municipios";
 import { Seletor } from "./seletor";
@@ -49,11 +49,12 @@ function Conteudo({ d }: { d: TerritorioResposta }) {
 export function BlocoTerritorio() {
   const f = useFiltrosBloco("territorio");
   const consulta = useBlocoObservatorio("territorio", f.qs);
-  const v = consulta.data?.filtros.valores;
-  const o = consulta.data?.filtros.opcoes;
+  const lembrados = useFiltrosLembrados(consulta.data?.filtros);
+  const v = lembrados?.valores;
+  const o = lembrados?.opcoes;
   const filtros = v && o && (
     <>
-      <Seletor rotulo="Métrica" valor={v.metrica} onChange={(x) => f.definir("metrica", x)}
+      <Seletor rotulo="Métrica" valor={v.metrica} onChange={(x) => f.definir("metrica", x, x === "valor" || x === "area" ? [] : ["cultura"])}
         opcoes={o.metricas.map((m) => ({ valor: m.slug, rotulo: m.nome }))} />
       {(v.metrica === "valor" || v.metrica === "area") && (
         <Seletor rotulo="Cultura" valor={v.cultura ?? ""} onChange={(x) => f.definir("cultura", x || null)}

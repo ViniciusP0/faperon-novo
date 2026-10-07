@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import { Bloco } from "./bloco";
-import { useBlocoObservatorio } from "./consultas";
+import { useBlocoObservatorio, useFiltrosLembrados } from "./consultas";
 import { GraficoObservatorio } from "./grafico-observatorio";
 import { Seletor } from "./seletor";
 import { TabelaDados } from "./tabela-dados";
@@ -49,8 +49,9 @@ function Conteudo({ d }: { d: PecuariaResposta }) {
 export function BlocoPecuaria() {
   const f = useFiltrosBloco("pecuaria");
   const consulta = useBlocoObservatorio("pecuaria", f.qs);
-  const v = consulta.data?.filtros.valores;
-  const o = consulta.data?.filtros.opcoes;
+  const lembrados = useFiltrosLembrados(consulta.data?.filtros);
+  const v = lembrados?.valores;
+  const o = lembrados?.opcoes;
   const periodo = o && v ? opcoesPeriodo(o.anos, v.inicio, v.fim) : null;
   const filtros = v && o && periodo && (
     <>

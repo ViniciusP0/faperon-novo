@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import { Bloco } from "./bloco";
-import { useBlocoObservatorio } from "./consultas";
+import { useBlocoObservatorio, useFiltrosLembrados } from "./consultas";
 import { GraficoObservatorio } from "./grafico-observatorio";
 import { Seletor } from "./seletor";
 import { TabelaDados } from "./tabela-dados";
@@ -34,12 +34,13 @@ function Conteudo({ d }: { d: CrescimentoResposta }) {
 export function BlocoCrescimento() {
   const f = useFiltrosBloco("crescimento");
   const consulta = useBlocoObservatorio("crescimento", f.qs);
-  const v = consulta.data?.filtros.valores;
-  const o = consulta.data?.filtros.opcoes;
+  const lembrados = useFiltrosLembrados(consulta.data?.filtros);
+  const v = lembrados?.valores;
+  const o = lembrados?.opcoes;
   const periodo = o && v ? opcoesPeriodo(o.anos, v.inicio, v.fim) : null;
   const filtros = v && o && periodo && (
     <>
-      <Seletor rotulo="Cultura" valor={v.cultura ?? ""} onChange={(x) => f.definir("cultura", x)}
+      <Seletor rotulo="Cultura" valor={v.cultura ?? ""} onChange={(x) => f.definir("cultura", x, ["inicio", "fim"])}
         opcoes={o.culturas.map((c) => ({ valor: c.slug, rotulo: c.nome }))} />
       <Seletor rotulo="De" valor={String(v.inicio ?? "")} onChange={(x) => f.definir("inicio", x)} opcoes={periodo.de} />
       <Seletor rotulo="Até" valor={String(v.fim ?? "")} onChange={(x) => f.definir("fim", x)} opcoes={periodo.ate} />

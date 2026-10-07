@@ -15,7 +15,12 @@ export function useFiltrosBloco(bloco: BlocoObservatorio) {
   const atual = new URLSearchParams(sp.toString());
   return {
     qs: parametrosDoBloco(atual, bloco).toString(),
-    definir: (chave: string, valor: string | null) => ir(comFiltro(atual, bloco, chave, valor)),
+    // `limpar`: filtros dependentes do alterado, que perdem o sentido com o novo valor.
+    definir: (chave: string, valor: string | null, limpar: string[] = []) => {
+      let novo = comFiltro(atual, bloco, chave, valor);
+      for (const k of limpar) novo = comFiltro(novo, bloco, k, null);
+      ir(novo);
+    },
     padrao: () => ir(semFiltrosDoBloco(atual, bloco)),
   };
 }

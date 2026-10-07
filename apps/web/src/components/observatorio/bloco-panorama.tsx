@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import { Bloco } from "./bloco";
-import { useBlocoObservatorio } from "./consultas";
+import { useBlocoObservatorio, useFiltrosLembrados } from "./consultas";
 import { GraficoObservatorio } from "./grafico-observatorio";
 import { Seletor } from "./seletor";
 import { TabelaDados } from "./tabela-dados";
@@ -44,8 +44,9 @@ function Conteudo({ d }: { d: PanoramaResposta }) {
 export function BlocoPanorama() {
   const f = useFiltrosBloco("panorama");
   const consulta = useBlocoObservatorio("panorama", f.qs);
-  const v = consulta.data?.filtros.valores;
-  const o = consulta.data?.filtros.opcoes;
+  const lembrados = useFiltrosLembrados(consulta.data?.filtros);
+  const v = lembrados?.valores;
+  const o = lembrados?.opcoes;
   const filtros = v && o && (
     <>
       <Seletor rotulo="Ano" valor={String(v.ano ?? "")} onChange={(x) => f.definir("ano", x)} opcoes={opcoesAnos(o.anos)} />
