@@ -168,3 +168,12 @@ def aviso_inicio_recortado(pedido: int, usado: int) -> str:
     return (
         f"O período começa em {usado}: antes do Plano Real não há como corrigir valores pelo IPCA."
     )
+
+
+def aviso_sigilo_parcial(n: int) -> str:
+    sujeito = "1 município com dado sigiloso" if n == 1 else f"{n} municípios com dado sigiloso"
+    verbo = "fica" if n == 1 else "ficam"
+    return (
+        f"{sujeito} para alguma cultura {verbo} sem cultura dominante "
+        "e fora da lista de dependentes."
+    )

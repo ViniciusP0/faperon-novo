@@ -50,3 +50,8 @@ def test_por_municipio_na_janela(dados_observatorio: dict) -> None:
 def test_codigos_sigilosos(dados_observatorio: dict) -> None:
     assert l.codigos_sigilosos("valor-da-producao", 5457, 2024) == ["1100031"]
     assert l.codigos_sigilosos("valor-da-producao", 5457, 2024, "cafe-em-grao-canephora") == []
+
+
+def test_municipios_com_sigilo(dados_observatorio: dict) -> None:
+    assert l.municipios_com_sigilo("valor-da-producao", 5457, 2024) == {"1100031"}
+    assert l.municipios_com_sigilo("valor-da-producao", 5457, 2015) == set()

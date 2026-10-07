@@ -4,7 +4,7 @@ from decimal import Decimal as D
 import pytest
 from rest_framework.test import APIClient
 
-from indicadores.models import IndicePreco, Produto
+from indicadores.models import IndicePreco, Medicao, Produto
 from ingestao.models import Carga
 from observatorio import regras as r
 from observatorio.servico import referencia_monetaria
@@ -360,3 +360,29 @@ def test_territorio_dominante_agrupa_em_outras_e_desempata_por_slug(
     assert slugs[2:8] == [f"cultura-{i}" for i in range(6)]
     cats = {m["nome"]: m["categoria"] for m in corpo["series"]["municipios"]}
     assert cats["Mun 8"] == "outras" and cats["Mun 0"] == "cultura-0"
+
+
+def test_territorio_sigilo_parcial_nao_distorce_dominante_nem_dependentes(
+    api: APIClient, dados_observatorio: dict, carga: Carga
+) -> None:
+    # 1100049 tem café OK, mas passa a ter soja sigilosa no mesmo ano
+    lancar(dados_observatorio["soja"], "valor-da-producao", "1100049", 2024, None, carga, "sigiloso")
+    _, dom = get(api, "territorio?metrica=dominante")
+    cats = {m["codigo_ibge"]: m["categoria"] for m in dom["series"]["municipios"]}
+    assert cats["1100049"] is None and cats["1100031"] is None
+    assert cats["1100023"] == "soja-em-grao" and cats["1100015"] == "soja-em-grao"
+    assert {d["codigo_ibge"] for d in dom["series"]["dependentes"]} == {"1100015", "1100023"}
+    assert r.aviso_sigilo_parcial(2) in dom["qualidade"]["avisos"]
+    _, val = get(api, "territorio")
+    assert "1100049" not in {d["codigo_ibge"] for d in val["series"]["dependentes"]}
+    assert r.aviso_sigilo_parcial(2) in val["qualidade"]["avisos"]
+
+
+def test_territorio_aviso_sigilo_parcial_so_com_sigilo(
+    api: APIClient, dados_observatorio: dict
+) -> None:
+    _, corpo = get(api, "territorio")
+    assert corpo["qualidade"]["avisos"] == [r.aviso_sigilo_parcial(1)]
+    Medicao.objects.filter(status_valor="sigiloso").delete()
+    _, limpo = get(api, "territorio")
+    assert limpo["qualidade"]["avisos"] == []

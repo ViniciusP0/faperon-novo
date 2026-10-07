@@ -115,3 +115,15 @@ def por_municipio_na_janela(
         if valor is not None:
             saida.setdefault(int(ano), {})[mun] = valor
     return saida
+
+
+def municipios_com_sigilo(indicador: str, tabela: int, ano: int) -> set[str]:
+    """Municípios com ao menos uma linha sigilosa no ano (qualquer produto), em UMA consulta."""
+    return set(
+        Medicao.objects.filter(
+            indicador__slug=indicador,
+            produto__tabela_origem=tabela,
+            ano=ano,
+            status_valor=StatusValor.SIGILOSO,
+        ).values_list("municipio_id", flat=True)
+    )

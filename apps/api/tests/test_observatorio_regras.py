@@ -160,3 +160,14 @@ def test_aviso_sem_ipca() -> None:
         "Não é possível calcular valores reais: o IPCA necessário para corrigir "
         "os valores deste ano não está disponível."
     )
+
+
+def test_aviso_sigilo_parcial() -> None:
+    assert r.aviso_sigilo_parcial(1) == (
+        "1 município com dado sigiloso para alguma cultura fica sem cultura dominante "
+        "e fora da lista de dependentes."
+    )
+    assert r.aviso_sigilo_parcial(3) == (
+        "3 municípios com dado sigiloso para alguma cultura ficam sem cultura dominante "
+        "e fora da lista de dependentes."
+    )

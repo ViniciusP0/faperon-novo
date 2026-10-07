@@ -362,6 +362,10 @@ def territorio(metrica: str, cultura: str | None, ano: int | None) -> dict[str, 
         ano_ref, avisos = None, [*avisos, r.AVISO_SEM_IPCA]
 
     por_produto = leitura.por_municipio_e_produto(VALOR, 5457, ano)
+    sigilo_parcial = leitura.municipios_com_sigilo(VALOR, 5457, ano)
+    if sigilo_parcial:  # a cultura dominante e a dependência não são confiáveis nesses municípios
+        avisos = [*avisos, r.aviso_sigilo_parcial(len(sigilo_parcial))]
+    por_produto = {m: v for m, v in por_produto.items() if m not in sigilo_parcial}
     dominantes = {m: c.cultura_dominante(v) for m, v in por_produto.items()}
     frequencia: dict[str, int] = {}
     for d in dominantes.values():
