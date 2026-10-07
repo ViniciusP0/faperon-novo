@@ -29,3 +29,4 @@ Decisões de arquitetura no formato MADR (Contexto, Opções, Decisão, Consequ�
 - [0025](0025-gunicorn-com-threads-e-renderizacao-de-pdf-serializada-com-espera-.md) — Gunicorn com threads e renderização de PDF serializada com espera limitada
 - [0026](0026-animacoes-sutis-com-css-e-intersectionobserver.md) — Animações sutis com CSS e IntersectionObserver
 - [0027](0027-pagina-de-noticias-como-listagem-que-aponta-para-o-wix.md) — Página de notícias como listagem que aponta para o Wix
+- [0028](0028-observatorio-como-contexto-de-leitura-com-valores-deflacionados-pelo-ipca.md) — Observatório como contexto de leitura, com valores deflacionados pelo IPCA
