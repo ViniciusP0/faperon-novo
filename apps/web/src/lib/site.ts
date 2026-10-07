@@ -14,6 +14,7 @@ export const ROTAS = {
   noticias: "/noticias",
   faleConosco: "/fale-conosco",
   login: "/login",
+  privacidade: "/politica-de-privacidade",
 } as const;
 
 export interface ItemMenu {

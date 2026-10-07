@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { LINKS_INSTITUCIONAIS, MENU } from "@/lib/site";
+import { LINKS_INSTITUCIONAIS, MENU, ROTAS } from "@/lib/site";
 
 export function SiteFooter() {
   return (
@@ -58,7 +58,12 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-white/20">
         <div className="container flex flex-col items-center justify-between gap-4 py-4 text-xs text-white/85 sm:flex-row">
-          <p>Protótipo em avaliação. Dados do painel: IBGE (SIDRA). O site atual da FAPERON continua no ar.</p>
+          <p>
+            Protótipo em avaliação. Dados do painel: IBGE (SIDRA). O site atual da FAPERON continua no ar.{" "}
+            <Link href={ROTAS.privacidade} className="underline underline-offset-4 hover:no-underline">
+              Política de Privacidade
+            </Link>
+          </p>
           <div className="flex shrink-0 items-center gap-3">
             <span className="text-sm">Desenvolvido por DATA-RO Inteligência Territorial</span>
             <Image
