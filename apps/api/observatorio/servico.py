@@ -110,7 +110,9 @@ def panorama(ano: int | None, janela: int) -> dict[str, Any]:
     origem_animal: set[str] = set()
     for tabela in TABELAS_VALOR:
         nomes |= leitura.produtos(tabela)
-        for slug, por_ano in leitura.totais_por_produto(VALOR, tabela, inicio, ano).items():
+        for slug, por_ano in leitura.totais_por_produto(
+            VALOR, tabela, inicio, ano, sem_duplicados=True
+        ).items():
             reais[slug] = {
                 a: v
                 for a, valor in por_ano.items()
@@ -218,7 +220,9 @@ def crescimento(cultura: str | None, inicio: int | None, fim: int | None) -> dic
         vazios = {"valores": {"cultura": cultura, "inicio": inicio, "fim": fim}, "opcoes": opcoes}
         return _vazio("crescimento", vazios, tabelas)
     if cultura is None:
-        valores = leitura.totais_por_produto(VALOR, 5457, anos[-1], anos[-1])
+        valores = leitura.totais_por_produto(
+            VALOR, 5457, anos[-1], anos[-1], sem_duplicados=True
+        )
         cultura = (
             max(valores, key=lambda s: (valores[s].get(anos[-1], Decimal(0)), s))
             if valores
@@ -254,7 +258,10 @@ def crescimento(cultura: str | None, inicio: int | None, fim: int | None) -> dic
     valores_fim = leitura.totais_por_produto(VALOR, 5457, fim, fim)
     areas_fim = leitura.totais_por_produto("area-colhida", 5457, fim, fim)
     rph: list[dict[str, Any]] = []
+    duplicados = leitura.componentes_duplicados(5457)  # o agregado já tem a linha do componente
     for slug, nome in culturas.items():
+        if slug in duplicados:
+            continue
         a = areas_fim.get(slug, {}).get(fim)
         if ano_ref is None or a is None or a < AREA_MINIMA_RANKING:
             continue

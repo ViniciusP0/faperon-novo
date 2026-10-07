@@ -9,6 +9,32 @@ from django.db.models import Max, QuerySet, Sum
 from indicadores.models import IndicePreco, Medicao, Municipio, Produto, StatusValor
 from ingestao.models import Carga
 
+# Produtos que a fonte publica DENTRO de um agregado também publicado: {tabela: {componente:
+# agregado}}. No SIDRA 5457 o "Café (em grão) Total" já contém o Canephora (e cobre variedades
+# que o componente não cobre), então somar os dois conta o café duas vezes. O agregado fica;
+# o componente só sai das somas entre produtos, e só se o agregado existir na tabela.
+PRODUTOS_COMPONENTE_DUPLICADO: dict[int, dict[str, str]] = {
+    5457: {"cafe-em-grao-canephora": "cafe-em-grao-total"}
+}
+
+
+def componentes_duplicados(tabela: int) -> frozenset[str]:
+    """Slugs a excluir das agregações entre produtos da tabela (agregado presente no banco)."""
+    pares = PRODUTOS_COMPONENTE_DUPLICADO.get(tabela, {})
+    if not pares:
+        return frozenset()
+    existentes = set(
+        Produto.objects.filter(tabela_origem=tabela, slug__in=set(pares.values())).values_list(
+            "slug", flat=True
+        )
+    )
+    return frozenset(comp for comp, agregado in pares.items() if agregado in existentes)
+
+
+def _sem_componentes(qs: QuerySet[Medicao], tabela: int) -> QuerySet[Medicao]:
+    excluidos = componentes_duplicados(tabela)
+    return qs.exclude(produto__slug__in=excluidos) if excluidos else qs
+
 
 def _ok(indicador: str, tabela: int) -> QuerySet[Medicao]:
     return Medicao.objects.filter(
@@ -30,11 +56,13 @@ def anos_disponiveis(indicador: str, tabela: int) -> list[int]:
 
 
 def totais_por_produto(
-    indicador: str, tabela: int, inicio: int, fim: int
+    indicador: str, tabela: int, inicio: int, fim: int, sem_duplicados: bool = False
 ) -> dict[str, dict[int, Decimal]]:
+    """Totais por produto; `sem_duplicados` tira o componente do agregado (para somar/compor)."""
     saida: dict[str, dict[int, Decimal]] = {}
+    base = _ok(indicador, tabela)
     linhas = (
-        _ok(indicador, tabela)
+        (_sem_componentes(base, tabela) if sem_duplicados else base)
         .filter(ano__range=(inicio, fim))
         .values("produto__slug", "ano")
         .annotate(total=Sum("valor"))
@@ -48,8 +76,7 @@ def por_municipio(
     indicador: str, tabela: int, ano: int, produto: str | None = None
 ) -> dict[str, Decimal]:
     qs = _ok(indicador, tabela).filter(ano=ano)
-    if produto:
-        qs = qs.filter(produto__slug=produto)
+    qs = qs.filter(produto__slug=produto) if produto else _sem_componentes(qs, tabela)
     linhas = qs.values("municipio_id").annotate(t=Sum("valor")).values_list("municipio_id", "t")
     return dict(linhas)
 
@@ -57,7 +84,7 @@ def por_municipio(
 def por_municipio_e_produto(indicador: str, tabela: int, ano: int) -> dict[str, dict[str, Decimal]]:
     saida: dict[str, dict[str, Decimal]] = {}
     linhas = (
-        _ok(indicador, tabela)
+        _sem_componentes(_ok(indicador, tabela), tabela)
         .filter(ano=ano)
         .values_list("municipio_id", "produto__slug", "valor")
     )
@@ -76,8 +103,7 @@ def codigos_sigilosos(
         ano=ano,
         status_valor=StatusValor.SIGILOSO,
     )
-    if produto:
-        qs = qs.filter(produto__slug=produto)
+    qs = qs.filter(produto__slug=produto) if produto else _sem_componentes(qs, tabela)
     return sorted(set(qs.values_list("municipio_id", flat=True)))
 
 
@@ -119,11 +145,10 @@ def por_municipio_na_janela(
 
 def municipios_com_sigilo(indicador: str, tabela: int, ano: int) -> set[str]:
     """Municípios com ao menos uma linha sigilosa no ano (qualquer produto), em UMA consulta."""
-    return set(
-        Medicao.objects.filter(
-            indicador__slug=indicador,
-            produto__tabela_origem=tabela,
-            ano=ano,
-            status_valor=StatusValor.SIGILOSO,
-        ).values_list("municipio_id", flat=True)
+    qs = Medicao.objects.filter(
+        indicador__slug=indicador,
+        produto__tabela_origem=tabela,
+        ano=ano,
+        status_valor=StatusValor.SIGILOSO,
     )
+    return set(_sem_componentes(qs, tabela).values_list("municipio_id", flat=True))
