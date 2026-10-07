@@ -1,6 +1,7 @@
 "use client";
 
 import { formatNumero, formatPercentual, formatValor } from "@/lib/format";
+import { fraseSigilosos } from "@/lib/sigilosos";
 import type { Filtros } from "@/lib/filters";
 import { cn } from "@/lib/utils";
 import { Barras } from "./barras";
@@ -23,6 +24,8 @@ export function Ranking({ filtros }: { filtros: Filtros }) {
   const { indicador, itens, total_estadual, ano_referencia } = data;
   const maximo = Math.max(...itens.map((i) => i.valor ?? 0), 1);
   const mostraPercentual = itens.some((i) => i.percentual_total !== null);
+  const mediaPonderada = indicador.agregacao === "media_ponderada";
+  const sigilosos = itens.filter((i) => i.status === "sigiloso").length;
   const ordenados = itens.filter((i) => i.status === "ok");
   const barras = ordenados.slice(0, TOP).map((i) => ({
     id: i.municipio.codigo_ibge,
@@ -44,10 +47,11 @@ export function Ranking({ filtros }: { filtros: Filtros }) {
         {total_estadual !== null && (
           <>
             {" "}
-            Total de Rondônia: <strong className="text-ink">{formatNumero(total_estadual)}</strong>.
+            {mediaPonderada ? "Média de Rondônia" : "Total de Rondônia"}: <strong className="text-ink">{formatNumero(total_estadual)}</strong>.
           </>
         )}
       </p>
+      {sigilosos > 0 && <p className="-mt-3 mb-5 max-w-[62ch] text-sm text-ink-muted">{fraseSigilosos(sigilosos)}</p>}
       <Barras itens={barras} unidade={indicador.unidade} rotulo={`Dez maiores municípios em ${indicador.nome.toLowerCase()} de ${data.produto.nome}`} />
 
       <details className="mt-6 rounded-xl border border-line bg-card">

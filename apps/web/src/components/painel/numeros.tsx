@@ -3,6 +3,7 @@
 import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 import type { Filtros } from "@/lib/filters";
 import { formatPercentual } from "@/lib/format";
+import { fraseSigilosos } from "@/lib/sigilosos";
 import { manchetePainel, medida } from "@/lib/manchete-painel";
 import { Skeleton } from "@/components/ui/feedback";
 import { Secao } from "./comuns";
@@ -89,7 +90,9 @@ export function Numeros({ filtros }: { filtros: Filtros }) {
     const rotulo = municipioNome ?? (mediaPonderada ? "Média de Rondônia" : "Total de Rondônia");
     if (valor === null) return { rotulo, numero: statusValor === "sigiloso" ? "X" : "–", apoio: `em ${r.ano_referencia}, valor não publicado pelo IBGE` };
     const med = medida(valor, unidadeApi);
-    return { rotulo, numero: med.numero, unidade: med.unidade, apoio: `em ${r.ano_referencia}` };
+    const sigilosos = r.itens.filter((i) => i.status === "sigiloso").length;
+    const nota = !municipioNome && sigilosos > 0 ? ` · ${fraseSigilosos(sigilosos)}` : "";
+    return { rotulo, numero: med.numero, unidade: med.unidade, apoio: `em ${r.ano_referencia}${nota}` };
   })();
 
   const cartaoVariacao: CartaoProps = (() => {

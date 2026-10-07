@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ApiError } from "@/lib/api";
 import type { RespostaBase } from "@/lib/api-types";
 import { formatDataHora } from "@/lib/format";
+import { fraseSigilosos } from "@/lib/sigilosos";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Resposta = RespostaBase<any, any, any, any>;
@@ -26,12 +27,6 @@ interface BlocoProps<R extends Resposta> {
   linkPainel?: (d: R) => string | null;
   onPadrao: () => void;
   children: (d: R) => ReactNode;
-}
-
-export function fraseSigilosos(n: number): string {
-  return n === 1
-    ? "1 município com dado sigiloso fica fora dos totais."
-    : `${n} municípios com dado sigiloso ficam fora dos totais.`;
 }
 
 export function Bloco<R extends Resposta>({ id, etiqueta, titulo, consulta, filtros, kpis, tabela, linkPainel, onPadrao, children }: BlocoProps<R>) {

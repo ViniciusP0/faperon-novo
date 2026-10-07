@@ -73,6 +73,23 @@ describe("Numeros", () => {
     expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(/Em 2024, Rondônia produziu 1.milhão de toneladas de soja/);
   });
 
+  it("no cartão do total, avisa que municípios sigilosos ficam fora", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        const corpo = url.includes("/ranking")
+          ? { ...ranking, itens: [...itens, { posicao: null, municipio: { codigo_ibge: "1100015", nome: "Alta Floresta" }, valor: null, status: "sigiloso", percentual_total: null }] }
+          : url.includes("/serie")
+            ? { produto, indicador, municipio: null, inicio: 2015, fim: 2024, pontos, meta }
+            : analise;
+        return { ok: true, json: async () => corpo };
+      }),
+    );
+    render(<Numeros filtros={parseFiltros(new URLSearchParams(base))} />, { wrapper });
+    const cartoes = await screen.findAllByTestId("cartao-numero");
+    expect(cartoes[0]).toHaveTextContent("em 2024 · 1 município com dado sigiloso fica fora dos totais.");
+  });
+
   it("com município, mostra o valor dele e a posição no ranking", async () => {
     responder({ serie: { produto, indicador, municipio: { codigo_ibge: "1100304", nome: "Vilhena" }, inicio: 2015, fim: 2024, pontos, meta } });
     render(<Numeros filtros={parseFiltros(new URLSearchParams(`${base}&municipio=1100304`))} />, { wrapper });
