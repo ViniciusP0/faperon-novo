@@ -70,8 +70,8 @@ Ordem: `ok` por valor decrescente (`posicao` 1..n), depois `sigiloso` (`posicao:
 
 `GET /api/v1/comparacao` aceita dois modos:
 
-- `produto`, `indicador`, `municipios=1100015,1100023` (2 a 5 códigos) → `"modo": "municipios"`.
-- `produtos=soja-em-grao,milho-em-grao` (2 a 5 slugs), `indicador`, `municipio?` opcional (sem ele, total RO) → `"modo": "produtos"`. Retorna 422 se as unidades dos produtos diferirem.
+- `produto`, `indicador`, `municipios=1100015,1100023` (2 a 5 códigos distintos; repetidos contam uma vez) → `"modo": "municipios"`.
+- `produtos=soja-em-grao,milho-em-grao` (2 a 5 slugs distintos; repetidos contam uma vez, e a contagem é validada antes de consultar o banco), `indicador`, `municipio?` opcional (sem ele, total RO) → `"modo": "produtos"`. Retorna 422 se as unidades dos produtos diferirem.
 
 Resposta: `{"modo","indicador","unidade","inicio","fim","anos":[2015,...],"series":[{"id","nome","pontos":[{"ano","valor","status"}]}],"meta"}`.
 

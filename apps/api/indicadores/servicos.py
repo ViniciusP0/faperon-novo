@@ -253,7 +253,7 @@ def serie(
 def comparacao_municipios(
     recorte: Recorte, inicio: int, fim: int, codigos: list[str]
 ) -> list[SerieNomeada]:
-    _validar_quantidade(codigos, "municipios")
+    validar_quantidade(codigos, "municipios")
     resultado = []
     for codigo in codigos:
         municipio = obter_municipio(codigo)
@@ -266,7 +266,7 @@ def comparacao_municipios(
 def comparacao_produtos(
     recortes: list[Recorte], inicio: int, fim: int, municipio: Municipio | None
 ) -> list[SerieNomeada]:
-    _validar_quantidade(recortes, "produtos")
+    validar_quantidade(recortes, "produtos")
     unidades = {r.unidade for r in recortes}
     if len(unidades) > 1:
         raise RecorteIncompativel(
@@ -279,7 +279,7 @@ def comparacao_produtos(
     ]
 
 
-def _validar_quantidade(itens: list[Any], campo: str) -> None:
+def validar_quantidade(itens: list[Any], campo: str) -> None:
     if not MIN_COMPARACAO <= len(itens) <= MAX_COMPARACAO:
         raise ConsultaInvalida(
             f"Informe de {MIN_COMPARACAO} a {MAX_COMPARACAO} itens para comparar",

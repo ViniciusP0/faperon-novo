@@ -1,3 +1,5 @@
+from typing import Any
+
 import pytest
 from rest_framework.test import APIClient
 
@@ -317,3 +319,39 @@ def test_recorte_sem_dados_responde_404_e_nao_inventa_periodo(
     assert status == 404
     assert corpo["erro"] == "Não há dados publicados para este produto e indicador"
     assert corpo["campos"] == {}
+
+
+def test_comparacao_de_produtos_repetidos_nao_consulta_o_banco_por_slug(
+    api: APIClient, milho_e_leite: None, django_assert_max_num_queries: Any
+) -> None:
+    """Slugs repetidos viram um só: 250 repetições não podem custar 250 x 3 consultas."""
+    repetidos = ",".join(["soja-em-grao"] * 250)
+    with django_assert_max_num_queries(2):
+        status, corpo = get(api, f"comparacao?produtos={repetidos}&indicador=quantidade-produzida")
+    assert status == 400
+    assert corpo["campos"] == {"produtos": "esperado de 2 a 5 itens"}
+
+
+def test_comparacao_de_produtos_com_slug_repetido_conta_so_os_distintos(
+    api: APIClient, milho_e_leite: None
+) -> None:
+    status, corpo = get(
+        api,
+        "comparacao?produtos=soja-em-grao,milho-em-grao,soja-em-grao&indicador=quantidade-produzida"
+        "&inicio=2024&fim=2024",
+    )
+    assert status == 200
+    assert [(s["id"], s["pontos"][0]["valor"]) for s in corpo["series"]] == [
+        ("soja-em-grao", 600),
+        ("milho-em-grao", 50),
+    ]
+
+
+def test_comparacao_de_mais_de_cinco_produtos_distintos_da_400_sem_consultar(
+    api: APIClient, milho_e_leite: None, django_assert_max_num_queries: Any
+) -> None:
+    seis = ",".join(f"produto-{i}" for i in range(6))
+    with django_assert_max_num_queries(2):
+        status, corpo = get(api, f"comparacao?produtos={seis}&indicador=quantidade-produzida")
+    assert status == 400
+    assert corpo["campos"] == {"produtos": "esperado de 2 a 5 itens"}

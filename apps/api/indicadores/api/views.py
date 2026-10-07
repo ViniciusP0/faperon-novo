@@ -189,6 +189,10 @@ class ComparacaoView(APIView):
         return self._corpo("municipios", recorte, recorte.unidade, inicio, fim, series)
 
     def _por_produtos(self, dados: dict[str, Any], slugs: list[str]) -> dict[str, Any]:
+        # Repetidos viram um só e a quantidade é validada antes de qualquer consulta ao banco:
+        # cada slug custa 3 consultas e a URL cabe centenas deles.
+        slugs = list(dict.fromkeys(slugs))
+        servicos.validar_quantidade(slugs, "produtos")
         recortes = [servicos.obter_recorte(s, dados["indicador"]) for s in slugs]
         periodos: list[tuple[int, int]] = []
         ultima_falha: NaoEncontrado | None = None
