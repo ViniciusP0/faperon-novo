@@ -315,72 +315,152 @@ function destaques() {
 }
 
 // ---- Observatório (/api/v1/observatorio/*): formato exato do contrato, dados fictícios ----
+// Espelha apps/api/observatorio/servico.py: validação (400), inexistentes (404), padrões e avisos reais.
 const META_OBS = {
   fontes: [{ fonte: "IBGE – Pesquisa Agrícola Municipal (PAM)", tabela_sidra: 5457, url_fonte: "https://sidra.ibge.gov.br/Tabela/5457" }],
   atualizado_em: "2026-10-01T12:00:00Z",
 };
-const qualidadeObs = (avisos = [], sigilosos = 0) => ({ municipios_sigilosos: sigilosos, ano_ref_monetario: 2024, avisos });
 const COMO_LER = ["Explicação fictícia do mock.", "Segunda explicação."];
-const ANOS_OBS = Array.from({ length: 10 }, (_, i) => 2015 + i);
+const OBS_DADOS_MIN = 2015; // anos com dado nos blocos de crescimento/território/pecuária
+const OBS_DADOS_MAX = 2024;
+const ANOS_OBS = Array.from({ length: OBS_DADOS_MAX - OBS_DADOS_MIN + 1 }, (_, i) => OBS_DADOS_MIN + i);
+const ANOS_PAN = Array.from({ length: 30 }, (_, i) => 1995 + i); // panorama: PAM+PPM+IPCA desde 1995
+const IPCA_MIN = 1995;
 const CULTURAS_OBS = [{ slug: "soja-em-grao", nome: "Soja (em grão)" }, { slug: "cafe-em-grao-canephora", nome: "Café (em grão) Canephora" }, { slug: "milho-em-grao", nome: "Milho (em grão)" }];
 const REBANHOS_OBS = [{ slug: "bovino", nome: "Bovino" }, { slug: "suino-total", nome: "Suíno - total" }];
 
-// Valida o parâmetro como a API real: valor fora das opções → 400 {erro, campos}.
+// Textos copiados de apps/api/observatorio/regras.py
+const AVISO_SEM_CARNE = "O valor da produção soma lavouras (PAM) e produtos de origem animal (PPM); não inclui carne bovina nem abate, que a PPM não publica.";
+const avisoAnoRef = (pedido, usado) => `O IPCA de ${pedido} ainda não está fechado; os valores estão a preços de ${usado}.`;
+const avisoInicioRecortado = (pedido, usado) => `O período começa em ${usado}: antes do Plano Real não há como corrigir valores pelo IPCA.`;
+const avisoSigiloParcial = (n) => {
+  const sujeito = n === 1 ? "1 município com dado sigiloso" : `${n} municípios com dado sigiloso`;
+  return `${sujeito} para alguma cultura ${n === 1 ? "fica" : "ficam"} sem cultura dominante e fora da lista de dependentes.`;
+};
+const avisoSigiloPecuaria = (n, tema) => {
+  const sujeito = n === 1 ? "1 município com dado sigiloso" : `${n} municípios com dado sigiloso`;
+  return `${sujeito} no ${tema} ${n === 1 ? "fica" : "ficam"} fora dos totais e do ranking; o principal polo pode ser outro.`;
+};
+const avisoVariacaoBaseComum = (nComum, nFora) => {
+  const comuns = nComum === 1 ? "o 1 município" : `os ${nComum} municípios`;
+  const fora = nFora === 1 ? "1 município ficou" : `${nFora} municípios ficaram`;
+  return `A variação do rebanho foi calculada sobre ${comuns} com dado nos dois anos; ${fora} de fora.`;
+};
+
+const camposInvalidos = (campo, detalhe) => new HttpError(400, "Parâmetros inválidos", { [campo]: detalhe });
+
+// Valida como o DRF: ChoiceField, SlugField e IntegerField(min_value).
 function escolha(sp, campo, validos, padrao) {
   const bruto = sp.get(campo);
   if (bruto === null || bruto === "") return padrao;
   const valor = typeof padrao === "number" ? Number(bruto) : bruto;
-  if (!validos.includes(valor)) throw new HttpError(400, "Parâmetros inválidos", { [campo]: `"${bruto}" não é uma escolha válida.` });
+  if (!validos.includes(valor)) throw camposInvalidos(campo, `"${bruto}" não é uma escolha válida.`);
   return valor;
+}
+function slugParam(sp, campo) {
+  const bruto = sp.get(campo);
+  if (bruto === null || bruto === "") return null;
+  if (!/^[-a-zA-Z0-9_]+$/.test(bruto)) throw camposInvalidos(campo, 'Informe um "slug" válido composto por letras, números, underscores ou hífens.');
+  return bruto;
+}
+function anoParam(sp, campo, minimo) {
+  const bruto = sp.get(campo);
+  if (bruto === null || bruto === "") return null;
+  if (!/^-?\d+$/.test(bruto)) throw camposInvalidos(campo, "Um número inteiro válido é necessário.");
+  const n = Number(bruto);
+  if (minimo !== undefined && n < minimo) throw camposInvalidos(campo, `Certifique-se de que este valor seja maior ou igual a ${minimo}.`);
+  return n;
+}
+function validarAno(ano, anos) {
+  if (!anos.includes(ano)) throw new HttpError(400, `Não há dados para ${ano}`, { ano: `use um ano entre ${anos[0]} e ${anos[anos.length - 1]}` });
+}
+function validarJanelaAnos(inicio, fim) {
+  if (inicio > fim) throw new HttpError(400, "O ano inicial não pode ser maior que o ano final", { inicio: "maior que fim" });
+}
+function slugExistente(slug, lista, rotulo) {
+  if (slug !== null && !lista.some((i) => i.slug === slug)) throw new HttpError(404, `${rotulo} '${slug}' não existe`, {});
+}
+const temDado = (ano) => ano >= OBS_DADOS_MIN && ano <= OBS_DADOS_MAX;
+const rond = (v, casas = 2) => Math.round(v * 10 ** casas) / 10 ** casas;
+// Número-índice base 100 no primeiro ano com dado; sem dado → null (nunca zero).
+function indice(anos, valorDe) {
+  const base = anos.map(valorDe).find((v) => v !== null);
+  return anos.map((a) => { const v = valorDe(a); return v === null || base === undefined ? null : rond((v / base) * 100); });
+}
+// IPCA vai de 1995 a OBS_DADOS_MAX; depois disso usa o último disponível e avisa.
+function refMonetaria(ano) {
+  if (ano > OBS_DADOS_MAX) return { ano_ref: OBS_DADOS_MAX, avisos: [avisoAnoRef(ano, OBS_DADOS_MAX)] };
+  return { ano_ref: ano, avisos: [] };
 }
 
 function observatorio(bloco, sp) {
   if (bloco === "panorama") {
-    const ano = escolha(sp, "ano", ANOS_OBS, 2024);
+    const ano = escolha(sp, "ano", ANOS_PAN, OBS_DADOS_MAX);
     const janela = escolha(sp, "janela", [5, 10, 20], 10);
-    const anos = ANOS_OBS.filter((a) => a <= ano && a > ano - janela);
+    validarAno(ano, ANOS_PAN);
+    const inicioPedido = ano - janela + 1;
+    const inicio = Math.max(inicioPedido, IPCA_MIN);
+    const anos = Array.from({ length: ano - inicio + 1 }, (_, i) => inicio + i);
+    const avisos = [AVISO_SEM_CARNE];
+    if (inicioPedido < IPCA_MIN) avisos.push(avisoInicioRecortado(inicioPedido, IPCA_MIN));
     const composicao = [["soja-em-grao", "Soja (em grão)", 45], ["cafe-em-grao-canephora", "Café (em grão) Canephora", 20], ["milho-em-grao", "Milho (em grão)", 15], ["leite", "Leite", 12], ["demais", "Demais produtos", 8]]
       .map(([slug, nome, p]) => ({ slug, nome, valor: p * 1000, participacao: p }));
     return {
-      filtros: { valores: { ano, janela, inicio: ano - janela + 1 }, opcoes: { anos: ANOS_OBS, janelas: [5, 10, 20] } },
+      filtros: { valores: { ano, janela, inicio }, opcoes: { anos: ANOS_PAN, janelas: [5, 10, 20] } },
       metricas: { valor_total_real: 100000, valor_lavouras_real: 88000, valor_origem_animal_real: 12000, variacao_real_pct: 42.5, area_colhida_ha: 1500000 },
       series: {
         composicao,
         evolucao: { anos, itens: composicao.map((c) => ({ slug: c.slug, nome: c.nome, valores: anos.map((_, i) => Math.round(c.valor * (0.6 + i * 0.04))) })) },
       },
       texto: { manchete: `Em ${ano}, Soja (em grão) respondeu por 45,0% do valor da produção agropecuária de Rondônia (mock).`, como_ler: COMO_LER },
-      qualidade: qualidadeObs(["O valor da produção soma lavouras (PAM) e produtos de origem animal (PPM); não inclui carne bovina nem abate, que a PPM não publica."]),
+      qualidade: { municipios_sigilosos: 0, ano_ref_monetario: ano, avisos },
       meta: META_OBS,
     };
   }
   if (bloco === "crescimento") {
-    const cultura = escolha(sp, "cultura", CULTURAS_OBS.map((c) => c.slug), "soja-em-grao");
-    const inicio = escolha(sp, "inicio", ANOS_OBS, 2015);
-    const fim = escolha(sp, "fim", ANOS_OBS, 2024);
-    if (inicio > fim) throw new HttpError(400, "O ano inicial não pode ser maior que o ano final", { inicio: "maior que fim" });
+    const cultura = slugParam(sp, "cultura") ?? "soja-em-grao";
+    const fimPedido = anoParam(sp, "fim", 1974);
+    const inicioPedido = anoParam(sp, "inicio", 1974);
+    slugExistente(cultura, CULTURAS_OBS, "Cultura");
+    const fim = fimPedido ?? OBS_DADOS_MAX;
+    const inicio = inicioPedido ?? fim - 9;
+    validarJanelaAnos(inicio, fim);
     const nome = CULTURAS_OBS.find((c) => c.slug === cultura).nome;
-    const anos = ANOS_OBS.filter((a) => a >= inicio && a <= fim);
+    const anos = Array.from({ length: fim - inicio + 1 }, (_, i) => inicio + i);
+    const { ano_ref, avisos } = refMonetaria(fim);
+    const dado = (fn) => (a) => (temDado(a) ? fn(a - OBS_DADOS_MIN) : null);
+    const area = dado((i) => 100 + i * 4), rend = dado((i) => 100 + i * 7), prod = dado((i) => 100 + i * 12);
+    const comDado = temDado(inicio) && temDado(fim) && fim > inicio;
     return {
       filtros: { valores: { cultura, inicio, fim }, opcoes: { culturas: CULTURAS_OBS, anos: ANOS_OBS } },
-      metricas: { variacao_producao_pct: 120, parte_area_pct: 35, parte_rendimento_pct: 65, perda_media_pct: 2.1, perda_ultimo_ano_pct: 1.8 },
+      metricas: comDado
+        ? { variacao_producao_pct: 120, parte_area_pct: 35, parte_rendimento_pct: 65, perda_media_pct: 2.1, perda_ultimo_ano_pct: 1.8 }
+        : { variacao_producao_pct: null, parte_area_pct: null, parte_rendimento_pct: null, perda_media_pct: null, perda_ultimo_ano_pct: null },
       series: {
-        indices: { anos, area: anos.map((_, i) => 100 + i * 4), rendimento: anos.map((_, i) => 100 + i * 7), producao: anos.map((_, i) => 100 + i * 12) },
-        perda: anos.map((ano, i) => ({ ano, valor: 1 + (i % 3) })),
+        indices: { anos, area: indice(anos, area), rendimento: indice(anos, rend), producao: indice(anos, prod) },
+        perda: anos.map((ano, i) => ({ ano, valor: temDado(ano) ? 1 + (i % 3) : null })),
         valor_por_hectare: [{ slug: "cafe-em-grao-canephora", nome: "Café (em grão) Canephora", valor: 18000, participacao: null }, { slug: "soja-em-grao", nome: "Soja (em grão)", valor: 6500, participacao: null }],
       },
       texto: { manchete: `A produção de ${nome} cresceu 120,0% entre ${inicio} e ${fim} (mock).`, como_ler: COMO_LER },
-      qualidade: qualidadeObs(),
+      qualidade: { municipios_sigilosos: 0, ano_ref_monetario: ano_ref, avisos },
       meta: META_OBS,
     };
   }
   if (bloco === "territorio") {
     const metrica = escolha(sp, "metrica", ["valor", "area", "rebanho", "dominante"], "valor");
-    const cultura = escolha(sp, "cultura", CULTURAS_OBS.map((c) => c.slug), null);
-    const ano = escolha(sp, "ano", ANOS_OBS, 2024);
+    const culturaPedida = slugParam(sp, "cultura");
+    const anoPedido = anoParam(sp, "ano");
+    slugExistente(culturaPedida, CULTURAS_OBS, "Cultura");
+    const cultura = metrica === "rebanho" || metrica === "dominante" ? null : culturaPedida;
+    const ano = anoPedido ?? OBS_DADOS_MAX;
+    validarAno(ano, ANOS_OBS);
+    const dominante = metrica === "dominante";
+    const monetaria = metrica === "valor" || dominante;
+    const ref = monetaria ? refMonetaria(ano) : { ano_ref: null, avisos: [] };
     const municipios = MUNICIPIOS.map((m, i) => ({
       codigo_ibge: m.codigo_ibge, nome: m.nome, microrregiao: i % 2 ? "Ariquemes" : "Cacoal",
       valor: i < 2 ? null : (52 - i) * 100, status: i === 0 ? "sigiloso" : i === 1 ? "sem_dado" : "ok",
-      categoria: metrica === "dominante" && i > 1 ? (i % 2 ? "soja-em-grao" : "cafe-em-grao-canephora") : null,
+      categoria: dominante && i > 1 ? (i % 5 === 0 ? "outras" : i % 2 ? "soja-em-grao" : "cafe-em-grao-canephora") : null,
     }));
     return {
       filtros: {
@@ -390,34 +470,47 @@ function observatorio(bloco, sp) {
           culturas: CULTURAS_OBS, anos: ANOS_OBS,
         },
       },
-      metricas: { unidade: metrica === "area" ? "Hectares" : metrica === "rebanho" ? "Cabeças" : "Mil Reais", total: 130000, top5_pct: 38.4, hhi: 520, concentracao: "baixa" },
+      metricas: { unidade: dominante ? "" : metrica === "area" ? "Hectares" : metrica === "rebanho" ? "Cabeças" : "Mil Reais", total: 130000, top5_pct: 38.4, hhi: 520, concentracao: "baixa" },
       series: {
         municipios,
         microrregioes: [{ nome: "Ariquemes", valor: 70000 }, { nome: "Cacoal", valor: 60000 }],
         dependentes: [{ codigo_ibge: MUNICIPIOS[2].codigo_ibge, nome: MUNICIPIOS[2].nome, cultura: "Soja (em grão)", participacao: 71.2 }],
-        categorias: metrica === "dominante" ? CULTURAS_OBS.slice(0, 2) : [],
+        categorias: dominante ? [...CULTURAS_OBS.slice(0, 2), { slug: "outras", nome: "Outras" }] : [],
       },
       texto: { manchete: `Em ${ano}, os cinco maiores municípios concentraram 38,4% do total (mock).`, como_ler: COMO_LER },
-      qualidade: qualidadeObs(["1 município com dado sigiloso (X) ficou fora da soma e da conclusão; o total é parcial."], 1),
+      qualidade: { municipios_sigilosos: 1, ano_ref_monetario: ref.ano_ref, avisos: [...ref.avisos, avisoSigiloParcial(1)] },
       meta: META_OBS,
     };
   }
-  const rebanho = escolha(sp, "rebanho", REBANHOS_OBS.map((r) => r.slug), "bovino");
-  const inicio = escolha(sp, "inicio", ANOS_OBS, 2015);
-  const fim = escolha(sp, "fim", ANOS_OBS, 2024);
-  if (inicio > fim) throw new HttpError(400, "O ano inicial não pode ser maior que o ano final", { inicio: "maior que fim" });
-  const anos = ANOS_OBS.filter((a) => a >= inicio && a <= fim);
+  const rebanho = slugParam(sp, "rebanho") ?? "bovino";
+  const fimPedido = anoParam(sp, "fim", 1974);
+  const inicioPedido = anoParam(sp, "inicio", 1974);
+  slugExistente(rebanho, REBANHOS_OBS, "Rebanho");
+  const fim = fimPedido ?? OBS_DADOS_MAX;
+  const inicio = inicioPedido ?? fim - 9;
+  validarJanelaAnos(inicio, fim);
+  const anos = Array.from({ length: fim - inicio + 1 }, (_, i) => inicio + i);
+  const { ano_ref, avisos } = refMonetaria(fim);
+  const bovino = rebanho === "bovino";
+  // Bovino: 1 município sigiloso fica fora da base comum (avisos reais); suíno: sem leite no mock.
+  if (bovino) avisos.push(avisoVariacaoBaseComum(50, 1), avisoSigiloPecuaria(1, "rebanho"));
+  const municipios = (bovino ? MUNICIPIOS.slice(1) : MUNICIPIOS).map((m, i) => ({ codigo_ibge: m.codigo_ibge, nome: m.nome, valor: 1000000 - i * 15000 }));
   return {
     filtros: { valores: { rebanho, inicio, fim }, opcoes: { rebanhos: REBANHOS_OBS, anos: ANOS_OBS } },
-    metricas: { efetivo_final: 18000000, variacao_pct: 30.2, top5_pct: 25.1, leite: { volume_mil_litros: 900000, valor_real: 1500000, produtividade_l_vaca: 1900, variacao_produtividade_pct: 22.4 } },
-    series: {
-      efetivo: anos.map((ano, i) => ({ ano, valor: 14000000 + i * 400000 })),
-      municipios: MUNICIPIOS.map((m, i) => ({ codigo_ibge: m.codigo_ibge, nome: m.nome, valor: 1000000 - i * 15000 })),
-      composicao: [{ slug: "bovino", nome: "Bovino", valor: 18000000, participacao: 90 }, { slug: "suino-total", nome: "Suíno - total", valor: 2000000, participacao: 10 }],
-      leite_polos: MUNICIPIOS.slice(0, 5).map((m, i) => ({ codigo_ibge: m.codigo_ibge, nome: m.nome, volume: 90000 - i * 5000, produtividade: 2100 - i * 50 })),
+    metricas: {
+      efetivo_final: temDado(fim) ? 18000000 : null,
+      variacao_pct: temDado(inicio) && temDado(fim) && fim > inicio ? 30.2 : null,
+      top5_pct: 25.1,
+      leite: bovino ? { volume_mil_litros: 900000, valor_real: 1500000, produtividade_l_vaca: 1900, variacao_produtividade_pct: 22.4 } : null,
     },
-    texto: { manchete: `O rebanho ${rebanho === "bovino" ? "bovino" : "suíno"} cresceu 30,2% entre ${inicio} e ${fim} (mock).`, como_ler: COMO_LER },
-    qualidade: qualidadeObs(),
+    series: {
+      efetivo: anos.map((ano) => ({ ano, valor: temDado(ano) ? 14000000 + (ano - OBS_DADOS_MIN) * 400000 : null })),
+      municipios,
+      composicao: [{ slug: "bovino", nome: "Bovino", valor: 18000000, participacao: 90 }, { slug: "suino-total", nome: "Suíno - total", valor: 2000000, participacao: 10 }],
+      leite_polos: bovino ? MUNICIPIOS.slice(1, 6).map((m, i) => ({ codigo_ibge: m.codigo_ibge, nome: m.nome, volume: 90000 - i * 5000, produtividade: 2100 - i * 50 })) : [],
+    },
+    texto: { manchete: `O rebanho ${bovino ? "bovino" : "suíno"} cresceu 30,2% entre ${inicio} e ${fim} (mock).`, como_ler: COMO_LER },
+    qualidade: { municipios_sigilosos: bovino ? 1 : 0, ano_ref_monetario: ano_ref, avisos },
     meta: META_OBS,
   };
 }
