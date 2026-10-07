@@ -51,9 +51,9 @@ describe("Início e Central", () => {
     expect(INICIO.nosso_agro.titulo).toBe("Nosso Agro");
   });
 
-  it("descreve os seis blocos do painel sem HTML solto", () => {
-    expect(CENTRAL.blocos).toHaveLength(6);
+  it("descreve a Central e as duas portas sem HTML solto", () => {
     expect(CENTRAL.paragrafos.every((p) => !p.includes("<"))).toBe(true);
+    expect(CENTRAL.seo.descricao).toContain("Observatório");
     expect(CENTRAL.cta_url).toBe("/painel");
     expect(CENTRAL.portas.map((p) => p.href)).toEqual(["/central-de-inteligencia/observatorio", "/painel"]);
     expect(CENTRAL.portas.map((p) => p.rotulo)).toEqual(["Abrir o Observatório", "Abrir o Painel Agro Analítico"]);
