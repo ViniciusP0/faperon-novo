@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { UseQueryResult } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
@@ -31,7 +31,7 @@ function renderizar(c: UseQueryResult<PanoramaResposta>) {
 }
 
 describe("Bloco do Observatório", () => {
-  it("mostra manchete, como ler, avisos, fonte e alterna gráfico e tabela", async () => {
+  it("mostra manchete, notas explicativas, avisos, fonte e alterna gráfico e tabela", async () => {
     render(
       <Bloco id="panorama" etiqueta="01" titulo="Panorama" consulta={consulta({})} filtros={null} onPadrao={vi.fn()}
         tabela={() => <table aria-label="dados"><tbody><tr><td>x</td></tr></tbody></table>}
@@ -60,9 +60,12 @@ describe("Bloco do Observatório", () => {
     expect(screen.getByRole("button", { name: "Ver como gráfico" })).toHaveAttribute("aria-pressed", "true");
   });
 
-  it("expõe nomes acessíveis para a lista Como ler e para o aside de qualidade", () => {
+  it("não escreve o rótulo 'Como ler', mas mantém as notas explicativas com nome acessível", () => {
     renderizar(consulta({}));
-    expect(screen.getByRole("list", { name: "Como ler" })).toBeInTheDocument();
+    expect(screen.queryByText(/como ler/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /como ler/i })).not.toBeInTheDocument();
+    const notas = screen.getByRole("list", { name: "Notas explicativas" });
+    expect(within(notas).getAllByRole("listitem").map((li) => li.textContent)).toEqual(["Primeira explicação.", "Segunda."]);
     expect(screen.getByRole("complementary", { name: "Fonte e qualidade do dado" })).toBeInTheDocument();
   });
 

@@ -68,8 +68,7 @@ export function Bloco<R extends Resposta>({ id, etiqueta, titulo, consulta, filt
           </div>
           <div className="mt-6 grid gap-6 md:grid-cols-[3fr_2fr]">
             <div>
-              <h3 id={`${id}-como-ler`} className="text-sm font-semibold uppercase tracking-wider text-ink-muted">Como ler</h3>
-              <ul aria-labelledby={`${id}-como-ler`} className="mt-2 space-y-2 leading-relaxed text-ink-muted">
+              <ul aria-label="Notas explicativas" className="space-y-2 leading-relaxed text-ink-muted">
                 {d.texto.como_ler.map((t, i) => <li key={i}>{t}</li>)}
               </ul>
             </div>
