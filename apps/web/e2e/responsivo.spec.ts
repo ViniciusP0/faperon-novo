@@ -13,7 +13,7 @@ test("celular: menu abre, sem rolagem horizontal, painel usável", async ({ page
   expect(larguraPagina).toBeLessThanOrEqual(1);
 });
 
-for (const rota of ["/sobre", "/informativos-tecnicos", "/noticias", "/fale-conosco"]) {
+for (const rota of ["/sobre", "/informativos-tecnicos", "/noticias", "/fale-conosco", "/central-de-inteligencia/observatorio"]) {
   test(`celular: ${rota} não tem rolagem horizontal`, async ({ page }) => {
     await page.goto(rota);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();

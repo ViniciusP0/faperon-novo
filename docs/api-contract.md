@@ -95,6 +95,87 @@ Métricas indisponíveis (ex.: início zero, `nao_agregavel` sem total) ficam `n
 
 `GET /api/v1/relatorio.pdf?...&municipios=` retorna `application/pdf` com `Content-Disposition: attachment; filename="faperon-<produto>-<indicador>-<inicio>-<fim>.pdf"`. Aceita os mesmos parâmetros da análise mais `municipios` (comparação, opcional). Cache por recorte e por Carga; rate limit por IP (429 com `Retry-After`).
 
+## Observatório
+
+Quatro rotas somente de leitura, uma por bloco da página `/central-de-inteligencia/observatorio`. Cada bloco é independente: um parâmetro inválido em um deles responde 400 só para aquela rota e não afeta as outras.
+
+| Rota | Parâmetros (todos opcionais) | Padrões |
+|---|---|---|
+| `GET /api/v1/observatorio/panorama` | `ano` (inteiro), `janela` (`5`, `10` ou `20`) | `ano` = último ano com dados do valor da produção; `janela` = `10` |
+| `GET /api/v1/observatorio/crescimento` | `cultura` (slug), `inicio`, `fim` (anos ≥ 1974) | `cultura` = `soja-em-grao`; `fim` = último ano com dados; `inicio` = `fim - 9` |
+| `GET /api/v1/observatorio/territorio` | `metrica` (`valor`, `area`, `rebanho`, `dominante`), `cultura` (slug), `ano` | `metrica` = `valor`; `cultura` = nenhuma (todas); `ano` = último ano com dados |
+| `GET /api/v1/observatorio/pecuaria` | `rebanho` (slug), `inicio`, `fim` (anos ≥ 1974) | `rebanho` = `bovino`; `fim` = último ano com dados; `inicio` = `fim - 9` |
+
+Os valores efetivamente usados voltam em `filtros.valores`; as escolhas possíveis, em `filtros.opcoes`. Valores monetários são **reais**: corrigidos pelo IPCA médio anual e expressos a preços do ano `qualidade.ano_ref_monetario`.
+
+### Forma comum
+
+```json
+{
+  "filtros": {"valores": {}, "opcoes": {}},
+  "metricas": {},
+  "series": {},
+  "texto": {"manchete": "Frase de uma linha com o achado principal.", "como_ler": ["Parágrafo 1.", "Parágrafo 2."]},
+  "qualidade": {"municipios_sigilosos": 1, "ano_ref_monetario": 2024, "avisos": ["..."]},
+  "meta": {
+    "fontes": [{"fonte": "IBGE – Pesquisa Agrícola Municipal (PAM)", "tabela_sidra": 5457, "url_fonte": "https://sidra.ibge.gov.br/Tabela/5457"}],
+    "atualizado_em": "2026-10-01T12:00:00Z"
+  }
+}
+```
+
+- `meta.fontes` é uma lista (cada bloco combina PAM, PPM e/ou IPCA); `atualizado_em` é a conclusão da última Carga bem-sucedida.
+- `qualidade.municipios_sigilosos`: municípios com dado sigiloso ("X") que ficaram fora de somas, rankings ou conclusões do bloco.
+- `qualidade.ano_ref_monetario`: ano dos preços; `null` quando não há como corrigir valores.
+- Opções de seleção são `{"slug", "nome"}`; `anos` é lista de inteiros.
+- `metricas` e `series` podem vir **vazios (`{}`)** com HTTP 200 quando não há o que mostrar; o motivo está em `qualidade.avisos` (e em `texto.manchete`). Métrica individual indisponível vem `null`. Ausente nunca é zero.
+
+#### `avisos`: semântica
+
+`qualidade.avisos` é uma lista de frases prontas para exibir, em português, sem códigos. Hoje:
+
+- **Sem dado** (`Não há dados publicados pelo IBGE para este recorte.`): o recorte existe mas o IBGE não publicou nada; `metricas`/`series` vazios.
+- **IPCA ausente** (`Não é possível calcular valores reais: o IPCA necessário ... não está disponível.`): faltam índices de preço. Só as partes monetárias degradam (lista vazia, `ano_ref_monetario: null`); métricas físicas (área, rebanho, produção) continuam. Não é o mesmo que "sem dado".
+- Avisos fixos ou condicionais: sem carne bovina (o valor soma PAM + PPM e a PPM não publica carne nem abate); IPCA do ano pedido ainda não fechado (valores a preços de outro ano); período começa depois do pedido (antes do Plano Real não há correção); sigilo parcial (municípios sigilosos ficam sem cultura dominante, fora da lista de dependentes, ou fora de totais/ranking da pecuária); variação do rebanho calculada sobre a base comum de municípios dos dois anos.
+
+### `panorama`
+
+- `filtros.valores`: `{ano, janela, inicio}`; `opcoes`: `{anos, janelas}`.
+- `metricas`: `valor_total_real`, `valor_lavouras_real`, `valor_origem_animal_real`, `variacao_real_pct`, `area_colhida_ha`.
+- `series.composicao`: `[{slug, nome, valor, participacao}]` (mil reais reais; `participacao` em %; o último item pode ser `demais`).
+- `series.evolucao`: `{anos: [int], itens: [{slug, nome, valores: [float|null]}]}`, um valor por ano em `anos`.
+
+### `crescimento`
+
+- `filtros.valores`: `{cultura, inicio, fim}`; `opcoes`: `{culturas: [{slug, nome}], anos}`.
+- `metricas`: `variacao_producao_pct`, `parte_area_pct`, `parte_rendimento_pct` (decomposição; somam 100), `perda_media_pct`, `perda_ultimo_ano_pct`.
+- `series.indices`: `{anos, area, rendimento, producao}`, números-índice com base 100 no primeiro ano.
+- `series.perda`: `[{ano, valor}]` (% da área plantada não colhida).
+- `series.valor_por_hectare`: `[{slug, nome, valor, participacao: null}]` (reais por hectare, ano final).
+
+### `territorio`
+
+- `filtros.valores`: `{metrica, cultura, ano}`; `opcoes`: `{metricas: [{slug, nome, unidade}], culturas, anos}`.
+- `metricas`: `unidade`, `total`, `top5_pct`, `hhi` (0 a 10.000), `concentracao` (`baixa`, `moderada` ou `alta`).
+- `series.municipios`: os 52 municípios, `[{codigo_ibge, nome, microrregiao, valor, status, categoria}]`. `status` é `ok`, `sigiloso` ou `sem_dado`; nos dois últimos `valor` é `null` (nunca 0). `categoria` é o slug da cultura dominante (só com `metrica=dominante`; `null` quando sigiloso/desconhecido).
+- `series.microrregioes`: `[{nome, valor}]`.
+- `series.dependentes`: `[{codigo_ibge, nome, cultura, participacao}]` (municípios com mais da metade do valor agrícola em uma cultura).
+- `series.categorias`: `[{slug, nome}]`, legenda do mapa (vazia fora de `dominante`).
+
+### `pecuaria`
+
+- `filtros.valores`: `{rebanho, inicio, fim}`; `opcoes`: `{rebanhos: [{slug, nome}], anos}`.
+- `metricas`: `efetivo_final`, `variacao_pct`, `top5_pct` e `leite: {volume_mil_litros, valor_real, produtividade_l_vaca, variacao_produtividade_pct}`.
+- `series.efetivo`: `[{ano, valor}]`; `series.municipios`: `[{codigo_ibge, nome, valor}]` (ordenado, maiores primeiro); `series.composicao`: `[{slug, nome, valor, participacao}]`; `series.leite_polos`: `[{codigo_ibge, nome, volume, produtividade}]`.
+
+### Erros
+
+Mesmo formato do restante da API: `{"erro": "Parâmetros inválidos", "campos": {"janela": "\"7\" não é uma escolha válida."}}`.
+
+- `400`: `janela`/`metrica` fora das escolhas, valor não numérico, ano abaixo de 1974, `ano` sem dados (`campos: {"ano": "use um ano entre 1994 e 2025"}`) ou `inicio > fim` (`campos: {"inicio": "maior que fim"}`).
+- `404`: `cultura` ou `rebanho` inexistente (`{"erro": "Cultura 'xxx' não existe", "campos": {}}`).
+- Ausência de dados **não** é erro: responde 200 com `metricas`/`series` vazios e o motivo em `qualidade.avisos`.
+
 ## Saúde
 
 `GET /api/v1/saude` → `{"status": "ok", "banco": "ok"}` (usado pelo healthcheck do Compose).
