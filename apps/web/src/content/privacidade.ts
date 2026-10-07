@@ -20,9 +20,9 @@ export const PRIVACIDADE = {
       titulo: "Quais dados tratamos",
       itens: [
         "Dados do formulário de contato: nome, sobrenome, e-mail, telefone e a mensagem que você escreve. O formulário monta a mensagem e abre uma conversa no WhatsApp da FAPERON; o envio só acontece quando você o confirma no WhatsApp.",
-        "Dados de acesso ao login do sistema, quando você tem cadastro: identificação de usuário e informações de sessão necessárias para mantê-lo autenticado.",
+        "A tela de login do site ainda não envia nem guarda nada: o que você digita nela não sai do seu navegador.",
         "Preferência de tema (claro ou escuro), guardada apenas no seu navegador. Ela não é enviada à FAPERON.",
-        "O painel de inteligência usa dados públicos do IBGE e não coleta dados pessoais de quem o consulta.",
+        "O painel de inteligência usa dados públicos do IBGE e não pede nem guarda dados pessoais de quem o consulta. O endereço IP do visitante é tratado de forma técnica, por cerca de um minuto e em cache temporário, só para limitar abusos (limite de requisições por minuto); ele não é gravado em banco de dados e não é usado para identificar ninguém.",
       ],
     },
     {
@@ -30,7 +30,7 @@ export const PRIVACIDADE = {
       titulo: "Para que usamos os dados",
       itens: [
         "Responder à sua mensagem e atender solicitações dirigidas à FAPERON.",
-        "Autenticar usuários e proteger o acesso às áreas restritas.",
+        "Limitar abusos e manter o painel disponível para todos (limite de requisições por IP).",
         "Cumprir obrigações legais e regulatórias.",
       ],
       paragrafos: ["Não vendemos nem cedemos dados pessoais para publicidade."],
