@@ -4,7 +4,7 @@ from decimal import Decimal
 from typing import Any
 
 from indicadores.catalogo import FONTES
-from indicadores.erros import ConsultaInvalida
+from indicadores.erros import ConsultaInvalida, NaoEncontrado
 from indicadores.servicos import formatar_data
 from observatorio import calculos as c
 from observatorio import leitura
@@ -183,6 +183,103 @@ def panorama(ano: int | None, janela: int) -> dict[str, Any]:
         },
         "qualidade": {
             "municipios_sigilosos": leitura.sigilosos(VALOR, 5457, ano),
+            "ano_ref_monetario": ano_ref,
+            "avisos": avisos,
+        },
+        "meta": meta(tabelas),
+    }
+
+
+AREA_MINIMA_RANKING = Decimal(1000)
+
+
+def _estadual(indicador: str, slug: str, inicio: int, fim: int) -> dict[int, Decimal]:
+    return leitura.totais_por_produto(indicador, 5457, inicio, fim).get(slug, {})
+
+
+def crescimento(cultura: str | None, inicio: int | None, fim: int | None) -> dict[str, Any]:
+    tabelas = [5457, 1737]
+    culturas = leitura.produtos(5457)
+    anos = leitura.anos_disponiveis("area-colhida", 5457)
+    opcoes = {"culturas": [{"slug": s, "nome": n} for s, n in culturas.items()], "anos": anos}
+    if not anos or not culturas:
+        vazios = {"valores": {"cultura": cultura, "inicio": inicio, "fim": fim}, "opcoes": opcoes}
+        return _vazio("crescimento", vazios, tabelas)
+    if cultura is None:
+        valores = leitura.totais_por_produto(VALOR, 5457, anos[-1], anos[-1])
+        cultura = (
+            max(valores, key=lambda s: (valores[s].get(anos[-1], Decimal(0)), s))
+            if valores
+            else next(iter(culturas))
+        )
+    if cultura not in culturas:
+        raise NaoEncontrado(f"Cultura '{cultura}' não existe")
+    fim = fim if fim is not None else anos[-1]
+    inicio = inicio if inicio is not None else fim - 9
+    if inicio > fim:
+        raise ConsultaInvalida(
+            "O ano inicial não pode ser maior que o ano final", {"inicio": "maior que fim"}
+        )
+    filtros = {"valores": {"cultura": cultura, "inicio": inicio, "fim": fim}, "opcoes": opcoes}
+
+    indices = leitura.indices_ipca()
+    ano_ref, avisos = referencia_monetaria(fim, indices)
+    if ano_ref is None:  # o R$/ha depende do IPCA; sem ele o bloco inteiro degrada
+        return _vazio("crescimento", filtros, tabelas, None, r.AVISO_SEM_IPCA, avisos)
+
+    area = _estadual("area-colhida", cultura, inicio, fim)
+    plantada = _estadual("area-plantada", cultura, inicio, fim)
+    producao = _estadual("quantidade-produzida", cultura, inicio, fim)
+    anos_janela = list(range(inicio, fim + 1))
+    rendimento = {a: producao[a] / area[a] for a in anos_janela if a in producao and area.get(a)}
+    d = c.decompor_crescimento(
+        area.get(inicio), area.get(fim), producao.get(inicio), producao.get(fim)
+    )
+    perdas = [(a, c.perda_lavoura(plantada.get(a), area.get(a))) for a in anos_janela]
+    perdas_ok = [p for _, p in perdas if p is not None]
+
+    valores_fim = leitura.totais_por_produto(VALOR, 5457, fim, fim)
+    areas_fim = leitura.totais_por_produto("area-colhida", 5457, fim, fim)
+    rph: list[dict[str, Any]] = []
+    for slug, nome in culturas.items():
+        a = areas_fim.get(slug, {}).get(fim)
+        if a is None or a < AREA_MINIMA_RANKING:
+            continue
+        real = c.deflacionar(valores_fim.get(slug, {}).get(fim), fim, ano_ref, indices)
+        vph = c.valor_por_hectare(real, a)
+        if vph is not None:
+            rph.append({"slug": slug, "nome": nome, "valor": f(vph, 0), "participacao": None})
+    rph.sort(key=lambda i: (-(i["valor"] or 0), i["slug"]))
+
+    def serie_indice(dados: dict[int, Decimal]) -> list[float | None]:
+        return [f(v) for _, v in c.indice_base_100([(a, dados.get(a)) for a in anos_janela])]
+
+    media_perda = sum(perdas_ok, Decimal(0)) / len(perdas_ok) if perdas_ok else None
+    return {
+        "filtros": filtros,
+        "metricas": {
+            "variacao_producao_pct": f(d.variacao_producao_pct) if d else None,
+            "parte_area_pct": f(d.parte_area_pct) if d else None,
+            "parte_rendimento_pct": f(d.parte_rendimento_pct) if d else None,
+            "perda_media_pct": f(media_perda),
+            "perda_ultimo_ano_pct": f(perdas[-1][1]),
+        },
+        "series": {
+            "indices": {
+                "anos": anos_janela,
+                "area": serie_indice(area),
+                "rendimento": serie_indice(rendimento),
+                "producao": serie_indice(producao),
+            },
+            "perda": [{"ano": a, "valor": f(p)} for a, p in perdas],
+            "valor_por_hectare": rph,
+        },
+        "texto": {
+            "manchete": r.manchete_crescimento(culturas[cultura], inicio, fim, d),
+            "como_ler": r.como_ler("crescimento", ano_ref),
+        },
+        "qualidade": {
+            "municipios_sigilosos": leitura.sigilosos("quantidade-produzida", 5457, fim, cultura),
             "ano_ref_monetario": ano_ref,
             "avisos": avisos,
         },

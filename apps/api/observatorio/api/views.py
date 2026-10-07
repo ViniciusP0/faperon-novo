@@ -21,8 +21,14 @@ class PanoramaView(APIView):
 
 
 class CrescimentoView(APIView):
+    @extend_schema(
+        parameters=[sz.ConsultaCrescimentoSerializer],
+        responses={200: sz.CrescimentoSerializer, **ERROS},
+    )
     def get(self, request: Request) -> Response:
-        return Response(status=501)
+        d = validar_consulta(sz.ConsultaCrescimentoSerializer, request)
+        resultado = servico.crescimento(d.get("cultura"), d.get("inicio"), d.get("fim"))
+        return Response(sz.CrescimentoSerializer(resultado).data)
 
 
 class TerritorioView(APIView):

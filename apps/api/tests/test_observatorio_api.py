@@ -134,3 +134,52 @@ def test_panorama_ano_com_ipca_nao_fechado(
     assert r.aviso_ano_ref(2026, 2025) in corpo["qualidade"]["avisos"]
     assert r.AVISO_SEM_IPCA in corpo["qualidade"]["avisos"]
     assert corpo["filtros"]["valores"]["ano"] == 2026
+
+
+def test_crescimento_padrao_e_decomposicao(api: APIClient, dados_observatorio: dict) -> None:
+    status, corpo = get(api, "crescimento")
+    assert status == 200
+    assert corpo["filtros"]["valores"] == {"cultura": "soja-em-grao", "inicio": 2015, "fim": 2024}
+    m = corpo["metricas"]
+    # soja: área 100→1110, produção 300→3660
+    assert m["parte_area_pct"] + m["parte_rendimento_pct"] == pytest.approx(100, abs=0.01)
+    assert m["perda_ultimo_ano_pct"] == pytest.approx((1120 - 1110) / 1120 * 100, abs=0.01)
+    ind = corpo["series"]["indices"]
+    assert ind["producao"][0] == 100.0 and ind["area"][0] == 100.0
+    assert ind["producao"][-1] == pytest.approx(3660 / 300 * 100, abs=0.01)
+    # rendimento = produção ÷ área estadual (3,0 → 3,2973), nunca média de rendimentos
+    assert ind["rendimento"][-1] == pytest.approx((3660 / 1110) / 3 * 100, abs=0.01)
+    assert {i["slug"] for i in corpo["series"]["valor_por_hectare"]} == {
+        "soja-em-grao",
+        "cafe-em-grao-canephora",
+    }
+
+
+def test_crescimento_ranking_exige_area_minima(
+    api: APIClient, dados_observatorio: dict
+) -> None:
+    # em 2015 nenhuma cultura tem 1.000 ha colhidos
+    _, corpo = get(api, "crescimento?cultura=soja-em-grao&inicio=2010&fim=2015")
+    assert corpo["series"]["valor_por_hectare"] == []
+
+
+def test_crescimento_sem_base_no_inicio(api: APIClient, dados_observatorio: dict) -> None:
+    status, corpo = get(api, "crescimento?cultura=soja-em-grao&inicio=2016&fim=2024")
+    assert status == 200
+    assert corpo["metricas"]["parte_area_pct"] is None
+    assert corpo["texto"]["manchete"].startswith("Não há base de comparação")
+    assert corpo["series"]["indices"]["producao"] == [None] * 9
+
+
+def test_crescimento_erros(api: APIClient, dados_observatorio: dict) -> None:
+    assert get(api, "crescimento?cultura=inexistente")[0] == 404
+    assert get(api, "crescimento?inicio=2024&fim=2015")[0] == 400
+
+
+def test_crescimento_sem_ipca(api: APIClient, dados_observatorio: dict) -> None:
+    IndicePreco.objects.all().delete()
+    status, corpo = get(api, "crescimento")
+    assert status == 200
+    assert corpo["texto"]["manchete"] == r.AVISO_SEM_IPCA
+    assert corpo["qualidade"]["ano_ref_monetario"] is None
+    assert corpo["series"].get("valor_por_hectare", []) == []

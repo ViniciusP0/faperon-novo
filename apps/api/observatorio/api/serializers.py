@@ -98,3 +98,55 @@ class PanoramaSerializer(serializers.Serializer):
     texto = TextoSerializer()
     qualidade = QualidadeSerializer()
     meta = MetaObservatorioSerializer()
+
+
+class ConsultaCrescimentoSerializer(serializers.Serializer):
+    cultura = serializers.SlugField(required=False)
+    inicio = serializers.IntegerField(required=False, min_value=1974)
+    fim = serializers.IntegerField(required=False, min_value=1974)
+
+
+class CrescimentoValoresSerializer(serializers.Serializer):
+    cultura = serializers.CharField(allow_null=True)
+    inicio = serializers.IntegerField(allow_null=True)
+    fim = serializers.IntegerField(allow_null=True)
+
+
+class CrescimentoOpcoesSerializer(serializers.Serializer):
+    culturas = OpcaoSerializer(many=True)
+    anos = serializers.ListField(child=serializers.IntegerField())
+
+
+class CrescimentoFiltrosSerializer(serializers.Serializer):
+    valores = CrescimentoValoresSerializer()
+    opcoes = CrescimentoOpcoesSerializer()
+
+
+class CrescimentoMetricasSerializer(serializers.Serializer):
+    variacao_producao_pct = serializers.FloatField(required=False, allow_null=True)
+    parte_area_pct = serializers.FloatField(required=False, allow_null=True)
+    parte_rendimento_pct = serializers.FloatField(required=False, allow_null=True)
+    perda_media_pct = serializers.FloatField(required=False, allow_null=True)
+    perda_ultimo_ano_pct = serializers.FloatField(required=False, allow_null=True)
+
+
+class IndicesSerializer(serializers.Serializer):
+    anos = serializers.ListField(child=serializers.IntegerField())
+    area = serializers.ListField(child=serializers.FloatField(allow_null=True))
+    rendimento = serializers.ListField(child=serializers.FloatField(allow_null=True))
+    producao = serializers.ListField(child=serializers.FloatField(allow_null=True))
+
+
+class CrescimentoSeriesSerializer(serializers.Serializer):
+    indices = IndicesSerializer(required=False)
+    perda = AnoValorSerializer(many=True, required=False)
+    valor_por_hectare = ItemValorSerializer(many=True, required=False)
+
+
+class CrescimentoSerializer(serializers.Serializer):
+    filtros = CrescimentoFiltrosSerializer()
+    metricas = CrescimentoMetricasSerializer()
+    series = CrescimentoSeriesSerializer()
+    texto = TextoSerializer()
+    qualidade = QualidadeSerializer()
+    meta = MetaObservatorioSerializer()
