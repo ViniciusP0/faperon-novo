@@ -21,7 +21,7 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-card">
-      <div className="mx-auto flex h-[72px] w-full max-w-[1920px] items-center justify-between gap-4 px-4 md:px-6 xl:px-8">
+      <div className="mx-auto flex h-[72px] w-full max-w-[1920px] items-center justify-between gap-4 px-4 md:px-6 lg:gap-3 lg:px-4 xl:gap-4 xl:px-8">
         <Link href="/" aria-label="FAPERON – página inicial" className="flex shrink-0 items-center gap-1">
           <Image
             src="/marca-faperon.png"
@@ -39,7 +39,7 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <div className="hidden items-center gap-2 lg:flex">
+        <div className="hidden items-center gap-1 lg:flex xl:gap-2">
           <nav aria-label="Principal">
             <ul className="flex items-center">
               {MENU.map((item) => (
@@ -49,7 +49,7 @@ export function SiteHeader() {
                     {...(item.externo ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                     aria-current={!item.externo && ativo(item.href) ? "page" : undefined}
                     className={cn(
-                      "inline-flex items-center gap-1 whitespace-nowrap border-b-[3px] border-transparent px-2 py-2 xl:px-3 text-sm font-medium text-ink hover:text-brand-fg",
+                      "inline-flex items-center gap-1 whitespace-nowrap border-b-[3px] border-transparent px-1.5 py-2 text-[0.8125rem] font-medium text-ink hover:text-brand-fg min-[1200px]:px-2 min-[1200px]:text-sm xl:px-3",
                       !item.externo && ativo(item.href) && "border-brand-light text-brand-fg",
                     )}
                   >
@@ -66,14 +66,14 @@ export function SiteHeader() {
             </ul>
           </nav>
 
-          <Link href={ROTAS.login} className={cn(buttonVariants({ size: "sm" }), BOTAO_ACESSO, "ml-2 shrink-0")}>
+          <Link href={ROTAS.login} className={cn(buttonVariants({ size: "sm" }), BOTAO_ACESSO, "ml-1 shrink-0 min-[1200px]:ml-2")}>
             <LogIn aria-hidden="true" className="h-4 w-4" />
-            {/* Entre 1024 e 1099 px o menu de 6 itens não deixa espaço: o rótulo encurta, e o nome acessível continua inteiro. */}
+            {/* Abaixo de 1200 px o menu de 6 itens não deixa folga (no Linux o texto sai um pouco mais largo): o rótulo encurta, e o nome acessível continua inteiro. */}
             <span>
-              Acessar<span className="sr-only min-[1100px]:not-sr-only"> o sistema</span>
+              Acessar<span className="sr-only min-[1200px]:not-sr-only"> o sistema</span>
             </span>
           </Link>
-          <BotaoTema className="ml-3" />
+          <BotaoTema className="ml-2 min-[1200px]:ml-3" />
         </div>
 
         <div className="flex items-center gap-1 lg:hidden">

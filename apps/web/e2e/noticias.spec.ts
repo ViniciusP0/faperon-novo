@@ -79,3 +79,24 @@ test("a 1024 px o cabeçalho com 6 itens cabe numa linha, sem transbordar", asyn
   const direita = Math.max(...caixas.map((c) => c.right));
   expect(direita).toBeLessThanOrEqual(1024);
 });
+
+test("o cabeçalho não transborda nem encosta na borda entre 1024 e 1280 px", async ({ page }) => {
+  await page.goto("/noticias");
+  // 1024 e 1104–1120 são as larguras em que o menu de 6 itens estourava no Linux (a renderização do texto lá é um pouco mais larga).
+  for (const largura of [1024, 1040, 1072, 1100, 1104, 1120, 1152, 1200, 1280]) {
+    await page.setViewportSize({ width: largura, height: 768 });
+    const medidas = await page.evaluate(() => {
+      const visiveis = [...document.querySelectorAll("header a, header button")].map((e) => e.getBoundingClientRect()).filter((r) => r.width > 0 && r.height > 0);
+      const itens = [...document.querySelectorAll('header nav[aria-label="Principal"] a')].map((e) => Math.round(e.getBoundingClientRect().top));
+      return {
+        excesso: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        direita: Math.max(...visiveis.map((r) => r.right)),
+        linhas: new Set(itens).size,
+      };
+    });
+    expect(medidas.linhas, `${largura}px: todos os itens na mesma linha`).toBe(1);
+    expect(medidas.excesso, `${largura}px: sem rolagem horizontal`).toBeLessThanOrEqual(1);
+    // folga mínima de 8 px entre o último controle do cabeçalho e a borda da tela
+    expect(medidas.direita, `${largura}px: o último controle precisa ficar a 8 px ou mais da borda`).toBeLessThanOrEqual(largura - 8);
+  }
+});
