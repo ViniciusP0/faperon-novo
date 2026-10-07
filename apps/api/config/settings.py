@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "ingestao",
     "indicadores",
     "analise",
+    "observatorio",
     "rest_framework",
     "drf_spectacular",
     "django.contrib.auth",
