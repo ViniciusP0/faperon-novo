@@ -1,5 +1,6 @@
 import type {
   AnaliseResposta,
+  BlocoObservatorio,
   ComparacaoResposta,
   ErroApi,
   Indicador,
@@ -7,6 +8,7 @@ import type {
   Municipio,
   ProdutoResumo,
   RankingResposta,
+  RespostasObservatorio,
   SerieResposta,
 } from "./api-types";
 
@@ -53,6 +55,8 @@ export const api = {
   serie: (query: string) => request<SerieResposta>(`${API_BASE}/serie?${query}`),
   comparacao: (query: string) => request<ComparacaoResposta>(`${API_BASE}/comparacao?${query}`),
   analise: (query: string) => request<AnaliseResposta>(`${API_BASE}/analise?${query}`),
+  observatorio: <B extends BlocoObservatorio>(bloco: B, query: string) =>
+    request<RespostasObservatorio[B]>(`${API_BASE}/observatorio/${bloco}${query ? `?${query}` : ""}`),
 };
 
 export const relatorioUrl = (query: string) => `${API_BASE}/relatorio.pdf?${query}`;
