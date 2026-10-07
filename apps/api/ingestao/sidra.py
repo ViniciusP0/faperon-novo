@@ -69,12 +69,14 @@ class SidraCliente:
         raise ErroSidraDefinitivo(f"Classificação {classificacao} não existe na tabela {tabela}")
 
     def dados(
-        self, tabela: int, variaveis: tuple[str, ...], classificacao: int, categoria: str
+        self, tabela: int, variaveis: tuple[str, ...], classificacao: int | None, categoria: str
     ) -> list[dict[str, Any]]:
         url = (
             f"{BASE_URL}/{tabela}/periodos/all/variaveis/{'|'.join(variaveis)}"
-            f"?localidades={LOCALIDADES_RO}&classificacao={classificacao}[{categoria}]"
+            f"?localidades={LOCALIDADES_RO}"
         )
+        if classificacao is not None:
+            url += f"&classificacao={classificacao}[{categoria}]"
         resposta = self._get(url)
         if not isinstance(resposta, list):
             raise ErroSidraDefinitivo(f"Resposta inesperada para {url}")

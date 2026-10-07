@@ -30,7 +30,7 @@ class ClienteFalso:
         return self._categorias
 
     def dados(
-        self, tabela: int, variaveis: tuple[str, ...], classificacao: int, categoria: str
+        self, tabela: int, variaveis: tuple[str, ...], classificacao: int | None, categoria: str
     ) -> Any:
         self.chamadas += 1
         resposta = self._respostas[categoria]

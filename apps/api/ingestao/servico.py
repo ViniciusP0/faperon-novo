@@ -33,7 +33,7 @@ class ClienteSidra(Protocol):
     def categorias(self, tabela: int, classificacao: int) -> list[tuple[str, str]]: ...
 
     def dados(
-        self, tabela: int, variaveis: tuple[str, ...], classificacao: int, categoria: str
+        self, tabela: int, variaveis: tuple[str, ...], classificacao: int | None, categoria: str
     ) -> list[dict[str, Any]]: ...
 
 
@@ -79,15 +79,19 @@ def executar_carga(
         hasher = hashlib.sha256()
         linhas: list[StagingMedicao] = []
         municipios: dict[str, str] = {}
-        categorias = [
-            (codigo, nome)
-            for codigo, nome in cliente.categorias(tabela, cfg.classificacao)
-            if codigo != CATEGORIA_TOTAL and (apenas is None or codigo in apenas)
-        ]
+        if cfg.classificacao is None:
+            assert cfg.categoria_unica is not None
+            categorias = [cfg.categoria_unica]
+        else:
+            categorias = [
+                (codigo, nome)
+                for codigo, nome in cliente.categorias(tabela, cfg.classificacao)
+                if codigo != CATEGORIA_TOTAL and (apenas is None or codigo in apenas)
+            ]
         for codigo, nome in categorias:
             resposta = cliente.dados(tabela, cfg.variaveis, cfg.classificacao, codigo)
             hasher.update(json.dumps(resposta, sort_keys=True, separators=(",", ":")).encode())
-            registros = list(parsear_dados(resposta))
+            registros = list(parsear_dados(resposta, cfg.categoria_unica))
             municipios.update({r.municipio_codigo: r.municipio_nome for r in registros})
             linhas.extend(_normalizar(cfg, registros))
             log.info("tabela %s: %s (%s) baixada", tabela, nome, codigo)

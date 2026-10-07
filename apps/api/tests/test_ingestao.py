@@ -36,7 +36,7 @@ def test_carga_grava_dimensoes_e_fatos(cliente_soja: ClienteFalso) -> None:
     vinculo = ProdutoIndicador.objects.get()
     assert vinculo.indicador.slug == "quantidade-produzida"
     assert vinculo.unidade == "Toneladas"
-    assert Indicador.objects.count() == 7
+    assert Indicador.objects.count() == 8
     # 45 municípios com valor em 2024, 44 em 2023 (Cacaulândia só em 2024): ausentes não viram linha
     assert Medicao.objects.filter(ano=2024).count() == 45
     assert not Medicao.objects.filter(valor=0).exists()

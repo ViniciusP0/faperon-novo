@@ -27,6 +27,7 @@ INDICADORES: dict[str, DefinicaoIndicador] = {
         DefinicaoIndicador(
             "106", "producao-de-origem-animal", "Produção de origem animal", Agregacao.SOMA
         ),
+        DefinicaoIndicador("107", "vacas-ordenhadas", "Vacas ordenhadas", Agregacao.SOMA),
     ]
 }
 
@@ -42,6 +43,7 @@ UNIDADES_PADRAO: dict[str, str] = {
     "214": "Toneladas",
     "112": "Quilogramas por Hectare",
     "105": "Cabeças",
+    "107": "Cabeças",
 }
 ANO_MINIMO_VALOR_PRODUCAO = 1994
 
@@ -63,4 +65,8 @@ FONTES: dict[int, Fonte] = {
     74: Fonte(
         "IBGE – Pesquisa da Pecuária Municipal (PPM)", 74, "https://sidra.ibge.gov.br/tabela/74"
     ),
+    94: Fonte(
+        "IBGE – Pesquisa da Pecuária Municipal (PPM)", 94, "https://sidra.ibge.gov.br/tabela/94"
+    ),
+    1737: Fonte("IBGE – IPCA (número-índice)", 1737, "https://sidra.ibge.gov.br/tabela/1737"),
 }

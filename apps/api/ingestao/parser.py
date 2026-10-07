@@ -47,13 +47,20 @@ def limpar_nome_produto(nome: str) -> str:
     return nome.rstrip("* ").strip()
 
 
-def parsear_dados(resposta: list[dict[str, Any]]) -> Iterator[Registro]:
+def parsear_dados(
+    resposta: list[dict[str, Any]], categoria_padrao: tuple[str, str] | None = None
+) -> Iterator[Registro]:
     for variavel in resposta:
         codigo = str(variavel["id"])
         unidade = variavel.get("unidade", "")
         for resultado in variavel["resultados"]:
-            categorias = resultado["classificacoes"][0]["categoria"]
-            ((cat_codigo, cat_nome),) = categorias.items()
+            if resultado["classificacoes"]:
+                categorias = resultado["classificacoes"][0]["categoria"]
+                ((cat_codigo, cat_nome),) = categorias.items()
+            elif categoria_padrao is not None:
+                cat_codigo, cat_nome = categoria_padrao
+            else:
+                raise ValueError(f"Variável {codigo} veio sem classificação e sem categoria padrão")
             for serie in resultado["series"]:
                 localidade = serie["localidade"]
                 for ano, token in serie["serie"].items():

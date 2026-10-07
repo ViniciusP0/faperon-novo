@@ -8,7 +8,7 @@ from ingestao.tabelas import TABELAS
 
 
 class Command(BaseCommand):
-    help = "Ingere PAM (5457) e PPM (3939, 74) do IBGE SIDRA para o banco."
+    help = "Ingere PAM (5457), PPM (3939, 74, 94) e IPCA (1737) do IBGE SIDRA para o banco."
 
     def add_arguments(self, parser: Any) -> None:
         parser.add_argument("--tabela", type=int, action="append", choices=sorted(TABELAS))

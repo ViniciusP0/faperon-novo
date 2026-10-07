@@ -48,9 +48,10 @@ def test_ciclo_roda_tabelas_vencidas_e_pula_as_recentes(cliente_soja: ClienteFal
         hash="y",
     )
     tentadas = rodar_ciclo(cliente_soja)  # type: ignore[arg-type]
-    assert tentadas == 2  # 74 (vencida) e 5457 (nunca rodou); 3939 é recente
+    assert tentadas == 3  # 74 (vencida), 94 e 5457 (nunca rodaram); 3939 é recente
     assert set(Carga.objects.filter(iniciada_em__gt=recente).values_list("tabela", flat=True)) == {
         74,
+        94,
         5457,
     }
 
@@ -58,8 +59,8 @@ def test_ciclo_roda_tabelas_vencidas_e_pula_as_recentes(cliente_soja: ClienteFal
 @pytest.mark.django_db
 def test_ciclo_registra_falha_sem_derrubar_o_agendador() -> None:
     quebrado = ClienteFalso([("1", "X")], {"1": RuntimeError("IBGE fora")})
-    assert rodar_ciclo(quebrado) == 3  # type: ignore[arg-type]
-    assert Carga.objects.filter(status=Carga.Status.FALHA).count() == 3
+    assert rodar_ciclo(quebrado) == 4  # type: ignore[arg-type]
+    assert Carga.objects.filter(status=Carga.Status.FALHA).count() == 4
     assert rodar_ciclo(quebrado) == 0  # aguarda 6 h antes de tentar de novo
 
 
