@@ -8,7 +8,8 @@ import { api } from "@/lib/api";
 import { parseFiltros, recorteParams, serializeFiltros, type Aba, type Filtros } from "@/lib/filters";
 import { Analise } from "./analise";
 import { Comparacao } from "./comparacao";
-import { NotaMetodologica, Vazio } from "./comuns";
+import { Button } from "@/components/ui/button";
+import { ErroConsulta, NotaMetodologica, Vazio } from "./comuns";
 import { BarraRecorte } from "./barra-recorte";
 import { useRanking } from "./consultas";
 import { Numeros } from "./numeros";
@@ -77,6 +78,17 @@ export function Painel() {
 
   const pronto = Boolean(filtros.produto) && indicadorValido && filtros.inicio !== null && filtros.fim !== null;
 
+  // Produto inexistente ou recorte sem dados: mostra o erro e uma saída, em vez de "carregando" para sempre.
+  const erroDoRecorte = indicadoresQ.isError
+    ? { erro: indicadoresQ.error, refazer: () => indicadoresQ.refetch() }
+    : padraoQ.isError
+      ? { erro: padraoQ.error, refazer: () => padraoQ.refetch() }
+      : null;
+  const voltarAoPadrao = useCallback(() => {
+    ultimo.current = parseFiltros(new URLSearchParams());
+    router.replace(pathname, { scroll: false });
+  }, [pathname, router]);
+
   const paramsPdf = recorteParams(filtros);
   if (filtros.municipio) paramsPdf.set("municipio", filtros.municipio);
   if (filtros.aba === "comparacao" && filtros.modo === "municipios" && filtros.municipios.length >= 2) {
@@ -121,11 +133,20 @@ export function Painel() {
 
       {!pronto ? (
         <div className="container py-8">
-          <Vazio>
-            {filtros.produto
-              ? "Carregando os indicadores do produto…"
-              : "Escolha um segmento e um produto para ver os números, o ranking, a evolução, a comparação e a análise."}
-          </Vazio>
+          {erroDoRecorte ? (
+            <div className="space-y-4">
+              <ErroConsulta erro={erroDoRecorte.erro} onRetry={() => erroDoRecorte.refazer()} />
+              <Button variant="outline" size="sm" onClick={voltarAoPadrao}>
+                Voltar ao padrão
+              </Button>
+            </div>
+          ) : (
+            <Vazio>
+              {filtros.produto
+                ? "Carregando os indicadores do produto…"
+                : "Escolha um segmento e um produto para ver os números, o ranking, a evolução, a comparação e a análise."}
+            </Vazio>
+          )}
           <NotaMetodologica meta={null} />
         </div>
       ) : (
