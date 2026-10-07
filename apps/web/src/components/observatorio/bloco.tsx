@@ -19,6 +19,9 @@ interface BlocoProps<R extends Resposta> {
   titulo: string;
   consulta: UseQueryResult<R>;
   filtros: ReactNode;
+  /** Indicadores-chave: ficam visíveis tanto no gráfico quanto na tabela. */
+  kpis?: (d: R) => ReactNode;
+  /** Uma tabela rotulada para cada gráfico ou mapa que o bloco mostra. */
   tabela: (d: R) => ReactNode;
   linkPainel?: (d: R) => string | null;
   onPadrao: () => void;
@@ -31,7 +34,7 @@ export function fraseSigilosos(n: number): string {
     : `${n} municípios com dado sigiloso ficam fora dos totais.`;
 }
 
-export function Bloco<R extends Resposta>({ id, etiqueta, titulo, consulta, filtros, tabela, linkPainel, onPadrao, children }: BlocoProps<R>) {
+export function Bloco<R extends Resposta>({ id, etiqueta, titulo, consulta, filtros, kpis, tabela, linkPainel, onPadrao, children }: BlocoProps<R>) {
   const [comoTabela, setComoTabela] = useState(false);
   const d = consulta.data;
   const painel = d && linkPainel ? linkPainel(d) : null;
@@ -54,6 +57,7 @@ export function Bloco<R extends Resposta>({ id, etiqueta, titulo, consulta, filt
       {d && (
         <div data-testid="conteudo-bloco" aria-busy={consulta.isPlaceholderData ? "true" : undefined} className={consulta.isPlaceholderData ? "opacity-60 transition-opacity" : undefined}>
           <p data-testid="manchete" className="mt-6 max-w-[70ch] text-lg font-medium leading-relaxed">{d.texto.manchete}</p>
+          {kpis && <div className="mt-6">{kpis(d)}</div>}
           <div className="mt-6">
             <div className="mb-2 flex justify-end">
               <Button variant="outline" size="sm" aria-pressed={comoTabela} onClick={() => setComoTabela((v) => !v)}>

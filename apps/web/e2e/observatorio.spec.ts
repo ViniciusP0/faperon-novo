@@ -31,7 +31,7 @@ test("Central → Observatório → filtro na URL → link reproduz → Painel",
 
   await aguardarPaginaCompleta(page); // mapa desenhado antes de trocá-lo pela tabela
   await territorio.getByRole("button", { name: "Ver como tabela" }).click();
-  await expect(territorio.getByRole("table")).toContainText("sigiloso");
+  await expect(territorio.getByRole("table", { name: "Valores por município" })).toContainText("sigiloso");
   for (const nome of BLOCOS) await expect(page.getByRole("region", { name: nome }).getByTestId("manchete")).toBeVisible();
   await semViolacoesSerias(page);
 
@@ -53,7 +53,7 @@ test("município sigiloso aparece como 'sigiloso' na tabela, nunca como zero", a
   await page.goto("/central-de-inteligencia/observatorio");
   const territorio = page.getByRole("region", { name: "Onde a produção acontece" });
   await territorio.getByRole("button", { name: "Ver como tabela" }).click();
-  const linha = territorio.getByRole("row").filter({ hasText: "Alta Floresta D'Oeste" });
+  const linha = territorio.getByRole("table", { name: "Valores por município" }).getByRole("row").filter({ hasText: "Alta Floresta D'Oeste" });
   await expect(linha).toHaveCount(1);
   await expect(linha.getByRole("cell").nth(2)).toHaveText("sigiloso");
   await expect(linha.getByRole("cell").filter({ hasText: /^0$/ })).toHaveCount(0);
@@ -81,3 +81,37 @@ for (const tema of ["claro", "escuro"]) {
     await semViolacoesSerias(page);
   });
 }
+
+test("visão em tabela: KPIs continuam visíveis e cada gráfico ganha sua tabela", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/central-de-inteligencia/observatorio");
+  await aguardarPaginaCompleta(page);
+
+  const panorama = page.getByRole("region", { name: "O tamanho e a composição do agro" });
+  await expect(panorama.getByText("R$ 14,5 bi")).toBeVisible();
+  await panorama.getByRole("button", { name: "Ver como tabela" }).click();
+  await expect(panorama.getByText("R$ 14,5 bi")).toBeVisible();
+  await expect(panorama.getByRole("table", { name: "Composição do valor da produção" })).toBeVisible();
+  await expect(panorama.getByRole("table", { name: "Evolução do valor da produção, ano a ano" })).toBeVisible();
+
+  const crescimento = page.getByRole("region", { name: "Por que a produção cresceu" });
+  await crescimento.getByRole("button", { name: "Ver como tabela" }).click();
+  for (const nome of ["Decomposição da variação da produção", "Valor por hectare das culturas no ano final"]) {
+    await expect(crescimento.getByRole("table", { name: nome })).toBeVisible();
+  }
+
+  const territorio = page.getByRole("region", { name: "Onde a produção acontece" });
+  await territorio.getByRole("button", { name: "Ver como tabela" }).click();
+  await expect(territorio.getByText("5 maiores")).toBeVisible();
+  for (const nome of ["Valores por município", "Total por microrregião", "Municípios dependentes de uma cultura"]) {
+    await expect(territorio.getByRole("table", { name: nome })).toBeVisible();
+  }
+
+  const pecuaria = page.getByRole("region", { name: "Rebanhos e leite" });
+  await pecuaria.getByRole("button", { name: "Ver como tabela" }).click();
+  await expect(pecuaria.getByText("900 milhões de litros")).toBeVisible();
+  for (const nome of ["Efetivo ao longo dos anos", "Composição dos rebanhos no ano final", "Polos de leite"]) {
+    await expect(pecuaria.getByRole("table", { name: nome })).toBeVisible();
+  }
+  await semViolacoesSerias(page);
+});

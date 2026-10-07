@@ -5,10 +5,10 @@ import { Bloco } from "./bloco";
 import { useBlocoObservatorio, useFiltrosLembrados } from "./consultas";
 import { GraficoObservatorio } from "./grafico-observatorio";
 import { Seletor } from "./seletor";
-import { TabelaDados } from "./tabela-dados";
+import { GrupoTabela, TabelaDados } from "./tabela-dados";
 import { anoValido, opcoesPeriodo, useFiltrosBloco } from "./use-filtros-bloco";
 import type { PecuariaResposta } from "@/lib/api-types";
-import { formatCompacto, formatNumero } from "@/lib/format";
+import { formatMilLitros, formatMilReais, formatNumero } from "@/lib/format";
 import { optionBarrasHorizontais, optionLinha, optionTreemap } from "@/lib/observatorio-graficos";
 
 function TabelaPolos({ d }: { d: PecuariaResposta }) {
@@ -18,12 +18,26 @@ function TabelaPolos({ d }: { d: PecuariaResposta }) {
   );
 }
 
+function Kpis({ d }: { d: PecuariaResposta }) {
+  const leite = d.metricas.leite;
+  if (!leite) return null;
+  return (
+    <div className="rounded-md border border-line p-5">
+      <h3 className="text-lg font-semibold">Leite</h3>
+      <dl className="mt-3 grid gap-3 sm:grid-cols-3">
+        <div><dt className="text-sm text-ink-muted">Volume de leite</dt><dd className="text-xl font-semibold">{leite.volume_mil_litros != null ? formatMilLitros(leite.volume_mil_litros) : "–"}</dd></div>
+        <div><dt className="text-sm text-ink-muted">Litros por vaca/ano</dt><dd className="text-xl font-semibold">{leite.produtividade_l_vaca != null ? formatNumero(leite.produtividade_l_vaca) : "–"}</dd></div>
+        <div><dt className="text-sm text-ink-muted">Valor do leite (preços reais)</dt><dd className="text-xl font-semibold">{leite.valor_real != null ? formatMilReais(leite.valor_real) : "–"}</dd></div>
+      </dl>
+    </div>
+  );
+}
+
 function Conteudo({ d }: { d: PecuariaResposta }) {
   const { efetivo, municipios, composicao, leite_polos: polos } = d.series;
   const efetivoOpt = useCallback((e: boolean) => optionLinha(efetivo ?? [], "Efetivo", "Cabeças", e), [efetivo]);
   const munOpt = useCallback((e: boolean) => optionBarrasHorizontais((municipios ?? []).slice(0, 10), "Cabeças", e), [municipios]);
   const compOpt = useCallback((e: boolean) => optionTreemap(composicao ?? [], "Cabeças", e), [composicao]);
-  const leite = d.metricas.leite;
   return (
     <div className="space-y-8">
       {(efetivo?.length ?? 0) > 0 && <GraficoObservatorio option={efetivoOpt} descricao={d.texto.manchete} altura={300} />}
@@ -31,17 +45,37 @@ function Conteudo({ d }: { d: PecuariaResposta }) {
         {(municipios?.length ?? 0) > 0 && <GraficoObservatorio option={munOpt} descricao="Dez maiores municípios em efetivo" altura={320} />}
         {(composicao?.length ?? 0) > 0 && <GraficoObservatorio option={compOpt} descricao="Composição dos rebanhos no ano final" altura={320} />}
       </div>
-      {leite && (
-        <div className="rounded-md border border-line p-5">
-          <h3 className="text-lg font-semibold">Leite</h3>
-          <dl className="mt-3 grid gap-3 sm:grid-cols-3">
-            <div><dt className="text-sm text-ink-muted">Volume (mil litros)</dt><dd className="text-xl font-semibold">{leite.volume_mil_litros != null ? formatCompacto(leite.volume_mil_litros) : "–"}</dd></div>
-            <div><dt className="text-sm text-ink-muted">Litros por vaca/ano</dt><dd className="text-xl font-semibold">{leite.produtividade_l_vaca != null ? formatNumero(leite.produtividade_l_vaca) : "–"}</dd></div>
-            <div><dt className="text-sm text-ink-muted">Valor (mil R$, reais)</dt><dd className="text-xl font-semibold">{leite.valor_real != null ? formatCompacto(leite.valor_real) : "–"}</dd></div>
-          </dl>
-          {(polos?.length ?? 0) > 0 && <div className="mt-4"><TabelaPolos d={d} /></div>}
-        </div>
+      {(polos?.length ?? 0) > 0 && <GrupoTabela titulo="Principais polos de leite"><TabelaPolos d={d} /></GrupoTabela>}
+    </div>
+  );
+}
+
+function Tabelas({ d }: { d: PecuariaResposta }) {
+  const efetivo = d.series.efetivo ?? [];
+  const composicao = d.series.composicao ?? [];
+  const municipios = d.series.municipios ?? [];
+  return (
+    <div className="space-y-8">
+      {efetivo.length > 0 && (
+        <GrupoTabela titulo="Efetivo ao longo dos anos">
+          <TabelaDados legenda="Efetivo ao longo dos anos" colunas={[{ chave: "ano", rotulo: "Ano" }, { chave: "valor", rotulo: "Cabeças", numerico: true }]}
+            linhas={efetivo.map((p) => ({ ano: String(p.ano), valor: p.valor }))} />
+        </GrupoTabela>
       )}
+      {municipios.length > 0 && (
+        <GrupoTabela titulo="Efetivo por município">
+          <TabelaDados legenda="Efetivo por município no ano final" colunas={[{ chave: "nome", rotulo: "Município" }, { chave: "valor", rotulo: "Cabeças", numerico: true }]}
+            linhas={municipios.map((m) => ({ nome: m.nome, valor: m.valor }))} />
+        </GrupoTabela>
+      )}
+      {composicao.length > 0 && (
+        <GrupoTabela titulo="Composição dos rebanhos">
+          <TabelaDados legenda="Composição dos rebanhos no ano final" colunas={[
+            { chave: "nome", rotulo: "Rebanho" }, { chave: "valor", rotulo: "Cabeças", numerico: true }, { chave: "participacao", rotulo: "%", numerico: true },
+          ]} linhas={composicao.map((i) => ({ nome: i.nome, valor: i.valor, participacao: i.participacao }))} />
+        </GrupoTabela>
+      )}
+      {(d.series.leite_polos?.length ?? 0) > 0 && <GrupoTabela titulo="Principais polos de leite"><TabelaPolos d={d} /></GrupoTabela>}
     </div>
   );
 }
@@ -69,13 +103,8 @@ export function BlocoPecuaria() {
         if (!rebanho || inicio == null || fim == null) return null;
         return `/painel?produto=${rebanho}&indicador=efetivo&inicio=${inicio}&fim=${fim}`;
       }}
-      tabela={(d) => (
-        <div className="space-y-6">
-          <TabelaDados legenda="Efetivo por município no ano final" colunas={[{ chave: "nome", rotulo: "Município" }, { chave: "valor", rotulo: "Cabeças", numerico: true }]}
-            linhas={(d.series.municipios ?? []).map((m) => ({ nome: m.nome, valor: m.valor }))} />
-          {(d.series.leite_polos?.length ?? 0) > 0 && <TabelaPolos d={d} />}
-        </div>
-      )}>
+      kpis={(d) => <Kpis d={d} />}
+      tabela={(d) => <Tabelas d={d} />}>
       {(d) => <Conteudo d={d} />}
     </Bloco>
   );

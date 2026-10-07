@@ -39,3 +39,13 @@ export function TabelaDados({ legenda, colunas, linhas }: { legenda: string; col
     </div>
   );
 }
+
+/** Um bloco da visão em tabela: título (h3) e a tabela equivalente de um gráfico ou mapa. */
+export function GrupoTabela({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+  return (
+    <section aria-label={titulo}>
+      <h3 className="mb-2 text-sm font-semibold uppercase tracking-wider text-ink-muted">{titulo}</h3>
+      {children}
+    </section>
+  );
+}

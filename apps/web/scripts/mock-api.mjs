@@ -333,6 +333,7 @@ const REBANHOS_OBS = [{ slug: "bovino", nome: "Bovino" }, { slug: "suino-total",
 const AVISO_SEM_CARNE = "O valor da produção soma lavouras (PAM) e produtos de origem animal (PPM); não inclui carne bovina nem abate, que a PPM não publica.";
 const avisoAnoRef = (pedido, usado) => `O IPCA de ${pedido} ainda não está fechado; os valores estão a preços de ${usado}.`;
 const avisoInicioRecortado = (pedido, usado) => `O período começa em ${usado}: antes do Plano Real não há como corrigir valores pelo IPCA.`;
+const avisoAntesPlanoReal = (fim) => `Antes de 1995 (Plano Real) não há como corrigir valores pelo IPCA; o valor por hectare não é calculado para ${fim}.`;
 const avisoSigiloParcial = (n) => {
   const sujeito = n === 1 ? "1 município com dado sigiloso" : `${n} municípios com dado sigiloso`;
   return `${sujeito} para alguma cultura ${n === 1 ? "fica" : "ficam"} sem cultura dominante e fora da lista de dependentes.`;
@@ -363,12 +364,14 @@ function slugParam(sp, campo) {
   if (!/^[-a-zA-Z0-9_]+$/.test(bruto)) throw camposInvalidos(campo, 'Informe um "slug" válido composto por letras, números, underscores ou hífens.');
   return bruto;
 }
+const ANO_TETO = 2100; // mesmo teto da API: impede janelas gigantes
 function anoParam(sp, campo, minimo) {
   const bruto = sp.get(campo);
   if (bruto === null || bruto === "") return null;
   if (!/^-?\d+$/.test(bruto)) throw camposInvalidos(campo, "Um número inteiro válido é necessário.");
   const n = Number(bruto);
   if (minimo !== undefined && n < minimo) throw camposInvalidos(campo, `Certifique-se de que este valor seja maior ou igual a ${minimo}.`);
+  if (n > ANO_TETO) throw camposInvalidos(campo, `Certifique-se de que este valor seja menor ou igual a ${ANO_TETO}.`);
   return n;
 }
 function validarAno(ano, anos) {
@@ -387,14 +390,22 @@ function indice(anos, valorDe) {
   const base = anos.map(valorDe).find((v) => v !== null);
   return anos.map((a) => { const v = valorDe(a); return v === null || base === undefined ? null : rond((v / base) * 100); });
 }
-// IPCA vai de 1995 a OBS_DADOS_MAX; depois disso usa o último disponível e avisa.
+// Anos percorridos nas séries: a janela cortada aos anos com dado; fora dos dados mantém os pedidos (valores null).
+function anosDaJanela(inicio, fim) {
+  const de = Math.max(inicio, OBS_DADOS_MIN), ate = Math.min(fim, OBS_DADOS_MAX);
+  const [a, b] = de <= ate ? [de, ate] : [inicio, fim];
+  return Array.from({ length: b - a + 1 }, (_, i) => a + i);
+}
+// IPCA vai de 1995 a OBS_DADOS_MAX; depois disso usa o último disponível e avisa; antes de 1995 não há correção.
 function refMonetaria(ano) {
+  if (ano < IPCA_MIN) return { ano_ref: null, avisos: [] };
   if (ano > OBS_DADOS_MAX) return { ano_ref: OBS_DADOS_MAX, avisos: [avisoAnoRef(ano, OBS_DADOS_MAX)] };
   return { ano_ref: ano, avisos: [] };
 }
 
 function observatorio(bloco, sp) {
   if (bloco === "panorama") {
+    anoParam(sp, "ano", 1974); // mesma validação de faixa do serializer antes da escolha
     const ano = escolha(sp, "ano", ANOS_PAN, OBS_DADOS_MAX);
     const janela = escolha(sp, "janela", [5, 10, 20], 10);
     validarAno(ano, ANOS_PAN);
@@ -407,7 +418,7 @@ function observatorio(bloco, sp) {
       .map(([slug, nome, p]) => ({ slug, nome, valor: p * 1000, participacao: p }));
     return {
       filtros: { valores: { ano, janela, inicio }, opcoes: { anos: ANOS_PAN, janelas: [5, 10, 20] } },
-      metricas: { valor_total_real: 100000, valor_lavouras_real: 88000, valor_origem_animal_real: 12000, variacao_real_pct: 42.5, area_colhida_ha: 1500000 },
+      metricas: { valor_total_real: 14500000, valor_lavouras_real: 12900000, valor_origem_animal_real: 1600000, variacao_real_pct: 42.5, area_colhida_ha: 1500000 },
       series: {
         composicao,
         evolucao: { anos, itens: composicao.map((c) => ({ slug: c.slug, nome: c.nome, valores: anos.map((_, i) => Math.round(c.valor * (0.6 + i * 0.04))) })) },
@@ -426,8 +437,9 @@ function observatorio(bloco, sp) {
     const inicio = inicioPedido ?? fim - 9;
     validarJanelaAnos(inicio, fim);
     const nome = CULTURAS_OBS.find((c) => c.slug === cultura).nome;
-    const anos = Array.from({ length: fim - inicio + 1 }, (_, i) => inicio + i);
+    const anos = anosDaJanela(inicio, fim);
     const { ano_ref, avisos } = refMonetaria(fim);
+    if (ano_ref === null) avisos.push(avisoAntesPlanoReal(fim));
     const dado = (fn) => (a) => (temDado(a) ? fn(a - OBS_DADOS_MIN) : null);
     const area = dado((i) => 100 + i * 4), rend = dado((i) => 100 + i * 7), prod = dado((i) => 100 + i * 12);
     const comDado = temDado(inicio) && temDado(fim) && fim > inicio;
@@ -449,7 +461,7 @@ function observatorio(bloco, sp) {
   if (bloco === "territorio") {
     const metrica = escolha(sp, "metrica", ["valor", "area", "rebanho", "dominante"], "valor");
     const culturaPedida = slugParam(sp, "cultura");
-    const anoPedido = anoParam(sp, "ano");
+    const anoPedido = anoParam(sp, "ano", 1974);
     slugExistente(culturaPedida, CULTURAS_OBS, "Cultura");
     const cultura = metrica === "rebanho" || metrica === "dominante" ? null : culturaPedida;
     const ano = anoPedido ?? OBS_DADOS_MAX;
@@ -466,7 +478,7 @@ function observatorio(bloco, sp) {
       filtros: {
         valores: { metrica, cultura, ano },
         opcoes: {
-          metricas: [["valor", "Valor da produção", "Mil Reais"], ["area", "Área colhida", "Hectares"], ["rebanho", "Rebanho bovino", "Cabeças"], ["dominante", "Cultura dominante", ""]].map(([slug, nome, unidade]) => ({ slug, nome, unidade })),
+          metricas: [["valor", "Valor da produção das lavouras", "Mil Reais"], ["area", "Área colhida", "Hectares"], ["rebanho", "Rebanho bovino", "Cabeças"], ["dominante", "Cultura dominante", ""]].map(([slug, nome, unidade]) => ({ slug, nome, unidade })),
           culturas: CULTURAS_OBS, anos: ANOS_OBS,
         },
       },
@@ -489,7 +501,7 @@ function observatorio(bloco, sp) {
   const fim = fimPedido ?? OBS_DADOS_MAX;
   const inicio = inicioPedido ?? fim - 9;
   validarJanelaAnos(inicio, fim);
-  const anos = Array.from({ length: fim - inicio + 1 }, (_, i) => inicio + i);
+  const anos = anosDaJanela(inicio, fim);
   const { ano_ref, avisos } = refMonetaria(fim);
   const bovino = rebanho === "bovino";
   // Bovino: 1 município sigiloso fica fora da base comum (avisos reais); suíno: sem leite no mock.

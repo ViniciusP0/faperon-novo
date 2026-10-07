@@ -126,7 +126,7 @@ describe("BlocoTerritorio", () => {
     expect(await screen.findByTestId("manchete")).toHaveTextContent("concentraram 100,0%");
     expect(chamadas(f)[0]).toBe("/api/v1/observatorio/territorio?metrica=valor");
     await userEvent.click(screen.getByRole("button", { name: "Ver como tabela" }));
-    const tabela = screen.getByRole("table");
+    const tabela = screen.getByRole("table", { name: "Valores por município" });
     expect(within(tabela).getByText("Cabixi").closest("tr")).toHaveTextContent("sigiloso");
     expect(within(tabela).getAllByText("Cacoal")[0]!.closest("tr")).toHaveTextContent("sem dado");
     expect(within(tabela).getByText("Cabixi").closest("tr")).not.toHaveTextContent("0");
@@ -206,7 +206,7 @@ describe("BlocoPanorama", () => {
     expect(area.nextElementSibling).toHaveTextContent("–");
     expect(screen.getAllByTestId("grafico")).toHaveLength(2);
     await userEvent.click(screen.getByRole("button", { name: "Ver como tabela" }));
-    expect(within(screen.getByRole("table")).getByText("Sem valor").closest("tr")).toHaveTextContent("––");
+    expect(within(screen.getByRole("table", { name: "Composição do valor da produção" })).getByText("Sem valor").closest("tr")).toHaveTextContent("––");
   });
 
   it("passa funções estáveis (option) aos gráficos entre renders", async () => {
@@ -237,7 +237,7 @@ describe("BlocoPanorama", () => {
     expect(screen.getByText("Sem dados para o recorte.")).toBeInTheDocument();
     expect(screen.queryAllByTestId("grafico")).toHaveLength(0);
     await userEvent.click(screen.getByRole("button", { name: "Ver como tabela" }));
-    expect(screen.getByRole("table")).toBeInTheDocument();
+    expect(screen.queryAllByRole("table")).toHaveLength(0);
   });
 });
 
@@ -260,7 +260,7 @@ describe("BlocoCrescimento", () => {
     render(<BlocoCrescimento />, { wrapper });
     await screen.findByTestId("manchete");
     await userEvent.click(screen.getByRole("button", { name: "Ver como tabela" }));
-    const linhas = within(screen.getByRole("table")).getAllByRole("row");
+    const linhas = within(screen.getByRole("table", { name: /Índices de área/ })).getAllByRole("row");
     expect(linhas[1]).toHaveTextContent("2020");
     expect(linhas[1]).toHaveTextContent("–"); // perda de 2020 ausente
     expect(linhas[2]).toHaveTextContent("0,5");
@@ -284,12 +284,11 @@ describe("BlocoPecuaria", () => {
     await screen.findByTestId("manchete");
     expect(chamadas(f)[0]).toBe("/api/v1/observatorio/pecuaria?rebanho=bovino");
     expect(screen.getByRole("heading", { level: 3, name: "Leite" })).toBeInTheDocument();
-    expect(screen.getByText("Volume (mil litros)").nextElementSibling).toHaveTextContent("–");
+    expect(screen.getByText("Volume de leite").nextElementSibling).toHaveTextContent("–");
     await userEvent.click(screen.getByRole("button", { name: "Ver como tabela" }));
-    const tabelas = screen.getAllByRole("table");
-    expect(tabelas).toHaveLength(2);
-    expect(within(tabelas[0]!).getByText("Nova Mamoré").closest("tr")).toHaveTextContent("Nova Mamoré–");
-    expect(within(tabelas[1]!).getByText("Polo Leite").closest("tr")).toHaveTextContent("300");
+    const municipios = screen.getByRole("table", { name: "Efetivo por município no ano final" });
+    expect(within(municipios).getByText("Nova Mamoré").closest("tr")).toHaveTextContent("Nova Mamoré–");
+    expect(within(screen.getByRole("table", { name: "Polos de leite" })).getByText("Polo Leite").closest("tr")).toHaveTextContent("300");
   });
 
   it("trocar o rebanho grava pec_rebanho e o link vai ao Painel com efetivo", async () => {
@@ -493,5 +492,80 @@ describe("valor exibido nos seletores vem da URL", () => {
     expect(screen.getByTestId("conteudo-bloco")).toContainElement(screen.getByTestId("manchete"));
     expect(screen.getByTestId("conteudo-bloco")).toContainElement(screen.getByRole("link", { name: /Ver no Painel/ }));
     resolver(ok(pecuaria));
+  });
+});
+
+describe("visão em tabela: uma tabela por gráfico e KPIs sempre visíveis (F6)", () => {
+  const tabela = (nome: string | RegExp) => screen.getByRole("table", { name: nome });
+  const alternar = () => userEvent.click(screen.getByRole("button", { name: "Ver como tabela" }));
+
+  it("Panorama: KPIs com unidade por extenso, tabela da composição e da evolução", async () => {
+    vi.stubGlobal("fetch", roteador());
+    render(<BlocoPanorama />, { wrapper });
+    await screen.findByTestId("manchete");
+    const valor = () => screen.getByText("Valor da produção").nextElementSibling;
+    expect(valor()).toHaveTextContent("R$ 17 bi");
+    await alternar();
+    expect(valor()).toHaveTextContent("R$ 17 bi");
+    expect(screen.getByText("Variação real no período").nextElementSibling).toHaveTextContent("201,15%");
+    expect(screen.queryAllByTestId("grafico")).toHaveLength(0);
+    expect(within(tabela("Composição do valor da produção")).getByText("Soja (em grão)").closest("tr")).toHaveTextContent("5.000");
+    const evolucao = tabela("Evolução do valor da produção, ano a ano");
+    expect(within(evolucao).getAllByRole("row")).toHaveLength(3);
+    expect(within(evolucao).getByRole("columnheader", { name: "Soja (em grão)" })).toBeInTheDocument();
+    expect(within(evolucao).getByText("2024").closest("tr")).toHaveTextContent("2");
+    expect(screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual(expect.arrayContaining(["Composição do valor da produção", "Evolução do valor da produção, ano a ano"]));
+  });
+
+  it("Crescimento: decomposição, índices/perda e valor por hectare em tabelas", async () => {
+    vi.stubGlobal("fetch", roteador());
+    render(<BlocoCrescimento />, { wrapper });
+    await screen.findByTestId("manchete");
+    await alternar();
+    expect(screen.queryAllByTestId("grafico")).toHaveLength(0);
+    const decomposicao = tabela("Decomposição da variação da produção");
+    expect(within(decomposicao).getByText("Expansão de área").closest("tr")).toHaveTextContent("60");
+    expect(within(decomposicao).getByText("Ganho de produtividade").closest("tr")).toHaveTextContent("40");
+    expect(within(decomposicao).getByText("Variação da produção").closest("tr")).toHaveTextContent("10");
+    expect(within(tabela("Valor por hectare das culturas no ano final")).getByText("Soja").closest("tr")).toHaveTextContent("7.000");
+    expect(tabela(/Índices de área/)).toBeInTheDocument();
+  });
+
+  it("Território: KPIs, mapa, microrregiões e dependentes em tabela", async () => {
+    const dep = { ...territorio, series: { ...territorio.series, dependentes: [{ codigo_ibge: "1100023", nome: "Ariquemes", cultura: "Soja", participacao: 83.3 }] } };
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => (url.startsWith("/geo/") ? { ok: true, json: async () => ({ type: "FeatureCollection", features: [] }) } : { ok: true, json: async () => dep })));
+    render(<BlocoTerritorio />, { wrapper });
+    await screen.findByTestId("manchete");
+    expect(screen.getByText("5 maiores").nextElementSibling).toHaveTextContent("100%");
+    await alternar();
+    expect(screen.getByText("5 maiores").nextElementSibling).toHaveTextContent("100%");
+    expect(screen.getByText("HHI").nextElementSibling).toHaveTextContent("5.000");
+    expect(within(tabela("Valores por município")).getAllByRole("row")).toHaveLength(4);
+    expect(within(tabela("Total por microrregião")).getByText("Ariquemes").closest("tr")).toHaveTextContent("10");
+    expect(within(tabela("Municípios dependentes de uma cultura")).getByText("Ariquemes").closest("tr")).toHaveTextContent("Soja83,3");
+  });
+
+  it("Pecuária: KPIs de leite visíveis, efetivo, municípios, composição e polos em tabelas", async () => {
+    vi.stubGlobal("fetch", roteador());
+    render(<BlocoPecuaria />, { wrapper });
+    await screen.findByTestId("manchete");
+    await alternar();
+    expect(screen.getByRole("heading", { level: 3, name: "Leite" })).toBeInTheDocument();
+    expect(screen.getByText("Litros por vaca/ano").nextElementSibling).toHaveTextContent("2.001");
+    expect(screen.queryAllByTestId("grafico")).toHaveLength(0);
+    const efetivo = tabela("Efetivo ao longo dos anos");
+    expect(within(efetivo).getByText("2022").closest("tr")).toHaveTextContent("100");
+    expect(within(tabela("Composição dos rebanhos no ano final")).getByText("Bovino").closest("tr")).toHaveTextContent("100");
+    expect(tabela("Efetivo por município no ano final")).toBeInTheDocument();
+    expect(tabela("Polos de leite")).toBeInTheDocument();
+  });
+
+  it("Pecuária: leite em unidades por extenso (milhões de litros, R$ bi/mi)", async () => {
+    const leite = { ...pecuaria, metricas: { ...pecuaria.metricas, leite: { volume_mil_litros: 583715, valor_real: 1251099, produtividade_l_vaca: 2001, variacao_produtividade_pct: 1 } } };
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, json: async () => leite })));
+    render(<BlocoPecuaria />, { wrapper });
+    await screen.findByTestId("manchete");
+    expect(screen.getByText("Volume de leite").nextElementSibling).toHaveTextContent("583,7 milhões de litros");
+    expect(screen.getByText(/Valor do leite/).nextElementSibling).toHaveTextContent("R$ 1,3 bi");
   });
 });
