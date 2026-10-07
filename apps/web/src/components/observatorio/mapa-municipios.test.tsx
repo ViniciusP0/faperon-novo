@@ -37,3 +37,17 @@ describe("MapaMunicipios: legenda de sem dado", () => {
     expect(screen.queryByText("Carregando o mapa…")).not.toBeInTheDocument();
   });
 });
+
+describe("MapaMunicipios: modo categoria", () => {
+  it("mostra a chave de sem dado quando há categorias e algum município com categoria null", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ({ type: "FeatureCollection", features: [] }) }));
+    const comCat = (codigo: string, categoria: string | null) => ({ ...m(codigo, "ok"), valor: null, categoria });
+    const { unmount } = render(<MapaMunicipios municipios={[comCat("1", "soja"), comCat("2", null)]} unidade="" categorias={[{ slug: "soja", nome: "Soja" }]} descricao="Mapa" />);
+    expect(await screen.findByTestId("grafico-mock")).toBeInTheDocument();
+    expect(screen.getByText("Sigiloso ou sem dado")).toBeInTheDocument();
+    unmount();
+    render(<MapaMunicipios municipios={[comCat("1", "soja")]} unidade="" categorias={[{ slug: "soja", nome: "Soja" }]} descricao="Mapa" />);
+    expect(await screen.findByTestId("grafico-mock")).toBeInTheDocument();
+    expect(screen.queryByText("Sigiloso ou sem dado")).not.toBeInTheDocument();
+  });
+});

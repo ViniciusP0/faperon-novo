@@ -37,7 +37,7 @@ export function MapaMunicipios({ municipios, unidade, categorias, descricao }: {
   const option = useCallback((e: boolean) => optionMapa(municipios, unidade, categorias, e), [municipios, unidade, categorias]);
   if (estado === "erro") return <Alert>Não foi possível carregar o mapa; veja os dados como tabela.</Alert>;
   if (estado === "carregando") return <div role="status" className="h-[460px] animate-pulse rounded-md bg-line/70"><span className="sr-only">Carregando o mapa…</span></div>;
-  const haSemDado = municipios.some((m) => m.status !== "ok");
+  const haSemDado = municipios.some((m) => m.status !== "ok" || (categorias.length > 0 && m.categoria === null));
   return (
     <div>
       <GraficoObservatorio option={option} descricao={descricao} altura={460} />
