@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from observatorio.calculos import ANO_MAXIMO, ANO_MINIMO_DADOS
+
 
 class TextoSerializer(serializers.Serializer):
     manchete = serializers.CharField()
@@ -41,7 +43,7 @@ class AnoValorSerializer(serializers.Serializer):
 
 
 class ConsultaPanoramaSerializer(serializers.Serializer):
-    ano = serializers.IntegerField(required=False)
+    ano = serializers.IntegerField(required=False, min_value=ANO_MINIMO_DADOS, max_value=ANO_MAXIMO)
     janela = serializers.ChoiceField(choices=[5, 10, 20], required=False, default=10)
 
 
@@ -102,8 +104,12 @@ class PanoramaSerializer(serializers.Serializer):
 
 class ConsultaCrescimentoSerializer(serializers.Serializer):
     cultura = serializers.SlugField(required=False)
-    inicio = serializers.IntegerField(required=False, min_value=1974)
-    fim = serializers.IntegerField(required=False, min_value=1974)
+    inicio = serializers.IntegerField(
+        required=False, min_value=ANO_MINIMO_DADOS, max_value=ANO_MAXIMO
+    )
+    fim = serializers.IntegerField(
+        required=False, min_value=ANO_MINIMO_DADOS, max_value=ANO_MAXIMO
+    )
 
 
 class CrescimentoValoresSerializer(serializers.Serializer):
@@ -157,7 +163,7 @@ class ConsultaTerritorioSerializer(serializers.Serializer):
         choices=["valor", "area", "rebanho", "dominante"], required=False, default="valor"
     )
     cultura = serializers.SlugField(required=False)
-    ano = serializers.IntegerField(required=False)
+    ano = serializers.IntegerField(required=False, min_value=ANO_MINIMO_DADOS, max_value=ANO_MAXIMO)
 
 
 class MetricaOpcaoSerializer(OpcaoSerializer):
@@ -228,8 +234,12 @@ class TerritorioSerializer(serializers.Serializer):
 
 class ConsultaPecuariaSerializer(serializers.Serializer):
     rebanho = serializers.SlugField(required=False)
-    inicio = serializers.IntegerField(required=False, min_value=1974)
-    fim = serializers.IntegerField(required=False, min_value=1974)
+    inicio = serializers.IntegerField(
+        required=False, min_value=ANO_MINIMO_DADOS, max_value=ANO_MAXIMO
+    )
+    fim = serializers.IntegerField(
+        required=False, min_value=ANO_MINIMO_DADOS, max_value=ANO_MAXIMO
+    )
 
 
 class PecuariaValoresSerializer(serializers.Serializer):

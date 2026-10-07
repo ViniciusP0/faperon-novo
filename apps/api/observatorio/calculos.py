@@ -7,6 +7,8 @@ from decimal import Decimal
 
 CEM = Decimal(100)
 ANO_MINIMO_DEFLACAO = 1995  # o IPCA médio de 1994 mistura meses anteriores ao Real
+ANO_MINIMO_DADOS = 1974  # primeiro ano publicado pelo SIDRA para estas tabelas
+ANO_MAXIMO = 2100  # teto sanitário: evita janelas gigantes vindas de parâmetros de URL
 LIMIAR_ESTAVEL_LN = 0.001
 LIMIAR_DEPENDENCIA = Decimal(50)
 DEMAIS = "demais"

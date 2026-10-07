@@ -72,6 +72,17 @@ def _validar_ano(ano: int, disponiveis: list[int]) -> None:
         )
 
 
+def _anos_da_janela(inicio: int, fim: int, anos: list[int]) -> list[int]:
+    """Anos a percorrer: a janela pedida cortada ao intervalo com dado (nunca uma lista enorme).
+
+    Janela inteiramente fora dos dados mantém os anos pedidos (limitados pelo teto da API),
+    para a série continuar existindo, só que com valores nulos.
+    """
+    inicio, fim = max(inicio, c.ANO_MINIMO_DADOS), min(fim, c.ANO_MAXIMO)
+    dentro = range(max(inicio, anos[0]), min(fim, anos[-1]) + 1)
+    return list(dentro) if dentro else list(range(inicio, fim + 1))
+
+
 def _soma_presentes(valores: list[Decimal | None]) -> float | None:
     """Soma só o que existe; sem nenhum valor o resultado é None, nunca zero."""
     presentes = [v for v in valores if v is not None]
@@ -245,7 +256,7 @@ def crescimento(cultura: str | None, inicio: int | None, fim: int | None) -> dic
 
     area = _estadual("area-colhida", cultura, inicio, fim)
     producao = _estadual("quantidade-produzida", cultura, inicio, fim)
-    anos_janela = list(range(inicio, fim + 1))
+    anos_janela = _anos_da_janela(inicio, fim, anos)
     rendimento = {a: producao[a] / area[a] for a in anos_janela if a in producao and area.get(a)}
     d = c.decompor_crescimento(
         area.get(inicio), area.get(fim), producao.get(inicio), producao.get(fim)
@@ -498,7 +509,7 @@ def pecuaria(rebanho: str | None, inicio: int | None, fim: int | None) -> dict[s
         )
 
     efetivo = _estadual_tabela("efetivo", 3939, rebanho, inicio, fim)
-    anos_janela = list(range(inicio, fim + 1))
+    anos_janela = _anos_da_janela(inicio, fim, anos)
     fin = efetivo.get(fim)
     # A variação só compara municípios com valor OK nos dois anos; quem some de um lado
     # (sigilo ou ausência) não pode inventar crescimento nem queda.

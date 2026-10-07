@@ -101,10 +101,10 @@ Quatro rotas somente de leitura, uma por bloco da página `/central-de-inteligen
 
 | Rota | Parâmetros (todos opcionais) | Padrões |
 |---|---|---|
-| `GET /api/v1/observatorio/panorama` | `ano` (inteiro), `janela` (`5`, `10` ou `20`) | `ano` = último ano com dados do valor da produção; `janela` = `10` |
-| `GET /api/v1/observatorio/crescimento` | `cultura` (slug), `inicio`, `fim` (anos ≥ 1974) | `cultura` = a de maior valor da produção no último ano com dados; `fim` = último ano com dados; `inicio` = `fim - 9` |
-| `GET /api/v1/observatorio/territorio` | `metrica` (`valor`, `area`, `rebanho`, `dominante`), `cultura` (slug), `ano` | `metrica` = `valor`; `cultura` = nenhuma (todas; ignorada com `rebanho` e `dominante`, que a devolvem `null`); `ano` = último ano com dados |
-| `GET /api/v1/observatorio/pecuaria` | `rebanho` (slug), `inicio`, `fim` (anos ≥ 1974) | `rebanho` = `bovino`; `fim` = último ano com dados; `inicio` = `fim - 9` |
+| `GET /api/v1/observatorio/panorama` | `ano` (inteiro, 1974 a 2100), `janela` (`5`, `10` ou `20`) | `ano` = último ano com dados do valor da produção; `janela` = `10` |
+| `GET /api/v1/observatorio/crescimento` | `cultura` (slug), `inicio`, `fim` (anos de 1974 a 2100) | `cultura` = a de maior valor da produção no último ano com dados; `fim` = último ano com dados; `inicio` = `fim - 9` |
+| `GET /api/v1/observatorio/territorio` | `metrica` (`valor`, `area`, `rebanho`, `dominante`), `cultura` (slug), `ano` (1974 a 2100) | `metrica` = `valor`; `cultura` = nenhuma (todas; ignorada com `rebanho` e `dominante`, que a devolvem `null`); `ano` = último ano com dados |
+| `GET /api/v1/observatorio/pecuaria` | `rebanho` (slug), `inicio`, `fim` (anos de 1974 a 2100) | `rebanho` = `bovino`; `fim` = último ano com dados; `inicio` = `fim - 9` |
 
 Os valores efetivamente usados voltam em `filtros.valores`; as escolhas possíveis, em `filtros.opcoes`. Valores monetários são **reais**: corrigidos pelo IPCA médio anual e expressos a preços do ano `qualidade.ano_ref_monetario`.
 
@@ -174,7 +174,7 @@ Os valores efetivamente usados voltam em `filtros.valores`; as escolhas possíve
 
 Mesmo formato do restante da API: `{"erro": "Parâmetros inválidos", "campos": {"janela": "\"7\" não é uma escolha válida."}}`.
 
-- `400`: `janela`/`metrica` fora das escolhas, slug malformado, valor não numérico, `inicio`/`fim` abaixo de 1974, `inicio > fim` (`campos: {"inicio": "maior que fim"}`), e `ano` sem dados **só em `panorama` e `territorio`** (`campos: {"ano": "use um ano entre 1994 e 2025"}`). Em `crescimento` e `pecuaria`, `inicio`/`fim` fora do período com dados **não** dão 400: a resposta é 200 com valores `null`.
+- `400`: `janela`/`metrica` fora das escolhas, slug malformado, valor não numérico, `ano`, `inicio` ou `fim` fora de 1974 a 2100 (o teto impede janelas gigantes), `inicio > fim` (`campos: {"inicio": "maior que fim"}`), e `ano` sem dados **só em `panorama` e `territorio`** (`campos: {"ano": "use um ano entre 1994 e 2025"}`). Em `crescimento` e `pecuaria`, `inicio`/`fim` fora do período com dados **não** dão 400: a resposta é 200 com valores `null`. Os anos percorridos nas séries são cortados ao intervalo com dados (ex.: `inicio=1980&fim=2090` com dados de 2015 a 2024 devolve 2015 a 2024); janela inteiramente fora dos dados mantém os anos pedidos, todos `null`.
 - `404`: `cultura` ou `rebanho` inexistente (`{"erro": "Cultura 'xxx' não existe", "campos": {}}`).
 - Ausência de dados **não** é erro: responde 200 com `metricas`/`series` vazios e o motivo em `qualidade.avisos`.
 
