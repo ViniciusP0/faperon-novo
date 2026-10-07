@@ -19,6 +19,7 @@ FROM staging_medicao s
 JOIN dim_produto p ON p.tabela_origem = s.tabela AND p.codigo_ibge = s.produto_codigo
 JOIN dim_indicador i ON i.codigo_ibge = s.indicador_codigo
 WHERE s.carga_id = %s
+ORDER BY s.id
 ON CONFLICT (produto_id, indicador_id, municipio_id, ano) DO UPDATE
 SET valor = EXCLUDED.valor, status_valor = EXCLUDED.status_valor, carga_id = EXCLUDED.carga_id
 WHERE fato_medicao.valor IS DISTINCT FROM EXCLUDED.valor
