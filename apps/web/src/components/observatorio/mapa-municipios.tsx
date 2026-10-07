@@ -1,9 +1,10 @@
 "use client";
 
 import * as echarts from "echarts/core";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert } from "@/components/ui/feedback";
 import type { MunicipioMapa, Opcao } from "@/lib/api-types";
+import { formatoPorUnidade } from "@/lib/format";
 import { COR_SEM_DADO, COR_SEM_DADO_ESCURO, optionMapa } from "@/lib/observatorio-graficos";
 import { GraficoObservatorio } from "./grafico-observatorio";
 import { useEscuro } from "./use-escuro";
@@ -34,7 +35,9 @@ export function MapaMunicipios({ municipios, unidade, categorias, descricao }: {
     void carregarMalha().then((ok) => vivo && setEstado(ok ? "ok" : "erro"));
     return () => { vivo = false; };
   }, []);
-  const option = useCallback((e: boolean) => optionMapa(municipios, unidade, categorias, e), [municipios, unidade, categorias]);
+  // O balão e a legenda escrevem o valor por extenso (R$ 1,1 bilhão, 1,4 milhão de hectares), no mesmo vocabulário do gráfico ao lado.
+  const formato = useMemo(() => formatoPorUnidade(unidade, Math.max(0, ...municipios.map((m) => m.valor ?? 0))), [unidade, municipios]);
+  const option = useCallback((e: boolean) => optionMapa(municipios, unidade, categorias, e, formato), [municipios, unidade, categorias, formato]);
   if (estado === "erro") return <Alert>Não foi possível carregar o mapa; veja os dados como tabela.</Alert>;
   if (estado === "carregando") return <div role="status" className="h-[460px] animate-pulse rounded-md bg-line/70"><span className="sr-only">Carregando o mapa…</span></div>;
   const haSemDado = municipios.some((m) => m.status !== "ok" || (categorias.length > 0 && m.categoria === null));

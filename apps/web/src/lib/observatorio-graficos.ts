@@ -1,7 +1,7 @@
 import type { EChartsCoreOption } from "echarts/core";
 import type { AnoValor, ItemValor, MunicipioMapa, Opcao } from "./api-types";
 import { PALETA, PALETA_ESCURA } from "./chart-options";
-import { formatCompacto, formatNumero, formatPercentual } from "./format";
+import { formatCompacto, formatNumero, formatPercentual, type FormatoUnidade } from "./format";
 
 /** Bege neutro: matiz e luminosidade distintos de toda a escala verde, no tema claro e no escuro. */
 export const COR_SEM_DADO = "#c2b8a8";
@@ -124,13 +124,23 @@ export function optionDecomposicao(parteArea: number, parteRendimento: number, e
   };
 }
 
-export function optionBarrasHorizontais(itens: { nome: string; valor: number | null }[], unidade: string, escuro = false): EChartsCoreOption {
+/**
+ * Barras horizontais. Com `formato`, o eixo e o balão usam a mesma escala e o mesmo vocabulário do mapa (por extenso),
+ * e `detalhes` acrescenta uma linha ao balão de cada barra (por exemplo, quantos municípios ela reúne).
+ */
+export function optionBarrasHorizontais(itens: { nome: string; valor: number | null }[], unidade: string, escuro = false, formato?: FormatoUnidade | null, detalhes?: Record<string, string>): EChartsCoreOption {
   const t = tema(escuro);
   const ordenados = [...itens].filter((i) => i.valor !== null).reverse();
+  const balao = formato
+    ? {
+      formatter: (itensBalao: { name: string; value: number; marker?: string }[]) => itensBalao.map((i) =>
+        `${escapar(i.name)}<br/>${i.marker ?? ""} <strong>${escapar(formato.valor(i.value))}</strong>${detalhes?.[i.name] ? `<br/>${escapar(detalhes[i.name]!)}` : ""}`).join("<br/>"),
+    }
+    : {};
   return {
-    color: t.paleta, textStyle: t.texto_, tooltip: { ...t.tooltip, trigger: "axis", axisPointer: { type: "shadow" } },
+    color: t.paleta, textStyle: t.texto_, tooltip: { ...t.tooltip, trigger: "axis", axisPointer: { type: "shadow" }, ...balao },
     grid: { left: 16, right: 40, top: 8, bottom: 40, containLabel: true },
-    xAxis: { type: "value", name: unidade, nameLocation: "middle", nameGap: 28, ...t.eixoY, nameTextStyle: { color: t.muted }, axisLabel: { ...t.eixoY.axisLabel, formatter: (v: number) => formatCompacto(v) } },
+    xAxis: { type: "value", name: formato ? formato.nomeEixo : unidade, nameLocation: "middle", nameGap: 28, ...t.eixoY, nameTextStyle: { color: t.muted }, axisLabel: { ...t.eixoY.axisLabel, formatter: (v: number) => (formato ? formato.eixo(v) : formatCompacto(v)) } },
     // Nomes longos de município quebram em linhas em vez de serem cortados.
     yAxis: { type: "category", data: ordenados.map((i) => i.nome), ...t.eixoX, axisLabel: { ...t.eixoX.axisLabel, width: 130, overflow: "break" } },
     series: [{ type: "bar", data: ordenados.map((i) => i.valor) }],
@@ -154,7 +164,7 @@ function corDaCategoria(cores: string[], slug: string, indice: number): string {
   return cores[indice % (cores.length - 1)]!;
 }
 
-export function optionMapa(municipios: MunicipioMapa[], unidade: string, categorias: Opcao[], escuro = false): EChartsCoreOption {
+export function optionMapa(municipios: MunicipioMapa[], unidade: string, categorias: Opcao[], escuro = false, formato?: FormatoUnidade | null): EChartsCoreOption {
   const t = tema(escuro);
   const porCategoria = categorias.length > 0;
   const nomeCat = new Map(categorias.map((c) => [c.slug, c.nome]));
@@ -171,6 +181,7 @@ export function optionMapa(municipios: MunicipioMapa[], unidade: string, categor
       name: m.codigo_ibge,
       value: valor,
       nome: m.nome,
+      microrregiao: m.microrregiao,
       rotulo: porCategoria && m.categoria ? nomeCat.get(m.categoria) ?? null : null,
       status: m.status,
       // Sigiloso e sem dado ficam cinza: nunca entram na escala como zero.
@@ -181,13 +192,15 @@ export function optionMapa(municipios: MunicipioMapa[], unidade: string, categor
     textStyle: t.texto_,
     tooltip: {
       ...t.tooltip,
-      formatter: (p: { data?: { nome: string; value: number | null; rotulo?: string | null; status: string } }) => {
+      formatter: (p: { data?: { nome: string; value: number | null; rotulo?: string | null; status: string; microrregiao?: string } }) => {
         if (!p.data) return "";
         const v = p.data.value;
         const rotulo = v === null || v === undefined
           ? (p.data.status === "sigiloso" ? "sigiloso" : "sem dado")
-          : p.data.rotulo ? escapar(p.data.rotulo) : typeof v === "number" ? `${formatNumero(v)} ${escapar(unidade.toLowerCase())}`.trim() : "";
-        return `${escapar(p.data.nome)}: <strong>${rotulo}</strong>`;
+          : p.data.rotulo ? escapar(p.data.rotulo) : typeof v === "number" ? (formato ? escapar(formato.valor(v)) : `${formatNumero(v)} ${escapar(unidade.toLowerCase())}`.trim()) : "";
+        // A microrregião leva o nome de um município (o principal): dizer a qual o município pertence evita confundir os dois valores.
+        const micro = p.data.microrregiao ? `<br/>Microrregião: ${escapar(p.data.microrregiao)}` : "";
+        return `${escapar(p.data.nome)}: <strong>${rotulo}</strong>${micro}`;
       },
     },
     visualMap: porCategoria
@@ -198,7 +211,7 @@ export function optionMapa(municipios: MunicipioMapa[], unidade: string, categor
       }
       : {
         type: "continuous", min, max: max > min ? max : min + 1,
-        inRange: { color: escuro ? ESCALA_ESCURA : ESCALA }, text: ["Maior", "Menor"], calculable: false, left: 0, bottom: 0, textStyle: t.texto_,
+        inRange: { color: escuro ? ESCALA_ESCURA : ESCALA }, text: formato && valores.length ? [`Maior: ${formato.valor(max)}`, `Menor: ${formato.valor(min)}`] : ["Maior", "Menor"], calculable: false, left: 0, bottom: 0, textStyle: t.texto_,
       },
     series: [{
       type: "map", map: "rondonia", nameProperty: "codigo_ibge", roam: false, data: dados, aspectScale: ASPECTO_MAPA,

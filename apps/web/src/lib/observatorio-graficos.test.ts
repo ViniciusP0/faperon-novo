@@ -21,7 +21,7 @@ import {
   optionMapa,
   optionTreemap,
 } from "./observatorio-graficos";
-import { formatBilhoesEixo, formatCompacto, formatMilReais } from "./format";
+import { formatBilhoesEixo, formatCompacto, formatMilReais, formatoPorUnidade } from "./format";
 
 echarts.use([MapChart, TooltipComponent, VisualMapComponent, SVGRenderer]);
 
@@ -55,6 +55,60 @@ function regioes(svg: string): string[] {
 function caminhosComCor(svg: string, cor: string): string[] {
   return regioes(svg).filter((p) => p.toLowerCase().includes(`fill="${cor.toLowerCase()}"`));
 }
+
+describe("mapa e barras falam a mesma língua: valores por extenso e microrregião explícita", () => {
+  const fmt = formatoPorUnidade("Mil Reais", 2_408_218)!;
+  const muni = (codigo: string, nome: string, valor: number | null, microrregiao: string, status: MunicipioMapa["status"] = "ok"): MunicipioMapa => ({ codigo_ibge: codigo, nome, microrregiao, valor, status, categoria: null });
+
+  it("o balão do mapa escreve o valor por extenso e diz a que microrregião o município pertence", () => {
+    const o = optionMapa([muni("1", "Porto Velho", 1_112_550, "Porto Velho"), muni("2", "Colorado do Oeste", 44_904, "Colorado do Oeste")], "Mil Reais", [], false, fmt) as unknown as {
+      tooltip: { formatter: (p: unknown) => string };
+    };
+    const balao = o.tooltip.formatter({ data: { nome: "Colorado do Oeste", value: 44_904, status: "ok", microrregiao: "Colorado do Oeste" } });
+    expect(balao).toContain("R$ 44,9 milhões");
+    expect(balao).not.toContain("44.904");
+    expect(balao).toContain("Microrregião: Colorado do Oeste");
+  });
+
+  it("sigiloso e sem dado continuam em texto, sem valor", () => {
+    const o = optionMapa([muni("1", "Cabixi", null, "Colorado do Oeste", "sigiloso")], "Mil Reais", [], false, fmt) as unknown as { tooltip: { formatter: (p: unknown) => string } };
+    expect(o.tooltip.formatter({ data: { nome: "Cabixi", value: null, status: "sigiloso", microrregiao: "Colorado do Oeste" } })).toContain("sigiloso");
+  });
+
+  it("a legenda do mapa mostra o maior e o menor valor, não só as palavras", () => {
+    const o = optionMapa([muni("1", "Porto Velho", 1_112_550, "A"), muni("2", "Colorado do Oeste", 44_904, "B"), muni("3", "Cabixi", null, "B", "sigiloso")], "Mil Reais", [], false, fmt) as unknown as {
+      visualMap: { text: string[]; min: number; max: number };
+    };
+    expect(o.visualMap.text).toEqual(["Maior: R$ 1,1 bilhão", "Menor: R$ 44,9 milhões"]);
+    expect([o.visualMap.min, o.visualMap.max]).toEqual([44_904, 1_112_550]);
+  });
+
+  it("sem formatador o mapa mantém o comportamento anterior", () => {
+    const o = optionMapa([muni("1", "Porto Velho", 1_112_550, "A")], "Mil Reais", []) as unknown as { visualMap: { text: string[] } };
+    expect(o.visualMap.text).toEqual(["Maior", "Menor"]);
+  });
+
+  it("as barras usam a mesma escala: eixo em R$ bilhões e balão por extenso com o número de municípios", () => {
+    const o = optionBarrasHorizontais(
+      [{ nome: "Microrregião Porto Velho", valor: 2_408_218 }, { nome: "Microrregião Cacoal", valor: 800_000 }],
+      "Mil Reais", false, fmt, { "Microrregião Porto Velho": "7 municípios" },
+    ) as unknown as {
+      xAxis: { name: string; axisLabel: { formatter: (v: number) => string } };
+      tooltip: { formatter: (p: unknown) => string };
+    };
+    expect(o.xAxis.name).toBe("R$ bilhões");
+    expect(o.xAxis.axisLabel.formatter(1_500_000)).toBe("1,5");
+    const balao = o.tooltip.formatter([{ name: "Microrregião Porto Velho", value: 2_408_218, marker: "" }]);
+    expect(balao).toContain("Microrregião Porto Velho");
+    expect(balao).toContain("R$ 2,4 bilhões");
+    expect(balao).toContain("7 municípios");
+  });
+
+  it("sem formatador as barras continuam como antes (outros blocos usam)", () => {
+    const o = optionBarrasHorizontais([{ nome: "A", valor: 1500 }], "R$/ha") as unknown as { xAxis: { name: string } };
+    expect(o.xAxis.name).toBe("R$/ha");
+  });
+});
 
 describe("proporção do mapa", () => {
   /** Largura/altura do estado na malha, com a longitude encurtada pelo cosseno da latitude central (o que a Terra tem de fato). */

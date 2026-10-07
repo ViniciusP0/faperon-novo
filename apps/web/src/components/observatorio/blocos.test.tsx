@@ -563,6 +563,84 @@ describe("visão em tabela: uma tabela por gráfico e KPIs sempre visíveis (F6)
     expect(within(tabela("Municípios dependentes de uma cultura")).getByText("Ariquemes").closest("tr")).toHaveTextContent("Soja83,3");
   });
 
+  describe("Território: mapa e gráfico ao lado falam a mesma língua (valores por extenso, microrregião explícita)", () => {
+    // Porto Velho (município) vale R$ 1,1 bi, mas a microrregião de Porto Velho, que o reúne com outros, vale R$ 2,4 bi.
+    const real = {
+      ...territorio,
+      metricas: { ...territorio.metricas, total: 3_000_000 },
+      series: {
+        ...territorio.series,
+        municipios: [
+          { codigo_ibge: "1100205", nome: "Porto Velho", microrregiao: "Porto Velho", valor: 1_112_550, status: "ok", categoria: null },
+          { codigo_ibge: "1100338", nome: "Nova Mamoré", microrregiao: "Porto Velho", valor: 1_295_668, status: "ok", categoria: null },
+          { codigo_ibge: "1100049", nome: "Cacoal", microrregiao: "Cacoal", valor: 800_000, status: "ok", categoria: null },
+        ],
+        microrregioes: [{ nome: "Porto Velho", valor: 2_408_218 }, { nome: "Cacoal", valor: 800_000 }],
+      },
+    };
+    type Opcao = { series: { type: string }[]; xAxis?: { name: string }; yAxis?: { data: string[] }; visualMap?: { text: string[] }; tooltip: { formatter: (p: unknown) => string } };
+    const montar = async () => {
+      vi.stubGlobal("fetch", vi.fn(async (url: string) => (url.startsWith("/geo/") ? { ok: true, json: async () => ({ type: "FeatureCollection", features: [] }) } : { ok: true, json: async () => real })));
+      render(<BlocoTerritorio />, { wrapper });
+      await screen.findByTestId("manchete");
+      const opcoes = (opcoesGrafico as ((e: boolean) => Opcao)[]).map((f) => f(false));
+      return { mapa: opcoes.find((o) => o.series[0]!.type === "map")!, barras: opcoes.find((o) => o.series[0]!.type === "bar")! };
+    };
+
+    it("o gráfico ao lado tem título visível e explica que cada barra é uma microrregião", async () => {
+      await montar();
+      expect(screen.getByRole("heading", { level: 3, name: "Total por microrregião" })).toBeInTheDocument();
+      expect(screen.getByText(/Cada barra soma os municípios de uma microrregião/)).toHaveTextContent(
+        "Cada barra soma os municípios de uma microrregião. O nome dela é o do município principal do grupo, que tem um valor próprio no mapa.",
+      );
+    });
+
+    it("as barras se chamam 'Microrregião X' e o eixo diz a unidade (R$ bilhões), não 'Mil Reais'", async () => {
+      const { barras } = await montar();
+      expect(barras.yAxis!.data).toEqual(["Microrregião Cacoal", "Microrregião Porto Velho"]);
+      expect(barras.xAxis!.name).toBe("R$ bilhões");
+    });
+
+    it("o balão da barra usa o mesmo vocabulário do mapa e diz quantos municípios ela reúne", async () => {
+      const { barras } = await montar();
+      const balao = barras.tooltip.formatter([{ name: "Microrregião Porto Velho", value: 2_408_218, marker: "" }]);
+      expect(balao).toContain("R$ 2,4 bilhões");
+      expect(balao).toContain("2 municípios");
+      expect(barras.tooltip.formatter([{ name: "Microrregião Cacoal", value: 800_000, marker: "" }])).toContain("1 município");
+    });
+
+    it("o mapa mostra o valor por extenso, a microrregião do município e os extremos na legenda", async () => {
+      const { mapa } = await montar();
+      const balao = mapa.tooltip.formatter({ data: { nome: "Porto Velho", value: 1_112_550, status: "ok", microrregiao: "Porto Velho" } });
+      expect(balao).toContain("R$ 1,1 bilhão");
+      expect(balao).toContain("Microrregião: Porto Velho");
+      expect(mapa.visualMap!.text).toEqual(["Maior: R$ 1,3 bilhão", "Menor: R$ 800 milhões"]);
+    });
+
+    it("na tabela alternativa o valor aparece completo em reais, igual ao que o mapa arredonda", async () => {
+      await montar();
+      await userEvent.click(screen.getByRole("button", { name: "Ver como tabela" }));
+      const porMunicipio = screen.getByRole("table", { name: "Valores por município" });
+      expect(within(porMunicipio).getByRole("columnheader", { name: "Valor (R$)" })).toBeInTheDocument();
+      // "Porto Velho" também aparece na coluna Microrregião de outro município: a linha é achada pela primeira célula.
+      const linha = (tabela: HTMLElement, nome: string) => within(tabela).getAllByRole("row").find((r) => r.firstElementChild?.textContent === nome)!;
+      expect(linha(porMunicipio, "Porto Velho")).toHaveTextContent("R$ 1.112.550.000");
+      const porMicro = screen.getByRole("table", { name: "Total por microrregião" });
+      expect(linha(porMicro, "Porto Velho")).toHaveTextContent("R$ 2.408.218.000");
+    });
+
+    it("hectares e cabeças usam a própria unidade, também por extenso", async () => {
+      const area = { ...real, metricas: { ...real.metricas, unidade: "Hectares" }, filtros: { ...real.filtros, valores: { ...real.filtros.valores, metrica: "area" } } };
+      vi.stubGlobal("fetch", vi.fn(async (url: string) => (url.startsWith("/geo/") ? { ok: true, json: async () => ({ type: "FeatureCollection", features: [] }) } : { ok: true, json: async () => area })));
+      render(<BlocoTerritorio />, { wrapper });
+      await screen.findByTestId("manchete");
+      const opcoes = (opcoesGrafico as ((e: boolean) => Opcao)[]).map((f) => f(false));
+      const mapa = opcoes.find((o) => o.series[0]!.type === "map")!;
+      expect(mapa.visualMap!.text[0]).toBe("Maior: 1,3 milhão de hectares");
+      expect(opcoes.find((o) => o.series[0]!.type === "bar")!.xAxis!.name).toBe("milhões de hectares");
+    });
+  });
+
   describe("Território: municípios dependentes mostram 6 e expandem com 'Ver mais'", () => {
     const nomes = ["Ariquemes", "Cacoal", "Jaru", "Vilhena", "Ji-Paraná", "Pimenta Bueno", "Rolim de Moura", "Buritis"];
     const comDependentes = (n: number) => ({

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useId, useState } from "react";
+import { useCallback, useId, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Bloco } from "./bloco";
 import { useBlocoObservatorio, useFiltrosLembrados } from "./consultas";
@@ -10,7 +10,7 @@ import { Seletor } from "./seletor";
 import { GrupoTabela, TabelaDados } from "./tabela-dados";
 import { opcoesAnos, useFiltrosBloco } from "./use-filtros-bloco";
 import type { TerritorioResposta } from "@/lib/api-types";
-import { formatNumero } from "@/lib/format";
+import { formatNumero, formatReais, formatoPorUnidade } from "@/lib/format";
 import { optionBarrasHorizontais } from "@/lib/observatorio-graficos";
 
 const STATUS = { ok: "", sigiloso: "sigiloso", sem_dado: "sem dado" } as const;
@@ -52,16 +52,33 @@ function Dependentes({ d }: { d: TerritorioResposta }) {
   );
 }
 
+const rotuloMicro = (nome: string) => `Microrregião ${nome}`;
+
 function Conteudo({ d }: { d: TerritorioResposta }) {
   const micro = d.series.microrregioes;
+  const municipios = d.series.municipios;
   const unidade = d.metricas.unidade ?? "";
-  const microOpt = useCallback((e: boolean) => optionBarrasHorizontais(micro ?? [], unidade, e), [micro, unidade]);
+  // Mesma escala e mesmo vocabulário do mapa; o eixo escolhe bilhões, milhões ou mil conforme a maior barra.
+  const formato = useMemo(() => formatoPorUnidade(unidade, Math.max(0, ...(micro ?? []).map((m) => m.valor ?? 0))), [unidade, micro]);
+  const itens = useMemo(() => (micro ?? []).map((m) => ({ nome: rotuloMicro(m.nome), valor: m.valor })), [micro]);
+  const detalhes = useMemo(() => {
+    const por: Record<string, number> = {};
+    for (const m of municipios ?? []) por[rotuloMicro(m.microrregiao)] = (por[rotuloMicro(m.microrregiao)] ?? 0) + 1;
+    return Object.fromEntries(Object.entries(por).map(([nome, n]) => [nome, `${n} ${n === 1 ? "município" : "municípios"}`]));
+  }, [municipios]);
+  const microOpt = useCallback((e: boolean) => optionBarrasHorizontais(itens, unidade, e, formato, detalhes), [itens, unidade, formato, detalhes]);
   return (
     <div className="grid gap-8 lg:grid-cols-[3fr_2fr]">
       <MapaMunicipios municipios={d.series.municipios ?? []} unidade={unidade} categorias={d.series.categorias ?? []}
         descricao={`Mapa dos municípios de Rondônia: ${d.texto.manchete}`} />
       <div className="space-y-6">
-        {(micro?.length ?? 0) > 0 && <GraficoObservatorio option={microOpt} descricao="Total por microrregião" altura={280} />}
+        {(micro?.length ?? 0) > 0 && (
+          <section aria-labelledby="territorio-micro-titulo">
+            <h3 id="territorio-micro-titulo" className="text-sm font-semibold">Total por microrregião</h3>
+            <p className="mt-1 text-sm text-ink-muted">Cada barra soma os municípios de uma microrregião. O nome dela é o do município principal do grupo, que tem um valor próprio no mapa.</p>
+            <GraficoObservatorio option={microOpt} descricao="Total por microrregião: cada barra soma os municípios do grupo" altura={280} />
+          </section>
+        )}
         <Dependentes key={`${d.filtros.valores.metrica}|${d.filtros.valores.cultura}|${d.filtros.valores.ano}`} d={d} />
       </div>
     </div>
@@ -70,6 +87,10 @@ function Conteudo({ d }: { d: TerritorioResposta }) {
 
 function Tabelas({ d }: { d: TerritorioResposta }) {
   const dominante = d.filtros.valores.metrica === "dominante";
+  // Em mil R$ o IBGE publica 1.112.550; a tabela mostra o valor completo (R$ 1.112.550.000), que o mapa arredonda por extenso.
+  const emReais = d.metricas.unidade === "Mil Reais";
+  const cabecalhoValor = emReais ? "Valor (R$)" : d.metricas.unidade || "Cultura dominante";
+  const celula = (v: number | null) => (v !== null && emReais ? formatReais(v) : v);
   const micro = d.series.microrregioes ?? [];
   const dependentes = d.series.dependentes ?? [];
   return (
@@ -77,19 +98,19 @@ function Tabelas({ d }: { d: TerritorioResposta }) {
       <GrupoTabela titulo="Valores por município (mapa)">
         <TabelaDados legenda="Valores por município" colunas={[
           { chave: "nome", rotulo: "Município" }, { chave: "microrregiao", rotulo: "Microrregião" },
-          { chave: "valor", rotulo: d.metricas.unidade || "Cultura dominante", numerico: !dominante },
+          { chave: "valor", rotulo: cabecalhoValor, numerico: !dominante },
         ]} linhas={(d.series.municipios ?? []).map((m) => ({
           nome: m.nome, microrregiao: m.microrregiao,
           valor: dominante
             ? (d.series.categorias?.find((c) => c.slug === m.categoria)?.nome ?? (STATUS[m.status] || "sem dado"))
-            : m.status === "ok" ? m.valor : STATUS[m.status],
+            : m.status === "ok" ? celula(m.valor) : STATUS[m.status],
         }))} />
       </GrupoTabela>
       {micro.length > 0 && (
         <GrupoTabela titulo="Total por microrregião">
           <TabelaDados legenda="Total por microrregião" colunas={[
-            { chave: "nome", rotulo: "Microrregião" }, { chave: "valor", rotulo: d.metricas.unidade || "Total", numerico: true },
-          ]} linhas={micro.map((m) => ({ nome: m.nome, valor: m.valor }))} />
+            { chave: "nome", rotulo: "Microrregião" }, { chave: "valor", rotulo: emReais ? "Valor (R$)" : d.metricas.unidade || "Total", numerico: true },
+          ]} linhas={micro.map((m) => ({ nome: m.nome, valor: celula(m.valor) }))} />
         </GrupoTabela>
       )}
       {dependentes.length > 0 && (
