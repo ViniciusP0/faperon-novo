@@ -20,3 +20,7 @@ Motivo: Automação, auditoria e reprocessamento.
 ## Consequências
 
 Dados sempre rastreáveis a uma Carga. Custo: código da ACL e testes com respostas reais gravadas.
+
+## Atualização (2026-10-07): valores que a fonte deixou de publicar
+
+O upsert só insere e atualiza; sozinho, um valor que o IBGE passou a publicar como "-" continuaria no fato com o número antigo. Por isso, numa carga **completa** (sem `apenas`), na mesma transação do upsert, os fatos da tabela cuja chave (produto, indicador, município, ano) não veio no staging são apagados. Salvaguarda: só apaga se o staging tiver ao menos 90% das linhas que a tabela já tinha; abaixo disso a carga segue (não falha), registra um aviso com os números e não apaga nada, porque uma resposta muito menor costuma ser fonte incompleta, não revisão. A carga parcial nunca apaga, e dados de outras tabelas nunca são tocados.

@@ -1,13 +1,16 @@
 """Escrita no modelo de leitura a partir do staging da Ingestão (interface publicada do núcleo)."""
 
+import logging
 from decimal import Decimal
 
 from django.db import connection
 from django.utils.text import slugify
 
 from indicadores.catalogo import INDICADORES
-from indicadores.models import Indicador, Municipio, Produto, ProdutoIndicador
+from indicadores.models import Indicador, Medicao, Municipio, Produto, ProdutoIndicador
 from ingestao.models import Carga, StagingMedicao
+
+log = logging.getLogger(__name__)
 
 UPSERT_MEDICOES = """
 INSERT INTO fato_medicao (produto_id, indicador_id, municipio_id, ano, valor, status_valor, carga_id)
@@ -22,6 +25,57 @@ WHERE fato_medicao.valor IS DISTINCT FROM EXCLUDED.valor
    OR fato_medicao.status_valor IS DISTINCT FROM EXCLUDED.status_valor
 """
 
+
+# Fatos da tabela que a fonte deixou de publicar (ex.: valor revisado para "-"): saem na carga completa.
+DELETE_AUSENTES = """
+DELETE FROM fato_medicao f
+USING dim_produto p
+WHERE f.produto_id = p.id
+  AND p.tabela_origem = %s
+  AND NOT EXISTS (
+    SELECT 1
+    FROM staging_medicao s
+    JOIN dim_indicador i ON i.codigo_ibge = s.indicador_codigo
+    WHERE s.carga_id = %s
+      AND s.produto_codigo = p.codigo_ibge
+      AND i.id = f.indicador_id
+      AND s.municipio_codigo = f.municipio_id
+      AND s.ano = f.ano
+  )
+"""
+
+# Salvaguarda: carga que veio com menos que isto do que já existia é tratada como suspeita (fonte
+# incompleta ou fora do ar) e não apaga nada.
+MINIMO_PARA_PODAR_PERCENTUAL = 90
+
+
+def contar_fatos_da_tabela(tabela: int) -> int:
+    return Medicao.objects.filter(produto__tabela_origem=tabela).count()
+
+
+def remover_fatos_ausentes(carga: Carga, existentes_antes: int) -> int:
+    """Apaga os fatos da tabela cuja chave não veio no staging desta carga COMPLETA.
+
+    Só roda se o staging tiver ao menos 90% das linhas que existiam; senão registra aviso e não
+    apaga. Deve rodar na mesma transação do upsert. Retorna quantas linhas apagou.
+    """
+    recebidas = StagingMedicao.objects.filter(carga=carga).count()
+    if existentes_antes and recebidas * 100 < existentes_antes * MINIMO_PARA_PODAR_PERCENTUAL:
+        log.warning(
+            "tabela %s: a carga trouxe %s linhas para %s existentes (menos de %s%%); "
+            "não apagou nenhum fato ausente",
+            carga.tabela,
+            recebidas,
+            existentes_antes,
+            MINIMO_PARA_PODAR_PERCENTUAL,
+        )
+        return 0
+    with connection.cursor() as cursor:
+        cursor.execute(DELETE_AUSENTES, [carga.tabela, carga.pk])
+        apagadas = int(cursor.rowcount)
+    if apagadas:
+        log.info("tabela %s: %s fatos deixaram de ser publicados pela fonte e foram removidos", carga.tabela, apagadas)
+    return apagadas
 
 def _slug_unico(nome: str, tabela: int) -> str:
     base = slugify(nome)[:110] or f"produto-{tabela}"

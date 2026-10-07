@@ -12,7 +12,7 @@ from typing import Any, Protocol
 from django.db import transaction
 from django.utils import timezone
 
-from indicadores.aplicacao import promover_staging
+from indicadores.aplicacao import contar_fatos_da_tabela, promover_staging, remover_fatos_ausentes
 from indicadores.catalogo import (
     ANO_MINIMO_VALOR_PRODUCAO,
     INDICADORES,
@@ -119,7 +119,11 @@ def executar_carga(
             for linha in linhas:
                 linha.carga = carga
             StagingMedicao.objects.bulk_create(linhas, batch_size=LOTE)
+            existentes_antes = contar_fatos_da_tabela(tabela)
             promover_staging(carga, cfg.segmento, municipios)
+            if apenas is None:
+                # Só a carga completa sabe o que a fonte deixou de publicar; a parcial nunca apaga.
+                remover_fatos_ausentes(carga, existentes_antes)
             StagingMedicao.objects.filter(carga=carga).delete()
             # Na mesma transação: se o REFRESH de mv_ranking falhar, os dados novos não ficam
             # publicados com o ranking antigo.
