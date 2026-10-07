@@ -77,3 +77,23 @@ def test_snapshot_leva_e_traz_o_ipca(tmp_path: Path) -> None:
     snapshot.gerar(destino)
     snapshot.restaurar(destino, forcar=True)
     assert dict(IndicePreco.objects.values_list("ano", "indice_medio")) == antes
+
+
+@pytest.mark.django_db
+def test_falha_ao_baixar_sucesso_reverte_os_indices(monkeypatch: pytest.MonkeyPatch) -> None:
+    from ingestao.models import Carga
+    from ingestao.servico import CargaFalhou
+
+    original = Carga.save
+
+    def save_que_falha(self: Carga, *args: Any, **kwargs: Any) -> None:
+        if self.status == Carga.Status.SUCESSO:
+            raise RuntimeError("disco cheio")
+        original(self, *args, **kwargs)
+
+    monkeypatch.setattr(Carga, "save", save_que_falha)
+    cliente = ClienteIpca(carregar_fixture("sidra_1737_ipca_2024_2025.json"))
+    with pytest.raises(CargaFalhou):
+        executar_carga_ipca(cliente)
+    assert Carga.objects.get(tabela=1737).status == Carga.Status.FALHA
+    assert not IndicePreco.objects.exists()

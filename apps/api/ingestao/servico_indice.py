@@ -41,14 +41,15 @@ def executar_carga_ipca(cliente: ClienteSerieNacional, *, forcar: bool = False) 
         )
         carga.hash = digest
         carga.linhas = len(medias)
-        if not forcar and anterior is not None and anterior.hash == digest:
-            carga.status = Carga.Status.INALTERADA
-        else:
-            with transaction.atomic():
+        with transaction.atomic():
+            if not forcar and anterior is not None and anterior.hash == digest:
+                carga.status = Carga.Status.INALTERADA
+            else:
                 gravar_indices_preco(carga, medias)
                 carga.status = Carga.Status.SUCESSO
-        carga.concluida_em = timezone.now()
-        carga.save()
+            # A baixa de SUCESSO fica na transação: se o save falhar, a gravação é revertida.
+            carga.concluida_em = timezone.now()
+            carga.save()
         return carga
     except Exception as exc:
         carga.status = Carga.Status.FALHA
@@ -56,4 +57,6 @@ def executar_carga_ipca(cliente: ClienteSerieNacional, *, forcar: bool = False) 
         carga.concluida_em = timezone.now()
         carga.save()
         log.error("IPCA: carga %s falhou: %s", carga.pk, exc)
-        raise exc if isinstance(exc, CargaFalhou) else CargaFalhou(str(exc)) from exc
+        if isinstance(exc, CargaFalhou):
+            raise
+        raise CargaFalhou(str(exc)) from exc
