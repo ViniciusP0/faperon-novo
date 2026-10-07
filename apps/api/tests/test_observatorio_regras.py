@@ -153,3 +153,10 @@ def test_como_ler_sem_ano_ref_e_avisos() -> None:
         "não inclui carne bovina nem abate, que a PPM não publica."
     )
     assert r.AVISO_SEM_DADOS == "Não há dados publicados pelo IBGE para este recorte."
+
+
+def test_aviso_sem_ipca() -> None:
+    assert r.AVISO_SEM_IPCA == (
+        "Não é possível calcular valores reais: o IPCA necessário para corrigir "
+        "os valores deste ano não está disponível."
+    )

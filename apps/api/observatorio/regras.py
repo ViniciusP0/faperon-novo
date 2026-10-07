@@ -17,6 +17,10 @@ AVISO_SEM_CARNE = (
     "não inclui carne bovina nem abate, que a PPM não publica."
 )
 AVISO_SEM_DADOS = "Não há dados publicados pelo IBGE para este recorte."
+AVISO_SEM_IPCA = (
+    "Não é possível calcular valores reais: o IPCA necessário para corrigir "
+    "os valores deste ano não está disponível."
+)
 
 
 def _pct(v: Decimal, sinal: bool = False) -> str:

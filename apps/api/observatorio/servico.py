@@ -42,17 +42,22 @@ JANELAS = (5, 10, 20)
 
 
 def _vazio(
-    bloco: str, filtros: dict[str, Any], tabelas: list[int], ano_ref: int | None = None
+    bloco: str,
+    filtros: dict[str, Any],
+    tabelas: list[int],
+    ano_ref: int | None = None,
+    motivo: str = r.AVISO_SEM_DADOS,
+    avisos: list[str] | None = None,
 ) -> dict[str, Any]:
     return {
         "filtros": filtros,
         "metricas": {},
         "series": {},
-        "texto": {"manchete": r.AVISO_SEM_DADOS, "como_ler": r.como_ler(bloco, ano_ref)},
+        "texto": {"manchete": motivo, "como_ler": r.como_ler(bloco, ano_ref)},
         "qualidade": {
             "municipios_sigilosos": 0,
             "ano_ref_monetario": ano_ref,
-            "avisos": [r.AVISO_SEM_DADOS],
+            "avisos": [*(avisos or []), motivo],
         },
         "meta": meta(tabelas),
     }
@@ -64,6 +69,12 @@ def _validar_ano(ano: int, disponiveis: list[int]) -> None:
             f"Não há dados para {ano}",
             {"ano": f"use um ano entre {disponiveis[0]} e {disponiveis[-1]}"},
         )
+
+
+def _soma_presentes(valores: list[Decimal | None]) -> float | None:
+    """Soma só o que existe; sem nenhum valor o resultado é None, nunca zero."""
+    presentes = [v for v in valores if v is not None]
+    return f(sum(presentes, Decimal(0))) if presentes else None
 
 
 def panorama(ano: int | None, janela: int) -> dict[str, Any]:
@@ -79,11 +90,19 @@ def panorama(ano: int | None, janela: int) -> dict[str, Any]:
     _validar_ano(ano, anos)
     indices = leitura.indices_ipca()
     ano_ref, avisos = referencia_monetaria(ano, indices)
-    avisos.insert(0, r.AVISO_SEM_CARNE)
     inicio = ano - janela + 1
-    if inicio < c.ANO_MINIMO_DEFLACAO:
-        avisos.append(r.aviso_inicio_recortado(inicio, c.ANO_MINIMO_DEFLACAO))
+    recortado = inicio < c.ANO_MINIMO_DEFLACAO
+    if recortado:
         inicio = c.ANO_MINIMO_DEFLACAO
+    filtros = {
+        "valores": {"ano": ano, "janela": janela, "inicio": inicio},
+        "opcoes": {"anos": anos, "janelas": list(JANELAS)},
+    }
+    if ano_ref is None:  # sem nenhum IPCA carregado não há valor real
+        return _vazio("panorama", filtros, tabelas, None, r.AVISO_SEM_IPCA, avisos)
+    avisos.insert(0, r.AVISO_SEM_CARNE)
+    if recortado:
+        avisos.append(r.aviso_inicio_recortado(ano - janela + 1, c.ANO_MINIMO_DEFLACAO))
 
     nomes: dict[str, str] = {}
     reais: dict[str, dict[int, Decimal]] = {}
@@ -102,12 +121,8 @@ def panorama(ano: int | None, janela: int) -> dict[str, Any]:
 
     no_ano = {s: v[ano] for s, v in reais.items() if ano in v}
     no_inicio = {s: v[inicio] for s, v in reais.items() if inicio in v}
-    filtros = {
-        "valores": {"ano": ano, "janela": janela, "inicio": inicio},
-        "opcoes": {"anos": anos, "janelas": list(JANELAS)},
-    }
-    if not no_ano:
-        return _vazio("panorama", filtros, tabelas, ano_ref)
+    if not no_ano:  # há dado bruto no ano (ele sai de anos), mas sem IPCA para corrigi-lo
+        return _vazio("panorama", filtros, tabelas, ano_ref, r.AVISO_SEM_IPCA, avisos)
     total = sum(no_ano.values(), Decimal(0))
     total_ini = sum(no_inicio.values(), Decimal(0))
     partes = c.participacoes(no_ano)
@@ -133,10 +148,7 @@ def panorama(ano: int | None, janela: int) -> dict[str, Any]:
             {
                 "slug": c.DEMAIS,
                 "nome": nome(c.DEMAIS),
-                "valores": [
-                    f(sum((reais[s].get(a, Decimal(0)) for s in resto), Decimal(0)))
-                    for a in anos_janela
-                ],
+                "valores": [_soma_presentes([reais[s].get(a) for s in resto]) for a in anos_janela],
             }
         )
 

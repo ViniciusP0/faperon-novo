@@ -3,7 +3,11 @@ from decimal import Decimal as D
 import pytest
 from rest_framework.test import APIClient
 
+from indicadores.models import IndicePreco, Produto
+from ingestao.models import Carga
+from observatorio import regras as r
 from observatorio.servico import referencia_monetaria
+from tests.conftest import lancar
 
 pytestmark = pytest.mark.django_db
 
@@ -69,3 +73,64 @@ def test_panorama_sem_dados(api: APIClient, db: None) -> None:
     assert status == 200
     assert corpo["series"].get("composicao", []) == []
     assert corpo["texto"]["manchete"] == "Não há dados publicados pelo IBGE para este recorte."
+
+
+def test_panorama_area_colhida_do_ano(api: APIClient, dados_observatorio: dict) -> None:
+    # 2024, PAM: soja 110 (Alta Floresta) + 1000 (Ariquemes) + café 50 + 2000 (Cacoal)
+    _, corpo = get(api, "panorama")
+    assert corpo["metricas"]["area_colhida_ha"] == 3160.0
+
+
+def _extras_pam(carga: Carga) -> None:
+    """7 extras na 5457: com os 3 do fixture são 10 itens e o 'demais' agrupa os 2 menores."""
+    valores = {"e1": 100, "e2": 90, "e3": 80, "e4": 70, "e5": 60, "e6": 50, "e7": 40}
+    for slug, valor in valores.items():
+        p = Produto.objects.create(
+            slug=slug,
+            codigo_ibge=slug,
+            nome=slug.upper(),
+            segmento="agricultura",
+            tabela_origem=5457,
+        )
+        lancar(p, "valor-da-producao", "1100015", 2024, valor, carga)
+        if slug == "e7":  # único item do 'demais' com dado em 2015 (4000 → 6000: x1,5)
+            lancar(p, "valor-da-producao", "1100015", 2015, 20, carga)
+
+
+def test_panorama_demais_nao_vira_zero(
+    api: APIClient, dados_observatorio: dict, carga: Carga
+) -> None:
+    _extras_pam(carga)
+    _, corpo = get(api, "panorama")
+    comp = corpo["series"]["composicao"]
+    assert len(comp) == 9
+    assert comp[-1]["slug"] == "demais" and comp[-1]["valor"] == 90.0
+    assert abs(sum(i["participacao"] for i in comp) - 100) <= 0.1
+    demais = next(i for i in corpo["series"]["evolucao"]["itens"] if i["slug"] == "demais")
+    assert demais["valores"][0] == 30.0  # 2015: 20 * 6000/4000
+    assert demais["valores"][1:9] == [None] * 8  # 2016-2023 sem dado: nunca zero
+    assert demais["valores"][9] == 90.0
+
+
+def test_panorama_sem_ipca(api: APIClient, dados_observatorio: dict) -> None:
+
+    IndicePreco.objects.all().delete()
+    status, corpo = get(api, "panorama")
+    assert status == 200
+    assert corpo["texto"]["manchete"] == r.AVISO_SEM_IPCA
+    assert corpo["qualidade"]["avisos"] == [r.AVISO_SEM_IPCA]
+    assert corpo["qualidade"]["ano_ref_monetario"] is None
+    assert corpo["series"].get("composicao", []) == []
+
+
+def test_panorama_ano_com_ipca_nao_fechado(
+    api: APIClient, dados_observatorio: dict, carga: Carga
+) -> None:
+
+    lancar(dados_observatorio["soja"], "valor-da-producao", "1100015", 2026, 700, carga)
+    status, corpo = get(api, "panorama?ano=2026")
+    assert status == 200
+    assert corpo["qualidade"]["ano_ref_monetario"] == 2025
+    assert r.aviso_ano_ref(2026, 2025) in corpo["qualidade"]["avisos"]
+    assert r.AVISO_SEM_IPCA in corpo["qualidade"]["avisos"]
+    assert corpo["filtros"]["valores"]["ano"] == 2026
