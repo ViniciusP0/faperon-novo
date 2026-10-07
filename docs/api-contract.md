@@ -4,6 +4,8 @@ Fonte única de verdade entre `apps/api` (Django) e `apps/web` (Next.js). O Djan
 
 Todas as rotas ficam sob `/api/v1/`. O Next.js faz proxy de `/api/*` para o Django. Respostas em JSON UTF-8. Erros: `{"erro": "mensagem", "campos": {"param": "detalhe"}}` com HTTP 400 (parâmetro inválido), 404 (recurso inexistente) ou 422 (combinação inválida, ex.: unidades diferentes na comparação).
 
+Limite de uso: todas as rotas têm um teto geral de 300 requisições por minuto por IP (variável `ANON_RATE_LIMIT`; o IP é o último do `X-Forwarded-For`, ADR 0023). Acima disso a API responde `429` com `Retry-After` e o corpo `{"erro": "...", "campos": {}}`. O PDF tem limites próprios (abaixo). Uma navegação normal (cerca de 10 chamadas por tela) fica longe do teto.
+
 Convenções:
 
 - `produto` e `indicador` usam **slug** (ex.: `soja-em-grao`, `quantidade-produzida`), nunca id numérico.

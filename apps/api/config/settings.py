@@ -112,7 +112,10 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.AllowAny"],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    # Limite geral por IP (último X-Forwarded-For, NUM_PROXIES e ADR 0023); o PDF tem escopos próprios abaixo.
+    "DEFAULT_THROTTLE_CLASSES": ["rest_framework.throttling.AnonRateThrottle"],
     "DEFAULT_THROTTLE_RATES": {
+        "anon": os.environ.get("ANON_RATE_LIMIT", "300/min"),
         "pdf": os.environ.get("PDF_RATE_LIMIT", "10/min"),
         "pdf_global": os.environ.get("PDF_GLOBAL_RATE_LIMIT", "30/min"),
     },
