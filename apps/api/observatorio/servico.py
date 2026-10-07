@@ -13,7 +13,7 @@ from observatorio import regras as r
 
 
 def referencia_monetaria(ano: int, indices: dict[int, Decimal]) -> tuple[int | None, list[str]]:
-    if not indices:
+    if not indices or ano < c.ANO_MINIMO_DEFLACAO:  # antes do Real não há correção possível
         return None, []
     if ano in indices:
         return ano, []
@@ -91,7 +91,7 @@ def _soma_presentes(valores: list[Decimal | None]) -> float | None:
 
 def panorama(ano: int | None, janela: int) -> dict[str, Any]:
     tabelas = [5457, 74, 1737]
-    anos = leitura.anos_disponiveis(VALOR, 5457)
+    anos = [a for a in leitura.anos_disponiveis(VALOR, 5457) if a >= c.ANO_MINIMO_DEFLACAO]
     if not anos:
         filtros_vazios = {
             "valores": {"ano": None, "janela": janela, "inicio": None},
@@ -252,7 +252,9 @@ def crescimento(cultura: str | None, inicio: int | None, fim: int | None) -> dic
     indices = leitura.indices_ipca()
     ano_ref, avisos = referencia_monetaria(fim, indices)
     if ano_ref is None:  # só o R$/ha precisa do deflator; o resto do bloco segue normal
-        avisos.append(r.AVISO_SEM_IPCA)
+        avisos.append(
+            r.aviso_antes_do_plano_real(fim) if fim < c.ANO_MINIMO_DEFLACAO else r.AVISO_SEM_IPCA
+        )
 
     area = _estadual("area-colhida", cultura, inicio, fim)
     producao = _estadual("quantidade-produzida", cultura, inicio, fim)
@@ -319,7 +321,7 @@ def crescimento(cultura: str | None, inicio: int | None, fim: int | None) -> dic
 
 
 METRICAS_TERRITORIO = {
-    "valor": ("Valor da produção", "Mil Reais"),
+    "valor": ("Valor da produção das lavouras", "Mil Reais"),
     "area": ("Área colhida", "Hectares"),
     "rebanho": ("Rebanho bovino", "Cabeças"),
     "dominante": ("Cultura dominante", ""),
@@ -470,7 +472,9 @@ def territorio(metrica: str, cultura: str | None, ano: int | None) -> dict[str, 
     }
 
 
-SUBTOTAIS_REBANHO = {"galinaceos-total", "suino-matrizes-de-suinos"}
+# Subconjuntos publicados dentro de um agregado que também está na lista: o agregado fica
+# (galinaceos-total, suino-total) e o subconjunto sai da composição para não ocultar cabeças.
+SUBTOTAIS_REBANHO = {"galinaceos-galinhas", "suino-matrizes-de-suinos"}
 POLOS_LEITE = 5
 
 

@@ -7,11 +7,12 @@ from observatorio.calculos import Decomposicao
 
 LIMIAR_ESTABILIDADE_PP = Decimal(1)
 NOMES_METRICA = {
-    "valor": "do valor da produção",
+    "valor": "do valor das lavouras",
     "area": "da área colhida",
     "rebanho": "do rebanho bovino",
-    "dominante": "do valor da produção",
+    "dominante": "do valor das lavouras",
 }
+METRICAS_COM_DEPENDENCIA = ("valor", "dominante")  # só elas partem do valor por cultura
 AVISO_SEM_CARNE = (
     "O valor da produção soma lavouras (PAM) e produtos de origem animal (PPM); "
     "não inclui carne bovina nem abate, que a PPM não publica."
@@ -89,7 +90,7 @@ def manchete_territorio(
         f"Em {ano}, os cinco maiores municípios concentraram {_pct(top5_pct)} {NOMES_METRICA[metrica]} "
         f"(concentração {classificar_concentracao(top5_pct)}); {polo} é o principal polo."
     )
-    if dependentes:
+    if dependentes and metrica in METRICAS_COM_DEPENDENCIA:
         texto += (
             f" {dependentes} municípios dependem de uma só cultura para mais da metade do valor agrícola."
             if dependentes > 1
@@ -135,6 +136,8 @@ def como_ler(bloco: str, ano_ref: int | None) -> list[str]:
             valores,
             "O retângulo de cada item é proporcional à sua participação no valor total do ano. "
             "Mudanças de participação mostram para onde a economia agrícola do estado está se deslocando.",
+            "A área colhida soma a área de cada cultura no ano (soma por cultura); "
+            "como inclui a segunda safra, pode superar a área física cultivada.",
         ],
         "crescimento": [
             "A produção cresce porque a área colhida aumenta, porque cada hectare rende mais, ou pelos dois. "
@@ -149,12 +152,13 @@ def como_ler(bloco: str, ano_ref: int | None) -> list[str]:
             "A concentração mede quanto do total está nos cinco maiores municípios. O índice HHI vai de 0 "
             "(produção espalhada) a 10.000 (tudo em um município).",
             "Município dependente é aquele em que uma única cultura passa de 50% do valor agrícola: "
-            "uma quebra de safra ou de preço dessa cultura afeta toda a economia local.",
+            "uma quebra de safra ou de preço dessa cultura pesa muito na renda agrícola do município.",
         ],
         "pecuaria": [
             "O efetivo é o número de cabeças em 31 de dezembro de cada ano, segundo a PPM do IBGE.",
             "A produtividade do leite é o volume anual dividido pelo número de vacas ordenhadas: "
             "mostra se o estado produz mais leite por animal, e não só com mais animais.",
+            f"O valor do leite está {precos}.",
         ],
     }
     return textos[bloco]
@@ -167,6 +171,13 @@ def aviso_ano_ref(pedido: int, usado: int) -> str:
 def aviso_inicio_recortado(pedido: int, usado: int) -> str:
     return (
         f"O período começa em {usado}: antes do Plano Real não há como corrigir valores pelo IPCA."
+    )
+
+
+def aviso_antes_do_plano_real(fim: int) -> str:
+    return (
+        "Antes de 1995 (Plano Real) não há como corrigir valores pelo IPCA; "
+        f"o valor por hectare não é calculado para {fim}."
     )
 
 

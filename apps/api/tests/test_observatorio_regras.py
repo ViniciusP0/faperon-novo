@@ -39,7 +39,7 @@ def test_manchete_crescimento_queda_e_sem_base() -> None:
 
 def test_manchete_territorio() -> None:
     assert r.manchete_territorio("valor", 2024, D("72.5"), "Ariquemes", 3) == (
-        "Em 2024, os cinco maiores municípios concentraram 72,5% do valor da produção (concentração alta); "
+        "Em 2024, os cinco maiores municípios concentraram 72,5% do valor das lavouras (concentração alta); "
         "Ariquemes é o principal polo. 3 municípios dependem de uma só cultura para mais da metade do valor agrícola."
     )
 
@@ -105,8 +105,9 @@ def test_territorio_ramos() -> None:
         "(concentração alta); Ariquemes é o principal polo."
     )
     assert r.manchete_territorio("area", 2024, D("72.5"), "Ariquemes", 0) == base
-    assert r.manchete_territorio("area", 2024, D("72.5"), "Ariquemes", 1) == (
-        base + " 1 município depende de uma só cultura para mais da metade do valor agrícola."
+    assert r.manchete_territorio("area", 2024, D("72.5"), "Ariquemes", 1) == base
+    assert r.manchete_territorio("valor", 2024, D("72.5"), "Ariquemes", 1).endswith(
+        " 1 município depende de uma só cultura para mais da metade do valor agrícola."
     )
     assert r.manchete_territorio("area", 2024, None, "Ariquemes", 0) == r.AVISO_SEM_DADOS
     assert r.manchete_territorio("area", 2024, D("72.5"), None, 0) == r.AVISO_SEM_DADOS

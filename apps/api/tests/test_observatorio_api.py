@@ -441,17 +441,17 @@ def test_pecuaria_composicao_exclui_subtotais(
     for slug, nome, codigo in [
         ("galinaceos-total", "Galináceos - total", "2681"),
         ("suino-matrizes-de-suinos", "Matrizes de suínos", "32794"),
-        ("galinhas", "Galinhas", "2675"),
+        ("galinaceos-galinhas", "Galináceos - galinhas", "2675"),
     ]:
         p = Produto.objects.create(
             slug=slug, codigo_ibge=codigo, nome=nome, segmento="pecuaria", tabela_origem=3939
         )
-        lancar(p, "efetivo", "1100015", 2024, 1000 if slug == "galinhas" else 5000, carga)
+        lancar(p, "efetivo", "1100015", 2024, 1000 if slug == "galinaceos-galinhas" else 5000, carga)
     _, corpo = get(api, "pecuaria")
     comp = corpo["series"]["composicao"]
     assert [(i["slug"], i["valor"], i["participacao"]) for i in comp] == [
-        ("bovino", 2000.0, 66.7),
-        ("galinhas", 1000.0, 33.3),
+        ("galinaceos-total", 5000.0, 71.4),
+        ("bovino", 2000.0, 28.6),
     ]
 
 

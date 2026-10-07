@@ -14,7 +14,10 @@ from ingestao.models import Carga
 # que o componente não cobre), então somar os dois conta o café duas vezes. O agregado fica;
 # o componente só sai das somas entre produtos, e só se o agregado existir na tabela.
 PRODUTOS_COMPONENTE_DUPLICADO: dict[int, dict[str, str]] = {
-    5457: {"cafe-em-grao-canephora": "cafe-em-grao-total"}
+    5457: {
+        "cafe-em-grao-canephora": "cafe-em-grao-total",
+        "cafe-em-grao-arabica": "cafe-em-grao-total",
+    }
 }
 
 
