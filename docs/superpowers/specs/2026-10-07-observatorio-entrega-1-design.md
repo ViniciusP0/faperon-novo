@@ -50,7 +50,7 @@ PDF e CSV; LSPA, Abate, ComexStat e ICMS; densidade por km²; regiões imediatas
 - Só a Ingestão conhece o código 1737 e as variáveis.
 
 **Malha municipal.**
-- Comando `manage.py baixar_malha` busca a malha de RO por município na API de malhas v3 do IBGE (qualidade mínima, GeoJSON), confere que há exatamente os 52 códigos IBGE do cadastro e grava `apps/web/public/geo/ro-municipios.json` (propriedade `codigo_ibge` em cada feição). Arquivo versionado; nunca é buscado em tempo de execução.
+- Comando `manage.py baixar_territorio` busca a malha de RO por município na API de malhas v3 do IBGE (qualidade mínima, GeoJSON), confere que há exatamente os 52 códigos IBGE do cadastro e grava `apps/web/public/geo/ro-municipios.json` (propriedade `codigo_ibge` em cada feição). Arquivo versionado; nunca é buscado em tempo de execução.
 
 ### 2. Contexto `observatorio` (Django)
 
@@ -141,7 +141,7 @@ Cada endpoint responde em até 500 ms (p95) no notebook da demo com o banco comp
   - `regras.py`: golden tests das manchetes e do "como ler" de cada bloco.
   - Endpoints: padrões, validação (400), inexistente (404), recorte vazio (200 com aviso), forma da resposta.
   - Ingestão: parser da 94 (sem classificação) e da 1737 com fixtures; ano de IPCA incompleto não é gravado.
-  - `baixar_malha`: recusa malha com códigos diferentes dos 52 do cadastro (fixture local, sem rede).
+  - `baixar_territorio`: recusa malha com códigos diferentes dos 52 do cadastro (fixture local, sem rede).
 - **Vitest**: molde do bloco (manchete, alternância tabela/gráfico, estados), leitura e escrita dos filtros na URL, hub da Central.
 - **Playwright**: Central → Observatório → mudar um filtro de um bloco → recarregar o link reproduz a visão → "ver no Painel" abre o recorte equivalente.
 

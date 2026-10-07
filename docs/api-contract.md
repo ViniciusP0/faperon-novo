@@ -101,7 +101,7 @@ Quatro rotas somente de leitura, uma por bloco da página `/central-de-inteligen
 
 | Rota | Parâmetros (todos opcionais) | Padrões |
 |---|---|---|
-| `GET /api/v1/observatorio/panorama` | `ano` (inteiro, 1974 a 2100), `janela` (`5`, `10` ou `20`) | `ano` = último ano com dados do valor da produção; `janela` = `10` |
+| `GET /api/v1/observatorio/panorama` | `ano` (inteiro, 1974 a 2100), `janela` (`5`, `10` ou `20`) | `ano` = último ano com dados do valor da produção (só aparecem anos a partir de 1995, o piso do IPCA); `janela` = `10` |
 | `GET /api/v1/observatorio/crescimento` | `cultura` (slug), `inicio`, `fim` (anos de 1974 a 2100) | `cultura` = a de maior valor da produção no último ano com dados; `fim` = último ano com dados; `inicio` = `fim - 9` |
 | `GET /api/v1/observatorio/territorio` | `metrica` (`valor`, `area`, `rebanho`, `dominante`), `cultura` (slug), `ano` (1974 a 2100) | `metrica` = `valor`; `cultura` = nenhuma (todas; ignorada com `rebanho` e `dominante`, que a devolvem `null`); `ano` = último ano com dados |
 | `GET /api/v1/observatorio/pecuaria` | `rebanho` (slug), `inicio`, `fim` (anos de 1974 a 2100) | `rebanho` = `bovino`; `fim` = último ano com dados; `inicio` = `fim - 9` |
@@ -137,7 +137,7 @@ Os valores efetivamente usados voltam em `filtros.valores`; as escolhas possíve
 - **Sem dado** (`Não há dados publicados pelo IBGE para este recorte.`): o recorte existe mas o IBGE não publicou nada; `metricas`/`series` vazios.
 - **IPCA ausente** (`Não é possível calcular valores reais: o IPCA necessário ... não está disponível.`): faltam índices de preço. Só as partes monetárias degradam (lista vazia, `ano_ref_monetario: null`); métricas físicas (área, rebanho, produção) continuam. Não é o mesmo que "sem dado".
 - Sem IPCA, no `panorama` e no `territorio` com `metrica=valor` a resposta tem `metricas` e `series` vazios (`{}`); no `crescimento` só `valor_por_hectare` fica vazio; na `pecuaria` só `leite.valor_real` fica `null`; no `territorio` com `metrica=dominante` o município pode ter `status: "ok"` com `valor: null`, e `ano_ref_monetario` passa a `null`.
-- Avisos e onde aparecem: sem carne bovina (o valor soma PAM + PPM e a PPM não publica carne nem abate) → só `panorama`; IPCA do ano pedido ainda não fechado (valores a preços de outro ano) → blocos monetários; período começa depois do pedido (antes do Plano Real não há correção) → `panorama`; sigilo parcial (`N município(s) com dado sigiloso para alguma cultura fica(m) sem cultura dominante e fora da lista de dependentes.`) → só `territorio`; variação do rebanho calculada sobre a base comum de municípios dos dois anos, e sigilo no rebanho/leite (`... fica(m) fora dos totais e do ranking; o principal polo pode ser outro.`) → só `pecuaria`.
+- Avisos e onde aparecem: sem carne bovina (o valor soma PAM + PPM e a PPM não publica carne nem abate) → só `panorama`; IPCA do ano pedido ainda não fechado (valores a preços de outro ano) → blocos monetários; período começa depois do pedido (antes do Plano Real não há correção) → `panorama`; ano final anterior a 1995, sem correção possível (o valor por hectare não é calculado) → `crescimento`; sigilo parcial (`N município(s) com dado sigiloso para alguma cultura fica(m) sem cultura dominante e fora da lista de dependentes.`) → só `territorio`; variação do rebanho calculada sobre a base comum de municípios dos dois anos, e sigilo no rebanho/leite (`... fica(m) fora dos totais e do ranking; o principal polo pode ser outro.`) → só `pecuaria`.
 
 ### `panorama`
 
@@ -158,6 +158,7 @@ Os valores efetivamente usados voltam em `filtros.valores`; as escolhas possíve
 
 - `filtros.valores`: `{metrica, cultura, ano}`; `opcoes`: `{metricas: [{slug, nome, unidade}], culturas, anos}`.
 - `metricas`: `unidade`, `total`, `top5_pct`, `hhi` (0 a 10.000), `concentracao` (`baixa`, `moderada` ou `alta`).
+- A métrica `valor` é o valor da produção das **lavouras** (PAM, sem origem animal): seu nome em `opcoes.metricas` é "Valor da produção das lavouras", e a manchete diz "do valor das lavouras". A frase sobre municípios dependentes só aparece nas métricas `valor` e `dominante`.
 - `series.municipios`: os 52 municípios, `[{codigo_ibge, nome, microrregiao, valor, status, categoria}]`. `status` é `ok`, `sigiloso` ou `sem_dado`; nos dois últimos `valor` é `null` (nunca 0). `categoria` é o slug da cultura dominante (só com `metrica=dominante`) ou `outras` quando a dominante não está entre as 8 principais; `null` quando sigiloso/desconhecido.
 - `series.microrregioes`: `[{nome, valor}]`.
 - `series.dependentes`: `[{codigo_ibge, nome, cultura, participacao}]` (municípios com mais da metade do valor agrícola em uma cultura).
@@ -180,7 +181,11 @@ Mesmo formato do restante da API: `{"erro": "Parâmetros inválidos", "campos": 
 
 ### Agregação do café
 
-Somas e composições entre produtos contam o café da PAM uma vez só: o "Café (em grão) Total" é mantido e o componente "Café (em grão) Canephora" fica fora das agregações entre produtos quando o Total existe. Pedir `cultura=cafe-em-grao-canephora` explicitamente continua devolvendo esse produto.
+Somas e composições entre produtos contam o café da PAM uma vez só: o "Café (em grão) Total" é mantido e os componentes "Café (em grão) Canephora" e "Café (em grão) Arábica" ficam fora das agregações entre produtos quando o Total existe. Pedir `cultura=cafe-em-grao-canephora` (ou `-arabica`) explicitamente continua devolvendo esse produto.
+
+### Composição dos rebanhos (`pecuaria`)
+
+A `series.composicao` mantém o agregado e tira o subconjunto, pela mesma lógica do café: `galinaceos-total` fica e `galinaceos-galinhas` sai; `suino-total` fica e `suino-matrizes-de-suinos` sai. Assim a soma não esconde cabeças (em Rondônia o total de galináceos é cerca de 3 vezes o de galinhas).
 
 ## Saúde
 
