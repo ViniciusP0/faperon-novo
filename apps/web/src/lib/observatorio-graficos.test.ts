@@ -2,8 +2,8 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { MapChart } from "echarts/charts";
-import { TooltipComponent, VisualMapComponent } from "echarts/components";
+import { LineChart, MapChart } from "echarts/charts";
+import { GridComponent, LegendComponent, TitleComponent, TooltipComponent, VisualMapComponent } from "echarts/components";
 import * as echarts from "echarts/core";
 import { SVGRenderer } from "echarts/renderers";
 import { describe, expect, it } from "vitest";
@@ -23,7 +23,7 @@ import {
 } from "./observatorio-graficos";
 import { formatBilhoesEixo, formatCompacto, formatMilReais, formatoPorUnidade } from "./format";
 
-echarts.use([MapChart, TooltipComponent, VisualMapComponent, SVGRenderer]);
+echarts.use([MapChart, LineChart, GridComponent, LegendComponent, TitleComponent, TooltipComponent, VisualMapComponent, SVGRenderer]);
 
 const m = (codigo: string, valor: number | null, status: MunicipioMapa["status"], categoria: string | null = null): MunicipioMapa =>
   ({ codigo_ibge: codigo, nome: codigo, microrregiao: "", valor, status, categoria });
@@ -263,6 +263,13 @@ describe("options do Observatório", () => {
     expect(o.title.text).toBe("Soma: R$ 2,3 mi");
     expect(o.title.right).toBeGreaterThanOrEqual(0);
     expect(o.title.top).toBeGreaterThanOrEqual(0);
+  });
+
+  it("evolução empilhada: o texto da soma é realmente desenhado no gráfico", () => {
+    const chart = echarts.init(null, undefined, { renderer: "svg", ssr: true, width: 600, height: 340 });
+    chart.setOption(optionLinhasEmpilhadas({ anos: [2023, 2024], itens: [{ nome: "Soja", valores: [1000, 2000] }] }, "x", false, { eixo: formatBilhoesEixo, valor: formatMilReais }));
+    expect(chart.renderToSVGString()).toContain("Soma: R$ 2 mi");
+    chart.dispose();
   });
 
   it("evolução empilhada sem formatador usa o compacto e não rotula quando o último ano não tem dado", () => {

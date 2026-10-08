@@ -1,7 +1,7 @@
 "use client";
 
 import { MapChart, TreemapChart } from "echarts/charts";
-import { VisualMapComponent } from "echarts/components";
+import { TitleComponent, VisualMapComponent } from "echarts/components";
 import * as echarts from "echarts/core";
 import type { EChartsCoreOption } from "echarts/core";
 import { useMemo } from "react";
@@ -9,7 +9,7 @@ import { Grafico } from "@/components/painel/grafico";
 import { useEscuro } from "./use-escuro";
 
 // Registra só o que o Observatório acrescenta; o Grafico registra o restante antes do init.
-echarts.use([MapChart, TreemapChart, VisualMapComponent]);
+echarts.use([MapChart, TreemapChart, TitleComponent, VisualMapComponent]);
 
 export type OpcaoDoTema = EChartsCoreOption | ((escuro: boolean) => EChartsCoreOption);
 
