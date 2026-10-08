@@ -34,7 +34,7 @@ export interface Municipio {
 export interface MetaGeral {
   ultima_carga: string | null;
   cargas: { tabela: number; status: string; concluida_em: string | null; linhas: number }[];
-  anos: { min: number; max: number };
+  anos: { min: number | null; max: number | null };
 }
 
 export interface ItemRanking {

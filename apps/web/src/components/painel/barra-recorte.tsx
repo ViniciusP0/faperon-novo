@@ -22,8 +22,9 @@ export function BarraRecorte({ filtros, indicadores, municipios, anos, paramsPdf
   const [aberta, setAberta] = useState(false);
 
   const listaAnos = useMemo(() => {
-    if (!anos) return [];
-    return Array.from({ length: anos.max - anos.min + 1 }, (_, i) => anos.max - i);
+    if (!anos || anos.min === null || anos.max === null) return [];
+    const { min, max } = anos;
+    return Array.from({ length: max - min + 1 }, (_, i) => max - i);
   }, [anos]);
 
   return (
