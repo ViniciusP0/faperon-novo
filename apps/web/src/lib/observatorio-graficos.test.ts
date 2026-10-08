@@ -249,8 +249,8 @@ describe("options do Observatório", () => {
 
   it("evolução empilhada: só linhas sólidas, sem preenchimento, e a linha de cima rotulada como a soma", () => {
     const ev = { anos: [2023, 2024], itens: [{ nome: "Soja", valores: [1000, 2000] }, { nome: "Café", valores: [500, null] }, { nome: "Leite", valores: [250, 300] }] };
-    type S = { type: string; stack: string; areaStyle?: unknown; lineStyle: { width: number }; endLabel?: { show: boolean; formatter: () => string } };
-    const o = optionLinhasEmpilhadas(ev, "R$ bilhões", false, { eixo: formatBilhoesEixo, valor: formatMilReais }) as unknown as { series: S[] };
+    type S = { type: string; stack: string; areaStyle?: unknown; lineStyle: { width: number }; endLabel?: unknown };
+    const o = optionLinhasEmpilhadas(ev, "R$ bilhões", false, { eixo: formatBilhoesEixo, valor: formatMilReais }) as unknown as { series: S[]; title: { text: string; right: number; top: number } };
     expect(o.series).toHaveLength(3);
     for (const s of o.series) {
       expect(s.type).toBe("line");
@@ -258,17 +258,18 @@ describe("options do Observatório", () => {
       expect(s.areaStyle).toBeUndefined();
       expect(s.lineStyle.width).toBeGreaterThanOrEqual(2);
     }
-    // só a última série (a linha de cima do empilhamento) leva o rótulo, com a soma do último ano: 2000 + 300 (o nulo não entra)
-    expect(o.series.slice(0, 2).map((s) => s.endLabel?.show ?? false)).toEqual([false, false]);
-    expect(o.series[2]!.endLabel?.show).toBe(true);
-    expect(o.series[2]!.endLabel?.formatter()).toBe("Soma: R$ 2,3 mi");
+    // a soma do último ano (2000 + 300; o nulo não entra) fica num título no canto superior direito, nunca sobre as linhas
+    expect(o.series.every((s) => s.endLabel === undefined)).toBe(true);
+    expect(o.title.text).toBe("Soma: R$ 2,3 mi");
+    expect(o.title.right).toBeGreaterThanOrEqual(0);
+    expect(o.title.top).toBeGreaterThanOrEqual(0);
   });
 
   it("evolução empilhada sem formatador usa o compacto e não rotula quando o último ano não tem dado", () => {
-    const com = optionLinhasEmpilhadas({ anos: [2024], itens: [{ nome: "A", valores: [1500] }] }, "x") as unknown as { series: { endLabel: { formatter: () => string } }[] };
-    expect(com.series[0]!.endLabel.formatter()).toBe("Soma: " + formatCompacto(1500));
-    const sem = optionLinhasEmpilhadas({ anos: [2024], itens: [{ nome: "A", valores: [null] }] }, "x") as unknown as { series: { endLabel?: { show: boolean } }[] };
-    expect(sem.series[0]!.endLabel?.show ?? false).toBe(false);
+    const com = optionLinhasEmpilhadas({ anos: [2024], itens: [{ nome: "A", valores: [1500] }] }, "x") as unknown as { title: { text: string } };
+    expect(com.title.text).toBe("Soma: " + formatCompacto(1500));
+    const sem = optionLinhasEmpilhadas({ anos: [2024], itens: [{ nome: "A", valores: [null] }] }, "x") as unknown as { title?: unknown };
+    expect(sem.title).toBeUndefined();
   });
 
   it("área empilhada e índices mapeiam séries e anos, inclusive vazios", () => {
