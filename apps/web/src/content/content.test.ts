@@ -55,8 +55,8 @@ describe("Início e Central", () => {
     expect(CENTRAL.paragrafos.every((p) => !p.includes("<"))).toBe(true);
     expect(CENTRAL.seo.descricao).toContain("Observatório");
     expect(CENTRAL.cta_url).toBe("/painel");
-    expect(CENTRAL.portas.map((p) => p.href)).toEqual(["/central-de-inteligencia/observatorio", "/painel"]);
-    expect(CENTRAL.portas.map((p) => p.rotulo)).toEqual(["Abrir o Observatório", "Abrir o Painel Agro Analítico"]);
+    expect(CENTRAL.portas.map((p) => p.href)).toEqual(["/painel", "/central-de-inteligencia/observatorio"]);
+    expect(CENTRAL.portas.map((p) => p.rotulo)).toEqual(["Abrir o Painel Agro Analítico", "Abrir o Observatório"]);
   });
 });
 

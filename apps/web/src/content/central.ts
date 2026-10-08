@@ -9,18 +9,18 @@ export const CENTRAL = {
   ],
   portas: [
     {
-      titulo: "Observatório Agropecuário",
-      texto: "Leitura explicada do agro de Rondônia: o tamanho e a composição da produção, por que ela cresce, onde acontece e como vai a pecuária. Valores corrigidos pela inflação.",
-      rotulo: "Abrir o Observatório",
-      href: "/central-de-inteligencia/observatorio",
-      icone: "insight",
-    },
-    {
       titulo: "Painel Agro Analítico",
       texto: "Consulta objetiva por produto, indicador, município e período, com ranking, série, comparação, análise e relatório em PDF.",
       rotulo: "Abrir o Painel Agro Analítico",
       href: "/painel",
       icone: "chart",
+    },
+    {
+      titulo: "Observatório Agropecuário",
+      texto: "Leitura explicada do agro de Rondônia: o tamanho e a composição da produção, por que ela cresce, onde acontece e como vai a pecuária. Valores corrigidos pela inflação.",
+      rotulo: "Abrir o Observatório",
+      href: "/central-de-inteligencia/observatorio",
+      icone: "insight",
     },
   ] satisfies { titulo: string; texto: string; rotulo: string; href: string; icone: NomeIcone }[],
   cta_texto: "Abrir o Painel Agro Analítico",
