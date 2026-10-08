@@ -63,7 +63,7 @@ test("jornada Início → Central → Painel → filtros → ranking → série 
 
   // Filtros: busca de produto por nome sem acento
   await page.getByLabel("Buscar produto").fill("cafe");
-  await expect(page.getByLabel("Produto", { exact: true }).locator("option")).toHaveCount(2); // placeholder + 1
+  await expect(page.getByLabel("Produto", { exact: true }).locator("option")).toHaveCount(3); // placeholder + Canephora + Total (o mock tem os dois cafés, como a API real)
   await page.getByLabel("Buscar produto").fill("soja");
   await page.getByLabel("Produto", { exact: true }).selectOption({ label: "Soja (em grão)" });
 

@@ -32,8 +32,8 @@ const IND = {
   "area-plantada": { slug: "area-plantada", nome: "Área plantada", unidade: "Hectares", agregacao: "soma" },
   "area-colhida": { slug: "area-colhida", nome: "Área colhida", unidade: "Hectares", agregacao: "soma" },
   "quantidade-produzida": { slug: "quantidade-produzida", nome: "Quantidade produzida", unidade: "Toneladas", agregacao: "soma" },
-  "rendimento-medio": { slug: "rendimento-medio", nome: "Rendimento médio", unidade: "Quilogramas por hectare", agregacao: "media_ponderada" },
-  "valor-da-producao": { slug: "valor-da-producao", nome: "Valor da produção", unidade: "Mil reais", agregacao: "soma" },
+  "rendimento-medio": { slug: "rendimento-medio", nome: "Rendimento médio", unidade: "Quilogramas por Hectare", agregacao: "media_ponderada" },
+  "valor-da-producao": { slug: "valor-da-producao", nome: "Valor da produção", unidade: "Mil Reais", agregacao: "soma" },
   efetivo: { slug: "efetivo", nome: "Efetivo dos rebanhos", unidade: "Cabeças", agregacao: "soma" },
   "producao-de-origem-animal": { slug: "producao-de-origem-animal", nome: "Produção de origem animal", unidade: "Mil litros", agregacao: "soma" },
 };
@@ -44,6 +44,7 @@ const PRODUTOS = [
   { slug: "soja-em-grao", nome: "Soja (em grão)", segmento: "agricultura", tabela_sidra: 5457, escala: 60000, preco: 2.4, inds: AGRI },
   { slug: "milho-em-grao", nome: "Milho (em grão)", segmento: "agricultura", tabela_sidra: 5457, escala: 30000, preco: 1.1, inds: AGRI },
   { slug: "cafe-em-grao-canephora", nome: "Café (em grão) Canephora", segmento: "agricultura", tabela_sidra: 5457, escala: 8000, preco: 12, inds: AGRI },
+  { slug: "cafe-em-grao-total", nome: "Café (em grão) Total", segmento: "agricultura", tabela_sidra: 5457, escala: 9000, preco: 12, inds: AGRI },
   { slug: "cacau-em-amendoa", nome: "Cacau (em amêndoa)", segmento: "agricultura", tabela_sidra: 5457, escala: 1500, preco: 20, inds: AGRI },
   { slug: "bovino", nome: "Bovino", segmento: "pecuaria", tabela_sidra: 3939, escala: 220000, preco: 0, inds: ["efetivo"] },
   { slug: "leite", nome: "Leite", segmento: "pecuaria", tabela_sidra: 74, escala: 12000, preco: 1.9, inds: ["producao-de-origem-animal", "valor-da-producao"] },
@@ -541,7 +542,7 @@ function rota(url) {
       return { json: p.inds.map((s) => indicadorDo(p, s)) };
     }
     case "/api/v1/municipios": return { json: MUNICIPIOS };
-    case "/api/v1/meta": return { json: { ultima_carga: ATUALIZADO_EM, cargas: [5457, 3939, 74].map((tabela) => ({ tabela, status: "concluida", concluida_em: ATUALIZADO_EM, linhas: 1000 })), anos: { min: ANO_MIN, max: ANO_MAX } } };
+    case "/api/v1/meta": return { json: { ultima_carga: ATUALIZADO_EM, cargas: [5457, 3939, 74].map((tabela) => ({ tabela, status: "sucesso", concluida_em: ATUALIZADO_EM, linhas: 1000 })), anos: { min: ANO_MIN, max: ANO_MAX } } };
     case "/api/v1/destaques": return { json: destaques() };
     case "/api/v1/ranking": return { json: ranking(sp) };
     case "/api/v1/serie": return { json: serie(sp) };
