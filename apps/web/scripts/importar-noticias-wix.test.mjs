@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { lerFeed, lerHome } from "./importar-noticias-wix.mjs";
+import { lerFeed, lerHome, semCategorias } from "./importar-noticias-wix.mjs";
 
 const item = (titulo, categorias = "") =>
   `<item><title><![CDATA[${titulo}]]></title><description><![CDATA[Resumo]]></description><link>https://www.faperon.com.br/post/${encodeURIComponent(titulo)}</link><pubDate>Thu, 17 Sep 2026 21:35:05 GMT</pubDate>${categorias}</item>`;
@@ -37,5 +37,20 @@ describe("lerHome (reserva)", () => {
   it("devolve categorias vazias, porque a home não informa categoria", () => {
     const [n] = lerHome('<a href="https://www.faperon.com.br/post/uma-noticia">Uma notícia</a>');
     expect(n.categorias).toEqual([]);
+  });
+});
+
+describe("semCategorias", () => {
+  it("avisa quando nenhuma notícia tem categoria (feed fora do ar, reserva da home ou --de= antigo), pois o filtro sumiria", () => {
+    expect(semCategorias([{ categorias: [] }, { categorias: [] }])).toBe(true);
+    expect(semCategorias([{}, { categorias: undefined }])).toBe(true);
+  });
+
+  it("não avisa quando ao menos uma tem categoria", () => {
+    expect(semCategorias([{ categorias: [] }, { categorias: ["Geral"] }])).toBe(false);
+  });
+
+  it("lista vazia não é aviso de categorias (o importador já falha antes)", () => {
+    expect(semCategorias([])).toBe(false);
   });
 });

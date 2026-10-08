@@ -79,6 +79,11 @@ export function lerFeed(xml) {
     .filter(Boolean);
 }
 
+/** True quando nenhuma notícia tem categoria: o feed saiu do ar (reserva da home) ou o --de= não as traz, e o filtro do site sumiria. */
+export function semCategorias(noticias) {
+  return noticias.length > 0 && noticias.every((n) => !n.categorias?.length);
+}
+
 export function lerHome(html) {
   const vistos = new Map();
   for (const m of html.matchAll(/<a\b[^>]*href="([^"]*\/post\/[^"]*)"[^>]*>([\s\S]*?)<\/a>/gi)) {
@@ -153,6 +158,7 @@ async function principal() {
     noticias.push({ slug, titulo: n.titulo, resumo: n.resumo, data: n.data, imagem, url_original: n.url_original || null, categorias: n.categorias ?? [] });
   }
   noticias.sort((a, b) => b.data.localeCompare(a.data));
+  if (semCategorias(noticias)) console.warn("Atenção: nenhuma notícia veio com categoria; o filtro por categoria de /noticias vai sumir. Confira o feed do Wix antes de publicar.");
   await writeFile(JSON_SAIDA, `${JSON.stringify(noticias, null, 2)}\n`, "utf8");
   console.log(`${noticias.length} notícias gravadas em src/content/noticias.json (${noticias.filter((n) => n.imagem).length} com imagem)`);
 }
