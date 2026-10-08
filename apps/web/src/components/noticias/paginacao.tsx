@@ -23,7 +23,7 @@ export function Paginacao({ pagina, totalPaginas, categoria }: { pagina: number;
         {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((p) => (
           <li key={p}>
             {p === pagina ? (
-              <span aria-current="page" className={cn(base, "border-brand bg-brand text-white")}>
+              <span aria-current="page" className={cn(base, "border-brand bg-brand text-white dark:border-brand-lime dark:bg-brand-lime dark:text-brand-dark")}>
                 {p}
               </span>
             ) : (

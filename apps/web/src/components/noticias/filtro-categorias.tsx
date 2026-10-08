@@ -20,7 +20,9 @@ export function FiltroCategorias({ opcoes, ativa, total }: { opcoes: OpcaoCatego
                 aria-current={selecionado ? "page" : undefined}
                 className={cn(
                   chip,
-                  selecionado ? "border-brand bg-brand text-white" : "border-line bg-card text-ink hover:border-brand-fg hover:text-brand-fg",
+                  selecionado
+                    ? "border-brand bg-brand text-white dark:border-brand-lime dark:bg-brand-lime dark:text-brand-dark"
+                    : "border-line bg-card text-ink hover:border-brand-fg hover:text-brand-fg",
                 )}
               >
                 {item.nome} ({item.total})

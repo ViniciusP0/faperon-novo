@@ -26,6 +26,14 @@ describe("FiltroCategorias", () => {
     expect(screen.getByRole("link", { name: /Faperon/ })).not.toHaveAttribute("aria-current");
   });
 
+  it("o item ativo se destaca também no tema escuro (lima), onde o verde da marca quase não contrasta com o fundo", () => {
+    render(<FiltroCategorias opcoes={opcoes} ativa="geral" total={20} />);
+    const ativo = screen.getByRole("link", { name: /Geral/ });
+    expect(ativo.className).toContain("dark:bg-brand-lime");
+    expect(ativo.className).toContain("dark:text-brand-dark");
+    expect(screen.getByRole("link", { name: /Faperon/ }).className).not.toContain("dark:bg-brand-lime");
+  });
+
   it("com Todas ativa, só ela é marcada", () => {
     render(<FiltroCategorias opcoes={opcoes} ativa={null} total={20} />);
     expect(screen.getByRole("link", { name: /Todas/ })).toHaveAttribute("aria-current", "page");

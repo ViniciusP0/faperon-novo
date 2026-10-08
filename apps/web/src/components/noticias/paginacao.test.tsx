@@ -27,6 +27,13 @@ describe("Paginacao", () => {
     expect(screen.getByRole("link", { name: "Página anterior" })).toBeInTheDocument();
   });
 
+  it("a página atual se destaca também no tema escuro (lima)", () => {
+    render(<Paginacao pagina={2} totalPaginas={3} categoria={null} />);
+    const atual = screen.getByText("2");
+    expect(atual.className).toContain("dark:bg-brand-lime");
+    expect(atual.className).toContain("dark:text-brand-dark");
+  });
+
   it("mantém a categoria nos endereços", () => {
     render(<Paginacao pagina={1} totalPaginas={2} categoria="geral" />);
     expect(screen.getByRole("link", { name: "Próxima página" })).toHaveAttribute("href", "/noticias?categoria=geral&pagina=2");
