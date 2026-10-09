@@ -1,7 +1,7 @@
 import type { EChartsCoreOption } from "echarts/core";
 import type { AnoValor, ItemValor, MunicipioMapa, Opcao } from "./api-types";
 import { PALETA, PALETA_ESCURA } from "./chart-options";
-import { formatCompacto, formatNumero, formatPercentual, type FormatoUnidade } from "./format";
+import { escapar, formatCompacto, formatNumero, formatPercentual, type FormatoUnidade } from "./format";
 
 /** Bege neutro: matiz e luminosidade distintos de toda a escala verde, no tema claro e no escuro. */
 export const COR_SEM_DADO = "#c2b8a8";
@@ -46,9 +46,7 @@ function tema(escuro: boolean) {
   };
 }
 
-export function escapar(texto: string): string {
-  return texto.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-}
+export { escapar };
 
 
 export function optionTreemap(itens: ItemValor[], unidade: string, escuro = false, formatar?: (v: number) => string): EChartsCoreOption {

@@ -1,6 +1,6 @@
 import type { EChartsCoreOption } from "echarts/core";
 import type { Ponto, SerieComparada } from "./api-types";
-import { formatCompacto, formatValor } from "./format";
+import { escapar, formatCompacto, formatValor } from "./format";
 import { pontosDaTendencia, tendenciaLinear } from "./tendencia";
 
 export const PALETA = ["#00604e", "#b45309", "#2b5672", "#7e3f98", "#5b8c2a"];
@@ -30,9 +30,9 @@ function tooltip(unidade: string, pontosPorSerie: Ponto[][]): EChartsCoreOption[
       const linhas = itens.map((i) => {
         const p = pontosPorSerie[i.seriesIndex]?.[i.dataIndex];
         const valor = p ? formatValor(p.valor, p.status) : "–";
-        return `${i.marker} ${i.seriesName}: <strong>${valor}</strong> ${p && p.valor !== null ? unidade.toLowerCase() : ""}`;
+        return `${i.marker} ${escapar(i.seriesName)}: <strong>${escapar(valor)}</strong> ${p && p.valor !== null ? escapar(unidade.toLowerCase()) : ""}`;
       });
-      return `<div>${itens[0]!.axisValue}</div>${linhas.join("<br/>")}`;
+      return `<div>${escapar(itens[0]!.axisValue)}</div>${linhas.join("<br/>")}`;
     },
   };
 }

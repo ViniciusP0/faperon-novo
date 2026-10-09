@@ -134,3 +134,8 @@ export function formatoPorUnidade(unidade: string, max: number): FormatoUnidade 
   const [div, nomeEixo] = a >= 1e6 ? [1e6, `milhões de ${u.plural}`] : a >= 1e3 ? [1e3, `mil ${u.plural}`] : [1, u.plural];
   return { valor: (v) => formatQuantidadePorExtenso(v, u), eixo: eixoEm(div), nomeEixo };
 }
+
+/** Escapa texto de origem externa antes de interpolá-lo em HTML (tooltips do ECharts). */
+export function escapar(texto: string): string {
+  return texto.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
