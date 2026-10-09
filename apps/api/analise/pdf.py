@@ -183,8 +183,9 @@ def gerar_relatorio(
 ) -> tuple[bytes, str]:
     """Retorna (pdf, nome). Mesmo recorte na mesma versão dos dados devolve o mesmo PDF."""
     comparacao = normalizar_comparacao(comparacao)
-    r = analisar(produto, indicador, inicio, fim, municipio)
+    # A versão vem antes da leitura: uma carga confirmada no meio nunca rotula dados antigos com a versão nova.
     versao = versao_dos_dados()
+    r = analisar(produto, indicador, inicio, fim, municipio)
     chave = chave_do_recorte(
         {
             "produto": produto,
