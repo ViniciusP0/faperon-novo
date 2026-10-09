@@ -138,6 +138,8 @@ def panorama(ano: int | None, janela: int) -> dict[str, Any]:
     if not no_ano:  # há dado bruto no ano (ele sai de anos), mas sem IPCA para corrigi-lo
         return _vazio("panorama", filtros, tabelas, ano_ref, r.AVISO_SEM_IPCA, avisos)
     total = sum(no_ano.values(), Decimal(0))
+    if total <= 0:  # só valores zerados: não há participação a calcular
+        return _vazio("panorama", filtros, tabelas, ano_ref, r.AVISO_SEM_DADOS, avisos)
     total_ini = sum(no_inicio.values(), Decimal(0))
     partes = c.participacoes(no_ano)
     partes_ini = c.participacoes(no_inicio)
