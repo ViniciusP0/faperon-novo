@@ -139,7 +139,10 @@ def executar_carga(
         carga.status = Carga.Status.FALHA
         carga.erro = str(exc)[:2000]
         carga.concluida_em = timezone.now()
-        carga.save()
+        try:
+            carga.save()
+        except Exception:  # banco fora do ar: o erro original ainda precisa chegar a rodar_ciclo
+            log.exception("tabela %s: não foi possível registrar a falha da carga %s", tabela, carga.pk)
         log.error("tabela %s: carga %s falhou: %s", tabela, carga.pk, exc)
         if isinstance(exc, CargaFalhou):
             raise
