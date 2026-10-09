@@ -24,6 +24,14 @@ describe("proxyParaApi", () => {
     expect(enviados.has("x-forwarded-for")).toBe(false);
   });
 
+  it("sem x-forwarded-for, usa o x-real-ip para o limite por IP não cair no IP do container", async () => {
+    const fetchFalso = vi.fn().mockResolvedValue(new Response("{}", { status: 200 }));
+    vi.stubGlobal("fetch", fetchFalso);
+    await proxyParaApi(new Request("http://site.test/api/v1/ranking", { headers: { "x-real-ip": "203.0.113.7" } }));
+    const enviados = fetchFalso.mock.calls[0]![1].headers as Headers;
+    expect(enviados.get("x-forwarded-for")).toBe("203.0.113.7");
+  });
+
   it("ipDoCliente pega o último valor não vazio", () => {
     expect(ipDoCliente("1.1.1.1, 2.2.2.2")).toBe("2.2.2.2");
     expect(ipDoCliente(" 2.2.2.2 ,")).toBe("2.2.2.2");
