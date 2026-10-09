@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type FocusEvent, type TouchEvent } from "react";
+import { useEffect, useRef, useState, type FocusEvent, type PointerEvent, type TouchEvent } from "react";
 
 export const INTERVALO_MS = 6000;
 const LIMITE_TOQUE_PX = 50;
@@ -34,8 +34,13 @@ export function useCarrossel(total: number) {
   const ir = (indice: number) => setAtual(((indice % total) + total) % total);
 
   const gestos = {
-    onMouseEnter: () => setEmUso(true),
-    onMouseLeave: () => setEmUso(false),
+    // Só o mouse de verdade pausa por hover: o mouseenter emulado após um toque nunca é seguido de mouseleave.
+    onPointerEnter: (e: PointerEvent) => {
+      if (e.pointerType === "mouse") setEmUso(true);
+    },
+    onPointerLeave: (e: PointerEvent) => {
+      if (e.pointerType === "mouse") setEmUso(false);
+    },
     onFocus: () => setEmUso(true),
     onBlur: (e: FocusEvent<HTMLElement>) => {
       if (!e.currentTarget.contains(e.relatedTarget)) setEmUso(false);

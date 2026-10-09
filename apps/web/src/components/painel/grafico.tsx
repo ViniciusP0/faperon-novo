@@ -4,11 +4,11 @@ import { BarChart, LineChart } from "echarts/charts";
 import { GridComponent, LegendComponent, MarkPointComponent, TooltipComponent } from "echarts/components";
 import * as echarts from "echarts/core";
 import { SVGRenderer } from "echarts/renderers";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
+import { useEscuro } from "@/components/observatorio/use-escuro";
 import { comEntrada, comTemaEscuro } from "@/lib/chart-options";
 import { reducaoDeMovimento } from "@/lib/movimento";
 import { consumirEntrada } from "./entrada-grafico";
-import { temaAtual } from "@/lib/tema";
 
 echarts.use([BarChart, LineChart, GridComponent, LegendComponent, MarkPointComponent, TooltipComponent, SVGRenderer]);
 
@@ -28,16 +28,7 @@ export function Grafico({ option, descricao, altura = 360, alturaMovel = altura,
   const ref = useRef<HTMLDivElement>(null);
   const chart = useRef<echarts.ECharts | null>(null);
   const desenhou = useRef(false);
-  const [escuro, setEscuro] = useState(false);
-
-  // Acompanha o tema do site (atributo data-theme em <html>), inclusive quando o visitante alterna com a página aberta.
-  useEffect(() => {
-    const ler = () => setEscuro(temaAtual() === "escuro");
-    ler();
-    const obs = new MutationObserver(ler);
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-    return () => obs.disconnect();
-  }, []);
+  const escuro = useEscuro();
 
   useEffect(() => {
     const el = ref.current;

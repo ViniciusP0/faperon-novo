@@ -16,7 +16,11 @@ export function useContador(valor: string, duracao = 1200) {
 
   useEffect(() => {
     const leitura = lerNumeroPtBr(valor);
-    if (!pendente || !leitura) return;
+    if (!pendente || !leitura) {
+      // Sem contagem em curso, o texto acompanha o valor recebido.
+      if (!contar.current) setExibido(valor);
+      return;
+    }
     contar.current = true;
     setExibido(formatarNumeroPtBr(leitura, 0));
   }, [pendente, valor]);
