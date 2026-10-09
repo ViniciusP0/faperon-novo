@@ -198,13 +198,18 @@ class ComparacaoView(APIView):
         ultima_falha: NaoEncontrado | None = None
         for r in recortes:
             try:
-                periodos.append(servicos.resolver_periodo(r, dados.get("inicio"), dados.get("fim")))
+                # Só o fim de cada produto interessa aqui: o início é validado uma vez, contra o fim comum.
+                periodos.append(servicos.resolver_periodo(r, None, dados.get("fim")))
             except NaoEncontrado as falha:
                 ultima_falha = falha
         if not dados.get("fim") and not periodos and ultima_falha is not None:
             raise ultima_falha
         fim = dados.get("fim") or max(p[1] for p in periodos)
         inicio = dados.get("inicio") or fim - (servicos.JANELA_PADRAO - 1)
+        if inicio > fim:
+            raise ConsultaInvalida(
+                "O ano inicial não pode ser maior que o ano final", {"inicio": "maior que fim"}
+            )
         municipio = servicos.obter_municipio(dados["municipio"]) if dados.get("municipio") else None
         series = servicos.comparacao_produtos(recortes, inicio, fim, municipio)
         return self._corpo("produtos", recortes[0], recortes[0].unidade, inicio, fim, series)
