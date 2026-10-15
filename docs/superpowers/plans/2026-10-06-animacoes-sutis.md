@@ -1100,7 +1100,7 @@ Subir `npm run mock` e `npm run dev` e, com o navegador, capturar Início, Sobre
 
 Ler `docs/adr/0025-gunicorn-com-threads-e-renderizacao-de-pdf-serializada-com-espera-.md` e `docs/adr/README.md` e seguir o mesmo formato (MADR). Criar `docs/adr/0026-animacoes-sutis-com-css-e-intersectionobserver.md` registrando: contexto (site institucional, intensidade sutil), decisão (CSS + hook de `IntersectionObserver`, `js-ok`, sem biblioteca), alternativas descartadas (Framer Motion pelo peso e superfície de teste; View Transitions API/scroll-driven animations pelo suporte irregular) e consequências (revelação depende do JS; sem JS ou com movimento reduzido tudo aparece). Acrescentar a linha correspondente na lista do `docs/adr/README.md`, se ele mantiver um índice.
 
-- [ ] **Step 5: Commitar e publicar na demo**
+- [x] **Step 5: Commitar e publicar na demo**
 
 ```bash
 git add docs/adr

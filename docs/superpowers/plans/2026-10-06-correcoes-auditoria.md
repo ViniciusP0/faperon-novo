@@ -1089,7 +1089,7 @@ Esperado: tudo PASS.
 Rode: `docker compose up -d --build && docker compose ps`
 Esperado: `db`, `api` (`healthy`), `scheduler` e `web` de pé. Abra `http://127.0.0.1:3000`, percorra Início → Central → Painel e baixe um PDF com 2 municípios na comparação.
 
-- [ ] **Passo 3: o usuário atualiza o `.env` do `dt-server` (passo manual, antes do push)**
+- [x] **Passo 3: o usuário atualiza o `.env` do `dt-server` (passo manual, antes do push)**
 
 ```
 DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,api
@@ -1098,7 +1098,7 @@ SITE_URL=https://dt-server.tail3fe9ce.ts.net
 
 Sem isso, o deploy sobe com `ALLOWED_HOSTS='*'` do `.env` antigo (funciona, mas sem a correção) e o sitemap continua em localhost.
 
-- [ ] **Passo 4: push e acompanhamento do deploy**
+- [x] **Passo 4: push e acompanhamento do deploy**
 
 Rode: `git push origin main` e acompanhe `infra/deploy.log` no servidor até aparecer `deploy finished at <hash>`.
 

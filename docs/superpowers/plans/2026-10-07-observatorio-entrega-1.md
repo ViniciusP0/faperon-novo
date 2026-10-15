@@ -4059,7 +4059,7 @@ make test && make lint && make typecheck && make web-test
 
 Expected: tudo PASS.
 
-- [ ] **Step 4: Publicar na demo** (memória do projeto: toda mudança visual vai para a demo)
+- [x] **Step 4: Publicar na demo** (memória do projeto: toda mudança visual vai para a demo)
 
 ```bash
 docker compose up -d --build api web
