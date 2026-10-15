@@ -30,6 +30,8 @@ Operação:
 - `deploy.ps1` **não** faz `reset --hard`: com alteração local não commitada ou commit local não enviado, ele registra `abortado` no log e não altera nada. Commite e envie (ou descarte) o trabalho local para o deploy voltar a rodar.
 - O site cai se a `vinicin` suspender, reiniciar ou se o Docker Desktop estiver fechado.
 
+Validação (15/10/2026): o ping do GitHub respondeu 200, um push em `main` respondeu 202 e criou o gatilho, e o `deploy.ps1` rodado à mão consumiu o gatilho e registrou `already up to date`. O caminho que reconstrói de fato (`new commits found, deploying`) só é exercitado por um push com a tarefa `faperon-deploy` registrada.
+
 # Deploy automático (webhook) no dt-server (Linux)
 
 O servidor atualiza sozinho a cada push em `main`, sem precisar acessar a máquina manualmente.
