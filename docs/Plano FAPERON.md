@@ -278,10 +278,10 @@ Pontos de integração entre trilhas: o contrato OpenAPI fica pronto no meio da 
 
 Checklist do primeiro dia, para os três começarem sem bloqueio:
 
-- [ ] Criar o repositório com `apps/web`, `apps/api`, `docs/adr`, `docs/specs`, `data/seed`, `infra/`
-- [ ] Copiar as ADRs 0001–0018 e as SPEC-01 a SPEC-08 deste plano para `docs/`
-- [ ] Subir o `docker-compose.yml` mínimo: Postgres, Django (Wagtail) e Next.js
-- [ ] Configurar o CI: Ruff, mypy, pytest, ESLint, tsc, Vitest
+- [x] Criar o repositório com `apps/web`, `apps/api`, `docs/adr`, `docs/specs`, `data/seed`, `infra/`
+- [x] Copiar as ADRs 0001–0018 e as SPEC-01 a SPEC-08 deste plano para `docs/`
+- [x] Subir o `docker-compose.yml` mínimo: Postgres, Django (Wagtail) e Next.js
+- [x] Configurar o CI: Ruff, mypy, pytest, ESLint, tsc, Vitest
 - [ ] Criar o quadro de tarefas com as três trilhas e as entregas da semana 1
 - [ ] Escrever o primeiro teste que falha: parser de uma resposta real da tabela 5457 (TDD)
 - [ ] Instalar o Tailscale no notebook da demo e reservar o nome da máquina para o Funnel

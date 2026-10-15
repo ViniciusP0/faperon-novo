@@ -70,7 +70,7 @@ Todos os comandos rodam em `apps/web` (exceto Docker e git, na raiz do repositó
   - `SCRIPT_JS_OK: string`
   - Em `src/test/mock-observer.ts`: `instalarObserverFalso(): { instancias: Instancia[]; disparar(): void }` e `definirMovimentoReduzido(ativo: boolean): void`
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Criar `src/lib/movimento.test.ts`:
 
@@ -161,7 +161,7 @@ describe("SCRIPT_JS_OK", () => {
 });
 ```
 
-- [ ] **Step 2: Criar os helpers de teste**
+- [x] **Step 2: Criar os helpers de teste**
 
 Criar `src/test/mock-observer.ts`:
 
@@ -220,12 +220,12 @@ export function definirMovimentoReduzido(ativo: boolean) {
 }
 ```
 
-- [ ] **Step 3: Rodar e confirmar a falha**
+- [x] **Step 3: Rodar e confirmar a falha**
 
 Run: `npx vitest run src/lib/movimento.test.ts`
 Expected: FAIL, "Failed to resolve import ./movimento".
 
-- [ ] **Step 4: Implementar `movimento.ts`**
+- [x] **Step 4: Implementar `movimento.ts`**
 
 Criar `src/lib/movimento.ts`:
 
@@ -272,12 +272,12 @@ export function formatarNumeroPtBr(leitura: LeituraNumero, progresso: number): s
 export const SCRIPT_JS_OK = `document.documentElement.classList.add("js-ok")`;
 ```
 
-- [ ] **Step 5: Rodar e confirmar que passa**
+- [x] **Step 5: Rodar e confirmar que passa**
 
 Run: `npx vitest run src/lib/movimento.test.ts`
 Expected: PASS.
 
-- [ ] **Step 6: CSS e script no layout**
+- [x] **Step 6: CSS e script no layout**
 
 Em `src/app/globals.css`, logo após o bloco `@media (prefers-reduced-motion: reduce) { ... }` e antes de `.prose-faperon p {`, acrescentar:
 
@@ -334,7 +334,7 @@ Em `src/app/layout.tsx`: importar `import { SCRIPT_JS_OK } from "@/lib/movimento
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_JS_OK }} />
 ```
 
-- [ ] **Step 7: Verificar e commitar**
+- [x] **Step 7: Verificar e commitar**
 
 Run: `npx tsc --noEmit && npx eslint src/lib src/test src/app && npx vitest run`
 Expected: tudo passa.
@@ -364,7 +364,7 @@ EOF
   - `useEntrouNaTela<T extends Element>(margem?: string): { ref: RefObject<T | null>; entrou: boolean }`
   - `<Revelar as?: "div" | "section" | "li" | "ul" | "aside"; indice?: number; ...HTMLAttributes<HTMLElement> />`
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Criar `src/components/site/revelar.test.tsx`:
 
@@ -430,12 +430,12 @@ describe("Revelar", () => {
 });
 ```
 
-- [ ] **Step 2: Rodar e confirmar a falha**
+- [x] **Step 2: Rodar e confirmar a falha**
 
 Run: `npx vitest run src/components/site/revelar.test.tsx`
 Expected: FAIL, "Failed to resolve import ./revelar".
 
-- [ ] **Step 3: Implementar o hook**
+- [x] **Step 3: Implementar o hook**
 
 Criar `src/components/site/use-entrou-na-tela.ts`:
 
@@ -477,7 +477,7 @@ export function useEntrouNaTela<T extends Element>(margem = "0px 0px -8% 0px") {
 }
 ```
 
-- [ ] **Step 4: Implementar o componente**
+- [x] **Step 4: Implementar o componente**
 
 Criar `src/components/site/revelar.tsx`:
 
@@ -512,12 +512,12 @@ export function Revelar({ as = "div", indice = 0, className, style, children, ..
 }
 ```
 
-- [ ] **Step 5: Rodar e confirmar que passa**
+- [x] **Step 5: Rodar e confirmar que passa**
 
 Run: `npx vitest run src/components/site/revelar.test.tsx`
 Expected: PASS (5 testes).
 
-- [ ] **Step 6: Commitar**
+- [x] **Step 6: Commitar**
 
 ```bash
 git add src/components/site/use-entrou-na-tela.ts src/components/site/revelar.tsx src/components/site/revelar.test.tsx
@@ -542,7 +542,7 @@ EOF
 - Consumes: `lerNumeroPtBr`, `formatarNumeroPtBr`, `easeOutCubic`, `reducaoDeMovimento`, `temObserver` (Task 1); `useEntrouNaTela` (Task 2).
 - Produces (Task 5): `<NumeroAnimado valor: string; duracao?: number />`. `valor` é o texto já formatado em pt-BR; o componente renderiza o valor final para leitores de tela (`sr-only`) e o número animado com `aria-hidden`.
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Criar `src/components/site/numero-animado.test.tsx`:
 
@@ -632,12 +632,12 @@ describe("NumeroAnimado", () => {
 });
 ```
 
-- [ ] **Step 2: Rodar e confirmar a falha**
+- [x] **Step 2: Rodar e confirmar a falha**
 
 Run: `npx vitest run src/components/site/numero-animado.test.tsx`
 Expected: FAIL, "Failed to resolve import ./numero-animado".
 
-- [ ] **Step 3: Implementar o hook**
+- [x] **Step 3: Implementar o hook**
 
 Criar `src/components/site/use-contador.ts`:
 
@@ -682,7 +682,7 @@ export function useContador(valor: string, duracao = 1200) {
 }
 ```
 
-- [ ] **Step 4: Implementar o componente**
+- [x] **Step 4: Implementar o componente**
 
 Criar `src/components/site/numero-animado.tsx`:
 
@@ -705,12 +705,12 @@ export function NumeroAnimado({ valor, duracao }: { valor: string; duracao?: num
 }
 ```
 
-- [ ] **Step 5: Rodar e confirmar que passa**
+- [x] **Step 5: Rodar e confirmar que passa**
 
 Run: `npx vitest run src/components/site/numero-animado.test.tsx`
 Expected: PASS (5 testes).
 
-- [ ] **Step 6: Commitar**
+- [x] **Step 6: Commitar**
 
 ```bash
 git add src/components/site/use-contador.ts src/components/site/numero-animado.tsx src/components/site/numero-animado.test.tsx
@@ -735,7 +735,7 @@ EOF
 
 Regra de edição: nas seções **abaixo da dobra**, trocar `<section ...>` por `<Revelar as="section" ...>` e `</section>` por `</Revelar>`, mantendo todos os atributos (`id`, `aria-labelledby`, `className`). Não envolver: o hero (carrossel e `HeroPagina`), o ticker de notícias, a `FaixaNumeros`, a seção em gradiente da Central (`central-titulo`, que está acima da dobra) e o `CtaDuplo`. Em cada arquivo adicionar `import { Revelar } from "@/components/site/revelar";` junto dos imports de `@/components`.
 
-- [ ] **Step 1: Escrever o e2e (falha antes das edições)**
+- [x] **Step 1: Escrever o e2e (falha antes das edições)**
 
 Criar `e2e/animacoes.spec.ts`:
 
@@ -774,7 +774,7 @@ test.describe("sem JavaScript", () => {
 });
 ```
 
-- [ ] **Step 2: Editar as páginas**
+- [x] **Step 2: Editar as páginas**
 
 Seções a envolver (números de linha aproximados, de antes das edições; confirme pelo `aria-labelledby`/`id`):
 
@@ -802,17 +802,17 @@ Exemplo, `sobre/page.tsx`:
 </Revelar>
 ```
 
-- [ ] **Step 3: Verificar tipos, lint e testes unitários**
+- [x] **Step 3: Verificar tipos, lint e testes unitários**
 
 Run: `npx tsc --noEmit && npx eslint . && npx vitest run`
 Expected: tudo passa, sem alterar nenhuma expectativa de teste existente.
 
-- [ ] **Step 4: Rodar o e2e novo e a suíte e2e completa**
+- [x] **Step 4: Rodar o e2e novo e a suíte e2e completa**
 
 Run: `npx playwright test e2e/animacoes.spec.ts`
 Expected: PASS (4 testes). Em seguida `npx playwright test`; expected: PASS, incluindo axe em `fluxo.spec.ts` (esse teste já usa `reducedMotion: "reduce"`).
 
-- [ ] **Step 5: Commitar**
+- [x] **Step 5: Commitar**
 
 ```bash
 git add src/app e2e/animacoes.spec.ts
@@ -837,7 +837,7 @@ EOF
 - Consumes: `<NumeroAnimado valor />` (Task 3).
 - Produces: `Numero` ganha o campo opcional `animar?: boolean` (padrão `false`, para que anos como "1983" nunca contem de 0).
 
-- [ ] **Step 1: Escrever o teste que falha**
+- [x] **Step 1: Escrever o teste que falha**
 
 Criar `src/components/site/faixa-numeros.test.tsx`:
 
@@ -878,12 +878,12 @@ describe("FaixaNumeros", () => {
 });
 ```
 
-- [ ] **Step 2: Rodar e confirmar a falha**
+- [x] **Step 2: Rodar e confirmar a falha**
 
 Run: `npx vitest run src/components/site/faixa-numeros.test.tsx`
 Expected: FAIL (o segundo teste, pois `animar` ainda não existe).
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 Em `src/components/site/faixa-numeros.tsx`, importar `NumeroAnimado` (`import { NumeroAnimado } from "./numero-animado";`), acrescentar `animar?: boolean;` à interface `Numero` e trocar o `<dd>` do valor por:
 
@@ -901,12 +901,12 @@ Em `src/app/page.tsx`, importar `NumeroAnimado` e trocar:
 - no bloco "Sistema" (`SOBRE.quem_somos.numeros.slice(1)`): `<p className="text-3xl font-bold tabular-nums text-brand-fg">{n.valor}</p>` → `…><NumeroAnimado valor={n.valor} /></p>`;
 - no bloco "Nosso agro": `<p className="text-3xl font-semibold tracking-tight text-brand-fg tabular-nums md:text-4xl">{n.valor}</p>` → `…><NumeroAnimado valor={n.valor} /></p>`.
 
-- [ ] **Step 4: Rodar e confirmar que passa**
+- [x] **Step 4: Rodar e confirmar que passa**
 
 Run: `npx tsc --noEmit && npx eslint . && npx vitest run`
 Expected: tudo passa.
 
-- [ ] **Step 5: Commitar**
+- [x] **Step 5: Commitar**
 
 ```bash
 git add src/components/site/faixa-numeros.tsx src/components/site/faixa-numeros.test.tsx src/app
@@ -927,7 +927,7 @@ EOF
 
 Só CSS; a regra global de `prefers-reduced-motion` já zera as transições. Sem testes novos (não há lógica); a verificação é lint, testes existentes e a captura de tela da Task 8.
 
-- [ ] **Step 1: Botões com feedback de pressionar**
+- [x] **Step 1: Botões com feedback de pressionar**
 
 Em `src/components/ui/button.tsx`, na string base do `cva`, trocar `transition-colors` por `transition duration-150 active:scale-[0.98]`:
 
@@ -935,7 +935,7 @@ Em `src/components/ui/button.tsx`, na string base do `cva`, trocar `transition-c
   "inline-flex items-center justify-center gap-2 rounded-xl font-medium transition duration-150 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50",
 ```
 
-- [ ] **Step 2: Elevação nos cards clicáveis**
+- [x] **Step 2: Elevação nos cards clicáveis**
 
 - `src/app/page.tsx`, `LinkAuto` dos cartões do sistema: trocar `transition-colors` por `card-elevar` e remover `motion-reduce:transition-none` (o CSS global cobre o movimento reduzido):
 
@@ -945,7 +945,7 @@ className="group flex w-full flex-col overflow-hidden rounded-2xl bg-brand-dark 
 
 - `src/app/sobre/page.tsx`: acrescentar `card-elevar` ao `className` do `LinkAuto` do bloco "Sistema FAPERON" (`… p-5 hover:bg-surface-alt` → `… p-5 card-elevar hover:bg-surface-alt`) e ao link do estatuto (`… px-6 py-5 hover:bg-steel-soft` → `… px-6 py-5 card-elevar hover:bg-steel-soft`).
 
-- [ ] **Step 3: Seta que desliza e zoom discreto na imagem**
+- [x] **Step 3: Seta que desliza e zoom discreto na imagem**
 
 - `src/app/ipagro/page.tsx`: no link do portal de transparência acrescentar `group` ao `className` do `<a>` e trocar a seta por:
 
@@ -955,12 +955,12 @@ className="group flex w-full flex-col overflow-hidden rounded-2xl bg-brand-dark 
 
 - `src/components/inicio/noticia-chamada.tsx`: na `Image` da notícia, `className="object-cover"` → `className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"` (o contêiner já tem `overflow-hidden` e o link já tem `group`).
 
-- [ ] **Step 4: Verificar**
+- [x] **Step 4: Verificar**
 
 Run: `npx tsc --noEmit && npx eslint . && npx vitest run`
 Expected: tudo passa.
 
-- [ ] **Step 5: Commitar**
+- [x] **Step 5: Commitar**
 
 ```bash
 git add src
@@ -985,7 +985,7 @@ EOF
 - Consumes: `reducaoDeMovimento` (Task 1).
 - Produces: `comEntrada(option: EChartsCoreOption, animar: boolean): EChartsCoreOption`.
 
-- [ ] **Step 1: Escrever o teste que falha**
+- [x] **Step 1: Escrever o teste que falha**
 
 Em `src/lib/chart-options.test.ts`, trocar o import por `import { comEntrada, comTemaEscuro, opcaoComparacao, opcaoSerie, PALETA_ESCURA } from "./chart-options";` e acrescentar no fim do arquivo:
 
@@ -1002,12 +1002,12 @@ describe("comEntrada", () => {
 });
 ```
 
-- [ ] **Step 2: Rodar e confirmar a falha**
+- [x] **Step 2: Rodar e confirmar a falha**
 
 Run: `npx vitest run src/lib/chart-options.test.ts`
 Expected: FAIL (`comEntrada` não existe).
 
-- [ ] **Step 3: Implementar `comEntrada`**
+- [x] **Step 3: Implementar `comEntrada`**
 
 Em `src/lib/chart-options.ts`, acrescentar ao final do arquivo:
 
@@ -1018,7 +1018,7 @@ export function comEntrada(option: EChartsCoreOption, animar: boolean): EChartsC
 }
 ```
 
-- [ ] **Step 4: Usar no `Grafico` (anima só na primeira renderização)**
+- [x] **Step 4: Usar no `Grafico` (anima só na primeira renderização)**
 
 Em `src/components/painel/grafico.tsx`: importar `comEntrada` junto de `comTemaEscuro` (`import { comEntrada, comTemaEscuro } from "@/lib/chart-options";`) e `reducaoDeMovimento` (`import { reducaoDeMovimento } from "@/lib/movimento";`); criar `const desenhou = useRef(false);` ao lado dos outros `useRef`; e trocar o último `useEffect` por:
 
@@ -1031,7 +1031,7 @@ Em `src/components/painel/grafico.tsx`: importar `comEntrada` junto de `comTemaE
   }, [option, escuro]);
 ```
 
-- [ ] **Step 5: Skeleton dos cartões de números**
+- [x] **Step 5: Skeleton dos cartões de números**
 
 Em `src/components/painel/numeros.tsx`: trocar o import `import { Carregando, Secao } from "./comuns";` por `import { Secao } from "./comuns";` (confirmar com o lint que `Carregando` não é usado em outro ponto do arquivo; se for, manter) e importar `import { Skeleton } from "@/components/ui/feedback";`. Substituir o retorno do estado pendente por:
 
@@ -1056,12 +1056,12 @@ Em `src/components/painel/numeros.tsx`: trocar o import `import { Carregando, Se
 
 Ajustar a altura `h-40` (10rem) à do `Cartao` real: abrir o Painel com a API mock (`npm run mock` e `npm run dev`), medir com o DevTools (ou `page.getByTestId("cartao-numero").first().boundingBox()`) o cartão de maior altura no desktop e usar essa altura no skeleton, para a seção não saltar quando os dados chegarem.
 
-- [ ] **Step 6: Verificar**
+- [x] **Step 6: Verificar**
 
 Run: `npx tsc --noEmit && npx eslint . && npx vitest run && npx playwright test`
 Expected: tudo passa (os e2e do Painel seguem com `svg` visível).
 
-- [ ] **Step 7: Commitar**
+- [x] **Step 7: Commitar**
 
 ```bash
 git add src
@@ -1082,21 +1082,21 @@ EOF
 
 Esta etapa é de verificação e auditoria (rodar em **Opus**, conforme as regras do projeto).
 
-- [ ] **Step 1: Suíte completa**
+- [x] **Step 1: Suíte completa**
 
 Run (em `apps/web`): `npx tsc --noEmit && npx eslint . && npx vitest run && npx playwright test && npm run build`
 Expected: tudo passa. Se algo falhar, **corrigir a causa** (não afrouxar o teste) antes de seguir.
 
-- [ ] **Step 2: Conferir que não entrou dependência nova**
+- [x] **Step 2: Conferir que não entrou dependência nova**
 
 Run (na raiz): `git diff 97a1629 -- apps/web/package.json apps/web/package-lock.json`
 Expected: sem saída.
 
-- [ ] **Step 3: Verificação visual**
+- [x] **Step 3: Verificação visual**
 
 Subir `npm run mock` e `npm run dev` e, com o navegador, capturar Início, Sobre e Painel em desktop e celular (390 px), nos temas claro e escuro. Conferir: conteúdo acima da dobra sem piscar, seções revelando ao rolar, contadores terminando no valor certo, cartões sem salto de layout, e que filtros do Painel respondem sem reanimar os gráficos. Repetir com `prefers-reduced-motion` ligado: nada se move.
 
-- [ ] **Step 4: Registrar o ADR**
+- [x] **Step 4: Registrar o ADR**
 
 Ler `docs/adr/0025-gunicorn-com-threads-e-renderizacao-de-pdf-serializada-com-espera-.md` e `docs/adr/README.md` e seguir o mesmo formato (MADR). Criar `docs/adr/0026-animacoes-sutis-com-css-e-intersectionobserver.md` registrando: contexto (site institucional, intensidade sutil), decisão (CSS + hook de `IntersectionObserver`, `js-ok`, sem biblioteca), alternativas descartadas (Framer Motion pelo peso e superfície de teste; View Transitions API/scroll-driven animations pelo suporte irregular) e consequências (revelação depende do JS; sem JS ou com movimento reduzido tudo aparece). Acrescentar a linha correspondente na lista do `docs/adr/README.md`, se ele mantiver um índice.
 

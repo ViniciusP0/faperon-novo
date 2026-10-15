@@ -82,13 +82,13 @@
 **Interfaces:**
 - Produces: fixtures reais (recortadas) usadas nas Tasks 1, 2 e 3; confirmação de: tabela 94 sem classificação e variável **107**; tabela 1737 variável **2266** (número-índice, dez/1993 = 100), períodos `AAAAMM`; malha v3 com `properties.codarea`; localidades v1 com `microrregiao.nome`.
 
-- [ ] **Step 1: Criar a branch a partir do commit da spec**
+- [x] **Step 1: Criar a branch a partir do commit da spec**
 
 ```bash
 git switch -c feat/observatorio
 ```
 
-- [ ] **Step 2: Conferir a tabela 94 e gravar a fixture**
+- [x] **Step 2: Conferir a tabela 94 e gravar a fixture**
 
 ```bash
 curl -s "https://servicodados.ibge.gov.br/api/v3/agregados/94/metadados" | python -c "import json,sys;d=json.load(sys.stdin);print(d['classificacoes'],[(v['id'],v['nome'],v['unidade']) for v in d['variaveis']])"
@@ -97,7 +97,7 @@ curl -s "https://servicodados.ibge.gov.br/api/v3/agregados/94/periodos/2023|2024
 
 Expected: `classificacoes` = `[]`; variável `107` "Vacas ordenhadas", unidade "Cabeças". A fixture tem `resultados[0].classificacoes == []`.
 
-- [ ] **Step 3: Conferir o IPCA e gravar a fixture**
+- [x] **Step 3: Conferir o IPCA e gravar a fixture**
 
 ```bash
 curl -s "https://servicodados.ibge.gov.br/api/v3/agregados/1737/periodos/202401-202512/variaveis/2266?localidades=N1[all]" > apps/api/tests/fixtures/sidra_1737_ipca_2024_2025.json
@@ -105,7 +105,7 @@ curl -s "https://servicodados.ibge.gov.br/api/v3/agregados/1737/periodos/202401-
 
 Expected: uma variável `2266`, uma série com 24 chaves `202401`…`202512`.
 
-- [ ] **Step 4: Gravar amostras de malha e localidades**
+- [x] **Step 4: Gravar amostras de malha e localidades**
 
 ```bash
 curl -s "https://servicodados.ibge.gov.br/api/v3/malhas/estados/11?formato=application/vnd.geo%2Bjson&qualidade=minima&intrarregiao=municipio" | python -c "import json,sys;d=json.load(sys.stdin);d['features']=d['features'][:2];print(json.dumps(d))" > apps/api/tests/fixtures/ibge_malha_ro_amostra.json
@@ -114,9 +114,9 @@ curl -s "https://servicodados.ibge.gov.br/api/v1/localidades/estados/11/municipi
 
 Expected: cada feição tem `properties.codarea` (7 dígitos); cada município tem `id` e `microrregiao.nome`.
 
-- [ ] **Step 5: Se algum código ou formato divergir**, pare, corrija a spec e os códigos das Tasks 1–3 neste plano, e avise o revisor. Se tudo bater, siga.
+- [x] **Step 5: Se algum código ou formato divergir**, pare, corrija a spec e os códigos das Tasks 1–3 neste plano, e avise o revisor. Se tudo bater, siga.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/tests/fixtures/
@@ -134,7 +134,7 @@ git commit -m "test(api): fixtures reais da PPM 94, do IPCA e das malhas do IBGE
 **Interfaces:**
 - Produces: produto `vacas-ordenhadas` (tabela 94, segmento pecuária) com indicador `vacas-ordenhadas` (código 107, soma, "Cabeças"); `TABELAS[94]`; `FONTES[94]`.
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 `apps/api/tests/test_ingestao_94_ipca.py`:
 
@@ -174,12 +174,12 @@ def test_carga_da_tabela_94_cria_produto_vacas_ordenhadas() -> None:
     assert cliente.chamadas == 1
 ```
 
-- [ ] **Step 2: Rodar e ver falhar**
+- [x] **Step 2: Rodar e ver falhar**
 
 Run: `$DEV pytest tests/test_ingestao_94_ipca.py -v`
 Expected: FAIL (`parsear_dados() got an unexpected keyword argument 'categoria_padrao'`, `KeyError: 94`).
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 `ingestao/tabelas.py` — substituir o dataclass e o dicionário:
 
@@ -295,12 +295,12 @@ e em `UNIDADES_PADRAO`: `"107": "Cabeças",`; e em `FONTES`:
 
 `ingest_sidra.py` — `help = "Ingere PAM (5457), PPM (3939, 74, 94) e IPCA (1737) do IBGE SIDRA para o banco."`
 
-- [ ] **Step 4: Rodar e ver passar (e o resto da suíte)**
+- [x] **Step 4: Rodar e ver passar (e o resto da suíte)**
 
 Run: `$DEV pytest -q`
 Expected: tudo PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api
@@ -320,7 +320,7 @@ git commit -m "feat(api): ingere vacas ordenhadas (PPM 94), tabela sem classific
 - Consumes: `TABELA_IPCA`, `VARIAVEL_IPCA` (Task 1).
 - Produces: `indicadores.models.IndicePreco(ano: int pk, indice_medio: Decimal, carga: FK Carga)`; `ingestao.servico_indice.executar_carga_ipca(cliente, *, forcar=False) -> Carga`; `SidraCliente.serie_nacional(tabela: int, variavel: str) -> list[dict]`; `parser.parsear_indice_mensal(resposta) -> dict[int, list[Decimal]]`; `parser.medias_anuais(mensal) -> dict[int, Decimal]`.
 
-- [ ] **Step 1: Testes que falham** (acrescentar a `test_ingestao_94_ipca.py`)
+- [x] **Step 1: Testes que falham** (acrescentar a `test_ingestao_94_ipca.py`)
 
 ```python
 from decimal import Decimal
@@ -371,12 +371,12 @@ def test_snapshot_leva_e_traz_o_ipca(tmp_path) -> None:
     assert dict(IndicePreco.objects.values_list("ano", "indice_medio")) == antes
 ```
 
-- [ ] **Step 2: Rodar e ver falhar**
+- [x] **Step 2: Rodar e ver falhar**
 
 Run: `$DEV pytest tests/test_ingestao_94_ipca.py -v`
 Expected: FAIL (`ImportError: IndicePreco`).
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 `indicadores/models.py` (fim do arquivo):
 
@@ -557,12 +557,12 @@ def executar_carga_ipca(cliente: ClienteSerieNacional, *, forcar: bool = False) 
 
 (snapshot antigo sem a chave continua carregando.)
 
-- [ ] **Step 4: Rodar a suíte**
+- [x] **Step 4: Rodar a suíte**
 
 Run: `$DEV pytest -q && $DEV ruff check . && $DEV mypy .`
 Expected: PASS, sem erros de lint/tipo.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api
@@ -580,7 +580,7 @@ git commit -m "feat(api): ingere o IPCA médio anual (SIDRA 1737) para deflacion
 **Interfaces:**
 - Produces: `normalizar_malha(geojson: dict, codigos_esperados: set[str]) -> dict` (feições só com `properties.codigo_ibge`; levanta `ErroTerritorio` se o conjunto de códigos divergir); `microrregioes(localidades: list[dict]) -> dict[str, str]`; `Municipio.microrregiao` preenchido nos 52; arquivo `public/geo/ro-municipios.json`.
 
-- [ ] **Step 1: Testes que falham**
+- [x] **Step 1: Testes que falham**
 
 `apps/api/tests/test_territorio.py`:
 
@@ -612,11 +612,11 @@ def test_microrregioes_por_codigo() -> None:
     assert all(mapa.values())
 ```
 
-- [ ] **Step 2: Rodar e ver falhar**
+- [x] **Step 2: Rodar e ver falhar**
 
 Run: `$DEV pytest tests/test_territorio.py -v` → FAIL (`ModuleNotFoundError`).
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 `ingestao/territorio.py`:
 
@@ -703,11 +703,11 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"{destino}: {len(malha['features'])} municípios"))
 ```
 
-- [ ] **Step 4: Testes passam**
+- [x] **Step 4: Testes passam**
 
 Run: `$DEV pytest tests/test_territorio.py -v` → PASS.
 
-- [ ] **Step 5: Gerar a malha, preencher microrregiões e ingerir 94 + IPCA no banco local; regenerar o snapshot**
+- [x] **Step 5: Gerar a malha, preencher microrregiões e ingerir 94 + IPCA no banco local; regenerar o snapshot**
 
 ```bash
 docker compose up -d --build api
@@ -718,7 +718,7 @@ make snapshot
 
 Expected: `ro-municipios.json` com 52 feições (< 300 KB); `tabela 94: sucesso`, `tabela 1737: sucesso`; `Municipio.objects.filter(microrregiao="").count() == 0`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api apps/web/public/geo/ro-municipios.json data/seed
@@ -751,7 +751,7 @@ git commit -m "feat(api): malha municipal de RO versionada e microrregiões dos 
   - `indice_base_100(serie: Sequence[tuple[int, Decimal | None]]) -> list[tuple[int, Decimal | None]]`
   - `produtividade_leite(mil_litros, vacas) -> Decimal | None` (litros/vaca/ano)
 
-- [ ] **Step 1: Testes que falham**
+- [x] **Step 1: Testes que falham**
 
 `apps/api/tests/test_observatorio_calculos.py`:
 
@@ -845,9 +845,9 @@ def test_produtividade_leite() -> None:
     assert c.produtividade_leite(D(1), D(0)) is None
 ```
 
-- [ ] **Step 2: Rodar e ver falhar** — `$DEV pytest tests/test_observatorio_calculos.py -v` → FAIL (módulo inexistente).
+- [x] **Step 2: Rodar e ver falhar** — `$DEV pytest tests/test_observatorio_calculos.py -v` → FAIL (módulo inexistente).
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 `observatorio/__init__.py`: vazio. `observatorio/apps.py`:
 
@@ -987,9 +987,9 @@ def produtividade_leite(mil_litros: Decimal | None, vacas: Decimal | None) -> De
     return mil_litros * 1000 / vacas
 ```
 
-- [ ] **Step 4: Rodar** — `$DEV pytest tests/test_observatorio_calculos.py -v && $DEV ruff check observatorio && $DEV mypy observatorio` → PASS.
+- [x] **Step 4: Rodar** — `$DEV pytest tests/test_observatorio_calculos.py -v && $DEV ruff check observatorio && $DEV mypy observatorio` → PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/observatorio apps/api/config/settings.py apps/api/tests/test_observatorio_calculos.py
@@ -1018,7 +1018,7 @@ git commit -m "feat(api): cálculos puros do Observatório (deflação, decompos
   - `municipios() -> list[tuple[str, str, str]]` (código, nome, microrregião)
   - `atualizado_em(tabelas: Sequence[int]) -> datetime | None`
 
-- [ ] **Step 1: Fixture e testes que falham**
+- [x] **Step 1: Fixture e testes que falham**
 
 Em `tests/conftest.py`, acrescentar:
 
@@ -1127,9 +1127,9 @@ def test_sigilosos_produtos_e_municipios(dados_observatorio: dict) -> None:
     assert l.atualizado_em([5457]) is not None
 ```
 
-- [ ] **Step 2: Rodar e ver falhar** — `$DEV pytest tests/test_observatorio_leitura.py -v` → FAIL.
+- [x] **Step 2: Rodar e ver falhar** — `$DEV pytest tests/test_observatorio_leitura.py -v` → FAIL.
 
-- [ ] **Step 3: Implementar** `observatorio/leitura.py`:
+- [x] **Step 3: Implementar** `observatorio/leitura.py`:
 
 ```python
 """Leitura do modelo de Indicadores para o Observatório. Só consultas; nenhum cálculo de negócio."""
@@ -1214,9 +1214,9 @@ def atualizado_em(tabelas: Sequence[int]) -> datetime | None:
     )
 ```
 
-- [ ] **Step 4: Rodar** — `$DEV pytest tests/test_observatorio_leitura.py -v && $DEV mypy observatorio` → PASS.
+- [x] **Step 4: Rodar** — `$DEV pytest tests/test_observatorio_leitura.py -v && $DEV mypy observatorio` → PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/observatorio/leitura.py apps/api/tests/conftest.py apps/api/tests/test_observatorio_leitura.py
@@ -1242,7 +1242,7 @@ git commit -m "feat(api): leitura agregada do modelo de indicadores para o Obser
   - `como_ler(bloco: str, ano_ref: int | None) -> list[str]`
   - `AVISO_SEM_CARNE`, `aviso_ano_ref(pedido: int, usado: int) -> str`, `aviso_inicio_recortado(pedido: int, usado: int) -> str`, `AVISO_SEM_DADOS`
 
-- [ ] **Step 1: Golden tests que falham**
+- [x] **Step 1: Golden tests que falham**
 
 `apps/api/tests/test_observatorio_regras.py`:
 
@@ -1312,9 +1312,9 @@ def test_avisos_e_como_ler() -> None:
     assert "a preços de 2024" in " ".join(r.como_ler("panorama", 2024))
 ```
 
-- [ ] **Step 2: Rodar e ver falhar** — `$DEV pytest tests/test_observatorio_regras.py -v` → FAIL.
+- [x] **Step 2: Rodar e ver falhar** — `$DEV pytest tests/test_observatorio_regras.py -v` → FAIL.
 
-- [ ] **Step 3: Implementar** `observatorio/regras.py`:
+- [x] **Step 3: Implementar** `observatorio/regras.py`:
 
 ```python
 """Textos do Observatório por regras determinísticas (ADR 0007): mesma entrada, mesmo texto."""
@@ -1455,9 +1455,9 @@ def aviso_inicio_recortado(pedido: int, usado: int) -> str:
     return f"O período começa em {usado}: antes do Plano Real não há como corrigir valores pelo IPCA."
 ```
 
-- [ ] **Step 4: Rodar** — `$DEV pytest tests/test_observatorio_regras.py -v` → PASS (ajuste só o texto que divergir por formatação, mantendo a frase dos testes como contrato).
+- [x] **Step 4: Rodar** — `$DEV pytest tests/test_observatorio_regras.py -v` → PASS (ajuste só o texto que divergir por formatação, mantendo a frase dos testes como contrato).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/observatorio/regras.py apps/api/tests/test_observatorio_regras.py
@@ -1480,7 +1480,7 @@ git commit -m "feat(api): manchetes e textos explicativos do Observatório por r
   - Serializers comuns: `TextoSerializer(manchete: str, como_ler: list[str])`, `QualidadeSerializer(municipios_sigilosos: int, ano_ref_monetario: int|null, avisos: list[str])`, `MetaObservatorioSerializer`, `ItemValorSerializer(slug, nome, valor: float|null, participacao: float|null)`, `AnoValorSerializer(ano, valor: float|null)`, `OpcaoSerializer(slug, nome)`.
   - Rotas `observatorio/panorama|crescimento|territorio|pecuaria` incluídas sob `api/v1/`.
 
-- [ ] **Step 1: Teste que falha**
+- [x] **Step 1: Teste que falha**
 
 `apps/api/tests/test_observatorio_api.py`:
 
@@ -1509,9 +1509,9 @@ def test_rotas_existem_no_schema(api: APIClient) -> None:
         assert f"/api/v1/observatorio/{bloco}" in schema
 ```
 
-- [ ] **Step 2: Rodar e ver falhar** — `$DEV pytest tests/test_observatorio_api.py -v` → FAIL.
+- [x] **Step 2: Rodar e ver falhar** — `$DEV pytest tests/test_observatorio_api.py -v` → FAIL.
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 `observatorio/api/__init__.py`: vazio.
 
@@ -1649,9 +1649,9 @@ urlpatterns = [
 
 `config/urls.py`: acrescentar `path("api/v1/", include("observatorio.urls")),` depois da linha de `analise.urls`.
 
-- [ ] **Step 4: Rodar** — `$DEV pytest tests/test_observatorio_api.py -v` → PASS.
+- [x] **Step 4: Rodar** — `$DEV pytest tests/test_observatorio_api.py -v` → PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/observatorio apps/api/config/urls.py apps/api/tests/test_observatorio_api.py
@@ -1684,7 +1684,7 @@ git commit -m "feat(api): rotas e contratos comuns da API do Observatório"
 
 Regras: itens = produtos da 5457 (valor-da-producao) + produtos da 74 (valor-da-producao), chaves `slug`; `inicio = max(ano - janela + 1, ANO_MINIMO_DEFLACAO)` (aviso se recortado); `ano` fora de `anos_disponiveis` → `ConsultaInvalida` (400) com campo `ano`; `janela` fora de {5,10,20} → 400 (serializer `ChoiceField`).
 
-- [ ] **Step 1: Testes que falham** (acrescentar)
+- [x] **Step 1: Testes que falham** (acrescentar)
 
 ```python
 def get(api: APIClient, caminho: str) -> tuple[int, dict]:
@@ -1731,9 +1731,9 @@ def test_panorama_sem_dados(api: APIClient, db: None) -> None:
     assert corpo["texto"]["manchete"] == "Não há dados publicados pelo IBGE para este recorte."
 ```
 
-- [ ] **Step 2: Rodar e ver falhar** — `$DEV pytest tests/test_observatorio_api.py -k panorama -v` → FAIL (501).
+- [x] **Step 2: Rodar e ver falhar** — `$DEV pytest tests/test_observatorio_api.py -k panorama -v` → FAIL (501).
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 `servico.py` (acrescentar; importar `from indicadores.erros import ConsultaInvalida` e `from observatorio import calculos as c`):
 
@@ -1924,9 +1924,9 @@ class PanoramaView(APIView):
 
 Nota: `_vazio` devolve `series: {}`; os campos de `PanoramaSeriesSerializer` são `required=False`, então `composicao` sai ausente. No teste de "sem dados", trocar a asserção por `assert corpo["series"].get("composicao", []) == []`.
 
-- [ ] **Step 4: Rodar** — `$DEV pytest tests/test_observatorio_api.py -k panorama -v` → PASS.
+- [x] **Step 4: Rodar** — `$DEV pytest tests/test_observatorio_api.py -k panorama -v` → PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/observatorio apps/api/tests/test_observatorio_api.py
@@ -1956,7 +1956,7 @@ series: {
 
 Regras: padrão de `cultura` = maior valor da produção (5457) no último ano; `fim` padrão = último ano com área colhida da cultura; `inicio` padrão = `fim - 9`; `inicio > fim` → 400; cultura inexistente na 5457 → `NaoEncontrado` (404). Rendimento da série = produção ÷ área (estadual), nunca média de rendimentos.
 
-- [ ] **Step 1: Testes que falham**
+- [x] **Step 1: Testes que falham**
 
 ```python
 def test_crescimento_padrao_e_decomposicao(api: APIClient, dados_observatorio: dict) -> None:
@@ -1985,9 +1985,9 @@ def test_crescimento_erros(api: APIClient, dados_observatorio: dict) -> None:
     assert get(api, "crescimento?inicio=2024&fim=2015")[0] == 400
 ```
 
-- [ ] **Step 2: Rodar e ver falhar** — `$DEV pytest tests/test_observatorio_api.py -k crescimento -v` → FAIL.
+- [x] **Step 2: Rodar e ver falhar** — `$DEV pytest tests/test_observatorio_api.py -k crescimento -v` → FAIL.
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 `servico.py` (acrescentar; importar `NaoEncontrado`):
 
@@ -2131,9 +2131,9 @@ class CrescimentoView(APIView):
 
 No teste de `valor_por_hectare`, troque a asserção dupla por `assert {i["slug"] for i in corpo["series"]["valor_por_hectare"]} == {"soja-em-grao", "cafe-em-grao-canephora"}` (soja 1110 ha, café 2050 ha no fim, ambos ≥ 1.000).
 
-- [ ] **Step 4: Rodar** — `$DEV pytest tests/test_observatorio_api.py -k crescimento -v` → PASS.
+- [x] **Step 4: Rodar** — `$DEV pytest tests/test_observatorio_api.py -k crescimento -v` → PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/observatorio apps/api/tests/test_observatorio_api.py
@@ -2164,7 +2164,7 @@ series: {
 
 Métricas: `valor` = valor-da-producao 5457 (deflacionado para `ano_ref`; cultura opcional); `area` = area-colhida 5457 (cultura opcional); `rebanho` = efetivo do `bovino` 3939 (cultura ignorada, `null` na resposta); `dominante` = cultura de maior valor por município. Todos os 52 municípios aparecem em `municipios`; quem não tem OK fica `valor: null` com `status` `sigiloso` (se houver linha sigilosa) ou `sem_dado`. Dependentes sempre calculados sobre o valor da 5457 do `ano`.
 
-- [ ] **Step 1: Testes que falham**
+- [x] **Step 1: Testes que falham**
 
 ```python
 def test_territorio_valor(api: APIClient, dados_observatorio: dict) -> None:
@@ -2197,9 +2197,9 @@ def test_territorio_metrica_invalida(api: APIClient, dados_observatorio: dict) -
     assert get(api, "territorio?cultura=inexistente")[0] == 404
 ```
 
-- [ ] **Step 2: Rodar e ver falhar** — `$DEV pytest tests/test_observatorio_api.py -k territorio -v` → FAIL.
+- [x] **Step 2: Rodar e ver falhar** — `$DEV pytest tests/test_observatorio_api.py -k territorio -v` → FAIL.
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 `servico.py` (acrescentar; importar `from analise.regras import classificar_concentracao`):
 
@@ -2402,9 +2402,9 @@ class TerritorioView(APIView):
         return Response(sz.TerritorioSerializer(servico.territorio(d["metrica"], d.get("cultura"), d.get("ano"))).data)
 ```
 
-- [ ] **Step 4: Rodar** — `$DEV pytest tests/test_observatorio_api.py tests/test_observatorio_leitura.py -v` → PASS.
+- [x] **Step 4: Rodar** — `$DEV pytest tests/test_observatorio_api.py tests/test_observatorio_leitura.py -v` → PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/observatorio apps/api/tests
@@ -2432,7 +2432,7 @@ series: { efetivo: [AnoValor], municipios: [MunicipioValor], composicao: [ItemVa
 
 Regras: padrão `rebanho="bovino"`; `fim` padrão = último ano com efetivo (3939); `inicio = fim - 9`; rebanho inexistente na 3939 → 404. `composicao` = efetivo de todos os rebanhos da 3939 no `fim`, **exceto** `galinaceos-total` e `suino-matrizes-de-suinos` (subtotais que duplicariam contagem). Leite: produção (74, `producao-de-origem-animal`) ÷ vacas ordenhadas (94) no estado e por município; polos = 5 maiores volumes.
 
-- [ ] **Step 1: Testes que falham**
+- [x] **Step 1: Testes que falham**
 
 ```python
 def test_pecuaria_padrao(api: APIClient, dados_observatorio: dict) -> None:
@@ -2453,9 +2453,9 @@ def test_pecuaria_rebanho_inexistente(api: APIClient, dados_observatorio: dict) 
     assert get(api, "pecuaria?rebanho=dinossauro")[0] == 404
 ```
 
-- [ ] **Step 2: Rodar e ver falhar** — `$DEV pytest tests/test_observatorio_api.py -k pecuaria -v` → FAIL.
+- [x] **Step 2: Rodar e ver falhar** — `$DEV pytest tests/test_observatorio_api.py -k pecuaria -v` → FAIL.
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 `servico.py` (acrescentar):
 
@@ -2618,12 +2618,12 @@ class PecuariaView(APIView):
         return Response(sz.PecuariaSerializer(servico.pecuaria(d.get("rebanho"), d.get("inicio"), d.get("fim"))).data)
 ```
 
-- [ ] **Step 4: Rodar a suíte inteira e lint/tipos**
+- [x] **Step 4: Rodar a suíte inteira e lint/tipos**
 
 Run: `$DEV pytest -q && $DEV ruff check . && $DEV mypy .`
 Expected: tudo PASS.
 
-- [ ] **Step 5: Medir desempenho no banco completo**
+- [x] **Step 5: Medir desempenho no banco completo**
 
 ```bash
 docker compose up -d --build api
@@ -2632,7 +2632,7 @@ for b in panorama crescimento territorio pecuaria; do for i in 1 2 3 4 5; do cur
 
 Expected: todas ≤ 0,5 s. Se alguma passar, adicionar em `observatorio/servico.py` um cache por processo `functools.lru_cache(maxsize=256)` numa função `_cache(bloco, parametros_tuple, carga_id)` chaveada pelo `max(Carga.id)` concluído, envolvendo a função do bloco, e repetir a medição.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/observatorio apps/api/tests/test_observatorio_api.py
@@ -2658,7 +2658,7 @@ git commit -m "feat(api): bloco Pecuária com rebanhos e produtividade do leite"
   - `semFiltrosDoBloco(sp, bloco): URLSearchParams`
   - `usePanorama(qs)`, `useCrescimento(qs)`, `useTerritorio(qs)`, `usePecuaria(qs)` (TanStack Query, `queryKey: ["observatorio", bloco, qs]`)
 
-- [ ] **Step 1: Teste que falha**
+- [x] **Step 1: Teste que falha**
 
 `apps/web/src/lib/observatorio-url.test.ts`:
 
@@ -2690,9 +2690,9 @@ describe("filtros do Observatório na URL", () => {
 });
 ```
 
-- [ ] **Step 2: Rodar e ver falhar** — `cd apps/web && npx vitest run src/lib/observatorio-url.test.ts` → FAIL.
+- [x] **Step 2: Rodar e ver falhar** — `cd apps/web && npx vitest run src/lib/observatorio-url.test.ts` → FAIL.
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 `src/lib/observatorio-url.ts`:
 
@@ -2841,9 +2841,9 @@ export function useBlocoObservatorio<B extends BlocoObservatorio>(bloco: B, qs: 
 }
 ```
 
-- [ ] **Step 4: Rodar** — `cd apps/web && npx vitest run src/lib/observatorio-url.test.ts && npm run typecheck` → PASS.
+- [x] **Step 4: Rodar** — `cd apps/web && npx vitest run src/lib/observatorio-url.test.ts && npm run typecheck` → PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/web/src/lib apps/web/src/components/observatorio/consultas.ts
@@ -2865,7 +2865,7 @@ git commit -m "feat(web): tipos, cliente e filtros na URL do Observatório"
   - `<TabelaDados legenda colunas={{chave, rotulo, numerico?}[]} linhas={Record<string, string | number | null>[]} />` (célula `null` exibe "–"; células numéricas formatadas com `formatNumero`).
   - `<Seletor rotulo valor opcoes={{valor, rotulo}[]} onChange />` (`<label>` + `<select>`).
 
-- [ ] **Step 1: Teste que falha**
+- [x] **Step 1: Teste que falha**
 
 `apps/web/src/components/observatorio/bloco.test.tsx`:
 
@@ -2937,9 +2937,9 @@ describe("Bloco do Observatório", () => {
 });
 ```
 
-- [ ] **Step 2: Rodar e ver falhar** — `npx vitest run src/components/observatorio/bloco.test.tsx` → FAIL.
+- [x] **Step 2: Rodar e ver falhar** — `npx vitest run src/components/observatorio/bloco.test.tsx` → FAIL.
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 `tabela-dados.tsx`:
 
@@ -3113,9 +3113,9 @@ export function Bloco<R extends Resposta>({ id, etiqueta, titulo, consulta, filt
 
 (Confirme no `Carregando` de `components/painel/comuns.tsx` que ele usa `role="status"`; se não usar, envolva-o em `<div role="status">`.)
 
-- [ ] **Step 4: Rodar** — `npx vitest run src/components/observatorio && npm run lint && npm run typecheck` → PASS.
+- [x] **Step 4: Rodar** — `npx vitest run src/components/observatorio && npm run lint && npm run typecheck` → PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/web/src/components/observatorio
@@ -3138,7 +3138,7 @@ git commit -m "feat(web): molde de bloco do Observatório com tabela acessível 
   - `<GraficoObservatorio option descricao altura? />` registra `TreemapChart`, `MapChart`, `VisualMapComponent` e repassa ao `Grafico`.
   - `<MapaMunicipios municipios unidade categorias descricao />` carrega `/geo/ro-municipios.json` uma vez (cache de módulo), chama `echarts.registerMap("rondonia", geo)` e renderiza; se o GeoJSON falhar, mostra o aviso "Não foi possível carregar o mapa; veja os dados como tabela." (o botão de tabela do bloco continua funcionando).
 
-- [ ] **Step 1: Testes que falham**
+- [x] **Step 1: Testes que falham**
 
 `src/lib/observatorio-graficos.test.ts`:
 
@@ -3202,9 +3202,9 @@ describe("MapaMunicipios", () => {
 });
 ```
 
-- [ ] **Step 2: Rodar e ver falhar** — `npx vitest run src/lib/observatorio-graficos.test.ts src/components/observatorio/mapa-municipios.test.tsx` → FAIL.
+- [x] **Step 2: Rodar e ver falhar** — `npx vitest run src/lib/observatorio-graficos.test.ts src/components/observatorio/mapa-municipios.test.tsx` → FAIL.
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 `src/lib/observatorio-graficos.ts`:
 
@@ -3386,9 +3386,9 @@ export function MapaMunicipios({ municipios, unidade, categorias, descricao }: {
 
 (Confirme a assinatura de `Alert` em `components/ui/feedback.tsx`; se exigir `variant`, use a variante neutra existente.)
 
-- [ ] **Step 4: Rodar** — `npx vitest run src/lib/observatorio-graficos.test.ts src/components/observatorio && npm run typecheck && npm run lint` → PASS.
+- [x] **Step 4: Rodar** — `npx vitest run src/lib/observatorio-graficos.test.ts src/components/observatorio && npm run typecheck && npm run lint` → PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/web/src/lib/observatorio-graficos* apps/web/src/components/observatorio
@@ -3409,7 +3409,7 @@ git commit -m "feat(web): gráficos e mapa coroplético dos municípios para o O
   - `useFiltrosBloco(bloco)` → `{ qs: string, definir(chave, valor | null): void, padrao(): void }` (usa `useSearchParams` e `useRouter().replace(..., { scroll: false })`).
   - `<BlocoPanorama />`, `<BlocoCrescimento />`, `<BlocoTerritorio />`, `<BlocoPecuaria />` (sem props; ids de seção `panorama`, `crescimento`, `territorio`, `pecuaria`).
 
-- [ ] **Step 1: Teste que falha**
+- [x] **Step 1: Teste que falha**
 
 `blocos.test.tsx` — mock de `next/navigation` e do `fetch`, renderiza `BlocoTerritorio` com um município sigiloso e confere a tabela:
 
@@ -3474,9 +3474,9 @@ describe("BlocoTerritorio", () => {
 });
 ```
 
-- [ ] **Step 2: Rodar e ver falhar** — `npx vitest run src/components/observatorio/blocos.test.tsx` → FAIL.
+- [x] **Step 2: Rodar e ver falhar** — `npx vitest run src/components/observatorio/blocos.test.tsx` → FAIL.
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 `use-filtros-bloco.ts`:
 
@@ -3753,9 +3753,9 @@ export function BlocoPecuaria() {
 }
 ```
 
-- [ ] **Step 4: Rodar** — `npx vitest run src/components/observatorio && npm run typecheck && npm run lint` → PASS.
+- [x] **Step 4: Rodar** — `npx vitest run src/components/observatorio && npm run typecheck && npm run lint` → PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/web/src/components/observatorio
@@ -3775,7 +3775,7 @@ git commit -m "feat(web): blocos Panorama, Crescimento, Território e Pecuária 
 - Consumes: blocos da Task 15; `IndiceSecoes` de `@/components/sobre/indice-secoes`; `HeroPagina`, `Destaque` de `@/components/site/hero-pagina`.
 - Produces: `CENTRAL.portas: {titulo, texto, rotulo, href, icone}[]` (Observatório e Painel; `cta_url`/`cta_texto` mantidos porque o Início os usa); rota `/central-de-inteligencia/observatorio` no sitemap.
 
-- [ ] **Step 1: Testes que falham**
+- [x] **Step 1: Testes que falham**
 
 `src/app/central-de-inteligencia/central.test.tsx`:
 
@@ -3795,9 +3795,9 @@ describe("Central de Inteligência", () => {
 
 `src/app/sitemap.test.ts` — acrescentar `"/central-de-inteligencia/observatorio"` logo depois de `"/central-de-inteligencia"` na lista esperada.
 
-- [ ] **Step 2: Rodar e ver falhar** — `npx vitest run src/app` → FAIL.
+- [x] **Step 2: Rodar e ver falhar** — `npx vitest run src/app` → FAIL.
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 `src/content/central.ts` — acrescentar ao objeto `CENTRAL` (e `"globe"` não existe em `NomeIcone`: use os ícones já existentes `insight` e `chart`):
 
@@ -3917,9 +3917,9 @@ export default function ObservatorioPage() {
 
 `src/app/sitemap.ts` — inserir `"/central-de-inteligencia/observatorio"` depois de `"/central-de-inteligencia"`.
 
-- [ ] **Step 4: Rodar** — `npm test && npm run typecheck && npm run lint` → PASS. (Se o teste existente do Início, `banners`/`hero`, quebrar por depender de `CENTRAL.cta_*`, confirme que esses campos continuam existindo.)
+- [x] **Step 4: Rodar** — `npm test && npm run typecheck && npm run lint` → PASS. (Se o teste existente do Início, `banners`/`hero`, quebrar por depender de `CENTRAL.cta_*`, confirme que esses campos continuam existindo.)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/web/src
@@ -3938,7 +3938,7 @@ git commit -m "feat(web): Central de Inteligência como hub e página do Observa
 - Consumes: tudo acima.
 - Produces: mock com as quatro rotas `/api/v1/observatorio/*` (dados fictícios no formato exato do contrato, com os 52 municípios do mock e um sigiloso); E2E da jornada; contrato documentado.
 
-- [ ] **Step 1: E2E que falha**
+- [x] **Step 1: E2E que falha**
 
 `apps/web/e2e/observatorio.spec.ts`:
 
@@ -3982,9 +3982,9 @@ test("parâmetro inválido em um bloco não derruba os outros", async ({ page })
 });
 ```
 
-- [ ] **Step 2: Rodar e ver falhar** — `cd apps/web && npx playwright test e2e/observatorio.spec.ts` → FAIL (mock sem as rotas).
+- [x] **Step 2: Rodar e ver falhar** — `cd apps/web && npx playwright test e2e/observatorio.spec.ts` → FAIL (mock sem as rotas).
 
-- [ ] **Step 3: Implementar o mock**
+- [x] **Step 3: Implementar o mock**
 
 Em `scripts/mock-api.mjs`, acrescentar funções que montam respostas no formato das Tasks 8–11 a partir de `MUNICIPIOS` (o primeiro município com `status: "sigiloso"` e `valor: null` no Território), e registrar no roteador do servidor (seguindo o padrão das rotas existentes no arquivo):
 
@@ -4049,9 +4049,9 @@ No roteamento do mock, antes do 404 final: se o caminho casar com `^/api/v1/obse
 
 `docs/api-contract.md` — nova seção `## Observatório` com as quatro rotas, parâmetros, padrões, a forma comum `{filtros, metricas, series, texto, qualidade, meta}`, os campos de cada bloco (copiar das Interfaces das Tasks 8–11) e os códigos de erro.
 
-- [ ] **Step 2b: Rodar E2E** — `npx playwright test e2e/observatorio.spec.ts` → PASS; depois a suíte inteira `npm run test:e2e` → PASS (o `fluxo.spec.ts` não pode quebrar com a nova Central: se ele clicar no CTA do hero da Central, troque o seletor para `getByRole("link", { name: /Abrir o Painel Agro Analítico/ })`, que continua existindo na porta do Painel).
+- [x] **Step 2b: Rodar E2E** — `npx playwright test e2e/observatorio.spec.ts` → PASS; depois a suíte inteira `npm run test:e2e` → PASS (o `fluxo.spec.ts` não pode quebrar com a nova Central: se ele clicar no CTA do hero da Central, troque o seletor para `getByRole("link", { name: /Abrir o Painel Agro Analítico/ })`, que continua existindo na porta do Painel).
 
-- [ ] **Step 3: Verificação final completa**
+- [x] **Step 3: Verificação final completa**
 
 ```bash
 make test && make lint && make typecheck && make web-test
@@ -4069,7 +4069,7 @@ for b in panorama crescimento territorio pecuaria; do curl -s -o /dev/null -w "$
 
 Expected: 200 em tudo, tempos ≤ 0,5 s. Abrir a página no navegador, conferir os quatro blocos, o mapa e o modo escuro; registrar uma captura.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/web/scripts/mock-api.mjs apps/web/e2e/observatorio.spec.ts docs/api-contract.md
