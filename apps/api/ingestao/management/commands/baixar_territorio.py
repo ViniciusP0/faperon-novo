@@ -7,7 +7,6 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from indicadores.models import Municipio
-from ingestao.tls import sessao_ibge
 from ingestao.territorio import (
     URL_LOCALIDADES,
     URL_MALHA,
@@ -15,6 +14,7 @@ from ingestao.territorio import (
     microrregioes,
     normalizar_malha,
 )
+from ingestao.tls import sessao_ibge
 
 TIMEOUT = 60
 
