@@ -704,7 +704,7 @@ estrago se essa premissa falhar.
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Passo 11 (depois do deploy, na Tarefa 11): verificação ponta a ponta pelo Funnel**
+- [x] **Passo 11 (depois do deploy, na Tarefa 11): verificação ponta a ponta pelo Funnel**
 
 De fora da tailnet (celular em dados móveis ou `curl --resolve`, ver `infra/demo-checklist.md`), rode 12 vezes, trocando o IP forjado a cada vez:
 
@@ -1084,7 +1084,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 Rode: `make test && make lint && make typecheck && make web-test`
 Esperado: tudo PASS.
 
-- [ ] **Passo 2: subir o compose completo localmente**
+- [x] **Passo 2: subir o compose completo localmente**
 
 Rode: `docker compose up -d --build && docker compose ps`
 Esperado: `db`, `api` (`healthy`), `scheduler` e `web` de pé. Abra `http://127.0.0.1:3000`, percorra Início → Central → Painel e baixe um PDF com 2 municípios na comparação.
@@ -1102,7 +1102,7 @@ Sem isso, o deploy sobe com `ALLOWED_HOSTS='*'` do `.env` antigo (funciona, mas 
 
 Rode: `git push origin main` e acompanhe `infra/deploy.log` no servidor até aparecer `deploy finished at <hash>`.
 
-- [ ] **Passo 5: verificação no ar (de fora da tailnet)**
+- [x] **Passo 5: verificação no ar (de fora da tailnet)**
 
 - `https://dt-server.tail3fe9ce.ts.net/` abre e o Painel carrega
 - `/robots.txt` aponta para `https://dt-server.tail3fe9ce.ts.net/sitemap.xml`
