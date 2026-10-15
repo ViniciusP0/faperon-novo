@@ -11,12 +11,24 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 REPO_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEPLOY_SCRIPT = os.path.join(REPO_DIR, "infra", "deploy.sh")
+GATILHO = os.path.join(REPO_DIR, "infra", ".deploy-pendente")
 SECRET = os.environ.get("GITHUB_WEBHOOK_SECRET", "")
-HOST = "127.0.0.1"
+# "script": roda deploy.sh (Linux/systemd); "gatilho": só cria o arquivo-gatilho, e o deploy.ps1
+# do host (tarefa agendada do Windows) faz o git pull e o docker compose.
+DEPLOY_MODE = os.environ.get("DEPLOY_MODE", "script")
+HOST = os.environ.get("LISTEN_HOST", "127.0.0.1")
 PORT = 9001
 MAX_BODY_SIZE = 1024 * 1024  # push do GitHub tem poucos KB; 1 MB já é folga
 SOCKET_TIMEOUT = 10  # segundos sem receber bytes: corta cliente lento (slowloris)
 MAX_CONEXOES = 8  # conexões simultâneas; o excedente recebe 503
+
+
+def solicitar_deploy():
+    if DEPLOY_MODE == "gatilho":
+        with open(GATILHO, "w", encoding="utf-8") as arquivo:
+            arquivo.write("deploy solicitado\n")
+    else:
+        subprocess.Popen([DEPLOY_SCRIPT], cwd=REPO_DIR, start_new_session=True)
 
 
 class ServidorLimitado(ThreadingHTTPServer):
@@ -105,7 +117,11 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             return
 
-        subprocess.Popen([DEPLOY_SCRIPT], cwd=REPO_DIR, start_new_session=True)
+        try:
+            solicitar_deploy()
+        except OSError:
+            self._reject(500)
+            return
         self.send_response(202)
         self.end_headers()
 

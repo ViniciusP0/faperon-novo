@@ -1,4 +1,36 @@
-# Deploy automático (webhook)
+# Deploy automático na vinicin (Windows)
+
+Enquanto o `dt-server` está offline, o site e o deploy rodam na `vinicin` (ADR 0021, atualização de 15/10/2026): `https://vinicin.tail3fe9ce.ts.net:8443`. A seção "Deploy automático (webhook)" mais abaixo descreve o `dt-server` (Linux) e continua valendo se ele voltar.
+
+Instalação (uma vez, no PowerShell, na raiz do repositório):
+
+```powershell
+# 1. .env: SITE_URL e segredo do webhook (o mesmo valor vai no GitHub)
+#    SITE_URL=https://vinicin.tail3fe9ce.ts.net:8443
+#    GITHUB_WEBHOOK_SECRET=<64 caracteres hexadecimais>
+docker compose up -d --build              # sobe também o serviço webhook (127.0.0.1:9001)
+
+# 2. Funnel: site em 8443 e webhook em 10000
+tailscale funnel --bg --https=8443 3000
+tailscale funnel --bg --https=10000 9001
+
+# 3. Tarefa agendada: consome o gatilho a cada minuto (sem rodar em paralelo consigo mesma)
+$acao = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PWD\infra\deploy.ps1`""
+$gatilho = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 1)
+$config = New-ScheduledTaskSettingsSet -MultipleInstances IgnoreNew -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Minutes 30)
+Register-ScheduledTask -TaskName 'faperon-deploy' -Action $acao -Trigger $gatilho -Settings $config
+```
+
+No GitHub (Settings -> Webhooks), a URL é `https://vinicin.tail3fe9ce.ts.net:10000/webhook`, `application/json`, só o evento `push`, com o mesmo segredo do `.env`. Para remover a tarefa: `Unregister-ScheduledTask -TaskName faperon-deploy`.
+
+Operação:
+
+- Listener: `docker compose ps webhook` e `docker compose logs webhook`. Um push em `main` cria `infra/.deploy-pendente`.
+- Log de cada deploy: `infra/deploy.log`. O deploy começa em até 1 minuto após o push.
+- `deploy.ps1` **não** faz `reset --hard`: com alteração local não commitada ou commit local não enviado, ele registra `abortado` no log e não altera nada. Commite e envie (ou descarte) o trabalho local para o deploy voltar a rodar.
+- O site cai se a `vinicin` suspender, reiniciar ou se o Docker Desktop estiver fechado.
+
+# Deploy automático (webhook) no dt-server (Linux)
 
 O servidor atualiza sozinho a cada push em `main`, sem precisar acessar a máquina manualmente.
 

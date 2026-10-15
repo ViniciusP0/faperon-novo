@@ -14,3 +14,5 @@ apps/web/tsconfig.tsbuildinfo
 infra/deploy.log
 
 .coverage
+
+infra/.deploy-pendente

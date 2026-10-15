@@ -71,5 +71,23 @@ services:
       api:
         condition: service_healthy
 
+  # Recebe o webhook de push do GitHub (ADR 0021). Só cria infra/.deploy-pendente; quem atualiza e
+  # reconstrói é o infra/deploy.ps1 no host. Funnel :10000 -> 127.0.0.1:9001.
+  webhook:
+    image: python:3.12-slim
+    command: ["python", "/app/infra/webhook_listener.py"]
+    environment:
+      GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET:-}
+      DEPLOY_MODE: gatilho
+      LISTEN_HOST: 0.0.0.0
+    volumes:
+      - ./infra:/app/infra
+    ports:
+      - "127.0.0.1:9001:9001"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: always
+
 volumes:
   pgdata:

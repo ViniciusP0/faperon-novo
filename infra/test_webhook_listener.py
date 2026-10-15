@@ -6,8 +6,10 @@ import hashlib
 import hmac
 import http.client
 import os
+import shutil
 import socket
 import sys
+import tempfile
 import threading
 import time
 import unittest
@@ -95,6 +97,33 @@ class ListenerTest(unittest.TestCase):
         porta = self.iniciar(max_conexoes=1, timeout=2)
         self.assertEqual(self.post(porta), 200)
         self.assertEqual(self.post(porta), 200)
+
+    def modo_gatilho(self):
+        pasta = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, pasta, True)
+        gatilho = os.path.join(pasta, ".deploy-pendente")
+        for nome, valor in (("DEPLOY_MODE", "gatilho"), ("GATILHO", gatilho)):
+            self.addCleanup(setattr, wl, nome, getattr(wl, nome))
+            setattr(wl, nome, valor)
+        return gatilho
+
+    def test_push_na_main_cria_o_gatilho_no_modo_gatilho(self):
+        gatilho = self.modo_gatilho()
+        corpo = b'{"ref": "refs/heads/main"}'
+        self.assertEqual(self.post(self.iniciar(), corpo=corpo, evento="push"), 202)
+        self.assertTrue(os.path.exists(gatilho))
+
+    def test_push_em_outra_branch_nao_cria_o_gatilho(self):
+        gatilho = self.modo_gatilho()
+        corpo = b'{"ref": "refs/heads/outra"}'
+        self.assertEqual(self.post(self.iniciar(), corpo=corpo, evento="push"), 200)
+        self.assertFalse(os.path.exists(gatilho))
+
+    def test_falha_ao_criar_o_gatilho_responde_500(self):
+        gatilho = self.modo_gatilho()
+        setattr(wl, "GATILHO", os.path.join(gatilho, "inexistente", "x"))
+        corpo = b'{"ref": "refs/heads/main"}'
+        self.assertEqual(self.post(self.iniciar(), corpo=corpo, evento="push"), 500)
 
 
 if __name__ == "__main__":

@@ -42,9 +42,9 @@ Ver `infra/demo-checklist.md`. O Funnel expõe a porta 3000 (Next.js) e, para o 
 
 ## Deploy automático
 
-O `dt-server` atualiza sozinho a cada `git push` em `main`: um serviço systemd (`faperon-webhook`, ver `infra/faperon-webhook.service`) recebe o webhook do GitHub, valida a assinatura HMAC e roda `infra/deploy.sh` (`git reset --hard origin/main` + `docker compose up -d --build`). Não precisa mais acessar o servidor manualmente para publicar uma mudança.
+A `vinicin` atualiza sozinha a cada `git push` em `main` (o `dt-server` está offline; ADR 0021). O serviço `webhook` do compose recebe o webhook do GitHub, valida a assinatura HMAC e cria `infra/.deploy-pendente`; a tarefa agendada `faperon-deploy` roda `infra/deploy.ps1` a cada minuto (`git merge --ff-only` + `docker compose up -d --build`). Se houver alteração local não commitada ou commit não enviado, o deploy é abortado e registrado no log, sem alterar nada.
 
-- Status do serviço: `systemctl status faperon-webhook`
-- Log de deploy: `infra/deploy.log` ou `journalctl -u faperon-webhook -f`
+- Status do serviço: `docker compose ps webhook`
+- Log de deploy: `infra/deploy.log`
 - Segredo compartilhado com o GitHub: `GITHUB_WEBHOOK_SECRET` no `.env` (configurar o mesmo valor em Settings > Webhooks no GitHub)
-- Detalhes de instalação (unit systemd, Funnel na porta 10000): `infra/demo-checklist.md`
+- Detalhes de instalação (tarefa agendada, Funnel na porta 10000): `infra/demo-checklist.md`
