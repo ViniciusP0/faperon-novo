@@ -282,10 +282,10 @@ Checklist do primeiro dia, para os três começarem sem bloqueio:
 - [x] Copiar as ADRs 0001–0018 e as SPEC-01 a SPEC-08 deste plano para `docs/`
 - [x] Subir o `docker-compose.yml` mínimo: Postgres, Django (Wagtail) e Next.js
 - [x] Configurar o CI: Ruff, mypy, pytest, ESLint, tsc, Vitest
-- [ ] Criar o quadro de tarefas com as três trilhas e as entregas da semana 1
-- [ ] Escrever o primeiro teste que falha: parser de uma resposta real da tabela 5457 (TDD)
-- [ ] Instalar o Tailscale no notebook da demo e reservar o nome da máquina para o Funnel
-- [ ] Marcar a demo interna da sexta da semana 1
+- [x] Criar o quadro de tarefas com as três trilhas e as entregas da semana 1
+- [x] Escrever o primeiro teste que falha: parser de uma resposta real da tabela 5457 (TDD)
+- [x] Instalar o Tailscale no notebook da demo e reservar o nome da máquina para o Funnel
+- [x] Marcar a demo interna da sexta da semana 1
 
 ## Riscos e perguntas abertas
 
