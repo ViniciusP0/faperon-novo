@@ -7,6 +7,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from indicadores.models import Municipio
+from ingestao.tls import sessao_ibge
 from ingestao.territorio import (
     URL_LOCALIDADES,
     URL_MALHA,
@@ -28,9 +29,10 @@ class Command(BaseCommand):
         codigos = set(Municipio.objects.values_list("codigo_ibge", flat=True))
         if len(codigos) != 52:
             raise CommandError(f"Cadastro tem {len(codigos)} municípios; rode a ingestão antes")
+        sessao = sessao_ibge()
         try:
-            malha = normalizar_malha(requests.get(URL_MALHA, timeout=TIMEOUT).json(), codigos)
-            micro = microrregioes(requests.get(URL_LOCALIDADES, timeout=TIMEOUT).json())
+            malha = normalizar_malha(sessao.get(URL_MALHA, timeout=TIMEOUT).json(), codigos)
+            micro = microrregioes(sessao.get(URL_LOCALIDADES, timeout=TIMEOUT).json())
         except (requests.RequestException, ValueError, ErroTerritorio) as exc:
             raise CommandError(str(exc)) from exc
         if set(micro) != codigos:

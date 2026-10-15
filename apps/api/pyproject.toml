@@ -25,9 +25,12 @@ django_settings_module = "config.settings"
 DJANGO_SETTINGS_MODULE = "config.settings"
 python_files = ["test_*.py"]
 testpaths = ["tests"]
-addopts = "-ra --strict-markers"
+addopts = "-ra --strict-markers -m \"not network\""
 filterwarnings = ["ignore:No directory at:UserWarning", "ignore::DeprecationWarning:weasyprint.*"]
-markers = ["golden: números de ouro conferidos no SIDRA"]
+markers = [
+  "golden: números de ouro conferidos no SIDRA",
+  "network: acessa a internet de verdade (IBGE)",
+]
 
 [tool.coverage.run]
 source = ["indicadores", "analise", "ingestao"]

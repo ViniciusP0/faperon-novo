@@ -7,6 +7,8 @@ from typing import Any
 
 import requests
 
+from ingestao.tls import sessao_ibge
+
 log = logging.getLogger(__name__)
 
 BASE_URL = "https://servicodados.ibge.gov.br/api/v3/agregados"
@@ -30,7 +32,7 @@ class SidraCliente:
         dormir: Callable[[float], None] = time.sleep,
         timeout: float = 120.0,
     ) -> None:
-        self.sessao = sessao or requests.Session()
+        self.sessao = sessao or sessao_ibge()
         self.tentativas = tentativas
         self.espera_base = espera_base
         self.dormir = dormir
