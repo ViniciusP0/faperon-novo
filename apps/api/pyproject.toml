@@ -25,13 +25,14 @@ django_settings_module = "config.settings"
 DJANGO_SETTINGS_MODULE = "config.settings"
 python_files = ["test_*.py"]
 testpaths = ["tests"]
-addopts = "-ra --strict-markers -m \"not network\""
+addopts = "-ra --strict-markers -m \"not network and not llm\""
 filterwarnings = ["ignore:No directory at:UserWarning", "ignore::DeprecationWarning:weasyprint.*"]
 markers = [
   "golden: números de ouro conferidos no SIDRA",
   "network: acessa a internet de verdade (IBGE)",
+  "llm: chama a API da Anthropic de verdade (perguntas de ouro do Zétele)",
 ]
 
 [tool.coverage.run]
-source = ["indicadores", "analise", "ingestao"]
+source = ["indicadores", "analise", "ingestao", "zetele"]
 omit = ["*/migrations/*", "*/management/*", "*/tests/*"]

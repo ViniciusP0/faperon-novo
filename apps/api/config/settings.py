@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "indicadores",
     "analise",
     "observatorio",
+    "zetele",
     "rest_framework",
     "drf_spectacular",
     "django.contrib.auth",
@@ -132,6 +133,8 @@ REST_FRAMEWORK = {
         "anon": os.environ.get("ANON_RATE_LIMIT", "300/min"),
         "pdf": os.environ.get("PDF_RATE_LIMIT", "10/min"),
         "pdf_global": os.environ.get("PDF_GLOBAL_RATE_LIMIT", "30/min"),
+        "zetele": os.environ.get("ZETELE_RATE_LIMIT", "6/min"),
+        "zetele_global": os.environ.get("ZETELE_GLOBAL_RATE_LIMIT", "30/min"),
     },
     "EXCEPTION_HANDLER": "indicadores.api.erros.tratador_de_excecoes",
     "NUM_PROXIES": int(os.environ.get("NUM_PROXIES", "1")),
@@ -144,6 +147,13 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     "SCHEMA_PATH_PREFIX": r"/api/v1",
 }
+
+# Zétele (ADR 0029). Sem chave, o assistente responde só às perguntas prontas do front.
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+ZETELE_MODELO = os.environ.get("ZETELE_MODELO", "claude-sonnet-5-5")
+ZETELE_LIMITE_DIARIO = int(os.environ.get("ZETELE_LIMITE_DIARIO", "1500"))
+ZETELE_SIMULTANEOS = int(os.environ.get("ZETELE_SIMULTANEOS", "3"))
+ZETELE_TERMOS_BLOQUEADOS = env_lista("ZETELE_TERMOS_BLOQUEADOS")
 
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "same-origin"

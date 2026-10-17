@@ -4,7 +4,11 @@ x-api: &api
   build:
     context: ./apps/api
     target: prod
-  env_file: .env
+  # .env.local guarda segredos (ANTHROPIC_API_KEY); opcional, fora do git. Exige Compose >= 2.24.
+  env_file:
+    - path: .env
+    - path: .env.local
+      required: false
   environment:
     POSTGRES_HOST: db
   volumes:

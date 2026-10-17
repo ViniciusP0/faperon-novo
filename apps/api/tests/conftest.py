@@ -222,3 +222,10 @@ def dados_observatorio(municipios: list[Municipio], carga: Carga) -> dict[str, P
     Municipio.objects.filter(codigo_ibge__in=[cab, cac]).update(microrregiao="Vilhena")
     atualizar_views()
     return {"soja": soja, "cafe": cafe, "bovino": bovino, "leite": leite, "vacas": vacas}
+
+
+@pytest.fixture(autouse=True)
+def sem_chave_da_anthropic(request: pytest.FixtureRequest, settings: Any) -> None:
+    """Nenhum teste fala com a Anthropic de verdade, exceto os marcados com llm."""
+    if request.node.get_closest_marker("llm") is None:
+        settings.ANTHROPIC_API_KEY = ""
