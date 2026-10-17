@@ -12,6 +12,7 @@ from ingestao.servico import CargaFalhou, executar_carga
 from ingestao.servico_indice import executar_carga_ipca
 from ingestao.sidra import SidraCliente
 from ingestao.tabelas import TABELA_IPCA, TABELAS
+from zetele.expurgo import expurgar_perguntas
 
 log = logging.getLogger(__name__)
 VERIFICACAO_A_CADA = 3600  # segundos
@@ -48,6 +49,13 @@ def rodar_ciclo(cliente: SidraCliente) -> int:
             log.info("scheduler: tabela %s -> %s", tabela, carga.status)
         except CargaFalhou as exc:
             log.error("scheduler: tabela %s falhou: %s", tabela, exc)
+    try:
+        apagadas = expurgar_perguntas()
+        if apagadas:
+            log.info("scheduler: %s perguntas do Zétele expurgadas (90 dias)", apagadas)
+    except Exception:
+        # o expurgo não pode derrubar a ingestão; a próxima passada tenta de novo
+        log.exception("scheduler: expurgo do Zétele falhou")
     return tentadas
 
 
