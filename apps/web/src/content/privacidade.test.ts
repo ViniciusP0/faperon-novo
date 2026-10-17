@@ -13,6 +13,7 @@ describe("Política de Privacidade descreve só o que o sistema faz hoje", () =>
 
   it("explica que o login não coleta nem guarda nada", () => {
     expect(texto).toMatch(/login[^.]*não envia nem guarda/i);
+    expect(texto).toMatch(/protótipo[^.]*fica salvo só no seu navegador/);
   });
 
   it("informa o tratamento técnico do IP para limitar abusos, sem gravar em banco", () => {

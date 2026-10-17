@@ -137,7 +137,8 @@ function ZeteleNaPagina({ pagina }: { pagina: PaginaComZetele }) {
         <div className="pointer-events-auto">
           <SaudacaoZetele bloqueada={aberto} onAbrir={abrir} />
         </div>
-        <div className="pointer-events-auto">
+        {/* sem pointer-events aqui: só a área do corpo dentro do botão recebe clique */}
+        <div>
           <BotaoZetele ref={botaoRef} aberto={aberto} pose={pose} onClick={() => (aberto ? fechar() : abrir())} />
         </div>
       </div>

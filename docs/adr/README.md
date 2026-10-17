@@ -32,3 +32,4 @@ Decisões de arquitetura no formato MADR (Contexto, Opções, Decisão, Consequ�
 - [0028](0028-observatorio-como-contexto-de-leitura-com-valores-deflacionados-pelo-ipca.md) — Observatório como contexto de leitura, com valores deflacionados pelo IPCA
 - [0029](0029-zetele-assistente-com-llm-restrito-ao-site-e-numeros-conferidos-em-codigo.md) — Zétele, assistente com LLM restrito ao site e números conferidos em código
 - [0030](0030-registro-anonimo-das-perguntas-do-zetele-por-90-dias.md) — Registro anônimo das perguntas do Zétele por 90 dias
+- [0031](0031-prototipo-do-sistema-interno-so-no-front-com-dados-no-navegador.md) — Protótipo do sistema interno só no front, com dados fictícios no navegador

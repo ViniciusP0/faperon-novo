@@ -36,3 +36,14 @@ test("no celular, o balão do Zétele mostra o campo e o botão de fechar", asyn
   await expect(page.getByRole("button", { name: "Fechar o Zétele" })).toBeInViewport();
   await expect(page.getByLabel("Sua pergunta")).toBeInViewport();
 });
+
+test("celular: o protótipo do sistema não tem rolagem horizontal", async ({ page }) => {
+  await page.goto("/login");
+  await page.getByRole("button", { name: "Entrar como Ana Ribeiro" }).click();
+  for (const rota of ["/sistema", "/sistema/agenda", "/sistema/frotas", "/sistema/espacos"]) {
+    await page.goto(rota);
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    const excesso = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(excesso, rota).toBeLessThanOrEqual(1);
+  }
+});

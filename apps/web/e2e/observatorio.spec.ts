@@ -1,5 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { semAreaDoZetele } from "./sem-zetele";
+
+test.beforeEach(({ page }) => semAreaDoZetele(page));
 
 const BLOCOS = ["O tamanho e a composição do agro", "Por que a produção cresceu", "Onde a produção acontece", "Rebanhos e leite"];
 

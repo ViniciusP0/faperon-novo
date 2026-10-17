@@ -1,5 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { semAreaDoZetele } from "./sem-zetele";
+
+test.beforeEach(({ page }) => semAreaDoZetele(page));
 
 const cartoes = (page: import("@playwright/test").Page) => page.locator('section[aria-label="Lista de notícias"] > ul > li');
 

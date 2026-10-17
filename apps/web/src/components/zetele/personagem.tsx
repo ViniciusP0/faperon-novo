@@ -7,7 +7,7 @@ const ORDEM: Pose[] = ["acenando", "tablet", "apontando"];
 /** As três poses ficam carregadas e empilhadas; trocar de pose é só opacidade (sem piscar). */
 export function Personagem({ pose, className }: { pose: Pose; className?: string }) {
   return (
-    <span aria-hidden="true" className={cn("relative block", className)}>
+    <span aria-hidden="true" className={cn("pointer-events-none relative block", className)}>
       {ORDEM.map((p) => (
         <Image
           key={p}

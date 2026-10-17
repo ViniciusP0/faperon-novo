@@ -268,8 +268,8 @@ Registro cronológico por área, atualizado em 24/09/2026. Cada entrada tem sint
 ### `src/lib/tema.test.ts` falha no Node 26
 - **Sintoma:** 3 testes falham com `localStorage` indefinido ao rodar `npm test` no Node 26.8.1 local.
 - **Causa:** mudança de ambiente do Node 26 com o jsdom; não é do Zétele (falha também sem as mudanças).
-- **Solução ou contorno:** nenhuma ainda; o CI usa Node 24.
-- **Status:** em aberto.
+- **Solução ou contorno:** `apps/web/vitest.config.ts` passa `--no-experimental-webstorage` aos workers do Vitest; o `localStorage` do Node deixava de esconder o do jsdom.
+- **Status:** resolvido.
 
 ### Remoção de fundo da arte do Zétele
 - **Sintoma:** o modelo padrão do `rembg` 2.0.85 (`bria-rmbg`) deixava o branco dos olhos transparente; o `u2net` deixava o vão entre braço e tronco e a sombra.
