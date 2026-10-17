@@ -76,3 +76,34 @@ export interface EstadoFrota {
 }
 
 export type SituacaoVeiculo = "disponivel" | "reservado" | "em_manutencao";
+
+export type IdEspaco = "auditorio" | "hub" | "sala-reunioes" | "nucleo-tecnico" | "sala-presidencia";
+
+export interface Espaco {
+  id: IdEspaco;
+  nome: string;
+  capacidade: number;
+}
+
+export type PeriodoEspaco = "dia_todo" | "manha" | "tarde" | "noite" | "horario";
+export type TipoEventoEspaco = "reuniao" | "curso" | "palestra" | "institucional" | "outro";
+export type StatusPedido = "pendente" | "aprovado" | "recusado" | "cancelado";
+
+export interface PedidoEspaco {
+  id: string;
+  espacoId: IdEspaco;
+  funcionarioId: string;
+  data: string;
+  periodo: PeriodoEspaco;
+  /** Horário já resolvido a partir do período (HH:mm). */
+  inicio: string;
+  fim: string;
+  tipo: TipoEventoEspaco;
+  nome: string;
+  participantes: number;
+  coffeeBreak: boolean;
+  observacoes: string;
+  status: StatusPedido;
+  motivoRecusa: string;
+  criadoEm: string;
+}
