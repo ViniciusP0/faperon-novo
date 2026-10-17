@@ -36,7 +36,7 @@ export function BarraSistema() {
   }
 
   return (
-    <div className="vidro-barra z-30 md:sticky md:top-[72px]">
+    <div className="vidro-barra z-30 md:sticky md:top-[72px] print:hidden">
       <div className="container flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-2.5">
         <nav aria-label="Seções do sistema">
           <ul className="flex flex-wrap gap-1">

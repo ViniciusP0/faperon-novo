@@ -520,3 +520,22 @@ body {
 .area-sistema * { scrollbar-width: thin; scrollbar-color: rgb(0 96 78 / 0.35) transparent; }
 .area-sistema :focus-visible { outline: 2px solid var(--brand-light); outline-offset: 2px; }
 .area-sistema table { font-variant-numeric: tabular-nums; }
+
+/* Impressão dos relatórios do sistema: só o relatório, em fundo branco, sem cabeçalho, rodapé nem Zétele. */
+@media print {
+  body:has(.relatorio-impressao) > :not(main) {
+    display: none !important;
+  }
+  body:has(.relatorio-impressao),
+  body:has(.relatorio-impressao) main {
+    background: #fff !important;
+    color: #111 !important;
+  }
+  body:has(.relatorio-impressao) .container {
+    max-width: none;
+    padding: 0;
+  }
+  @page {
+    margin: 14mm;
+  }
+}
