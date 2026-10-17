@@ -6,6 +6,7 @@ export interface Funcionario {
   nome: string;
   area: string;
   gestorFrota: boolean;
+  gestorEspacos: boolean;
 }
 
 export type TipoEvento = "reuniao" | "viagem" | "compromisso";
