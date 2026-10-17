@@ -90,6 +90,79 @@ describe("proxyParaApi", () => {
       new Request("http://site.test/api/v1/zetele/perguntar", { method: "POST", body: "x".repeat(16_385) }),
     );
     expect(res.status).toBe(413);
+    expect(await res.json()).toEqual({ erro: "Corpo grande demais" });
+    expect(fetchFalso).not.toHaveBeenCalled();
+  });
+
+  it("aceita corpo de exatamente 16 KB", async () => {
+    const fetchFalso = vi.fn().mockResolvedValue(new Response("{}", { status: 200 }));
+    vi.stubGlobal("fetch", fetchFalso);
+    const corpo = "x".repeat(16_384);
+    const res = await proxyParaApi(new Request("http://site.test/api/v1/zetele/perguntar", { method: "POST", body: corpo }));
+    expect(res.status).toBe(200);
+    expect(fetchFalso.mock.calls[0]![1].body).toBe(corpo);
+  });
+
+  it("conta bytes, não caracteres", async () => {
+    const fetchFalso = vi.fn();
+    vi.stubGlobal("fetch", fetchFalso);
+    // 9 000 caracteres, 18 000 bytes em UTF-8.
+    const res = await proxyParaApi(
+      new Request("http://site.test/api/v1/zetele/perguntar", { method: "POST", body: "é".repeat(9_000) }),
+    );
+    expect(res.status).toBe(413);
+    expect(fetchFalso).not.toHaveBeenCalled();
+  });
+
+  it("corta um stream sem content-length assim que passa de 16 KB, sem ler o resto", async () => {
+    const fetchFalso = vi.fn();
+    vi.stubGlobal("fetch", fetchFalso);
+    let pedacos = 0;
+    // 1 MB em pedaços de 4 KB: ler tudo antes de checar puxaria os 256 pedaços. Finito de propósito, para um
+    // proxy que bufferiza falhar no assert em vez de travar o teste enchendo a memória.
+    const fluxo = new ReadableStream<Uint8Array>({
+      pull(controle) {
+        pedacos++;
+        controle.enqueue(new Uint8Array(4_096));
+        if (pedacos === 256) controle.close();
+      },
+    });
+    const res = await proxyParaApi(
+      new Request("http://site.test/api/v1/zetele/perguntar", { method: "POST", body: fluxo, duplex: "half" } as RequestInit),
+    );
+    expect(res.status).toBe(413);
+    expect(await res.json()).toEqual({ erro: "Corpo grande demais" });
+    expect(pedacos).toBeLessThan(10);
+    expect(fetchFalso).not.toHaveBeenCalled();
+  });
+
+  it("content-length declarado acima do limite: 413 sem ler o corpo", async () => {
+    const fetchFalso = vi.fn();
+    vi.stubGlobal("fetch", fetchFalso);
+    const req = new Request("http://site.test/api/v1/zetele/perguntar", {
+      method: "POST",
+      headers: { "content-length": "500000000" },
+      body: "x",
+    });
+    const res = await proxyParaApi(req);
+    expect(res.status).toBe(413);
+    expect(req.bodyUsed).toBe(false);
+    expect(fetchFalso).not.toHaveBeenCalled();
+  });
+
+  it("corpo que falha no meio da leitura vira 400", async () => {
+    const fetchFalso = vi.fn();
+    vi.stubGlobal("fetch", fetchFalso);
+    const fluxo = new ReadableStream<Uint8Array>({
+      pull(controle) {
+        controle.error(new Error("cliente desconectou"));
+      },
+    });
+    const res = await proxyParaApi(
+      new Request("http://site.test/api/v1/zetele/perguntar", { method: "POST", body: fluxo, duplex: "half" } as RequestInit),
+    );
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ erro: "Corpo inválido" });
     expect(fetchFalso).not.toHaveBeenCalled();
   });
 });
