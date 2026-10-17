@@ -4,6 +4,7 @@ import hashlib
 import json
 import threading
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 from django.template.loader import render_to_string
@@ -22,7 +23,8 @@ from indicadores.erros import ConsultaInvalida, ServicoOcupado
 from indicadores.models import StatusValor
 from ingestao.models import Carga
 
-VERSAO_TEMPLATE = "3"
+VERSAO_TEMPLATE = "4"  # 4: capa do informativo como primeira página
+PASTA_TEMPLATES = Path(__file__).resolve().parent / "templates" / "analise"  # base das imagens do HTML (capa.jpg)
 MAX_RELATORIOS = 200  # teto de PDFs guardados por versão dos dados (~centenas de KB cada)
 
 # Gunicorn gthread: várias threads por processo. Pango/fontconfig não são confiáveis em
@@ -37,7 +39,7 @@ def renderizar(html: str) -> bytes:
     if not _RENDERIZACAO.acquire(timeout=ESPERA_RENDERIZACAO):
         raise ServicoOcupado("Geração de PDF ocupada no momento; tente novamente em instantes")
     try:
-        pdf = HTML(string=html).write_pdf()
+        pdf = HTML(string=html, base_url=str(PASTA_TEMPLATES)).write_pdf()
     finally:
         _RENDERIZACAO.release()
     assert pdf is not None
@@ -166,6 +168,7 @@ def _contexto(r: ResultadoAnalise, codigos_comparacao: list[str]) -> dict[str, A
             timezone.localtime(atualizado).strftime("%d/%m/%Y %H:%M") if atualizado else "—"
         ),
         "gerado_em": timezone.localtime().strftime("%d/%m/%Y %H:%M"),
+        "emitido_em": timezone.localtime().strftime("%d/%m/%Y"),
     }
 
 

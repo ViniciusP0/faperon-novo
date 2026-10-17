@@ -10,6 +10,18 @@
     @bottom-left { content: "FAPERON · Central de Inteligência Agropecuária"; font-size: 8pt; color: #666; }
     @bottom-right { content: "Página " counter(page) " de " counter(pages); font-size: 8pt; color: #666; }
   }
+  /* Capa do informativo, igual à do PDF do site original: página inteira sem margem nem rodapé. */
+  @page capa {
+    margin: 0;
+    background: url(capa.jpg) no-repeat center / 100% 100%;
+    @bottom-left { content: none; }
+    @bottom-right { content: none; }
+  }
+  .capa { page: capa; height: 296mm; overflow: hidden; padding: 82mm 14mm 0; box-sizing: border-box; color: #fff; break-after: page; }
+  .capa h1 { font-size: 27pt; line-height: 1.2; margin: 0 0 7mm; color: #fff; }
+  .capa .linha { border-top: 1.5mm solid #148040; margin-bottom: 7mm; }
+  .capa .produto { font-size: 24pt; font-weight: bold; color: #16a34a; margin: 0 0 6mm; }
+  .capa p { font-size: 13pt; line-height: 1.35; margin: 0 0 3.5mm; }
   body { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 9.5pt; color: #1f2933; line-height: 1.45; }
   header { border-bottom: 3px solid #2E7D32; padding-bottom: 8px; margin-bottom: 14px; }
   .marca { font-size: 9pt; letter-spacing: 0.08em; text-transform: uppercase; color: #2E7D32; font-weight: bold; }
@@ -31,6 +43,17 @@
 </style>
 </head>
 <body>
+<section class="capa">
+  <h1>Informativo Automatizado de Dados Agrícolas</h1>
+  <div class="linha"></div>
+  <div class="produto">{{ produto }}</div>
+  <p>Indicador: {{ indicador }} ({{ unidade }})</p>
+  <p>Localidade: {{ escopo }}</p>
+  <p>Período de Análise: {{ inicio }} a {{ fim }}</p>
+  <p>Fonte: {{ fonte }}.</p>
+  <p>Data de Emissão: {{ emitido_em }}</p>
+</section>
+
 <header>
   <div class="marca">FAPERON · Central de Inteligência Agropecuária</div>
   <h1>{{ titulo }}</h1>

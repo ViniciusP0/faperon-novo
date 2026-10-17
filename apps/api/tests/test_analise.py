@@ -2,6 +2,7 @@ from decimal import Decimal
 
 import pytest
 from django.core.cache import cache
+from django.template.loader import render_to_string
 from hypothesis import given
 from hypothesis import strategies as st
 from rest_framework.test import APIClient
@@ -331,7 +332,7 @@ def test_renderizacao_de_pdf_e_serializada_por_processo(monkeypatch: pytest.Monk
     trava = threading.Lock()
 
     class HtmlFalso:
-        def __init__(self, string: str) -> None:
+        def __init__(self, string: str, base_url: str | None = None) -> None:
             pass
 
         def write_pdf(self) -> bytes:
@@ -366,7 +367,7 @@ def test_renderizacao_ocupada_demais_levanta_servico_ocupado(
     finally:
         pdf._RENDERIZACAO.release()
     # liberado o bloqueio, a renderização volta a funcionar
-    monkeypatch.setattr(pdf, "HTML", lambda string: type("H", (), {"write_pdf": lambda self: b"%PDF"})())
+    monkeypatch.setattr(pdf, "HTML", lambda string, base_url=None: type("H", (), {"write_pdf": lambda self: b"%PDF"})())
     assert pdf.renderizar("<p/>") == b"%PDF"
 
 
@@ -475,3 +476,20 @@ def test_produto_igual_ao_indicador_nao_repete_o_nome_na_frase() -> None:
     assert unico == [
         "Em Rondônia, o único ano com dados de efetivo de vacas ordenhadas no período é 2024: 9 Cabeças."
     ]
+
+
+@pytest.mark.django_db
+def test_relatorio_pdf_traz_a_capa_do_informativo(api: APIClient, dados_soja: Produto) -> None:
+    conteudo = api.get(f"/api/v1/relatorio.pdf?{Q}").content
+    assert b"/Width 1488" in conteudo  # capa.jpg embutida como fundo da primeira página
+
+
+def test_capa_do_relatorio_usa_os_dados_do_recorte() -> None:
+    html = render_to_string(
+        "analise/relatorio.html",
+        {"produto": "Soja", "escopo": "Rondônia", "inicio": 2022, "fim": 2024, "emitido_em": "17/10/2026"},
+    )
+    assert "Informativo Automatizado de Dados Agrícolas" in html
+    assert "Localidade: Rondônia" in html
+    assert "Período de Análise: 2022 a 2024" in html
+    assert "Data de Emissão: 17/10/2026" in html
