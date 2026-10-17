@@ -41,7 +41,7 @@ export function SaudacaoZetele({ bloqueada, onAbrir }: { bloqueada: boolean; onA
   return (
     <div
       role="status"
-      className="zetele-balao mb-24 flex items-center gap-1 rounded-2xl rounded-br-sm border border-line bg-card py-1.5 pl-4 pr-1.5 text-sm text-ink shadow-lg"
+      className="zetele-balao mb-36 flex items-center gap-1 rounded-2xl rounded-br-sm border border-line bg-card py-1.5 pl-4 pr-1.5 text-sm text-ink shadow-lg"
     >
       <button
         type="button"
