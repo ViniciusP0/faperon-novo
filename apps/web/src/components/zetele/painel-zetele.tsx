@@ -52,7 +52,7 @@ export function PainelZetele(p: Props) {
           p.onFechar();
         }
       }}
-      className="fixed inset-x-0 bottom-0 z-30 flex max-h-[80dvh] flex-col rounded-t-2xl border border-line bg-card text-ink shadow-2xl sm:inset-x-auto sm:bottom-4 sm:right-[13.25rem] sm:max-h-[min(80dvh,600px)] sm:w-[360px] sm:rounded-2xl"
+      className="fixed inset-x-0 bottom-0 z-30 flex max-h-[80dvh] flex-col rounded-t-2xl border border-line bg-card text-ink shadow-2xl sm:inset-x-auto sm:bottom-4 sm:right-[16rem] sm:max-h-[min(80dvh,600px)] sm:w-[360px] sm:rounded-2xl"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <div className="flex items-center gap-3 border-b border-line px-4 py-3">
