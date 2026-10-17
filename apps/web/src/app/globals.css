@@ -441,3 +441,40 @@ body {
     }
   }
 }
+
+/* Mapa dos sindicatos (Leaflet): popup e tiles acompanham o tema. */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--card);
+  color: var(--ink);
+}
+.leaflet-popup-content-wrapper {
+  overflow: hidden;
+  padding: 0;
+  border-radius: 1rem;
+}
+.leaflet-popup-content {
+  margin: 0;
+  width: 280px !important;
+}
+.leaflet-container a.leaflet-popup-close-button {
+  top: 8px;
+  right: 8px;
+  display: flex;
+  height: 28px;
+  width: 28px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: rgb(0 0 0 / 0.55);
+  color: #fff;
+}
+:root[data-theme="dark"] .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.6);
+}
+.leaflet-container .leaflet-popup-content p {
+  margin: 0;
+}
+:root[data-theme="dark"] .leaflet-overlay-pane path[fill="#e6f2ea"] {
+  fill: #0e1915;
+}

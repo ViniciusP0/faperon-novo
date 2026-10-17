@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { CtaDuplo } from "@/components/site/cta-duplo";
 import { Destaque, HeroPagina } from "@/components/site/hero-pagina";
-import { ListaSindicatos } from "@/components/sistema/lista-sindicatos";
+import { MapaSindicatos } from "@/components/sistema/mapa-sindicatos";
 import { Fontes, NavSistema } from "@/components/sistema/nav-sistema";
 import { SINDICATOS, SINDICATOS_TEXTO as c } from "@/content/sindicatos";
 import { Revelar } from "@/components/site/revelar";
@@ -37,9 +37,9 @@ export default function SindicatosRuraisPage() {
             Sindicatos dos Produtores Rurais
           </h2>
           <p className="mt-2 mb-8 max-w-[70ch] leading-relaxed text-ink-muted">
-            Contatos conforme o cadastro publicado no site da FAPERON. Alguns sindicatos atendem mais de um município e aparecem com os dois nomes.
+            Clique em um pin para ver a foto da sede, o endereço e os contatos, conforme o cadastro publicado no site da FAPERON. Alguns sindicatos atendem mais de um município e aparecem com os dois nomes.
           </p>
-          <ListaSindicatos sindicatos={SINDICATOS} />
+          <MapaSindicatos sindicatos={SINDICATOS} />
           <Fontes fontes={[{ rotulo: "Site da FAPERON, Sindicatos Rurais", url: "https://www.faperon.com.br/mapa-sindicatos" }]} />
         </Revelar>
 

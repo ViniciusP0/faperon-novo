@@ -6,15 +6,24 @@ export interface Sindicato {
   endereco: string;
   telefones: string[];
   email: string;
+  lat: number;
+  lng: number;
+  /** Quão exata é a coordenada: `endereco` (número da rua), `rua` (só a rua) ou `cidade` (centro do município). */
+  precisao: "endereco" | "rua" | "cidade";
+  /** Fachada, em `public/sindicatos`; ausente quando o site original da FAPERON não tem foto. */
+  foto?: string;
 }
 
-/** Cadastro copiado da página "Sindicatos Rurais" do site atual da FAPERON em 02/10/2026. */
-export const SINDICATOS: Sindicato[] = dados;
+/**
+ * Cadastro copiado da página "Sindicatos Rurais" do site atual da FAPERON em 02/10/2026. As fotos vieram da mesma página
+ * em 17/10/2026; as coordenadas foram obtidas no Nominatim (OpenStreetMap) a partir do endereço.
+ */
+export const SINDICATOS = dados as Sindicato[];
 
 export const SINDICATOS_TEXTO = {
   seo: {
     titulo: "Sindicatos Rurais",
-    descricao: "Encontre o Sindicato dos Produtores Rurais do seu município em Rondônia: presidente, telefone, e-mail e endereço.",
+    descricao: "Mapa dos Sindicatos dos Produtores Rurais de Rondônia: encontre o do seu município com foto, endereço, presidente, telefone e e-mail.",
   },
   hero: {
     antes: "Encontre o sindicato rural",
