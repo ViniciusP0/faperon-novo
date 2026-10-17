@@ -10,11 +10,11 @@ export function ehPaginaComZetele(caminho: string | null): caminho is PaginaComZ
 }
 
 export type Pose = "acenando" | "tablet" | "apontando";
-/** Arte recortada de Gemini_Generated_Image_1wmk3o1wmk3o1wmk.jpeg (Task 11). Trocar a extensão aqui se virar WebP. */
+/** Arte recortada de Gemini_Generated_Image_1wmk3o1wmk3o1wmk.jpeg (Task 11), em WebP sem fundo. */
 export const POSES: Record<Pose, string> = {
-  acenando: "/zetele/acenando.png",
-  tablet: "/zetele/tablet.png",
-  apontando: "/zetele/apontando.png",
+  acenando: "/zetele/acenando.webp",
+  tablet: "/zetele/tablet.webp",
+  apontando: "/zetele/apontando.webp",
 };
 
 export interface PerguntaPronta {

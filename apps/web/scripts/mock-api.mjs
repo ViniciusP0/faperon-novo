@@ -28,6 +28,19 @@ const ANO_MIN = 2000;
 const ANO_MAX = 2024;
 const ATUALIZADO_EM = "2026-09-24T14:00:00Z";
 
+// Zétele: o mock não lê o corpo do POST; toda pergunta recebe a resposta de soja.
+const ZETELE_RESPOSTA = {
+  status: "respondida",
+  texto: "Em 2024, o município que mais produziu soja foi Ariquemes (dados fictícios do mock).",
+  fontes: [{
+    rotulo: "IBGE – Pesquisa Agrícola Municipal (PAM), tabela 5457, ano 2024",
+    url_fonte: "https://sidra.ibge.gov.br/Tabela/5457",
+    url_interna: "/painel?segmento=agricultura&produto=soja-em-grao&indicador=quantidade-produzida&fim=2024",
+    atualizado_em: ATUALIZADO_EM,
+  }],
+  sugestoes: ["Como foi a evolução da soja nos últimos 10 anos?"],
+};
+
 const IND = {
   "area-plantada": { slug: "area-plantada", nome: "Área plantada", unidade: "Hectares", agregacao: "soma" },
   "area-colhida": { slug: "area-colhida", nome: "Área colhida", unidade: "Hectares", agregacao: "soma" },
@@ -557,6 +570,8 @@ function rota(url) {
       const { inicio, fim } = periodo(sp);
       return { pdf: pdfMinimo(a.titulo), nome: `faperon-${sp.get("produto")}-${sp.get("indicador")}-${inicio}-${fim}.pdf` };
     }
+    case "/api/v1/zetele/estado": return { json: { disponivel: true, motivo: null } };
+    case "/api/v1/zetele/perguntar": return { json: ZETELE_RESPOSTA };
     default: throw new HttpError(404, "Rota não encontrada");
   }
 }

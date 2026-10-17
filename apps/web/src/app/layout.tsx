@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { FundoParallax } from "@/components/site/fundo-parallax";
 import { SiteFooter } from "@/components/site/footer";
 import { SiteHeader } from "@/components/site/header";
+import { Zetele } from "@/components/zetele/zetele";
 import { SITE_URL } from "@/lib/site";
 import { SCRIPT_TEMA } from "@/lib/tema";
 import { Providers } from "./providers";
@@ -41,6 +42,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <Providers>{children}</Providers>
         </main>
         <SiteFooter />
+        <Zetele />
       </body>
     </html>
   );

@@ -28,3 +28,11 @@ for (const rota of ["/sobre", "/informativos-tecnicos", "/noticias", "/fale-cono
     expect(excesso).toBeLessThanOrEqual(1);
   });
 }
+
+test("no celular, o balão do Zétele mostra o campo e o botão de fechar", async ({ page }) => {
+  await page.addInitScript(() => window.sessionStorage.setItem("zetele-saudou", "1"));
+  await page.goto("/");
+  await page.getByRole("button", { name: "Falar com o Zétele, assistente do site" }).click();
+  await expect(page.getByRole("button", { name: "Fechar o Zétele" })).toBeInViewport();
+  await expect(page.getByLabel("Sua pergunta")).toBeInViewport();
+});
