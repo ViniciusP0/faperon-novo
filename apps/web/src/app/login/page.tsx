@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { FormularioLogin } from "@/components/login/formulario-login";
+import { EscolhaFuncionario } from "@/components/login/escolha-funcionario";
 import { Alert } from "@/components/ui/feedback";
+import { PROTOTIPO } from "@/content/sistema/funcionarios";
 
 export const metadata: Metadata = {
   title: "Acessar o sistema",
@@ -12,18 +13,18 @@ export const metadata: Metadata = {
 export default function LoginPage() {
   return (
     <div className="flex min-h-[calc(100vh-72px)] items-center justify-center bg-surface-alt px-4 py-12">
-      <div className="w-full max-w-sm rounded-2xl border-t-4 border-brand-light bg-card p-8 shadow-md">
+      <div className="w-full max-w-md rounded-2xl border-t-4 border-brand-light bg-card p-8 shadow-md">
         <div className="mb-6 flex flex-col items-center text-center">
           <Image src="/marca-faperon.png" alt="" width={56} height={56} className="h-14 w-14" />
           <h1 className="mt-3 text-xl font-semibold text-ink">Acessar o sistema</h1>
-          <p className="mt-1 text-sm text-ink-muted">Entre com seu e-mail e senha da FAPERON.</p>
+          <p className="mt-1 text-sm text-ink-muted">Escolha um funcionário de exemplo para conhecer a agenda, a frota e o agendamento de espaços.</p>
         </div>
 
         <Alert tone="info" className="mb-4">
-          O acesso ao sistema ainda está em desenvolvimento e abrirá em breve.
+          {PROTOTIPO.faixa} Não há contas reais: o acesso com e-mail e senha da FAPERON virá na versão definitiva.
         </Alert>
 
-        <FormularioLogin />
+        <EscolhaFuncionario />
 
         <p className="mt-6 text-center text-sm text-ink-muted">
           <Link href="/" className="font-medium text-brand-fg hover:underline">

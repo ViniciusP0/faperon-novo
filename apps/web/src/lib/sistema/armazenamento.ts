@@ -21,25 +21,30 @@ function sessao(): Storage | null {
   }
 }
 
+/** A memória só vale quando o storage não existe ou lança erro; com storage funcionando, ele manda. */
 function lerBruto(storage: Storage | null, chave: string): string | null {
-  try {
-    const valor = storage?.getItem(chave);
-    if (valor != null) return valor;
-  } catch {
-    // storage bloqueado: vale o que está em memória
+  if (storage) {
+    try {
+      return storage.getItem(chave);
+    } catch {
+      // storage bloqueado: cai para a memória
+    }
   }
   return memoria.get(chave) ?? null;
 }
 
 function gravarBruto(storage: Storage | null, chave: string, valor: string | null): void {
+  if (storage) {
+    try {
+      if (valor == null) storage.removeItem(chave);
+      else storage.setItem(chave, valor);
+      return;
+    } catch {
+      // storage bloqueado: guarda em memória
+    }
+  }
   if (valor == null) memoria.delete(chave);
   else memoria.set(chave, valor);
-  try {
-    if (valor == null) storage?.removeItem(chave);
-    else storage?.setItem(chave, valor);
-  } catch {
-    // já ficou em memória
-  }
 }
 
 export function ler<T>(chave: string, padrao: T): T {
