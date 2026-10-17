@@ -142,8 +142,8 @@ export function Agenda() {
           </div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] table-fixed border-collapse">
-              <caption className="mb-2 text-left text-lg font-semibold capitalize text-ink">
-                {nomeDoMes(mes.mes0)} de {mes.ano}
+              <caption className="mb-2 text-left text-lg font-semibold text-ink">
+                {nomeDoMes(mes.mes0).replace(/^./, (l) => l.toUpperCase())} de {mes.ano}
               </caption>
               <thead>
                 <tr>

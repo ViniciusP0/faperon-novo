@@ -31,26 +31,23 @@ function StatusPedidoSelo({ status }: { status: StatusPedido }) {
   return <Badge className={cn("px-2 py-0", corStatus[status])}>{ROTULO_STATUS[status]}</Badge>;
 }
 
-function domingoDa(data: string): string {
-  return somarDias(data, -new Date(`${data}T12:00`).getDay());
-}
-
 function PainelSemana() {
   const { hoje, pedidos } = useSistema();
-  const [inicio, setInicio] = useState(() => domingoDa(hoje));
+  // começa hoje: os pedidos que importam são os que vêm pela frente
+  const [inicio, setInicio] = useState(hoje);
   const dias = Array.from({ length: 7 }, (_, i) => somarDias(inicio, i));
   const visiveis = pedidos.filter((p) => p.status === "pendente" || p.status === "aprovado");
 
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <Button variant="ghost" size="sm" onClick={() => setInicio(somarDias(inicio, -7))} aria-label="Semana anterior">
+        <Button variant="ghost" size="sm" onClick={() => setInicio(somarDias(inicio, -7))} aria-label="7 dias antes">
           <ChevronLeft aria-hidden="true" className="h-4 w-4" />
         </Button>
-        <Button variant="outline" size="sm" onClick={() => setInicio(domingoDa(hoje))}>
-          Esta semana
+        <Button variant="outline" size="sm" onClick={() => setInicio(hoje)}>
+          Hoje
         </Button>
-        <Button variant="ghost" size="sm" onClick={() => setInicio(somarDias(inicio, 7))} aria-label="Próxima semana">
+        <Button variant="ghost" size="sm" onClick={() => setInicio(somarDias(inicio, 7))} aria-label="7 dias depois">
           <ChevronRight aria-hidden="true" className="h-4 w-4" />
         </Button>
         <span className="text-sm text-ink-muted">
@@ -59,7 +56,7 @@ function PainelSemana() {
       </div>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[900px] table-fixed border-collapse text-xs">
-          <caption className="sr-only">Agendamentos dos espaços na semana</caption>
+          <caption className="sr-only">Agendamentos dos espaços em 7 dias</caption>
           <thead>
             <tr>
               <th scope="col" className="w-36 pb-2 text-left text-ink-muted">Espaço</th>
@@ -288,7 +285,7 @@ export function Espacos() {
         rotulo="Agendamento de espaços"
         base="/sistema/espacos"
         abas={[
-          { id: "painel", rotulo: "Painel da semana", conteudo: <PainelSemana /> },
+          { id: "painel", rotulo: "Painel de 7 dias", conteudo: <PainelSemana /> },
           { id: "fila", rotulo: `Fila (${pedidos.filter((p) => p.status === "pendente").length})`, conteudo: <Fila /> },
           { id: "meus", rotulo: "Meus pedidos", conteudo: <MeusPedidos /> },
         ]}

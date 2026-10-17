@@ -95,14 +95,13 @@ describe("Agendamento de espaços", () => {
   });
 
   it("o painel da semana mostra os pedidos e destaca conflitos", () => {
-    // a semana do painel começa no domingo: usa hoje para o pedido cair na semana exibida
     const hoje = hojeISO();
     gravar("espacos", [
       pedido({ id: "a", nome: "Reunião aprovada", status: "aprovado", data: hoje }),
       pedido({ id: "b", nome: "Pedido em choque", data: hoje }),
     ]);
     renderEspacos("carla");
-    const tabela = screen.getByRole("table", { name: "Agendamentos dos espaços na semana" });
+    const tabela = screen.getByRole("table", { name: "Agendamentos dos espaços em 7 dias" });
     expect(within(tabela).getByText(/Reunião aprovada/)).toBeInTheDocument();
     expect(within(tabela).getAllByText(/conflito/)).toHaveLength(2);
   });
