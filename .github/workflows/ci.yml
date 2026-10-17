@@ -25,6 +25,22 @@ jobs:
       DJANGO_SECRET_KEY: ci-only
     steps:
       - uses: actions/checkout@v4
+      # Roda no checkout, fora do container (lá o .env.example não existe): limites documentados, chave nunca.
+      - name: .env.example documenta o Zétele sem a chave
+        run: |
+          set -eu
+          falhou=0
+          if grep -q '^ANTHROPIC_API_KEY=' .env.example; then
+            echo "::error file=.env.example::ANTHROPIC_API_KEY não pode estar no .env.example (fica no .env.local)"
+            falhou=1
+          fi
+          for nome in ZETELE_RATE_LIMIT ZETELE_GLOBAL_RATE_LIMIT ZETELE_LIMITE_DIARIO ZETELE_SIMULTANEOS; do
+            if ! grep -q "^${nome}=" .env.example; then
+              echo "::error file=.env.example::falta ${nome}= no .env.example"
+              falhou=1
+            fi
+          done
+          exit "$falhou"
       - name: Build da imagem da API
         run: docker build --target dev -t faperon-api apps/api
       - name: Build do estágio de produção da API

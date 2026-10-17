@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pytest
 from django.conf import settings
 
 
@@ -21,7 +22,7 @@ def test_env_example_documenta_os_limites_sem_a_chave() -> None:
 
     exemplo = Path(BASE_DIR).parent.parent / ".env.example"
     if not exemplo.exists():  # no container só apps/api é montado
-        return
+        pytest.skip(".env.example fica fora do container; a checagem roda no CI")
     texto = exemplo.read_text(encoding="utf-8")
     for nome in (
         "ZETELE_RATE_LIMIT",
