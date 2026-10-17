@@ -441,3 +441,13 @@ body {
     }
   }
 }
+
+/* Zétele: o balão de saudação entra uma vez ao carregar, curto (ADR 0026). */
+@keyframes zetele-entrar {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+.zetele-balao { animation: zetele-entrar var(--mov-base) var(--mov-easing); }
+@media (prefers-reduced-motion: reduce) {
+  .zetele-balao { animation: none; }
+}
