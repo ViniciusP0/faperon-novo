@@ -29,6 +29,19 @@ describe("Política de Privacidade descreve só o que o sistema faz hoje", () =>
   });
 
   it("tem a data da revisão atual", () => {
-    expect(PRIVACIDADE.atualizadoEm).toBe("2026-10-07");
+    expect(PRIVACIDADE.atualizadoEm).toBe("2026-10-17");
+  });
+
+  it("descreve o Zétele: o que guarda, por quanto tempo, sem IP, e o envio à Anthropic", () => {
+    expect(texto).toMatch(/Zétele/);
+    expect(texto).toMatch(/90 dias/);
+    expect(texto).toMatch(/não guardamos seu endereço IP/i);
+    expect(texto).toMatch(/Anthropic/);
+    expect(texto).toMatch(/art\. 33 da LGPD/);
+  });
+
+  it("nomeia o encarregado de dados", () => {
+    expect(texto).toMatch(/Weslley Hariel Lima e Silva Palomeque Gonçalves/);
+    expect(texto).toMatch(/weslley\.palomeque@dataro-it\.com\.br/);
   });
 });
