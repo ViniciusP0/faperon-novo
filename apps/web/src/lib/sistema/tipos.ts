@@ -10,7 +10,7 @@ export interface Funcionario {
 }
 
 export type TipoEvento = "reuniao" | "viagem" | "compromisso";
-export type OrigemEvento = "pessoal" | "faperon" | "frota";
+export type OrigemEvento = "pessoal" | "faperon" | "frota" | "espaco";
 
 export interface Evento {
   id: string;
