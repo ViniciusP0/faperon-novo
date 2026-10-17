@@ -4,7 +4,7 @@ Data: 2026-10-17 · Status: aguardando revisão
 
 ## Objetivo
 
-Colocar no canto inferior direito do Início e da Central de Inteligência o **Zétele**, um personagem (homem do campo de chapéu de palha e camisa xadrez) com um balão de conversa. Ele responde **só sobre o site da FAPERON**: onde encontrar cada recurso, como usar a Central de Inteligência (Painel Agro Analítico e Observatório), páginas institucionais e contatos, e números do IBGE que o próprio site publica. Perguntas prontas (chips) facilitam o primeiro uso. O desenho já deixa a costura para um RAG e um FAQ, que entram depois.
+Colocar no canto inferior esquerdo do Início e da Central de Inteligência o **Zétele**, um personagem (homem do campo de chapéu de palha e camisa xadrez) com um balão de conversa. Ele responde **só sobre o site da FAPERON**: onde encontrar cada recurso, como usar a Central de Inteligência (Painel Agro Analítico e Observatório), páginas institucionais e contatos, e números do IBGE que o próprio site publica. Perguntas prontas (chips) facilitam o primeiro uso. O desenho já deixa a costura para um RAG e um FAQ, que entram depois.
 
 Critério de sucesso: um visitante em `/painel` clica em "Qual município mais produz soja em Rondônia?" e recebe, em menos de 15 s, uma resposta curta com o número exato que o Painel mostra, a fonte (IBGE, tabela, ano) e um link que abre o Painel já filtrado. Uma pergunta fora do escopo ("qual a previsão do preço da soja?") recebe uma recusa educada de uma frase com um caminho dentro do site.
 
@@ -16,7 +16,7 @@ Critério de sucesso: um visitante em `/painel` clica em "Qual município mais p
 - **Registro das perguntas:** só o texto (mascarado), o desfecho, a página e a data, sem IP, por 90 dias, para montar o FAQ.
 - **Encarregado de dados citado na política de privacidade:** Weslley Hariel Lima e Silva Palomeque Gonçalves (`weslley.palomeque@dataro-it.com.br`), DPO da DATA-RO.
 - **Teto de custo:** 1.500 perguntas por dia. Ao estourar, o Zétele cai para as perguntas prontas e só o log registra.
-- **Saudação:** um balão "Oi! Posso ajudar?" aparece **uma vez por visita**, alguns segundos depois de a página carregar, e some sozinho.
+- **Posição e saudação (revisto em 17/10/2026 a pedido do usuário):** o Zétele fica no **canto inferior esquerdo**, fixo na tela (acompanha a rolagem). O balão "Oi! Posso ajudar?" aparece **já ao carregar a página**, ao lado do personagem, e fica até a pessoa clicar nele (abre a conversa) ou fechá-lo no X; dispensado, não volta na mesma visita.
 - **Arte:** as 3 poses (acenando, segurando tablet, apontando) são recortadas da arte original e têm o fundo removido.
 - **Backend no Django**, com o SDK Python da Anthropic, atrás do proxy `/api/v1/`. Sem streaming. Conhecimento inteiro no system prompt com prompt caching, sem RAG nesta entrega.
 
@@ -51,16 +51,16 @@ RAG (embeddings, pgvector), FAQ publicado, streaming, comparação entre municí
 
 - **`zetele.tsx`** (client): montado em `apps/web/src/app/layout.tsx` depois do `<SiteFooter />`, fora de `Providers` (usa `fetch` direto). Lê `usePathname()` e só renderiza nas rotas de `PAGINAS_COM_ZETELE` (em `content/zetele.ts`). Ao montar, faz `GET /api/v1/zetele/estado` para decidir o modo: completo ou só chips estáticos.
 - **`botao-zetele.tsx`:**
-  - Botão flutuante `fixed bottom-4 right-4 z-30`, abaixo do header `z-40` e do skip link `z-50`, respeitando `env(safe-area-inset-bottom)`.
+  - Botão flutuante `fixed bottom-4 left-4 z-30` (fixo: acompanha a rolagem), abaixo do header `z-40` e do skip link `z-50`, respeitando `env(safe-area-inset-bottom)`.
   - Atributos: `aria-haspopup="dialog"`, `aria-expanded`, `aria-controls="zetele-painel"`.
   - Rótulo: "Falar com o Zétele, assistente do site".
 - **`saudacao-zetele.tsx`:**
-  - Balão "Oi! Posso ajudar?" ao lado do botão, 4 s depois da montagem. Some após 8 s, ao clicar no X ou ao abrir o painel.
+  - Balão "Oi! Posso ajudar?" à direita do personagem, na altura da cabeça, visível já na montagem. Não some sozinho: sai ao clicar nele (abre o painel), ao clicar no X ou ao abrir o painel pelo botão.
   - Não move o foco e usa `role="status"`.
-  - Aparece uma vez por visita: a marca `zetele-saudou` fica no `sessionStorage`, com leitura e escrita em `try/catch`. Se o storage falhar, não mostra o balão.
+  - Dispensado, não volta na mesma visita: a marca `zetele-saudou` fica no `sessionStorage`, com leitura e escrita em `try/catch`. Se o storage falhar, o balão aparece e o X continua fechando na página atual.
   - Com `prefers-reduced-motion`, aparece sem animação.
 - **`painel-zetele.tsx`:**
-  - `role="dialog"` não modal, com `aria-labelledby` apontando para o título "Zétele". Largura de 360 px no desktop; no celular vira uma folha inferior de largura total com `max-height: 80dvh`.
+  - `role="dialog"` não modal, com `aria-labelledby` apontando para o título "Zétele". Largura de 360 px no desktop, ancorado à esquerda (`sm:left-4`, acima do personagem); no celular vira uma folha inferior de largura total com `max-height: 80dvh`.
   - Esc fecha e devolve o foco ao botão; ao abrir, o foco vai para o campo.
   - Fechar não apaga a conversa: o estado fica no componente, nada vai para o `localStorage`.
 - **`mensagens.tsx`:**
@@ -314,7 +314,7 @@ As respostas estáticas reaproveitam os textos de `CENTRAL`, `CONTATO` e `INFORM
   - **Foco e teclado:** abrir leva o foco ao campo; Esc fecha e devolve o foco.
   - **Chips:** o estático responde sem `fetch`; o de dados faz `POST` e a resposta entra na região `aria-live`.
   - **Respostas e estados:** cartão de fonte com link; `disponivel=false` desabilita o campo e esconde os chips de dados; pose por estado; o 429 mostra a espera.
-  - **Saudação:** aparece uma vez (o `sessionStorage` marca) e não aparece se o storage lançar erro.
+  - **Saudação:** aparece já na montagem e não some sozinha; o X e o clique a dispensam e marcam o `sessionStorage`; dispensada, não volta; com o storage falhando, aparece e o X fecha.
 - **`content/zetele.test.ts`:** cada chip estático tem `href` de página existente; `PAGINAS_COM_ZETELE` são exatamente as quatro; o teste de deriva do `site.md`.
 - **`lib/proxy.test.ts`:** `POST` repassa o corpo e o `content-type`; `GET` segue igual.
 
