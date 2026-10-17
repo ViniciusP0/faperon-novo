@@ -205,7 +205,7 @@ Detalhes e motivos: ADR 0029 e ADR 0030.
 
 - `pergunta`: 1 a 500 caracteres. `historico`: até 6 mensagens de até 1.200 caracteres; `papel` é `visitante` ou `zetele`. `pagina`: `/`, `/central-de-inteligencia`, `/central-de-inteligencia/observatorio` ou `/painel`. No `/` o Zétele só orienta (sem consultar dados).
 - `200`: `{"status": "respondida" | "recusada" | "erro", "texto": "...", "fontes": [{"rotulo", "url_fonte", "url_interna", "atualizado_em"}], "sugestoes": ["..."]}`. `fontes` é montado pelo servidor; o texto só tem links Markdown para rotas do site, para as URLs das fontes, para os hosts da lista (IBGE, CNA, FAPERON) e para o WhatsApp oficial.
-- `400 {"erro": "Parâmetros inválidos", "campos": {...}}`; `429` com `Retry-After` (6/min por IP, 30/min no total); `503 {"erro", "motivo"}` com `Retry-After` (`sem_chave`, `orcamento_diario` (1.500/dia), `indisponivel`, `ocupado` (3 simultâneas por processo)).
+- `400 {"erro": "Parâmetros inválidos", "campos": {...}}`; `429` com `Retry-After` (6/min por IP, 30/min no total); `503 {"erro", "motivo"}` com `Retry-After` (`sem_chave`, `orcamento_diario` (200/dia), `indisponivel`, `ocupado` (3 simultâneas por processo)).
 - O proxy do Next aceita POST com corpo de até 16 KB.
 
 ## Saúde

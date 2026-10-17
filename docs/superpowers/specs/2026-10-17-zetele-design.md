@@ -15,7 +15,7 @@ Critério de sucesso: um visitante em `/painel` clica em "Qual município mais p
 - **Números:** o Zétele consulta os serviços de indicadores por *tool use* e cita a fonte. Todo número é conferido em código contra o resultado da ferramenta (ver Guardrails). Uma ADR nova registra a relação com a ADR 0007.
 - **Registro das perguntas:** só o texto (mascarado), o desfecho, a página e a data, sem IP, por 90 dias, para montar o FAQ.
 - **Encarregado de dados citado na política de privacidade:** Weslley Hariel Lima e Silva Palomeque Gonçalves (`weslley.palomeque@dataro-it.com.br`), DPO da DATA-RO.
-- **Teto de custo:** 1.500 perguntas por dia. Ao estourar, o Zétele cai para as perguntas prontas e só o log registra.
+- **Teto de custo:** 200 perguntas por dia (era 1.500; reduzido a pedido do usuário em 17/10/2026). Ao estourar, o Zétele cai para as perguntas prontas e só o log registra.
 - **Posição e saudação (revisto em 17/10/2026 a pedido do usuário):** o Zétele fica no **canto inferior direito**, fixo na tela (acompanha a rolagem). O balão "Oi! Posso ajudar?" aparece **já ao carregar a página**, ao lado do personagem, e fica até a pessoa clicar nele (abre a conversa) ou fechá-lo no X; dispensado, não volta na mesma visita.
 - **Arte:** as 3 poses (acenando, segurando tablet, apontando) são recortadas da arte original e têm o fundo removido.
 - **Backend no Django**, com o SDK Python da Anthropic, atrás do proxy `/api/v1/`. Sem streaming. Conhecimento inteiro no system prompt com prompt caching, sem RAG nesta entrega.
@@ -123,7 +123,7 @@ Resposta 200:
 | `ZETELE_MODELO` | `.env.local` | `claude-sonnet-5-5` |
 | `ZETELE_RATE_LIMIT` | `.env.example` | `6/min` por IP |
 | `ZETELE_GLOBAL_RATE_LIMIT` | `.env.example` | `30/min` |
-| `ZETELE_LIMITE_DIARIO` | `.env.example` | `1500` perguntas por dia (contador no cache, por data) |
+| `ZETELE_LIMITE_DIARIO` | `.env.example` | `200` perguntas por dia (contador no cache, por data) |
 | `ZETELE_SIMULTANEOS` | `.env.example` | `3` por processo (`BoundedSemaphore` sem espera → `503 ocupado`, `Retry-After: 10`) |
 
 - **Compose:** em `docker-compose.yml`, a âncora `x-api` passa a ter `env_file: [{path: .env}, {path: .env.local, required: false}]`. Isso exige Docker Compose 2.24 ou mais novo; conferir a versão na vinicin antes do deploy. O serviço `web` não recebe o `.env.local`.

@@ -31,4 +31,4 @@ Itens que ainda precisam de ação, de decisão ou de confirmação do cliente. 
 | Ciente do encarregado sobre o Zétele | O registro das perguntas (90 dias, mascarado, sem IP) e o envio do texto à Anthropic (transferência internacional) precisam do ciente do Weslley (encarregado de dados) antes do deploy (ADR 0030). | Enviar o texto da política e a base legal proposta; registrar a data e o retorno aqui. |
 | Chave da Anthropic na vinicin | O Zétele lê `ANTHROPIC_API_KEY` do `.env.local` (fora do git). Sem ela, responde só às perguntas prontas. | Criar o `.env.local` ao lado do `.env` na vinicin antes do deploy. |
 | Docker Compose na vinicin | O `env_file` com `required: false` (para o `.env.local`) exige Compose 2.24 ou mais novo. | Conferir com `docker compose version` antes do deploy. |
-| Custo do Zétele | Não há painel de custo; teto de 1.500 perguntas por dia. | Acompanhar pelos tokens gravados em `zetele_pergunta` e pelo console da Anthropic. |
+| Custo do Zétele | Não há painel de custo; teto de 200 perguntas por dia. | Acompanhar pelos tokens gravados em `zetele_pergunta` e pelo console da Anthropic. |

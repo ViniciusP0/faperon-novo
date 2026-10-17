@@ -151,7 +151,7 @@ SPECTACULAR_SETTINGS = {
 # Zétele (ADR 0029). Sem chave, o assistente responde só às perguntas prontas do front.
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 ZETELE_MODELO = os.environ.get("ZETELE_MODELO", "claude-sonnet-5-5")
-ZETELE_LIMITE_DIARIO = int(os.environ.get("ZETELE_LIMITE_DIARIO", "1500"))
+ZETELE_LIMITE_DIARIO = int(os.environ.get("ZETELE_LIMITE_DIARIO", "200"))
 ZETELE_SIMULTANEOS = int(os.environ.get("ZETELE_SIMULTANEOS", "3"))
 ZETELE_TERMOS_BLOQUEADOS = env_lista("ZETELE_TERMOS_BLOQUEADOS")
 

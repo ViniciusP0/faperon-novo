@@ -19,7 +19,7 @@ O site precisa de um assistente que explique onde está cada recurso e como usar
 - Antes de entregar, `zetele/verificacao.py` exige que todo número do texto exista nos resultados das ferramentas, na base ou na conversa; remove links fora da lista; reprova palavras em inglês e termos bloqueados.
 - Se a conferência reprova, a resposta do modelo é descartada e vai uma frase determinística montada a partir do resultado da ferramenta.
 - As fontes (IBGE, tabela, ano, link para a consulta equivalente no Painel ou no Observatório) são montadas pelo servidor, nunca pelo modelo.
-- Limites: 6/min por IP, 30/min global, 1.500 perguntas por dia, 3 simultâneas por processo, 40 s por pergunta. Sem chave ou sem orçamento, o widget mostra só as perguntas prontas.
+- Limites: 6/min por IP, 30/min global, 200 perguntas por dia, 3 simultâneas por processo, 40 s por pergunta. Sem chave ou sem orçamento, o widget mostra só as perguntas prontas.
 - A chave fica em `.env.local`, lido só pelo container `api`.
 
 ## Relação com a ADR 0007
