@@ -1,0 +1,313 @@
+"use client";
+
+import { ChevronLeft, ChevronRight, Coffee } from "lucide-react";
+import { useState, type FormEvent } from "react";
+import { ESPACOS } from "@/content/sistema/exemplo";
+import { FUNCIONARIOS } from "@/content/sistema/funcionarios";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Alert } from "@/components/ui/feedback";
+import { Label, Textarea } from "@/components/ui/field";
+import { agoraISO, formatarDataBR, somarDias } from "@/lib/sistema/datas";
+import { conflitosDoPedido, excedeCapacidade, podeAprovar, ROTULO_PERIODO, ROTULO_STATUS, ROTULO_TIPO_ESPACO } from "@/lib/sistema/espacos";
+import { novoId, useSistema } from "@/lib/sistema/estado";
+import type { PedidoEspaco, StatusPedido } from "@/lib/sistema/tipos";
+import { cn } from "@/lib/utils";
+import { Abas } from "../abas";
+import { Dialogo } from "../dialogo";
+import { FormularioPedido } from "./formulario-pedido";
+
+const corStatus: Record<StatusPedido, string> = {
+  pendente: "bg-warm text-ink",
+  aprovado: "bg-brand-soft text-brand-strong",
+  recusado: "bg-danger-soft text-danger-ink",
+  cancelado: "bg-surface-alt text-ink-muted",
+};
+
+const DIAS_SEMANA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+const nomeFuncionario = (id: string) => FUNCIONARIOS.find((f) => f.id === id)?.nome ?? id;
+
+function StatusPedidoSelo({ status }: { status: StatusPedido }) {
+  return <Badge className={cn("px-2 py-0", corStatus[status])}>{ROTULO_STATUS[status]}</Badge>;
+}
+
+function domingoDa(data: string): string {
+  return somarDias(data, -new Date(`${data}T12:00`).getDay());
+}
+
+function PainelSemana() {
+  const { hoje, pedidos } = useSistema();
+  const [inicio, setInicio] = useState(() => domingoDa(hoje));
+  const dias = Array.from({ length: 7 }, (_, i) => somarDias(inicio, i));
+  const visiveis = pedidos.filter((p) => p.status === "pendente" || p.status === "aprovado");
+
+  return (
+    <div>
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <Button variant="ghost" size="sm" onClick={() => setInicio(somarDias(inicio, -7))} aria-label="Semana anterior">
+          <ChevronLeft aria-hidden="true" className="h-4 w-4" />
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => setInicio(domingoDa(hoje))}>
+          Esta semana
+        </Button>
+        <Button variant="ghost" size="sm" onClick={() => setInicio(somarDias(inicio, 7))} aria-label="Próxima semana">
+          <ChevronRight aria-hidden="true" className="h-4 w-4" />
+        </Button>
+        <span className="text-sm text-ink-muted">
+          {formatarDataBR(dias[0]!)} a {formatarDataBR(dias[6]!)} · pendentes e aprovados; conflitos em vermelho
+        </span>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[900px] table-fixed border-collapse text-xs">
+          <caption className="sr-only">Agendamentos dos espaços na semana</caption>
+          <thead>
+            <tr>
+              <th scope="col" className="w-36 pb-2 text-left text-ink-muted">Espaço</th>
+              {dias.map((d) => (
+                <th key={d} scope="col" className={cn("pb-2 text-left font-semibold text-ink-muted", d === hoje && "text-brand-strong")}>
+                  {DIAS_SEMANA[new Date(`${d}T12:00`).getDay()]} {d.slice(8)}/{d.slice(5, 7)}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {ESPACOS.map((esp) => (
+              <tr key={esp.id}>
+                <th scope="row" className="border border-line p-2 text-left align-top font-medium text-ink">
+                  {esp.nome}
+                  <span className="block font-normal text-ink-muted">até {esp.capacidade}</span>
+                </th>
+                {dias.map((d) => (
+                  <td key={d} className="h-20 border border-line p-1 align-top">
+                    <ul className="grid gap-1">
+                      {visiveis
+                        .filter((p) => p.espacoId === esp.id && p.data === d)
+                        .sort((a, b) => a.inicio.localeCompare(b.inicio))
+                        .map((p) => {
+                          const conflito = conflitosDoPedido(p, pedidos).length > 0 || excedeCapacidade(p, esp);
+                          return (
+                            <li
+                              key={p.id}
+                              className={cn("rounded-md border-l-4 px-1.5 py-1", p.status === "aprovado" ? "border-l-brand bg-brand-soft" : "border-l-brand-lime bg-warm", conflito && "ring-2 ring-danger")}
+                            >
+                              <span className="font-medium">
+                                {p.inicio}–{p.fim}
+                              </span>{" "}
+                              {p.nome}
+                              <span className="block text-ink-muted">
+                                {ROTULO_STATUS[p.status]}
+                                {conflito && <strong className="text-danger-ink"> · conflito</strong>}
+                              </span>
+                            </li>
+                          );
+                        })}
+                    </ul>
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function DetalhesPedido({ p, mostrarQuem }: { p: PedidoEspaco; mostrarQuem: boolean }) {
+  const { pedidos } = useSistema();
+  const espaco = ESPACOS.find((e) => e.id === p.espacoId)!;
+  const conflitos = p.status === "pendente" || p.status === "aprovado" ? conflitosDoPedido(p, pedidos) : [];
+  const lotado = excedeCapacidade(p, espaco);
+  return (
+    <div className="text-sm">
+      <p className="font-medium text-ink">
+        {p.nome} <StatusPedidoSelo status={p.status} />
+      </p>
+      <p className="text-ink-muted">
+        {espaco.nome} · {formatarDataBR(p.data)} · {p.periodo === "horario" ? `${p.inicio}–${p.fim}` : `${ROTULO_PERIODO[p.periodo]}`} · {ROTULO_TIPO_ESPACO[p.tipo]} · {p.participantes} participantes
+        {p.coffeeBreak && (
+          <>
+            {" · "}
+            <Coffee aria-hidden="true" className="inline h-3.5 w-3.5" /> coffee break
+          </>
+        )}
+        {mostrarQuem && ` · pedido por ${nomeFuncionario(p.funcionarioId)}`}
+      </p>
+      {p.observacoes && <p className="text-ink-muted">Obs.: {p.observacoes}</p>}
+      {p.status === "recusado" && p.motivoRecusa && <p className="text-danger-ink">Motivo da recusa: {p.motivoRecusa}</p>}
+      {(conflitos.length > 0 || lotado) && (
+        <ul className="mt-1 list-disc pl-5 text-danger-ink">
+          {conflitos.map((c) => (
+            <li key={c.id}>
+              Conflito com {c.nome} ({c.inicio}–{c.fim}, {ROTULO_STATUS[c.status].toLowerCase()})
+            </li>
+          ))}
+          {lotado && <li>Passa da capacidade ({espaco.capacidade} pessoas)</li>}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function Fila() {
+  const { funcionario, pedidos, atualizarPedidos } = useSistema();
+  const [aviso, setAviso] = useState<string | null>(null);
+  const [recusando, setRecusando] = useState<PedidoEspaco | null>(null);
+  const [motivo, setMotivo] = useState("");
+  const [erroMotivo, setErroMotivo] = useState<string | null>(null);
+  const gestor = funcionario?.gestorEspacos ?? false;
+  const fila = pedidos.filter((p) => p.status === "pendente").sort((a, b) => a.criadoEm.localeCompare(b.criadoEm));
+
+  function aprovar(p: PedidoEspaco) {
+    const bloqueio = podeAprovar(p, pedidos);
+    if (bloqueio) return setAviso(bloqueio);
+    setAviso(null);
+    atualizarPedidos((lista) => lista.map((o) => (o.id === p.id ? { ...o, status: "aprovado" } : o)));
+  }
+
+  function recusar(e: FormEvent) {
+    e.preventDefault();
+    if (!motivo.trim()) return setErroMotivo("Informe o motivo da recusa.");
+    atualizarPedidos((lista) => lista.map((o) => (o.id === recusando!.id ? { ...o, status: "recusado", motivoRecusa: motivo.trim() } : o)));
+    setRecusando(null);
+    setMotivo("");
+    setErroMotivo(null);
+  }
+
+  return (
+    <div>
+      <p className="mb-3 text-sm text-ink-muted">
+        {fila.length} pedido(s) aguardando, em ordem de chegada.
+        {!gestor && " A fila é avaliada pelo gestor dos espaços."}
+      </p>
+      {aviso && (
+        <Alert tone="erro" className="mb-3">
+          {aviso}
+        </Alert>
+      )}
+      <ol className="grid gap-2">
+        {fila.map((p) => (
+          <li key={p.id} className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-line bg-card p-3">
+            <DetalhesPedido p={p} mostrarQuem />
+            {gestor && (
+              <div className="flex gap-2">
+                <Button size="sm" onClick={() => aprovar(p)} aria-label={`Aprovar ${p.nome}`}>
+                  Aprovar
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setRecusando(p)} aria-label={`Recusar ${p.nome}`}>
+                  Recusar
+                </Button>
+              </div>
+            )}
+          </li>
+        ))}
+      </ol>
+      {recusando && (
+        <Dialogo titulo={`Recusar: ${recusando.nome}`} aoFechar={() => setRecusando(null)}>
+          <form onSubmit={recusar} className="grid gap-4" noValidate>
+            <div>
+              <Label htmlFor="motivo-recusa">Motivo da recusa</Label>
+              <Textarea id="motivo-recusa" value={motivo} onChange={(e) => setMotivo(e.target.value)} className="min-h-20" />
+            </div>
+            {erroMotivo && <Alert tone="erro">{erroMotivo}</Alert>}
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setRecusando(null)}>
+                Cancelar
+              </Button>
+              <Button type="submit">Recusar pedido</Button>
+            </div>
+          </form>
+        </Dialogo>
+      )}
+    </div>
+  );
+}
+
+function MeusPedidos() {
+  const { funcionario, pedidos, atualizarPedidos } = useSistema();
+  if (!funcionario) return null;
+  const meus = pedidos.filter((p) => p.funcionarioId === funcionario.id).sort((a, b) => b.data.localeCompare(a.data));
+  return (
+    <div>
+      {meus.length === 0 && <p className="text-sm text-ink-muted">Você ainda não pediu nenhum espaço.</p>}
+      <ul className="grid gap-2">
+        {meus.map((p) => (
+          <li key={p.id} className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-line bg-card p-3">
+            <DetalhesPedido p={p} mostrarQuem={false} />
+            {(p.status === "pendente" || p.status === "aprovado") && (
+              <Button size="sm" variant="ghost" onClick={() => atualizarPedidos((lista) => lista.map((o) => (o.id === p.id ? { ...o, status: "cancelado" } : o)))} aria-label={`Cancelar ${p.nome}`}>
+                Cancelar pedido
+              </Button>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export function Espacos() {
+  const { funcionario, hoje, pedidos, atualizarPedidos } = useSistema();
+  const [novo, setNovo] = useState<PedidoEspaco | null>(null);
+  const [enviado, setEnviado] = useState<string | null>(null);
+  if (!funcionario) return null;
+
+  function abrirNovo() {
+    setEnviado(null);
+    setNovo({
+      id: novoId("pedido"),
+      espacoId: "sala-reunioes",
+      funcionarioId: funcionario!.id,
+      data: somarDias(hoje, 1),
+      periodo: "manha",
+      inicio: "08:00",
+      fim: "12:00",
+      tipo: "reuniao",
+      nome: "",
+      participantes: 0,
+      coffeeBreak: false,
+      observacoes: "",
+      status: "pendente",
+      motivoRecusa: "",
+      criadoEm: agoraISO(),
+    });
+  }
+
+  return (
+    <div>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-semibold text-ink">Agendamento de espaços</h1>
+        <Button onClick={abrirNovo}>Novo pedido</Button>
+      </div>
+      {enviado && (
+        <Alert tone="info" className="mb-4">
+          {enviado}
+        </Alert>
+      )}
+      <Abas
+        rotulo="Agendamento de espaços"
+        base="/sistema/espacos"
+        abas={[
+          { id: "painel", rotulo: "Painel da semana", conteudo: <PainelSemana /> },
+          { id: "fila", rotulo: `Fila (${pedidos.filter((p) => p.status === "pendente").length})`, conteudo: <Fila /> },
+          { id: "meus", rotulo: "Meus pedidos", conteudo: <MeusPedidos /> },
+        ]}
+      />
+      {novo && (
+        <Dialogo titulo="Novo pedido de espaço" aoFechar={() => setNovo(null)}>
+          <FormularioPedido
+            base={novo}
+            pedidos={pedidos}
+            aoCancelar={() => setNovo(null)}
+            aoEnviar={(p) => {
+              const comConflito = conflitosDoPedido(p, pedidos).length > 0;
+              atualizarPedidos((lista) => [...lista, p]);
+              setNovo(null);
+              setEnviado(`Pedido "${p.nome}" enviado para a fila${comConflito ? ", marcado com conflito" : ""}. Acompanhe em Meus pedidos.`);
+            }}
+          />
+        </Dialogo>
+      )}
+    </div>
+  );
+}
