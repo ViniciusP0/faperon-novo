@@ -26,7 +26,7 @@ async function entrarComo(page: Page, nome: string) {
 test("protótipo do sistema: agenda individual, reserva de veículo, frota e espaços", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/login");
-  await expect(page.getByText(/Protótipo: dados fictícios/)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Acessar o sistema" })).toBeVisible();
   await semViolacoesSerias(page);
   await page.getByLabel("E-mail").fill("user@faperon.br");
   await page.getByLabel("Senha").fill("errada");

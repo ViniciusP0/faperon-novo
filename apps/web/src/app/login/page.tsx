@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { AcessoSistema } from "@/components/login/acesso-sistema";
-import { Alert } from "@/components/ui/feedback";
-import { PROTOTIPO } from "@/content/sistema/funcionarios";
 
 export const metadata: Metadata = {
   title: "Acessar o sistema",
@@ -19,10 +17,6 @@ export default function LoginPage() {
           <h1 className="mt-3 text-xl font-semibold text-ink">Acessar o sistema</h1>
           <p className="mt-1 text-sm text-ink-muted">Entre para conhecer a agenda, a frota e o agendamento de espaços.</p>
         </div>
-
-        <Alert tone="info" className="mb-4">
-          {PROTOTIPO.faixa} Use o acesso de demonstração que a equipe passou; as contas reais da FAPERON virão na versão definitiva.
-        </Alert>
 
         <AcessoSistema />
 

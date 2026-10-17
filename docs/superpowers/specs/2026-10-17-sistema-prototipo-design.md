@@ -27,7 +27,7 @@ Autenticação real, backend, persistência compartilhada entre pessoas e máqui
 ## Requisitos
 
 ### 1. Rotas e entrada
-- `/login`: faixa de protótipo, lista dos 5 funcionários (nome, área e o selo "Gestor da frota" quando for o caso) e o botão "Entrar como <nome>". O formulário de e-mail e senha sai.
+- `/login`: e-mail e senha de demonstração (sem caixa de aviso, a pedido do usuário) e, depois, a lista dos 5 funcionários (nome, área e o selo "Gestor da frota" quando for o caso) e o botão "Entrar como <nome>". O formulário de e-mail e senha sai.
 - `/sistema`: saudação, atalhos para Agenda e Frotas, e "Trocar de funcionário" e "Sair" (limpam a sessão e voltam ao `/login`).
 - `/sistema/agenda` e `/sistema/frotas`: os dois módulos. As frotas têm abas: Veículos, Reservas, Abastecimento e manutenção, e Custos.
 - Sem sessão, `/sistema/*` mostra "Escolha um funcionário para entrar" com o link para o `/login`.
