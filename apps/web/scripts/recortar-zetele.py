@@ -76,7 +76,7 @@ REF = 320
 
 def trocar_chapeu_por_enxada(img: Image.Image) -> Image.Image:
     s = img.width / REF
-    p = lambda x, y: (x * s, y * s)  # noqa: E731
+    p = lambda x, y: (x * s, y * s)
     a = np.asarray(img.convert("RGBA")).copy()
     h, w = a.shape[:2]
 
