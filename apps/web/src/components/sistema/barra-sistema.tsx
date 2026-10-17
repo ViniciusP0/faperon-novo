@@ -1,5 +1,6 @@
 "use client";
 
+import { LogOut, RotateCcw, UserRoundCog } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { PROTOTIPO } from "@/content/sistema/funcionarios";
@@ -13,7 +14,10 @@ const SECOES = [
   { href: "/sistema/espacos", rotulo: "Espaços" },
 ];
 
-/** Barra do sistema: faixa de protótipo, quem está logado, navegação e ações. */
+const acao =
+  "inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium sm:min-h-0 text-ink-muted transition duration-150 ease-out hover:bg-white/60 hover:text-ink dark:hover:bg-white/5";
+
+/** Barra do sistema em vidro, fixa sob o cabeçalho do site: o conteúdo rola por trás dela. */
 export function BarraSistema() {
   const { funcionario, sair, encerrar, restaurar } = useSistema();
   const caminho = usePathname();
@@ -30,51 +34,57 @@ export function BarraSistema() {
   }
 
   return (
-    <div className="border-b border-line bg-card">
-      <p role="note" className="bg-warm/30 px-4 py-1.5 text-center text-xs font-medium text-ink">
-        {PROTOTIPO.faixa}
-      </p>
-      <div className="container flex flex-wrap items-center justify-between gap-3 py-3">
+    <div className="vidro-barra z-30 md:sticky md:top-[72px]">
+      <div className="container flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-2.5">
         <nav aria-label="Seções do sistema">
           <ul className="flex flex-wrap gap-1">
-            {SECOES.map((s) => (
-              <li key={s.href}>
-                <Link
-                  href={s.href}
-                  aria-current={caminho === s.href ? "page" : undefined}
-                  className={cn(
-                    "rounded-lg px-3 py-1.5 text-sm font-medium text-ink-muted hover:bg-brand-soft hover:text-brand-strong",
-                    caminho === s.href && "bg-brand-soft text-brand-strong",
-                  )}
-                >
-                  {s.rotulo}
-                </Link>
-              </li>
-            ))}
+            {SECOES.map((s) => {
+              const ativa = caminho === s.href;
+              return (
+                <li key={s.href}>
+                  <Link
+                    href={s.href}
+                    aria-current={ativa ? "page" : undefined}
+                    className={cn(
+                      "inline-flex rounded-lg px-3 py-1.5 text-sm font-medium transition duration-150 ease-out",
+                      ativa ? "vidro-claro" : "text-ink-muted hover:bg-white/60 hover:text-ink dark:hover:bg-white/5",
+                    )}
+                  >
+                    {s.rotulo}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </nav>
-        <div className="flex flex-wrap items-center gap-2 text-sm">
+        <div className="flex flex-wrap items-center gap-1 text-sm">
           {funcionario && (
-            <span className="text-ink">
+            <span className="mr-2 text-ink">
               <span className="sr-only">Logado como </span>
-              <strong>{funcionario.nome}</strong> <span className="text-ink-muted">· {funcionario.area}</span>
+              <strong className="font-semibold">{funcionario.nome}</strong> <span className="text-ink-muted">· {funcionario.area}</span>
             </span>
           )}
-          <button type="button" onClick={restaurar} className="rounded-lg px-2 py-1 text-ink-muted underline-offset-2 hover:text-ink hover:underline">
-            {PROTOTIPO.restaurar}
+          <button type="button" onClick={restaurar} className={acao} title="Volta agenda, frota e espaços aos dados de exemplo">
+            <RotateCcw aria-hidden="true" className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+            <span className="sr-only sm:not-sr-only">{PROTOTIPO.restaurar}</span>
           </button>
           {funcionario && (
-            <button type="button" onClick={trocar} className="rounded-lg border border-line px-3 py-1 font-medium text-brand-fg hover:bg-brand-soft">
-              Trocar de funcionário
+            <button type="button" onClick={trocar} className={acao}>
+              <UserRoundCog aria-hidden="true" className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+              <span className="sr-only sm:not-sr-only">Trocar de funcionário</span>
             </button>
           )}
           {funcionario && (
-            <button type="button" onClick={sairDoSistema} className="rounded-lg px-3 py-1 font-medium text-ink-muted hover:bg-surface-alt hover:text-ink">
-              Sair
+            <button type="button" onClick={sairDoSistema} className={acao}>
+              <LogOut aria-hidden="true" className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+              <span className="sr-only sm:not-sr-only">Sair</span>
             </button>
           )}
         </div>
       </div>
+      <p role="note" className="border-t border-line py-1 text-center text-[11px] font-medium tracking-wide text-ink-muted">
+        {PROTOTIPO.faixa}
+      </p>
     </div>
   );
 }

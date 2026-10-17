@@ -65,7 +65,7 @@ function FormularioVeiculo({ inicial, aoSalvar, aoCancelar }: { inicial: Veiculo
         <Button variant="ghost" onClick={aoCancelar}>
           Cancelar
         </Button>
-        <Button type="submit">Salvar veículo</Button>
+        <Button variant="vidro" type="submit">Salvar veículo</Button>
       </div>
     </form>
   );
@@ -88,7 +88,7 @@ export function Veiculos() {
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-ink-muted">{frota.veiculos.length} veículos. Revisão a cada 10.000 km ou 12 meses.</p>
-        {gestor && <Button onClick={() => setEditando({ novo: true, veiculo: { id: novoId("veiculo"), placa: "", modelo: "", ano: new Date().getFullYear(), km: 0 } })}>Cadastrar veículo</Button>}
+        {gestor && <Button variant="vidro" onClick={() => setEditando({ novo: true, veiculo: { id: novoId("veiculo"), placa: "", modelo: "", ano: new Date().getFullYear(), km: 0 } })}>Cadastrar veículo</Button>}
       </div>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[720px] text-sm">

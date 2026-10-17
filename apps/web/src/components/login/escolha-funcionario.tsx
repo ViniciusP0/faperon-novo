@@ -22,7 +22,7 @@ export function EscolhaFuncionario() {
             type="button"
             onClick={() => entrar(f.id)}
             aria-label={`Entrar como ${f.nome}`}
-            className="flex w-full items-center justify-between gap-3 rounded-xl border border-line bg-surface px-4 py-3 text-left hover:border-brand-fg hover:bg-brand-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand"
+            className="vidro-claro flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition duration-150 ease-out"
           >
             <span>
               <span className="block font-medium text-ink">{f.nome}</span>

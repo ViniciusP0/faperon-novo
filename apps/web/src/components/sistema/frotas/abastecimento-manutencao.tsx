@@ -96,7 +96,7 @@ export function AbastecimentoManutencao() {
             </div>
           </div>
           {msgAb && <Alert tone={msgAb.tom}>{msgAb.texto}</Alert>}
-          <Button type="submit">Registrar abastecimento</Button>
+          <Button variant="vidro" type="submit">Registrar abastecimento</Button>
         </form>
         <h3 className="mt-5 text-sm font-semibold text-ink">Últimos abastecimentos</h3>
         <ul className="mt-2 grid gap-1 text-sm">
@@ -153,7 +153,7 @@ export function AbastecimentoManutencao() {
               </label>
             </div>
             {msgMa && <Alert tone={msgMa.tom}>{msgMa.texto}</Alert>}
-            <Button type="submit">Registrar manutenção</Button>
+            <Button variant="vidro" type="submit">Registrar manutenção</Button>
           </form>
         ) : (
           <p className="mt-3 rounded-2xl border border-line bg-surface-alt p-4 text-sm text-ink-muted">Só o gestor da frota registra manutenções.</p>
@@ -169,7 +169,7 @@ export function AbastecimentoManutencao() {
                 {km(m.km)} · {reais(m.valor)}
                 {!m.concluida &&
                   (funcionario.gestorFrota ? (
-                    <Button size="sm" variant="outline" onClick={() => concluir(m.id)}>
+                    <Button size="sm" variant="vidro-claro" onClick={() => concluir(m.id)}>
                       Concluir
                     </Button>
                   ) : (

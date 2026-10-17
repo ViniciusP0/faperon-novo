@@ -17,7 +17,7 @@ export function ExigeLogin({ children }: { children: ReactNode }) {
         <p className="mt-2 text-sm text-ink-muted">
           {acesso ? "O protótipo do sistema abre com um funcionário de exemplo." : "Entre com o e-mail e a senha do protótipo."}
         </p>
-        <Link href="/login" className={buttonVariants({ className: "mt-5" })}>
+        <Link href="/login" className={buttonVariants({ variant: "vidro", className: "mt-5" })}>
           Ir para Acessar o sistema
         </Link>
       </div>

@@ -10,8 +10,9 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-[calc(100vh-72px)] items-center justify-center bg-surface-alt px-4 py-12">
-      <div className="w-full max-w-md rounded-2xl border-t-4 border-brand-light bg-card p-8 shadow-md">
+    <div className="area-sistema flex min-h-[calc(100vh-72px)] items-center justify-center px-4 py-12">
+      {/* cartão em vidro sobre o fundo de folhas do site */}
+      <div className="vidro-cartao w-full max-w-md rounded-2xl p-8">
         <div className="mb-6 flex flex-col items-center text-center">
           <Image src="/marca-faperon.png" alt="" width={56} height={56} className="h-14 w-14" />
           <h1 className="mt-3 text-xl font-semibold text-ink">Acessar o sistema</h1>

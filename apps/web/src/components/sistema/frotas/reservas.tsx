@@ -13,6 +13,7 @@ import { formatarPlaca } from "@/lib/sistema/placa";
 import { conflitoDeReserva, MENSAGEM_CONFLITO, validarRetorno } from "@/lib/sistema/reservas";
 import type { Reserva, SituacaoReserva } from "@/lib/sistema/tipos";
 import { Dialogo } from "../dialogo";
+import { Segmentado } from "../segmentado";
 
 const ROTULO_RESERVA: Record<SituacaoReserva, string> = {
   agendada: "Agendada",
@@ -76,7 +77,7 @@ function FormularioReserva({ inicial, aoSalvar, aoCancelar }: { inicial: Reserva
         <Button variant="ghost" onClick={aoCancelar}>
           Cancelar
         </Button>
-        <Button type="submit">Reservar</Button>
+        <Button variant="vidro" type="submit">Reservar</Button>
       </div>
     </form>
   );
@@ -105,7 +106,7 @@ function PedidoDeKm({ titulo, rotulo, minimo, aoConfirmar, aoCancelar }: { titul
           <Button variant="ghost" onClick={aoCancelar}>
             Cancelar
           </Button>
-          <Button type="submit">Confirmar</Button>
+          <Button variant="vidro" type="submit">Confirmar</Button>
         </div>
       </form>
     </Dialogo>
@@ -140,14 +141,16 @@ export function Reservas() {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div role="group" aria-label="Quais reservas mostrar" className="flex rounded-xl border border-line p-0.5">
-          {(["minhas", "todas"] as const).map((f) => (
-            <button key={f} type="button" aria-pressed={filtro === f} onClick={() => setFiltro(f)} className={filtro === f ? "rounded-lg bg-brand px-3 py-1.5 text-sm font-medium text-white" : "rounded-lg px-3 py-1.5 text-sm font-medium text-ink-muted"}>
-              {f === "minhas" ? "Minhas reservas" : "Todas"}
-            </button>
-          ))}
-        </div>
-        <Button
+        <Segmentado
+          rotulo="Quais reservas mostrar"
+          valor={filtro}
+          aoMudar={setFiltro}
+          opcoes={[
+            { valor: "minhas", rotulo: "Minhas reservas" },
+            { valor: "todas", rotulo: "Todas" },
+          ]}
+        />
+        <Button variant="vidro"
           onClick={() =>
             setNova({ id: novoId("reserva"), veiculoId: "", funcionarioId: funcionario.id, saida: `${amanha}T08:00`, retorno: `${amanha}T18:00`, destino: "", motivo: "", kmInicial: null, kmFinal: null, situacao: "agendada" })
           }
@@ -172,11 +175,11 @@ export function Reservas() {
                   {r.kmInicial != null && r.kmFinal != null && ` · ${km(r.kmFinal - r.kmInicial)} rodados`}
                 </p>
               </div>
-              {minha && (
+              {minha && (r.situacao === "agendada" || r.situacao === "em_uso") && (
                 <div className="flex gap-2">
                   {r.situacao === "agendada" && (
                     <>
-                      <Button size="sm" variant="outline" onClick={() => setKm({ reserva: r, etapa: "saida" })}>
+                      <Button size="sm" variant="vidro-claro" onClick={() => setKm({ reserva: r, etapa: "saida" })}>
                         Registrar saída
                       </Button>
                       <Button size="sm" variant="ghost" onClick={() => mudar(r.id, { situacao: "cancelada" })}>
@@ -185,7 +188,7 @@ export function Reservas() {
                     </>
                   )}
                   {r.situacao === "em_uso" && (
-                    <Button size="sm" onClick={() => setKm({ reserva: r, etapa: "retorno" })}>
+                    <Button variant="vidro" size="sm" onClick={() => setKm({ reserva: r, etapa: "retorno" })}>
                       Registrar retorno
                     </Button>
                   )}

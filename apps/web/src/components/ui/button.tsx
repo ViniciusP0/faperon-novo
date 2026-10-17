@@ -12,6 +12,9 @@ export const buttonVariants = cva(
         outline: "border border-brand-fg text-brand-fg hover:bg-brand-soft",
         light: "bg-white text-brand-dark hover:bg-brand-soft",
         ghost: "text-brand-fg hover:bg-brand-soft",
+        // Área do sistema (protótipo): vidro sóbrio na paleta FAPERON; classes em globals.css.
+        vidro: "vidro-primario",
+        "vidro-claro": "vidro-claro",
       },
       size: {
         sm: "h-9 px-3 text-sm",

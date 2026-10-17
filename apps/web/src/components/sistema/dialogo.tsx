@@ -15,7 +15,7 @@ export function Dialogo({ titulo, aoFechar, children }: { titulo: string; aoFech
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/35 p-0 backdrop-blur-[3px] sm:items-center sm:p-4">
       <div
         ref={caixa}
         role="dialog"

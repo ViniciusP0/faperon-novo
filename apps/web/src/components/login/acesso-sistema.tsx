@@ -61,7 +61,7 @@ export function AcessoSistema() {
         <Input id="login-senha" name="senha" type="password" autoComplete="current-password" required />
       </div>
       {erro && <Alert tone="erro">{erro}</Alert>}
-      <Button type="submit" size="lg" className="mt-1 w-full" disabled={conferindo}>
+      <Button variant="vidro" type="submit" size="lg" className="mt-1 w-full" disabled={conferindo}>
         Entrar
       </Button>
     </form>

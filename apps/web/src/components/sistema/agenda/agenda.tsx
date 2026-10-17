@@ -11,6 +11,7 @@ import { novoId, useSistema } from "@/lib/sistema/estado";
 import type { Evento } from "@/lib/sistema/tipos";
 import { cn } from "@/lib/utils";
 import { Dialogo } from "../dialogo";
+import { Segmentado } from "../segmentado";
 import { FormularioEvento } from "./formulario-evento";
 
 const DIAS = [
@@ -25,11 +26,12 @@ const DIAS = [
 
 const DIAS_DA_LISTA = 30;
 
-const corDaOrigem: Record<Evento["origem"], string> = {
-  pessoal: "border-l-brand bg-brand-soft",
-  faperon: "border-l-brand-lime bg-warm",
-  frota: "border-l-steel bg-steel-soft",
-  espaco: "border-l-brand-light bg-surface-alt",
+// Origem pelo tom do fundo e por um ponto de cor, sem faixa lateral.
+const corDaOrigem: Record<Evento["origem"], { fundo: string; ponto: string }> = {
+  pessoal: { fundo: "bg-brand-soft", ponto: "bg-brand" },
+  faperon: { fundo: "bg-warm", ponto: "bg-brand-lime" },
+  frota: { fundo: "bg-steel-soft", ponto: "bg-steel" },
+  espaco: { fundo: "bg-surface-alt", ponto: "bg-brand-light" },
 };
 
 function Selo({ origem }: { origem: Evento["origem"] }) {
@@ -72,22 +74,25 @@ export function Agenda() {
   function Item({ e, compacto }: { e: Evento; compacto?: boolean }) {
     const conteudo = (
       <>
-        <span className="font-medium">{e.inicio}</span> {e.titulo}
-        <Selo origem={e.origem} />
-        {!compacto && e.local && <span className="block text-xs text-ink-muted">{e.local}</span>}
+        <span aria-hidden="true" className={cn("mt-[0.4rem] h-1.5 w-1.5 shrink-0 rounded-full", corDaOrigem[e.origem].ponto)} />
+        <span className="min-w-0">
+          <span className="font-medium tabular-nums">{e.inicio}</span> {e.titulo}
+          <Selo origem={e.origem} />
+          {!compacto && e.local && <span className="block text-xs text-ink-muted">{e.local}</span>}
+        </span>
       </>
     );
-    const classe = cn("block w-full rounded-md border-l-4 px-2 py-1 text-left text-xs text-ink", corDaOrigem[e.origem]);
+    const classe = cn("flex w-full gap-1.5 rounded-lg px-2 py-1 text-left text-xs text-ink transition duration-150 ease-out", corDaOrigem[e.origem].fundo);
     if (e.origem === "pessoal") {
       return (
-        <button type="button" className={cn(classe, "hover:brightness-95")} onClick={() => setEditando({ evento: e, novo: false })} aria-label={`Editar ${e.titulo}, ${formatarDataBR(e.data)} às ${e.inicio}`}>
+        <button type="button" className={cn(classe, "hover:-translate-y-px hover:shadow-[0_6px_14px_-10px_rgb(0_70_58/0.45)] motion-reduce:hover:translate-y-0")} onClick={() => setEditando({ evento: e, novo: false })} aria-label={`Editar ${e.titulo}, ${formatarDataBR(e.data)} às ${e.inicio}`}>
           {conteudo}
         </button>
       );
     }
     if (e.origem === "frota") {
       return (
-        <Link href="/sistema/frotas?aba=reservas" className={cn(classe, "hover:brightness-95")}>
+        <Link href="/sistema/frotas?aba=reservas" className={cn(classe, "hover:-translate-y-px hover:shadow-[0_6px_14px_-10px_rgb(0_70_58/0.45)] motion-reduce:hover:translate-y-0")}>
           {conteudo}
         </Link>
       );
@@ -104,20 +109,16 @@ export function Agenda() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold text-ink">Minha agenda</h1>
         <div className="flex flex-wrap items-center gap-2">
-          <div role="group" aria-label="Visão da agenda" className="flex rounded-xl border border-line p-0.5">
-            {(["mes", "lista"] as const).map((v) => (
-              <button
-                key={v}
-                type="button"
-                aria-pressed={visao === v}
-                onClick={() => setVisao(v)}
-                className={cn("rounded-lg px-3 py-1.5 text-sm font-medium", visao === v ? "bg-brand text-white" : "text-ink-muted hover:text-ink")}
-              >
-                {v === "mes" ? "Mês" : "Lista"}
-              </button>
-            ))}
-          </div>
-          <Button onClick={() => novo()}>
+          <Segmentado
+            rotulo="Visão da agenda"
+            valor={visao}
+            aoMudar={setVisao}
+            opcoes={[
+              { valor: "mes", rotulo: "Mês" },
+              { valor: "lista", rotulo: "Lista" },
+            ]}
+          />
+          <Button variant="vidro" onClick={() => novo()}>
             <Plus aria-hidden="true" className="h-4 w-4" />
             Novo evento
           </Button>
@@ -133,7 +134,7 @@ export function Agenda() {
             <Button variant="ghost" size="sm" onClick={() => andarMes(-1)} aria-label="Mês anterior">
               <ChevronLeft aria-hidden="true" className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setMes({ ano: Number(hoje.slice(0, 4)), mes0: Number(hoje.slice(5, 7)) - 1 })}>
+            <Button variant="vidro-claro" size="sm" onClick={() => setMes({ ano: Number(hoje.slice(0, 4)), mes0: Number(hoje.slice(5, 7)) - 1 })}>
               Hoje
             </Button>
             <Button variant="ghost" size="sm" onClick={() => andarMes(1)} aria-label="Próximo mês">
@@ -164,7 +165,7 @@ export function Agenda() {
                         key={dia}
                         className={cn(
                           "h-28 border border-line p-1 align-top",
-                          !dia.startsWith(mesAtual) && "bg-surface-alt/60 text-ink-muted",
+                          !dia.startsWith(mesAtual) && "bg-surface-alt text-ink-muted",
                         )}
                       >
                         <div className="mb-1 flex items-center justify-between">
@@ -174,8 +175,8 @@ export function Agenda() {
                           >
                             {Number(dia.slice(8))}
                           </span>
-                          <button type="button" onClick={() => novo(dia)} className="rounded px-1 text-xs text-ink-muted opacity-60 hover:bg-brand-soft hover:opacity-100" aria-label={`Novo evento em ${formatarDataBR(dia)}`}>
-                            +
+                          <button type="button" onClick={() => novo(dia)} className="rounded-md p-0.5 text-ink-muted opacity-50 transition hover:bg-brand-soft hover:text-brand-strong hover:opacity-100" aria-label={`Novo evento em ${formatarDataBR(dia)}`}>
+                            <Plus aria-hidden="true" className="h-3.5 w-3.5" />
                           </button>
                         </div>
                         <ul className="grid gap-1">

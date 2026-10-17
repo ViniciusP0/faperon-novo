@@ -155,7 +155,7 @@ export function FormularioPedido({ base, pedidos, aoEnviar, aoCancelar }: Props)
         <Button variant="ghost" onClick={aoCancelar}>
           Cancelar
         </Button>
-        <Button type="submit">Enviar para a fila</Button>
+        <Button variant="vidro" type="submit">Enviar para a fila</Button>
       </div>
     </form>
   );

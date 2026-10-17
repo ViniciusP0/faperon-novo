@@ -12,9 +12,11 @@ export const metadata: Metadata = {
 export default function SistemaLayout({ children }: { children: ReactNode }) {
   return (
     <SistemaProvider>
-      <BarraSistema />
-      <div className="container py-8">
-        <ExigeLogin>{children}</ExigeLogin>
+      <div className="area-sistema">
+        <BarraSistema />
+        <div className="container py-10">
+          <ExigeLogin>{children}</ExigeLogin>
+        </div>
       </div>
     </SistemaProvider>
   );

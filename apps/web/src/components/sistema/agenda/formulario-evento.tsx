@@ -80,7 +80,7 @@ export function FormularioEvento({ inicial, novo, aoSalvar, aoExcluir, aoCancela
           <Button variant="ghost" onClick={aoCancelar}>
             Cancelar
           </Button>
-          <Button type="submit">Salvar</Button>
+          <Button variant="vidro" type="submit">Salvar</Button>
         </div>
       </div>
     </form>

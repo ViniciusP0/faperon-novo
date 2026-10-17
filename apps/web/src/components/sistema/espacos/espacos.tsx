@@ -44,7 +44,7 @@ function PainelSemana() {
         <Button variant="ghost" size="sm" onClick={() => setInicio(somarDias(inicio, -7))} aria-label="7 dias antes">
           <ChevronLeft aria-hidden="true" className="h-4 w-4" />
         </Button>
-        <Button variant="outline" size="sm" onClick={() => setInicio(hoje)}>
+        <Button variant="vidro-claro" size="sm" onClick={() => setInicio(hoje)}>
           Hoje
         </Button>
         <Button variant="ghost" size="sm" onClick={() => setInicio(somarDias(inicio, 7))} aria-label="7 dias depois">
@@ -85,9 +85,10 @@ function PainelSemana() {
                           return (
                             <li
                               key={p.id}
-                              className={cn("rounded-md border-l-4 px-1.5 py-1", p.status === "aprovado" ? "border-l-brand bg-brand-soft" : "border-l-brand-lime bg-warm", conflito && "ring-2 ring-danger")}
+                              className={cn("rounded-lg px-1.5 py-1", p.status === "aprovado" ? "bg-brand-soft" : "bg-warm", conflito && "ring-1 ring-inset ring-danger")}
                             >
-                              <span className="font-medium">
+                              <span aria-hidden="true" className={cn("mr-1 inline-block h-1.5 w-1.5 rounded-full align-middle", p.status === "aprovado" ? "bg-brand" : "bg-brand-lime")} />
+                              <span className="font-medium tabular-nums">
                                 {p.inicio}–{p.fim}
                               </span>{" "}
                               {p.nome}
@@ -188,10 +189,10 @@ function Fila() {
             <DetalhesPedido p={p} mostrarQuem />
             {gestor && (
               <div className="flex gap-2">
-                <Button size="sm" onClick={() => aprovar(p)} aria-label={`Aprovar ${p.nome}`}>
+                <Button variant="vidro" size="sm" onClick={() => aprovar(p)} aria-label={`Aprovar ${p.nome}`}>
                   Aprovar
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => setRecusando(p)} aria-label={`Recusar ${p.nome}`}>
+                <Button size="sm" variant="vidro-claro" onClick={() => setRecusando(p)} aria-label={`Recusar ${p.nome}`}>
                   Recusar
                 </Button>
               </div>
@@ -211,7 +212,7 @@ function Fila() {
               <Button variant="ghost" onClick={() => setRecusando(null)}>
                 Cancelar
               </Button>
-              <Button type="submit">Recusar pedido</Button>
+              <Button variant="vidro" type="submit">Recusar pedido</Button>
             </div>
           </form>
         </Dialogo>
@@ -274,7 +275,7 @@ export function Espacos() {
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold text-ink">Agendamento de espaços</h1>
-        <Button onClick={abrirNovo}>Novo pedido</Button>
+        <Button variant="vidro" onClick={abrirNovo}>Novo pedido</Button>
       </div>
       {enviado && (
         <Alert tone="info" className="mb-4">
