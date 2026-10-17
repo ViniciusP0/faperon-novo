@@ -71,13 +71,18 @@ export type ParteTexto = { tipo: "texto"; texto: string } | { tipo: "link"; text
 
 const RE_LINK = /\[([^\]]+)\]\(([^)\s]+)\)/g;
 
+/** Rota do próprio site; "//host" é URL de outro domínio (sem protocolo), não rota interna. */
+export function ehRotaInterna(href: string): boolean {
+  return href.startsWith("/") && !href.startsWith("//");
+}
+
 /** O servidor já conferiu os links; aqui só se transforma Markdown em partes, aceitando rota interna ou https. */
 export function partesDoTexto(texto: string): ParteTexto[] {
   const partes: ParteTexto[] = [];
   let ultimo = 0;
   for (const m of texto.matchAll(RE_LINK)) {
     const href = m[2]!;
-    if (!href.startsWith("/") && !href.startsWith("https://")) continue;
+    if (!ehRotaInterna(href) && !href.startsWith("https://")) continue;
     if (m.index! > ultimo) partes.push({ tipo: "texto", texto: texto.slice(ultimo, m.index) });
     partes.push({ tipo: "link", texto: m[1]!, href });
     ultimo = m.index! + m[0].length;

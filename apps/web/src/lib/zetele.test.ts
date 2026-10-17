@@ -20,6 +20,10 @@ describe("partesDoTexto", () => {
   it("não vira link o que não é rota interna nem https", () => {
     expect(partesDoTexto("[x](javascript:alert(1))")).toEqual([{ tipo: "texto", texto: "[x](javascript:alert(1))" }]);
   });
+
+  it("não trata //host como rota interna", () => {
+    expect(partesDoTexto("[x](//golpe.example)")).toEqual([{ tipo: "texto", texto: "[x](//golpe.example)" }]);
+  });
 });
 
 describe("cliente da API", () => {
