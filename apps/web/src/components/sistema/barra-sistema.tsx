@@ -15,12 +15,17 @@ const SECOES = [
 
 /** Barra do sistema: faixa de protótipo, quem está logado, navegação e ações. */
 export function BarraSistema() {
-  const { funcionario, sair, restaurar } = useSistema();
+  const { funcionario, sair, encerrar, restaurar } = useSistema();
   const caminho = usePathname();
   const router = useRouter();
 
   function trocar() {
     sair();
+    router.push("/login");
+  }
+
+  function sairDoSistema() {
+    encerrar();
     router.push("/login");
   }
 
@@ -61,6 +66,11 @@ export function BarraSistema() {
           {funcionario && (
             <button type="button" onClick={trocar} className="rounded-lg border border-line px-3 py-1 font-medium text-brand-fg hover:bg-brand-soft">
               Trocar de funcionário
+            </button>
+          )}
+          {funcionario && (
+            <button type="button" onClick={sairDoSistema} className="rounded-lg px-3 py-1 font-medium text-ink-muted hover:bg-surface-alt hover:text-ink">
+              Sair
             </button>
           )}
         </div>

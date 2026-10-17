@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { agendaDeExemplo, eventosInstitucionais, frotaDeExemplo, pedidosDeExemplo } from "@/content/sistema/exemplo";
 import { funcionarioPorId } from "@/content/sistema/funcionarios";
-import { apagarTudo, gravar, gravarSessao, ler, lerSessao } from "./armazenamento";
+import { apagarTudo, gravar, gravarAcesso, gravarSessao, ler, lerAcesso, lerSessao } from "./armazenamento";
 import { hojeISO } from "./datas";
 import type { EstadoFrota, Evento, Funcionario, PedidoEspaco } from "./tipos";
 
@@ -11,8 +11,13 @@ interface ContextoSistema {
   /** Falso até ler o storage (no servidor e no primeiro render): evita descompasso de hidratação. */
   pronto: boolean;
   hoje: string;
+  /** Login (e-mail e senha) feito nesta aba. */
+  acesso: boolean;
   funcionario: Funcionario | null;
+  /** Troca de perfil: mantém o login. */
   sair: () => void;
+  /** Sai do sistema: desfaz o login e o perfil. */
+  encerrar: () => void;
   /** Eventos pessoais do funcionário logado. */
   eventos: Evento[];
   institucionais: Evento[];
@@ -32,13 +37,16 @@ const FROTA_VAZIA: EstadoFrota = { veiculos: [], reservas: [], abastecimentos: [
 export function SistemaProvider({ children }: { children: ReactNode }) {
   const [pronto, setPronto] = useState(false);
   const [hoje] = useState(hojeISO);
+  const [acesso, setAcesso] = useState(false);
   const [funcionario, setFuncionario] = useState<Funcionario | null>(null);
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [frota, setFrota] = useState<EstadoFrota>(FROTA_VAZIA);
   const [pedidos, setPedidos] = useState<PedidoEspaco[]>([]);
 
   const carregar = useCallback(() => {
-    const atual = funcionarioPorId(lerSessao());
+    const liberado = lerAcesso();
+    setAcesso(liberado);
+    const atual = liberado ? funcionarioPorId(lerSessao()) : null;
     setFuncionario(atual);
     setEventos(atual ? ler(`agenda:${atual.id}`, agendaDeExemplo(atual.id, hoje)) : []);
     setFrota(ler("frota", frotaDeExemplo(hoje)));
@@ -56,10 +64,17 @@ export function SistemaProvider({ children }: { children: ReactNode }) {
     return {
       pronto,
       hoje,
+      acesso,
       funcionario,
       sair: () => {
         gravarSessao(null);
         setFuncionario(null);
+      },
+      encerrar: () => {
+        gravarSessao(null);
+        gravarAcesso(false);
+        setFuncionario(null);
+        setAcesso(false);
       },
       eventos,
       institucionais: eventosInstitucionais(hoje),
@@ -84,7 +99,7 @@ export function SistemaProvider({ children }: { children: ReactNode }) {
         carregar();
       },
     };
-  }, [pronto, hoje, funcionario, eventos, frota, pedidos, carregar]);
+  }, [pronto, hoje, acesso, funcionario, eventos, frota, pedidos, carregar]);
 
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;
 }

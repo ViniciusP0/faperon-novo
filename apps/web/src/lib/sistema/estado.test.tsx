@@ -1,12 +1,13 @@
 import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { frotaDeExemplo, pedidosDeExemplo } from "@/content/sistema/exemplo";
-import { gravarSessao } from "./armazenamento";
+import { gravarAcesso, gravarSessao } from "./armazenamento";
 import { SistemaProvider, useSistema } from "./estado";
 
 beforeEach(() => {
   window.localStorage.clear();
   window.sessionStorage.clear();
+  gravarAcesso(true);
 });
 
 function Sonda() {

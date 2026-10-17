@@ -7,8 +7,17 @@ async function semViolacoesSerias(page: Page) {
   expect(serias, JSON.stringify(serias.map((v) => ({ id: v.id, nos: v.nodes.map((n) => n.target) })), null, 2)).toEqual([]);
 }
 
-async function entrarComo(page: Page, nome: string) {
+async function login(page: Page) {
   await page.goto("/login");
+  if (await page.getByLabel("E-mail").isVisible().catch(() => false)) {
+    await page.getByLabel("E-mail").fill("user@faperon.br");
+    await page.getByLabel("Senha").fill("Senha@123");
+    await page.getByRole("button", { name: "Entrar", exact: true }).click();
+  }
+}
+
+async function entrarComo(page: Page, nome: string) {
+  await login(page);
   await page.getByRole("button", { name: `Entrar como ${nome}` }).click();
   await expect(page).toHaveURL(/\/sistema$/);
   await expect(page.getByRole("heading", { name: `Olá, ${nome.split(" ")[0]}` })).toBeVisible();
@@ -19,6 +28,10 @@ test("protótipo do sistema: agenda individual, reserva de veículo, frota e esp
   await page.goto("/login");
   await expect(page.getByText(/Protótipo: dados fictícios/)).toBeVisible();
   await semViolacoesSerias(page);
+  await page.getByLabel("E-mail").fill("user@faperon.br");
+  await page.getByLabel("Senha").fill("errada");
+  await page.getByRole("button", { name: "Entrar", exact: true }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "E-mail ou senha incorretos." })).toBeVisible();
 
   // Carla cria um evento e reserva um veículo; a reserva aparece na agenda dela
   await entrarComo(page, "Carla Mendes");
@@ -66,8 +79,8 @@ test("protótipo do sistema: agenda individual, reserva de veículo, frota e esp
   await semViolacoesSerias(page);
 });
 
-test("sem funcionário escolhido, o sistema pede para entrar", async ({ page }) => {
+test("sem login, o sistema pede para entrar", async ({ page }) => {
   await page.goto("/sistema/frotas");
-  await expect(page.getByRole("heading", { name: "Escolha um funcionário para entrar" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Faça login para entrar no sistema" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Ir para Acessar o sistema" })).toHaveAttribute("href", "/login");
 });

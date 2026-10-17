@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EscolhaFuncionario } from "@/components/login/escolha-funcionario";
-import { gravarSessao, lerSessao } from "@/lib/sistema/armazenamento";
+import { gravarAcesso, gravarSessao, lerSessao } from "@/lib/sistema/armazenamento";
 import { SistemaProvider } from "@/lib/sistema/estado";
 import { BarraSistema } from "./barra-sistema";
 import { ExigeLogin } from "./exige-login";
@@ -14,6 +14,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push }), usePathname: ()
 beforeEach(() => {
   window.localStorage.clear();
   window.sessionStorage.clear();
+  gravarAcesso(true);
   push.mockClear();
 });
 
@@ -34,6 +35,13 @@ describe("entrada no protótipo", () => {
     await user.click(screen.getByRole("button", { name: "Entrar como Ana Ribeiro" }));
     expect(lerSessao()).toBe("ana");
     expect(push).toHaveBeenCalledWith("/sistema");
+  });
+
+  it("sem login, o sistema pede para fazer login", () => {
+    gravarAcesso(false);
+    render(<Sistema><p>conteúdo</p></Sistema>);
+    expect(screen.getByRole("heading", { name: "Faça login para entrar no sistema" })).toBeInTheDocument();
+    expect(screen.queryByText("conteúdo")).toBeNull();
   });
 
   it("sem sessão, o sistema pede para escolher um funcionário", () => {

@@ -13,7 +13,7 @@ Critério de sucesso: em uma demonstração, alguém entra como "Carla (Comunica
 ## Decisões já tomadas
 
 - **Fidelidade:** protótipo navegável só no front (Next.js), com dados fictícios. O que a pessoa cria fica só no navegador dela. Nada vai para o Django nem para fora do navegador.
-- **Entrada:** no `/login`, a pessoa escolhe um entre 5 funcionários fictícios. Não há senha nem e-mail. Uma faixa avisa: "Protótipo: dados fictícios, salvos só neste navegador".
+- **Entrada (revista a pedido do usuário):** no `/login`, a pessoa entra com o acesso de demonstração `user@faperon.br` / `Senha@123`, conferido no navegador contra o SHA-256 da senha (a senha não fica em texto no código). O login trava a demonstração, mas não é segurança real. Depois, escolhe um entre 5 perfis fictícios. Uma faixa avisa: "Protótipo: dados fictícios, salvos só neste navegador".
 - **Agenda:** individual, com os eventos institucionais da FAPERON visíveis para todos (só leitura). As reservas de veículo da pessoa aparecem na agenda dela.
 - **Frotas:** cadastro de veículos, reserva e uso, abastecimento e manutenção, e painel de custos.
 - **Papel de gestor da frota:** só o gestor cadastra e edita veículos e registra manutenção. Qualquer funcionário reserva veículo e registra abastecimento.

@@ -39,6 +39,9 @@ test("no celular, o balão do Zétele mostra o campo e o botão de fechar", asyn
 
 test("celular: o protótipo do sistema não tem rolagem horizontal", async ({ page }) => {
   await page.goto("/login");
+  await page.getByLabel("E-mail").fill("user@faperon.br");
+  await page.getByLabel("Senha").fill("Senha@123");
+  await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await page.getByRole("button", { name: "Entrar como Ana Ribeiro" }).click();
   for (const rota of ["/sistema", "/sistema/agenda", "/sistema/frotas", "/sistema/espacos"]) {
     await page.goto(rota);

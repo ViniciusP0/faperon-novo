@@ -61,6 +61,17 @@ export function gravar(chave: string, valor: unknown): void {
   gravarBruto(local(), PREFIXO + chave, JSON.stringify(valor));
 }
 
+const CHAVE_ACESSO = `${PREFIXO}acesso`;
+
+/** Login do protótipo feito nesta aba (some ao fechar a aba). */
+export function lerAcesso(): boolean {
+  return lerBruto(sessao(), CHAVE_ACESSO) === "1";
+}
+
+export function gravarAcesso(liberado: boolean): void {
+  gravarBruto(sessao(), CHAVE_ACESSO, liberado ? "1" : null);
+}
+
 export function lerSessao(): string | null {
   return lerBruto(sessao(), CHAVE_SESSAO);
 }

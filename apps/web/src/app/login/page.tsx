@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { EscolhaFuncionario } from "@/components/login/escolha-funcionario";
+import { AcessoSistema } from "@/components/login/acesso-sistema";
 import { Alert } from "@/components/ui/feedback";
 import { PROTOTIPO } from "@/content/sistema/funcionarios";
 
@@ -17,14 +17,14 @@ export default function LoginPage() {
         <div className="mb-6 flex flex-col items-center text-center">
           <Image src="/marca-faperon.png" alt="" width={56} height={56} className="h-14 w-14" />
           <h1 className="mt-3 text-xl font-semibold text-ink">Acessar o sistema</h1>
-          <p className="mt-1 text-sm text-ink-muted">Escolha um funcionário de exemplo para conhecer a agenda, a frota e o agendamento de espaços.</p>
+          <p className="mt-1 text-sm text-ink-muted">Entre para conhecer a agenda, a frota e o agendamento de espaços.</p>
         </div>
 
         <Alert tone="info" className="mb-4">
-          {PROTOTIPO.faixa} Não há contas reais: o acesso com e-mail e senha da FAPERON virá na versão definitiva.
+          {PROTOTIPO.faixa} Use o acesso de demonstração que a equipe passou; as contas reais da FAPERON virão na versão definitiva.
         </Alert>
 
-        <EscolhaFuncionario />
+        <AcessoSistema />
 
         <p className="mt-6 text-center text-sm text-ink-muted">
           <Link href="/" className="font-medium text-brand-fg hover:underline">

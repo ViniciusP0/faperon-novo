@@ -13,7 +13,7 @@ A FAPERON quer validar três módulos do sistema interno atrás do botão "Acess
 
 ## Decisão
 
-- O `/login` passa a ser a escolha de um funcionário fictício; não há e-mail nem senha.
+- O `/login` pede o acesso de demonstração (`user@faperon.br`, senha combinada com a equipe), conferido no navegador contra o SHA-256 da senha. Ele trava a demonstração e não é segurança real: o código do front é público. Depois do login, a pessoa escolhe um entre 5 perfis fictícios.
 - Papel único de gestor (Marcos, Administrativo) para cadastrar veículos, registrar manutenção e aprovar ou recusar pedidos de espaço.
 - As regras ficam em funções puras e testadas em `apps/web/src/lib/sistema/` (conflito de reserva, revisão por km e data, custos por mês, períodos e conflitos de espaço), prontas para migrar para o backend.
 - Toda tela mostra a faixa "Protótipo: dados fictícios, salvos só neste navegador"; as rotas são `noindex` e ficam fora do sitemap.

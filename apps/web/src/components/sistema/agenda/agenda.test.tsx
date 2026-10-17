@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { gravar, gravarSessao } from "@/lib/sistema/armazenamento";
+import { gravar, gravarAcesso, gravarSessao } from "@/lib/sistema/armazenamento";
 import { hojeISO } from "@/lib/sistema/datas";
 import { SistemaProvider } from "@/lib/sistema/estado";
 import { Agenda } from "./agenda";
@@ -11,6 +11,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }), usePat
 beforeEach(() => {
   window.localStorage.clear();
   window.sessionStorage.clear();
+  gravarAcesso(true);
 });
 
 function renderAgenda(quem: string) {
