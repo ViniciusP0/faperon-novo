@@ -150,3 +150,29 @@ Os componentes só chamam essas funções.
 - **Ser confundido com o sistema real:** a faixa de protótipo aparece em todas as telas e o `/login` deixa claro que não há conta real.
 - **Dados só no navegador:** é a intenção do protótipo e está dito na faixa. O backend real é uma entrega futura, com ADR.
 - **Política de privacidade:** continua verdadeira, porque nada sai do navegador. O texto sobre o login, que diz que nada é enviado nem guardado, precisa citar que o protótipo guarda dados fictícios só no navegador.
+
+
+## Ampliação (17/10/2026, pedidos do usuário)
+
+### Prestação de contas básica (`/sistema/contas`)
+- **Despesa:**
+  - data, centro de custo (Presidência, Administrativo, Técnica, Comunicação, Sindical; por padrão, o da área do funcionário);
+  - categoria: material de escritório, combustível, alimentação, hospedagem, transporte, serviços, eventos, outros;
+  - descrição, fornecedor, valor (> 0);
+  - comprovante: imagem ou PDF de até 300 KB guardado no navegador; acima disso, só o nome do arquivo.
+- **Status:** `rascunho` → `enviada` → `aprovada` | `devolvida` (com observação do gestor). Rascunho e devolvida podem ser editados, excluídos e reenviados.
+- **Gestor das contas:** o Marcos (Administrativo) aprova ou devolve.
+- **Abas:** Minhas despesas | Aprovação (só gestor) | Por centro de custo (totais por centro e categoria, só aprovadas e enviadas).
+
+### Relatórios (`/sistema/relatorios`)
+- **Tipos:** Frota (viagens, km, combustível, manutenção e custo por veículo), Espaços (pedidos por espaço e status, horas aprovadas, conflitos), Agenda (eventos do funcionário e da FAPERON) e Prestação de contas (despesas por centro, categoria, funcionário e status; o gestor vê todos, os demais só os próprios).
+- **Período:** de/até, com atalhos "Este mês", "Últimos 30 dias" e "Últimos 3 meses".
+- **Saídas:** prévia em tabela com totais, "Imprimir / salvar PDF" (CSS de impressão sem cabeçalho, navegação nem Zétele) e "Baixar CSV" (separador `;`, UTF-8 com BOM, para abrir no Excel).
+
+### Agendar por voz (Agenda, Reservas, Espaços)
+- **Transcrição:** o botão "Agendar por voz" usa o reconhecimento de voz do navegador (Web Speech API, `pt-BR`), com a transcrição ao vivo. Sem suporte, aparece um campo para digitar a frase.
+- **Interpretação:** `POST /api/v1/sistema/interpretar` com `{tipo: "evento" | "reserva" | "espaco", texto, hoje, veiculos?, espacos?}`. O Django pede ao Claude Sonnet 5.5 a saída estruturada do tipo, com a data de hoje e o dia da semana para resolver "terça" e "dia 20".
+- **Conferência em código:** data `YYYY-MM-DD`; horários `HH:mm` com fim depois do início; veículo e espaço precisam estar entre os enviados; números positivos. Campo inválido volta vazio.
+- **Formulário:** abre já preenchido, para a pessoa revisar e salvar. Nada é salvo sem confirmação.
+- **Limites e registro:** os mesmos do Zétele (por IP, global e diário). A transcrição não é gravada no servidor.
+- **Privacidade:** a política cita o serviço de voz do navegador e o envio do texto à Anthropic.
