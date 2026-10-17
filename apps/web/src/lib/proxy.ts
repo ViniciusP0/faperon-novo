@@ -4,6 +4,7 @@ const PERMITIDOS = ["/api/v1/"];
 
 /** Acima do timeout do gunicorn (60 s): uma API travada não segura a conexão do Next para sempre. */
 const TEMPO_LIMITE_MS = 65_000;
+const CORPO_MAXIMO = 16_384; // o Zétele manda no máximo ~9 KB (pergunta + 6 mensagens)
 
 /** Último item do X-Forwarded-For: o que o Funnel (único proxy confiável) acrescentou. O resto pode ter vindo do cliente. */
 export function ipDoCliente(valor: string | null): string | null {
@@ -11,7 +12,7 @@ export function ipDoCliente(valor: string | null): string | null {
   return itens.at(-1) ?? null;
 }
 
-/** Encaminha ao Django só a API pública (schema e docs ficam fora do Funnel), lendo API_INTERNAL_URL em runtime (rewrites do next.config são fixados no build). */
+/** Encaminha ao Django só a API pública (schema e docs ficam fora do Funnel); GET/HEAD sem corpo, POST com corpo limitado. Lê API_INTERNAL_URL em runtime (rewrites do next.config são fixados no build). */
 export async function proxyParaApi(req: Request): Promise<Response> {
   const base = process.env.API_INTERNAL_URL ?? "http://localhost:8000";
   const origem = new URL(req.url);
@@ -29,8 +30,17 @@ export async function proxyParaApi(req: Request): Promise<Response> {
   const ip = ipDoCliente(req.headers.get("x-forwarded-for")) ?? ipDoCliente(req.headers.get("x-real-ip"));
   if (ip) headers.set("x-forwarded-for", ip);
 
+  const temCorpo = req.method !== "GET" && req.method !== "HEAD";
+  let corpo: string | undefined;
+  if (temCorpo) {
+    corpo = await req.text();
+    if (corpo.length > CORPO_MAXIMO) return Response.json({ erro: "Corpo grande demais" }, { status: 413 });
+    const tipo = req.headers.get("content-type");
+    if (tipo) headers.set("content-type", tipo);
+  }
+
   try {
-    const res = await fetch(destino, { method: req.method, headers, redirect: "manual",
+    const res = await fetch(destino, { method: req.method, headers, body: corpo, redirect: "manual",
       cache: "no-store",
       signal: AbortSignal.timeout(TEMPO_LIMITE_MS),
     });

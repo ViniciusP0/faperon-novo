@@ -56,4 +56,40 @@ describe("proxyParaApi", () => {
     expect(res.status).toBe(200);
     expect(String(fetchFalso.mock.calls[0]![0])).toMatch(/\/api\/v1\/ranking\?produto=soja$/);
   });
+
+  it("POST repassa corpo e content-type ao Django", async () => {
+    const fetchFalso = vi.fn().mockResolvedValue(new Response("{}", { status: 200 }));
+    vi.stubGlobal("fetch", fetchFalso);
+    const corpo = JSON.stringify({ pergunta: "onde fica o ranking?", historico: [], pagina: "/" });
+    await proxyParaApi(
+      new Request("http://site.test/api/v1/zetele/perguntar", {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-forwarded-for": "203.0.113.9" },
+        body: corpo,
+      }),
+    );
+    const [url, init] = fetchFalso.mock.calls[0]!;
+    expect(String(url)).toMatch(/\/api\/v1\/zetele\/perguntar$/);
+    expect(init.method).toBe("POST");
+    expect(init.body).toBe(corpo);
+    expect((init.headers as Headers).get("content-type")).toBe("application/json");
+    expect((init.headers as Headers).get("x-forwarded-for")).toBe("203.0.113.9");
+  });
+
+  it("GET continua sem corpo", async () => {
+    const fetchFalso = vi.fn().mockResolvedValue(new Response("{}", { status: 200 }));
+    vi.stubGlobal("fetch", fetchFalso);
+    await proxyParaApi(new Request("http://site.test/api/v1/ranking"));
+    expect(fetchFalso.mock.calls[0]![1].body).toBeUndefined();
+  });
+
+  it("recusa corpo acima de 16 KB sem chamar o Django", async () => {
+    const fetchFalso = vi.fn();
+    vi.stubGlobal("fetch", fetchFalso);
+    const res = await proxyParaApi(
+      new Request("http://site.test/api/v1/zetele/perguntar", { method: "POST", body: "x".repeat(16_385) }),
+    );
+    expect(res.status).toBe(413);
+    expect(fetchFalso).not.toHaveBeenCalled();
+  });
 });

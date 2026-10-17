@@ -4,3 +4,4 @@ export const dynamic = "force-dynamic";
 
 export const GET = proxyParaApi;
 export const HEAD = proxyParaApi;
+export const POST = proxyParaApi;
