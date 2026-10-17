@@ -256,3 +256,24 @@ Registro cronológico por área, atualizado em 24/09/2026. Cada entrada tem sint
 - **Causa:** decisão do cliente durante o projeto.
 - **Solução:** o app de conteúdo e o admin saíram do Django; o conteúdo editorial passou para `apps/web/src/content` (ADR 0020, que substitui a 0004). As tabelas antigas do Wagtail continuam no banco já existente, sem efeito.
 - **Status:** resolvido.
+
+## Zétele (17/10/2026)
+
+### Testes do backend com o código montado falham no entrypoint
+- **Sintoma:** `docker compose run --rm -v "$PWD/apps/api:/app" api-dev pytest` falha com `exec /app/entrypoint.sh: permission denied`.
+- **Causa:** o `entrypoint.sh` está no git sem bit de execução (100644); a imagem faz `chmod +x`, mas o volume montado esconde a cópia da imagem.
+- **Solução ou contorno:** `docker compose run --rm --entrypoint "" -v "$PWD/apps/api:/app" api-dev <comando>` (o entrypoint só faz `exec "$@"` para comandos avulsos).
+- **Status:** contornado.
+
+### `src/lib/tema.test.ts` falha no Node 26
+- **Sintoma:** 3 testes falham com `localStorage` indefinido ao rodar `npm test` no Node 26.8.1 local.
+- **Causa:** mudança de ambiente do Node 26 com o jsdom; não é do Zétele (falha também sem as mudanças).
+- **Solução ou contorno:** nenhuma ainda; o CI usa Node 24.
+- **Status:** em aberto.
+
+### Remoção de fundo da arte do Zétele
+- **Sintoma:** o modelo padrão do `rembg` 2.0.85 (`bria-rmbg`) deixava o branco dos olhos transparente; o `u2net` deixava o vão entre braço e tronco e a sombra.
+- **Causa:** modelos de segmentação erram em arte de contorno e cores chapadas; o `bria-rmbg` tem ainda licença não comercial.
+- **Solução ou contorno:** `apps/web/scripts/recortar-zetele.py` fixa `u2net` e limpa a máscara (maior componente, buracos pequenos, vão do braço).
+- **Status:** resolvido.
+

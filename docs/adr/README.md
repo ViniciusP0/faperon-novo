@@ -30,3 +30,5 @@ Decisões de arquitetura no formato MADR (Contexto, Opções, Decisão, Consequ�
 - [0026](0026-animacoes-sutis-com-css-e-intersectionobserver.md) — Animações sutis com CSS e IntersectionObserver
 - [0027](0027-pagina-de-noticias-como-listagem-que-aponta-para-o-wix.md) — Página de notícias como listagem que aponta para o Wix
 - [0028](0028-observatorio-como-contexto-de-leitura-com-valores-deflacionados-pelo-ipca.md) — Observatório como contexto de leitura, com valores deflacionados pelo IPCA
+- [0029](0029-zetele-assistente-com-llm-restrito-ao-site-e-numeros-conferidos-em-codigo.md) — Zétele, assistente com LLM restrito ao site e números conferidos em código
+- [0030](0030-registro-anonimo-das-perguntas-do-zetele-por-90-dias.md) — Registro anônimo das perguntas do Zétele por 90 dias

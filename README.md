@@ -24,6 +24,14 @@ Com `make` (ou copie os comandos do `Makefile` no Windows): `make up`, `make see
 - `make seed` carrega o snapshot versionado em `data/seed/` sem acessar o IBGE.
 - `make snapshot` gera um novo snapshot depois de uma carga completa.
 
+## Zétele (assistente do site)
+
+O Zétele fica no canto inferior direito do Início e da Central (ADR 0029). No Início ele só orienta; na Central consulta os dados do IBGE e fala de valor da produção e preço médio.
+
+- Para responder com IA, crie `.env.local` na raiz com `ANTHROPIC_API_KEY=...` (fora do git; só o container `api` lê). Sem a chave, ele responde só às perguntas prontas.
+- `make test` não chama a Anthropic. As perguntas de ouro (30 casos, API real) rodam com `docker compose run --rm --entrypoint "" -v "$PWD/apps/api:/app" -v "$PWD/data:/app/data" api-dev pytest -m llm -s`.
+- `docker compose exec api python manage.py zetele_exportar --dias 90` exporta as perguntas (anônimas, 90 dias) em CSV para montar o FAQ.
+
 ## Estrutura
 
 ```

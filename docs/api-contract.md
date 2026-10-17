@@ -189,6 +189,25 @@ Somas e composições entre produtos contam o café da PAM uma vez só: o "Café
 
 A `series.composicao` mantém o agregado e tira o subconjunto, pela mesma lógica do café: `galinaceos-total` fica e `galinaceos-galinhas` sai; `suino-total` fica e `suino-matrizes-de-suinos` sai. Assim a soma não esconde cabeças (em Rondônia o total de galináceos é cerca de 3 vezes o de galinhas).
 
+## Zétele (assistente do site)
+
+Detalhes e motivos: ADR 0029 e ADR 0030.
+
+`GET /api/v1/zetele/estado` → `200 {"disponivel": bool, "motivo": null | "sem_chave" | "orcamento_diario" | "indisponivel"}`. Não chama o modelo.
+
+`POST /api/v1/zetele/perguntar`, corpo JSON:
+
+```json
+{"pergunta": "Qual município mais produz soja em Rondônia?",
+ "historico": [{"papel": "visitante", "texto": "..."}, {"papel": "zetele", "texto": "..."}],
+ "pagina": "/painel"}
+```
+
+- `pergunta`: 1 a 500 caracteres. `historico`: até 6 mensagens de até 1.200 caracteres; `papel` é `visitante` ou `zetele`. `pagina`: `/`, `/central-de-inteligencia`, `/central-de-inteligencia/observatorio` ou `/painel`. No `/` o Zétele só orienta (sem consultar dados).
+- `200`: `{"status": "respondida" | "recusada" | "erro", "texto": "...", "fontes": [{"rotulo", "url_fonte", "url_interna", "atualizado_em"}], "sugestoes": ["..."]}`. `fontes` é montado pelo servidor; o texto só tem links Markdown para rotas do site, para as URLs das fontes, para os hosts da lista (IBGE, CNA, FAPERON) e para o WhatsApp oficial.
+- `400 {"erro": "Parâmetros inválidos", "campos": {...}}`; `429` com `Retry-After` (6/min por IP, 30/min no total); `503 {"erro", "motivo"}` com `Retry-After` (`sem_chave`, `orcamento_diario` (1.500/dia), `indisponivel`, `ocupado` (3 simultâneas por processo)).
+- O proxy do Next aceita POST com corpo de até 16 KB.
+
 ## Saúde
 
 `GET /api/v1/saude` → `{"status": "ok", "banco": "ok"}` (usado pelo healthcheck do Compose).
