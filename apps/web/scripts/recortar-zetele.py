@@ -1,4 +1,5 @@
 """Recorta as 3 poses do Zétele da arte original, remove o fundo e grava em public/zetele/.
+Na pose acenando, troca o chapéu que ele segura por uma enxada desenhada no mesmo traço.
 
 Uso (raiz do repo):
   uv run --with pillow --with scipy --with "rembg[cpu]==2.0.85" \\
@@ -11,7 +12,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 from rembg import new_session, remove
 from scipy import ndimage
 
@@ -69,6 +70,55 @@ def recortar(pose: Image.Image, mascara: Image.Image) -> Image.Image:
     return Image.fromarray(np.dstack([cor, alfa]).astype(np.uint8), "RGBA")
 
 
+# Coordenadas da troca chapéu → enxada, pensadas na largura final (LARGURA = 320).
+REF = 320
+
+
+def trocar_chapeu_por_enxada(img: Image.Image) -> Image.Image:
+    s = img.width / REF
+    p = lambda x, y: (x * s, y * s)  # noqa: E731
+    a = np.asarray(img.convert("RGBA")).copy()
+    h, w = a.shape[:2]
+
+    # 1) a mão fecha sobre a aba: ela fica; o resto do chapéu sai
+    mao = Image.new("L", (w, h), 0)
+    ImageDraw.Draw(mao).polygon([p(34, 314), p(86, 314), p(86, 350), p(82, 368), p(70, 377), p(50, 377), p(37, 367), p(33, 340)], fill=255)
+    mao_arr = np.asarray(mao) > 0
+    ys, xs = np.mgrid[0:h, 0:w]
+    y320, x320 = ys / s, xs / s
+    borda = 84 - (y320 - 336) * (10 / 142)  # contorno esquerdo da perna esquerda
+    regiao = (y320 >= 336) & (y320 <= 478) & (x320 <= 114) & ~mao_arr
+    perna = regiao & (x320 > borda)
+    fora = regiao & ~perna
+
+    # 2) a calça coberta pelo chapéu volta com a textura da própria perna logo abaixo
+    linha_fonte = int(482 * s)
+    a[perna] = a[linha_fonte, xs[perna]]
+    a[fora, 3] = 0
+
+    img2 = Image.fromarray(a, "RGBA")
+    d2 = ImageDraw.Draw(img2)
+    contorno = (52, 36, 28, 255)
+    d2.line([p(84, 336), p(74, 482)], fill=contorno, width=round(2.6 * s))
+
+    # 3) enxada atrás do personagem: o cabo some atrás do braço e aparece no punho fechado
+    enxada = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(enxada)
+    topo, base = p(80, 210), p(41, 540)
+    d.line([topo, base], fill=contorno, width=round(9.4 * s))
+    d.line([topo, base], fill=(176, 122, 69, 255), width=round(5 * s))
+    d.line([p(79.2, 214), p(41.6, 530)], fill=(214, 160, 98, 255), width=round(1.4 * s))
+    # lâmina da enxada: estreita junto ao olho, larga no fio (à esquerda, rente ao chão)
+    lamina = [p(46, 533), p(7, 522), p(3, 554), p(45, 549)]
+    d.polygon(lamina, fill=(142, 152, 156, 255))
+    d.polygon([p(7, 522), p(12, 523), p(9, 554), p(3, 554)], fill=(198, 206, 208, 255))  # fio afiado
+    d.line([p(14, 530), p(40, 537)], fill=(170, 180, 183, 255), width=round(1.4 * s))  # brilho
+    d.line(lamina + [lamina[0]], fill=contorno, width=round(2.6 * s), joint="curve")
+    d.rounded_rectangle([p(35, 531), p(51, 543)], radius=2 * s, fill=(110, 118, 122, 255), outline=contorno, width=round(2.2 * s))  # olho da enxada
+    enxada.alpha_composite(img2)
+    return enxada
+
+
 def main(arte: Path) -> None:
     DESTINO.mkdir(parents=True, exist_ok=True)
     original = Image.open(arte).convert("RGB")
@@ -81,6 +131,9 @@ def main(arte: Path) -> None:
         assert isinstance(mascara, Image.Image)
         recorte = recortar(pose, mascara)
         recorte = recorte.crop(recorte.getbbox())
+        if nome == "acenando":
+            # pedido do usuário (17/10/2026): sai o chapéu da mão, entra uma enxada
+            recorte = trocar_chapeu_por_enxada(recorte)
         altura = round(recorte.height * LARGURA / recorte.width)
         final = recorte.resize((LARGURA, altura), Image.Resampling.LANCZOS)
         png = DESTINO / f"{nome}.png"
