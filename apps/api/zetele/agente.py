@@ -18,6 +18,12 @@ MAX_RODADAS = 3
 MAX_CHAMADAS = 4
 ORCAMENTO_SEGUNDOS = 40.0
 MAX_HISTORICO = 6
+# No Início o Zétele só orienta para as áreas do site; dados e preços ficam na Central.
+PAGINAS_SO_ORIENTACAO = frozenset({"/"})
+ORIENTACAO_INICIO = (
+    "Nesta página o Zétele só orienta para onde ir no site: não consulte dados nem cite números; "
+    "para números e preços, indique a Central de Inteligência."
+)
 
 TEXTO_RECUSA = "Isso eu não sei responder. Posso ajudar com o Painel, o Observatório ou as páginas da FAPERON."
 TEXTO_DEMORA = "Demorei demais para consultar os dados. Tente de novo ou abra o Painel Agro Analítico."
@@ -49,7 +55,8 @@ def _mensagens(historico: list[dict[str, str]], pergunta: str, pagina: str) -> l
             msgs[-1]["content"] += "\n\n" + item["texto"]
         else:
             msgs.append({"role": papel, "content": item["texto"]})
-    atual = f"(O visitante está em {pagina}.)\n\n{pergunta}"
+    aviso = f" {ORIENTACAO_INICIO}" if pagina in PAGINAS_SO_ORIENTACAO else ""
+    atual = f"(O visitante está em {pagina}.{aviso})\n\n{pergunta}"
     if msgs and msgs[-1]["role"] == "user":
         msgs[-1]["content"] += "\n\n" + atual
     else:
@@ -107,6 +114,7 @@ def responder(
     inicio = relogio()
     system = prompt.system_atual()
     messages = _mensagens(historico, pergunta, pagina)
+    ferramentas_da_pagina = [] if pagina in PAGINAS_SO_ORIENTACAO else ferramentas.DEFINICOES
     resultados: list[ResultadoFerramenta] = []
     tokens = [0, 0]
     chamadas = 0
@@ -122,7 +130,7 @@ def responder(
             r = cliente.criar(
                 system=system,
                 messages=messages,
-                tools=ferramentas.DEFINICOES,
+                tools=ferramentas_da_pagina,
                 ultima_rodada=rodada == MAX_RODADAS - 1,
             )
         except TempoEsgotado:

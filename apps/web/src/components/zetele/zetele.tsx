@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
+  PAGINAS_SO_ORIENTACAO,
   ZETELE,
   ehPaginaComZetele,
   perguntasDaPagina,
@@ -146,6 +147,7 @@ function ZeteleNaPagina({ pagina }: { pagina: PaginaComZetele }) {
           mensagens={mensagens}
           carregando={carregando}
           disponivel={disponivel}
+          soOrientacao={PAGINAS_SO_ORIENTACAO.includes(pagina)}
           espera={espera}
           mostrarChips={mostrarChips}
           visiveis={visiveis}

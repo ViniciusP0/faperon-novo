@@ -20,7 +20,7 @@ describe("Zétele: conteúdo", () => {
   });
 
   it("tem 8 perguntas prontas; as estáticas têm resposta e link para página que existe", () => {
-    expect(PERGUNTAS).toHaveLength(8);
+    expect(PERGUNTAS).toHaveLength(9);
     for (const p of PERGUNTAS.filter((q) => q.tipo === "estatica")) {
       expect(p.resposta, p.id).toBeTruthy();
       expect(ROTAS, p.id).toContain(p.href);
@@ -33,6 +33,10 @@ describe("Zétele: conteúdo", () => {
       expect(visiveis.map((p) => p.id)).toEqual(ORDEM_POR_PAGINA[pagina]);
       expect(visiveis.length + demais.length).toBe(PERGUNTAS.length);
     }
+  });
+
+  it("no Início só há perguntas de orientação (estáticas)", () => {
+    expect(perguntasDaPagina("/").visiveis.every((p) => p.tipo === "estatica")).toBe(true);
   });
 
   it("respostas estáticas usam os contatos reais", () => {

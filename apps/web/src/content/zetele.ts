@@ -60,6 +60,7 @@ export const PERGUNTAS: PerguntaPronta[] = [
   { id: "soja", texto: "Qual município mais produz soja em Rondônia?", tipo: "dados" },
   { id: "gado", texto: "Quantas cabeças de gado tem Rondônia hoje?", tipo: "dados" },
   { id: "cafe", texto: "Como a produção de café evoluiu nos últimos 10 anos?", tipo: "dados" },
+  { id: "preco", texto: "Quanto vale a produção de soja e qual o preço médio?", tipo: "dados" },
   {
     id: "informativos",
     texto: "Onde encontro os Informativos Técnicos?",
@@ -78,11 +79,14 @@ export const PERGUNTAS: PerguntaPronta[] = [
   },
 ];
 
+/** No Início o Zétele só orienta (sem dados); perguntas de dados e preços ficam na Central. */
+export const PAGINAS_SO_ORIENTACAO: readonly PaginaComZetele[] = ["/"];
+
 export const ORDEM_POR_PAGINA: Record<PaginaComZetele, string[]> = {
-  "/": ["central", "informativos", "contato", "soja"],
-  "/central-de-inteligencia": ["painel-observatorio", "soja", "cafe", "pdf"],
-  "/painel": ["pdf", "soja", "gado", "cafe"],
-  "/central-de-inteligencia/observatorio": ["painel-observatorio", "cafe", "gado", "soja"],
+  "/": ["central", "painel-observatorio", "informativos", "contato"],
+  "/central-de-inteligencia": ["painel-observatorio", "soja", "preco", "pdf"],
+  "/painel": ["pdf", "soja", "preco", "gado"],
+  "/central-de-inteligencia/observatorio": ["painel-observatorio", "cafe", "preco", "soja"],
 };
 
 export function perguntasDaPagina(pagina: PaginaComZetele): { visiveis: PerguntaPronta[]; demais: PerguntaPronta[] } {

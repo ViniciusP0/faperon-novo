@@ -11,7 +11,7 @@ URL_SOJA = "/painel?segmento=agricultura&produto=soja-em-grao&indicador=quantida
 
 def test_definicoes_sao_estritas() -> None:
     nomes = [d["name"] for d in DEFINICOES]
-    assert nomes == ["ranking_municipios", "evolucao_e_analise", "bloco_observatorio"]
+    assert nomes == ["ranking_municipios", "evolucao_e_analise", "bloco_observatorio", "valor_e_preco_medio"]
     for d in DEFINICOES:
         assert d["strict"] is True
         assert d["input_schema"]["additionalProperties"] is False
@@ -70,3 +70,27 @@ def test_erros_de_dominio_viram_erro_de_ferramenta(dados_soja: Produto) -> None:
         executar("ranking_municipios", {"produto": "nao-existe", "indicador": "quantidade-produzida"})
     with pytest.raises(ErroDeFerramenta):
         executar("ferramenta_inventada", {})
+
+
+@pytest.mark.django_db
+def test_valor_e_preco_medio_divide_valor_pela_quantidade(dados_observatorio: dict[str, Produto]) -> None:
+    from decimal import Decimal
+
+    r = executar("valor_e_preco_medio", {"produto": "soja-em-grao"})
+    d = r.dados
+    assert d["ano_referencia"] == 2024
+    valor = Decimal(str(d["valor_total"]))
+    quantidade = Decimal(str(d["quantidade_total"]))
+    assert d["preco_medio_formatado"] == formatar_numero(valor * 1000 / quantidade, 2)
+    assert d["unidade_preco"] == "R$ por tonelada"
+    assert d["url_painel"].endswith("&indicador=valor-da-producao&fim=2024")
+    assert r.urls == frozenset({d["url_painel"]})
+    assert "preço médio" in r.resumo and d["preco_medio_formatado"] in r.resumo
+
+
+@pytest.mark.django_db
+def test_valor_e_preco_medio_usa_producao_de_origem_animal_na_pecuaria(
+    dados_observatorio: dict[str, Produto],
+) -> None:
+    r = executar("valor_e_preco_medio", {"produto": "leite"})
+    assert r.dados["unidade_preco"] == "R$ por mil litros"

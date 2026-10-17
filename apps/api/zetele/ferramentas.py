@@ -124,7 +124,22 @@ DEFINICOES: list[dict[str, Any]] = [
             ["bloco"],
         ),
     },
+    {
+        "name": "valor_e_preco_medio",
+        "description": (
+            "Valor da produção (IBGE) de um produto em Rondônia e o preço médio implícito "
+            "(valor da produção dividido pela quantidade). Use para perguntas de preço e de quanto "
+            "vale a produção. Não é cotação de mercado do dia."
+        ),
+        "strict": True,
+        "input_schema": _schema({"produto": _PRODUTO, "ano": _ANO}, ["produto"]),
+    },
 ]
+
+# Quantidade que divide o valor: lavouras têm quantidade produzida; leite, ovos e mel, produção
+# de origem animal.
+QUANTIDADES_PARA_PRECO = ("quantidade-produzida", "producao-de-origem-animal")
+SINGULAR = {"Toneladas": "tonelada", "Mil frutos": "mil frutos", "Mil litros": "mil litros"}
 
 
 def _fmt(valor: Any, casas: int | None = None) -> str | None:
@@ -279,10 +294,59 @@ def _observatorio(e: dict[str, Any]) -> ResultadoFerramenta:
     return ResultadoFerramenta(dados, fontes, frozenset({url}), res["texto"]["manchete"])
 
 
+def _recorte_de_quantidade(produto: str) -> servicos.Recorte:
+    for indicador in QUANTIDADES_PARA_PRECO:
+        try:
+            return servicos.obter_recorte(produto, indicador)
+        except (NaoEncontrado, RecorteIncompativel):
+            continue
+    raise ErroDeFerramenta(f"O produto '{produto}' não tem quantidade para calcular preço médio")
+
+
+def _preco(e: dict[str, Any]) -> ResultadoFerramenta:
+    recorte_valor = servicos.obter_recorte(e["produto"], "valor-da-producao")
+    recorte_qtd = _recorte_de_quantidade(e["produto"])
+    _, fim = servicos.resolver_periodo(recorte_valor, None, e.get("ano"))
+    valor = servicos.ranking(recorte_valor, fim, fim)["total_estadual"]
+    quantidade = servicos.ranking(recorte_qtd, fim, fim)["total_estadual"]
+    if not valor or not quantidade:
+        raise ErroDeFerramenta(f"Sem valor ou quantidade de {recorte_valor.produto.nome} em {fim}")
+    # valor do IBGE vem em mil reais; o preço médio sai em reais por unidade da quantidade
+    preco = valor * 1000 / quantidade
+    unidade = SINGULAR.get(recorte_qtd.unidade, recorte_qtd.unidade.lower())
+    url = _url_painel(
+        segmento=recorte_valor.produto.segmento, produto=recorte_valor.produto.slug,
+        indicador="valor-da-producao", fim=fim,
+    )
+    fonte = _fonte(recorte_valor.produto.tabela_origem, fim, url)
+    dados = {
+        "produto": recorte_valor.produto.nome,
+        "ano_referencia": fim,
+        "valor_total": valor,
+        "valor_formatado": _fmt(valor),
+        "unidade_valor": recorte_valor.unidade,
+        "quantidade_total": quantidade,
+        "quantidade_formatada": _fmt(quantidade),
+        "unidade_quantidade": recorte_qtd.unidade,
+        "preco_medio_formatado": _fmt(preco, 2),
+        "unidade_preco": f"R$ por {unidade}",
+        "observacao": "Preço médio implícito (valor ÷ quantidade), não é cotação de mercado.",
+        "fonte": fonte["rotulo"],
+        "url_painel": url,
+    }
+    resumo = (
+        f"Em {fim}, a produção de {recorte_valor.produto.nome} em Rondônia valeu "
+        f"{dados['valor_formatado']} ({recorte_valor.unidade.lower()}), um preço médio implícito de "
+        f"R$ {dados['preco_medio_formatado']} por {unidade}. Fonte: {fonte['rotulo']}."
+    )
+    return ResultadoFerramenta(dados, [fonte], frozenset({url}), resumo)
+
+
 _EXECUTORES: dict[str, Callable[[dict[str, Any]], ResultadoFerramenta]] = {
     "ranking_municipios": _ranking,
     "evolucao_e_analise": _analise,
     "bloco_observatorio": _observatorio,
+    "valor_e_preco_medio": _preco,
 }
 
 

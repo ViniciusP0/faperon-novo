@@ -122,3 +122,18 @@ def test_link_fora_da_lista_e_removido(dados_soja: Produto) -> None:
 def test_texto_sem_json_e_aceito_e_rotulo_de_recusa_reconhecido(dados_soja: Produto) -> None:
     cli = ClienteLLMFalso([RespostaFalsa("end_turn", [Bloco("text", text="[RECUSA] Não posso ajudar com isso.")])])
     assert responder(cli, "x", [], "/").status == "recusada"
+
+
+def test_na_pagina_inicial_nao_ha_ferramentas_e_ele_so_orienta(dados_soja: Produto) -> None:
+    cli = ClienteLLMFalso([final("resposta", "Os números ficam na [Central de Inteligência](/central-de-inteligencia).")])
+    r = responder(cli, "quanto Rondônia produz de soja?", [], "/")
+    assert r.status == "respondida"
+    assert cli.pedidos[0]["tools"] == []
+    assert "só orienta" in cli.pedidos[0]["messages"][-1]["content"]
+
+
+def test_na_central_as_ferramentas_estao_disponiveis(dados_soja: Produto) -> None:
+    cli = ClienteLLMFalso([final("resposta", "ok")])
+    responder(cli, "x", [], "/painel")
+    assert len(cli.pedidos[0]["tools"]) == 4
+    assert "só orienta" not in cli.pedidos[0]["messages"][-1]["content"]

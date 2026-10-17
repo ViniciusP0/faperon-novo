@@ -94,6 +94,17 @@ describe("Zetele", () => {
     expect(poseAtiva()).toBe("tablet");
   });
 
+  it("no Início só aparecem perguntas de orientação, nem em 'mais sugestões'", async () => {
+    caminho = "/";
+    stubFetch();
+    const user = userEvent.setup();
+    render(<Zetele />);
+    await abrir(user);
+    expect(screen.getByRole("button", { name: "O que é a Central de Inteligência?" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Qual município mais produz soja em Rondônia?" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Mais sugestões" })).toBeNull();
+  });
+
   it("sem o modelo: campo desabilitado e só perguntas estáticas", async () => {
     stubFetch({ estado: { disponivel: false, motivo: "sem_chave" } });
     const user = userEvent.setup();

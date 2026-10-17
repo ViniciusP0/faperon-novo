@@ -16,6 +16,8 @@ interface Props {
   mensagens: Mensagem[];
   carregando: boolean;
   disponivel: boolean;
+  /** Início: só orientação, sem perguntas de dados. */
+  soOrientacao: boolean;
   espera: number;
   mostrarChips: boolean;
   visiveis: PerguntaPronta[];
@@ -83,7 +85,7 @@ export function PainelZetele(p: Props) {
 
       <div className="border-t border-line px-4 py-3">
         {p.mostrarChips ? (
-          <Chips visiveis={p.visiveis} demais={p.demais} soEstaticas={!p.disponivel} onEscolher={p.onEscolher} />
+          <Chips visiveis={p.visiveis} demais={p.demais} soEstaticas={!p.disponivel || p.soOrientacao} onEscolher={p.onEscolher} />
         ) : (
           <button type="button" onClick={p.onMostrarChips} className="text-xs font-medium text-brand-fg underline">
             {ZETELE.sugestoes}

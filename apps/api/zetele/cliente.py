@@ -56,15 +56,16 @@ class ClienteAnthropic:
             "max_tokens": 1500,
             "system": system,
             "messages": messages,
-            "tools": tools,
-            # Sonnet 5.5 recusa tool_choice any/tool (400); na última rodada, "none" força a resposta
-            "tool_choice": {"type": "none"} if ultima_rodada else {"type": "auto"},
             "thinking": {"type": "adaptive"},
             "output_config": {"effort": "low", "format": FORMATO},
             # recusa por engano de um classificador é refeita no servidor (Claude API)
             "betas": ["server-side-fallback-2026-07-01"],
             "fallbacks": "default",
         }
+        if tools:  # no Início não há ferramentas (só orientação)
+            parametros["tools"] = tools
+            # Sonnet 5.5 recusa tool_choice any/tool (400); na última rodada, "none" força a resposta
+            parametros["tool_choice"] = {"type": "none"} if ultima_rodada else {"type": "auto"}
         try:
             return self._cliente.beta.messages.create(**parametros)
         except anthropic.APITimeoutError as exc:
