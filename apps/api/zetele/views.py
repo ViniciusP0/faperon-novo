@@ -10,8 +10,8 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
-from zetele import agente, disponibilidade, registro
-from zetele.cliente import ClienteAnthropic, ClienteLLM, ProvedorIndisponivel
+from zetele import agente, disponibilidade, registro, voz
+from zetele.cliente import ClienteAnthropic, ClienteLLM, ProvedorIndisponivel, TempoEsgotado
 from zetele.models import Pergunta
 from zetele.throttles import ZeteleGlobalThrottle
 
@@ -26,6 +26,8 @@ PAGINAS_COM_ZETELE = (
     "/sistema/agenda",
     "/sistema/frotas",
     "/sistema/espacos",
+    "/sistema/contas",
+    "/sistema/relatorios",
 )
 # Uma pergunta prende uma thread do gunicorn por até 40 s: no máximo N por processo (ADR 0025).
 SEMAFORO = threading.BoundedSemaphore(settings.ZETELE_SIMULTANEOS)
@@ -89,7 +91,9 @@ class EstadoView(APIView):
         return Response(disponibilidade.estado())
 
 
-class PerguntarView(APIView):
+class LimitesDoZetele(APIView):
+    """Limite por IP e teto global de quem gasta a cota da Anthropic (perguntas e agendamento por voz)."""
+
     throttle_classes = [ScopedRateThrottle, ZeteleGlobalThrottle]
     throttle_scope = "zetele"
 
@@ -99,6 +103,8 @@ class PerguntarView(APIView):
             if not throttle.allow_request(request, self):
                 self.throttled(request, cast(float, throttle.wait()))
 
+
+class PerguntarView(LimitesDoZetele):
     @extend_schema(request=PerguntaSerializer, responses={200: RespostaSerializer})
     def post(self, request: Request) -> Response:
         entrada = PerguntaSerializer(data=request.data)
@@ -132,5 +138,86 @@ class PerguntarView(APIView):
         # a reserva determinística é uma resposta válida: o visitante não precisa saber da falha
         status = "respondida" if resposta.status == "verificacao_falhou" else resposta.status
         return Response(
-            {"status": status, "texto": resposta.texto, "fontes": resposta.fontes, "sugestoes": resposta.sugestoes}
+            {
+                "status": status,
+                "texto": resposta.texto,
+                "fontes": resposta.fontes,
+                "sugestoes": resposta.sugestoes,
+            }
+        )
+
+
+class OpcaoSerializer(serializers.Serializer):
+    id = serializers.CharField(max_length=40)
+    descricao = serializers.CharField(max_length=80)
+
+
+class InterpretarSerializer(serializers.Serializer):
+    tipo = serializers.ChoiceField(choices=list(voz.FORMATOS))
+    texto = serializers.CharField(max_length=500)
+    hoje = serializers.DateField()
+    veiculos = OpcaoSerializer(many=True, required=False, default=list)
+    espacos = OpcaoSerializer(many=True, required=False, default=list)
+
+    def validate_veiculos(self, valor: list[dict[str, str]]) -> list[dict[str, str]]:
+        if len(valor) > 20:
+            raise serializers.ValidationError("No máximo 20 veículos.")
+        return valor
+
+    def validate_espacos(self, valor: list[dict[str, str]]) -> list[dict[str, str]]:
+        if len(valor) > 10:
+            raise serializers.ValidationError("No máximo 10 espaços.")
+        return valor
+
+
+class InterpretacaoSerializer(serializers.Serializer):
+    tipo = serializers.CharField()
+    campos = serializers.DictField()
+    faltando = serializers.ListField(child=serializers.CharField())
+
+
+class InterpretarView(LimitesDoZetele):
+    """Agendamento por voz do protótipo do sistema: mesmos limites do Zétele, transcrição não gravada."""
+
+    @extend_schema(request=InterpretarSerializer, responses={200: InterpretacaoSerializer})
+    def post(self, request: Request) -> Response:
+        entrada = InterpretarSerializer(data=request.data)
+        entrada.is_valid(raise_exception=True)
+        d: dict[str, Any] = dict(entrada.validated_data)
+        veiculos = [dict(o) for o in d["veiculos"]]
+        espacos = [dict(o) for o in d["espacos"]]
+
+        situacao = disponibilidade.estado()
+        if not situacao["disponivel"]:
+            return _indisponivel(situacao["motivo"])
+        if disponibilidade.contar_pergunta() > settings.ZETELE_LIMITE_DIARIO:
+            return _indisponivel("orcamento_diario")
+        if not SEMAFORO.acquire(blocking=False):
+            return _indisponivel("ocupado")
+        try:
+            resultado = voz.interpretar(
+                obter_cliente(), d["tipo"], d["texto"], d["hoje"], veiculos, espacos
+            )
+        except ProvedorIndisponivel as exc:
+            log.warning("voz: provedor indisponível (%s)", exc)
+            disponibilidade.abrir_disjuntor()
+            return _indisponivel("indisponivel")
+        except TempoEsgotado:
+            return _indisponivel("indisponivel")
+        except voz.InterpretacaoFalhou as exc:
+            log.info("voz: interpretação falhou (%s)", exc)
+            return Response(
+                {"erro": "Não consegui entender o pedido. Tente de novo ou preencha o formulário."},
+                status=422,
+            )
+        finally:
+            SEMAFORO.release()
+        log.info(
+            "voz: %s interpretado (%s/%s tokens)",
+            d["tipo"],
+            resultado.tokens_entrada,
+            resultado.tokens_saida,
+        )
+        return Response(
+            {"tipo": d["tipo"], "campos": resultado.campos, "faltando": resultado.faltando}
         )

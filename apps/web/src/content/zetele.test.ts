@@ -1,3 +1,5 @@
+import { readdirSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -15,7 +17,7 @@ describe("Zétele: conteúdo", () => {
   it("aparece no Início, na Central, no Observatório, no Painel e na área logada", () => {
     expect([...PAGINAS_COM_ZETELE].sort()).toEqual([
       "/", "/central-de-inteligencia", "/central-de-inteligencia/observatorio", "/painel",
-      "/sistema", "/sistema/agenda", "/sistema/espacos", "/sistema/frotas",
+      "/sistema", "/sistema/agenda", "/sistema/contas", "/sistema/espacos", "/sistema/frotas", "/sistema/relatorios",
     ]);
     expect(ehPaginaComZetele("/sistema/frotas")).toBe(true);
     expect(ehPaginaComZetele("/painel")).toBe(true);
@@ -23,11 +25,20 @@ describe("Zétele: conteúdo", () => {
     expect(ehPaginaComZetele(null)).toBe(false);
   });
 
-  it("tem 8 perguntas prontas; as estáticas têm resposta e link para página que existe", () => {
-    expect(PERGUNTAS).toHaveLength(18);
+  it("aparece em todas as telas da área logada", () => {
+    const raiz = join(process.cwd(), "src/app/sistema");
+    const paginas = readdirSync(raiz, { recursive: true, encoding: "utf8" })
+      .filter((f) => f.endsWith("page.tsx"))
+      .map((f) => `/sistema/${dirname(f)}`.replace(/\/\.$/, ""));
+    expect(paginas.length).toBeGreaterThan(5);
+    for (const pagina of paginas) expect(ehPaginaComZetele(pagina), pagina).toBe(true);
+  });
+
+  it("tem as perguntas prontas; as estáticas têm resposta e link para página que existe", () => {
+    expect(PERGUNTAS).toHaveLength(22);
     for (const p of PERGUNTAS.filter((q) => q.tipo === "estatica")) {
       expect(p.resposta, p.id).toBeTruthy();
-      expect([...ROTAS, "/sistema/agenda", "/sistema/frotas", "/sistema/espacos"], p.id).toContain(p.href!.split("?")[0]);
+      expect([...ROTAS, ...PAGINAS_COM_ZETELE], p.id).toContain(p.href!.split("?")[0]);
     }
   });
 

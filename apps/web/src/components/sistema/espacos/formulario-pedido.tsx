@@ -40,13 +40,14 @@ export function FormularioPedido({ base, pedidos, aoEnviar, aoCancelar }: Props)
     espacoId: base.espacoId,
     data: base.data,
     periodo: base.periodo,
-    inicio: "",
-    fim: "",
+    // período fixo resolve o horário sozinho; só "horario" usa os campos (ex.: vindos do agendamento por voz)
+    inicio: base.periodo === "horario" ? base.inicio : "",
+    fim: base.periodo === "horario" ? base.fim : "",
     tipo: base.tipo,
-    nome: "",
-    participantes: "",
-    coffeeBreak: false,
-    observacoes: "",
+    nome: base.nome,
+    participantes: base.participantes ? String(base.participantes) : "",
+    coffeeBreak: base.coffeeBreak,
+    observacoes: base.observacoes,
   });
   const [erro, setErro] = useState<string | null>(null);
   const espaco = ESPACOS.find((e) => e.id === r.espacoId)!;

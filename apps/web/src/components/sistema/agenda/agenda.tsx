@@ -9,9 +9,11 @@ import { itensDaAgenda, ROTULO_ORIGEM, ROTULO_TIPO_EVENTO } from "@/lib/sistema/
 import { formatarDataBR, gradeDoMes, nomeDoMes, somarDias } from "@/lib/sistema/datas";
 import { novoId, useSistema } from "@/lib/sistema/estado";
 import type { Evento } from "@/lib/sistema/tipos";
+import { aplicarEvento } from "@/lib/sistema/voz";
 import { cn } from "@/lib/utils";
 import { Dialogo } from "../dialogo";
 import { Segmentado } from "../segmentado";
+import { AgendarPorVoz, AvisoVoz } from "../voz/agendar-por-voz";
 import { FormularioEvento } from "./formulario-evento";
 
 const DIAS = [
@@ -43,7 +45,7 @@ export function Agenda() {
   const { funcionario, hoje, eventos, institucionais, frota, pedidos, salvarEvento, excluirEvento } = useSistema();
   const [visao, setVisao] = useState<"mes" | "lista">("mes");
   const [mes, setMes] = useState(() => ({ ano: Number(hoje.slice(0, 4)), mes0: Number(hoje.slice(5, 7)) - 1 }));
-  const [editando, setEditando] = useState<{ evento: Evento; novo: boolean } | null>(null);
+  const [editando, setEditando] = useState<{ evento: Evento; novo: boolean; faltandoVoz?: string[] } | null>(null);
 
   const itens = useMemo(
     () => (funcionario ? itensDaAgenda(funcionario.id, eventos, institucionais, frota.reservas, frota.veiculos, pedidos) : []),
@@ -57,11 +59,20 @@ export function Agenda() {
 
   if (!funcionario) return null;
 
+  const eventoNovo = (data = hoje): Evento => ({
+    id: novoId("evento"),
+    titulo: "",
+    data,
+    inicio: "09:00",
+    fim: "10:00",
+    local: "",
+    descricao: "",
+    tipo: "reuniao",
+    origem: "pessoal",
+  });
+
   function novo(data = hoje) {
-    setEditando({
-      novo: true,
-      evento: { id: novoId("evento"), titulo: "", data, inicio: "09:00", fim: "10:00", local: "", descricao: "", tipo: "reuniao", origem: "pessoal" },
-    });
+    setEditando({ novo: true, evento: eventoNovo(data) });
   }
 
   function andarMes(delta: number) {
@@ -118,6 +129,7 @@ export function Agenda() {
               { valor: "lista", rotulo: "Lista" },
             ]}
           />
+          <AgendarPorVoz tipo="evento" aoInterpretar={(campos, faltando) => setEditando({ novo: true, evento: aplicarEvento(eventoNovo(), campos), faltandoVoz: faltando })} />
           <Button variant="vidro" onClick={() => novo()}>
             <Plus aria-hidden="true" className="h-4 w-4" />
             Novo evento
@@ -223,6 +235,7 @@ export function Agenda() {
 
       {editando && (
         <Dialogo titulo={editando.novo ? "Novo evento" : "Editar evento"} aoFechar={() => setEditando(null)}>
+          {editando.faltandoVoz && <AvisoVoz faltando={editando.faltandoVoz} />}
           <FormularioEvento
             inicial={editando.evento}
             novo={editando.novo}

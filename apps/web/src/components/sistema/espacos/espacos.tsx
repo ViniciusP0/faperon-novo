@@ -12,9 +12,11 @@ import { agoraISO, formatarDataBR, somarDias } from "@/lib/sistema/datas";
 import { conflitosDoPedido, excedeCapacidade, podeAprovar, ROTULO_PERIODO, ROTULO_STATUS, ROTULO_TIPO_ESPACO } from "@/lib/sistema/espacos";
 import { novoId, useSistema } from "@/lib/sistema/estado";
 import type { PedidoEspaco, StatusPedido } from "@/lib/sistema/tipos";
+import { aplicarEspaco } from "@/lib/sistema/voz";
 import { cn } from "@/lib/utils";
 import { Abas } from "../abas";
 import { Dialogo } from "../dialogo";
+import { AgendarPorVoz, AvisoVoz } from "../voz/agendar-por-voz";
 import { FormularioPedido } from "./formulario-pedido";
 
 const corStatus: Record<StatusPedido, string> = {
@@ -248,11 +250,16 @@ export function Espacos() {
   const { funcionario, hoje, pedidos, atualizarPedidos } = useSistema();
   const [novo, setNovo] = useState<PedidoEspaco | null>(null);
   const [enviado, setEnviado] = useState<string | null>(null);
+  const [faltandoVoz, setFaltandoVoz] = useState<string[] | null>(null);
   if (!funcionario) return null;
 
-  function abrirNovo() {
+  function abrirNovo(pedido = pedidoNovo()) {
     setEnviado(null);
-    setNovo({
+    setNovo(pedido);
+  }
+
+  function pedidoNovo(): PedidoEspaco {
+    return {
       id: novoId("pedido"),
       espacoId: "sala-reunioes",
       funcionarioId: funcionario!.id,
@@ -268,14 +275,32 @@ export function Espacos() {
       status: "pendente",
       motivoRecusa: "",
       criadoEm: agoraISO(),
-    });
+    };
   }
 
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold text-ink">Agendamento de espaços</h1>
-        <Button variant="vidro" onClick={abrirNovo}>Novo pedido</Button>
+        <div className="flex flex-wrap gap-2">
+          <AgendarPorVoz
+            tipo="espaco"
+            espacos={ESPACOS.map((e) => ({ id: e.id, descricao: e.nome }))}
+            aoInterpretar={(campos, faltando) => {
+              setFaltandoVoz(faltando);
+              abrirNovo(aplicarEspaco(pedidoNovo(), campos));
+            }}
+          />
+          <Button
+            variant="vidro"
+            onClick={() => {
+              setFaltandoVoz(null);
+              abrirNovo();
+            }}
+          >
+            Novo pedido
+          </Button>
+        </div>
       </div>
       {enviado && (
         <Alert tone="info" className="mb-4">
@@ -293,6 +318,7 @@ export function Espacos() {
       />
       {novo && (
         <Dialogo titulo="Novo pedido de espaço" aoFechar={() => setNovo(null)}>
+          {faltandoVoz && <AvisoVoz faltando={faltandoVoz} />}
           <FormularioPedido
             base={novo}
             pedidos={pedidos}

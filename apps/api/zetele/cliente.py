@@ -35,6 +35,7 @@ class ClienteLLM(Protocol):
         messages: list[dict[str, Any]],
         tools: list[dict[str, Any]],
         ultima_rodada: bool,
+        formato: dict[str, Any] | None = None,
     ) -> Any: ...
 
 
@@ -50,14 +51,16 @@ class ClienteAnthropic:
         messages: list[dict[str, Any]],
         tools: list[dict[str, Any]],
         ultima_rodada: bool,
+        formato: dict[str, Any] | None = None,
     ) -> Any:
+        """`formato` troca a saída estruturada padrão (resposta do Zétele) por outra, como a do agendamento por voz."""
         parametros: dict[str, Any] = {
             "model": self._modelo,
             "max_tokens": 1500,
             "system": system,
             "messages": messages,
             "thinking": {"type": "adaptive"},
-            "output_config": {"effort": "low", "format": FORMATO},
+            "output_config": {"effort": "low", "format": formato or FORMATO},
             # recusa por engano de um classificador é refeita no servidor (Claude API)
             "betas": ["server-side-fallback-2026-07-01"],
             "fallbacks": "default",

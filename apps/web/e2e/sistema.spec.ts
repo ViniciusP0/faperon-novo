@@ -87,3 +87,46 @@ test("sem login, o sistema pede para entrar", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Faça login para entrar no sistema" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Ir para Acessar o sistema" })).toHaveAttribute("href", "/login");
 });
+
+test("contas, relatórios e agendamento por voz digitado; o Zétele está em todas as telas logadas", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.route("**/api/v1/sistema/interpretar", (rota) =>
+    rota.fulfill({
+      json: {
+        tipo: "evento",
+        campos: { titulo: "Reunião com o sindicato", data: "2026-10-20", inicio: "09:00", fim: "10:00", local: "", tipo: "reuniao", descricao: "" },
+        faltando: [],
+      },
+    }),
+  );
+  await entrarComo(page, "Carla Mendes");
+  for (const secao of ["Agenda", "Frotas", "Espaços", "Contas", "Relatórios"]) {
+    await page.getByRole("link", { name: secao, exact: true }).click();
+    await expect(page.getByRole("button", { name: "Falar com o Zétele, assistente do site" })).toBeAttached();
+  }
+
+  await page.getByRole("link", { name: "Contas", exact: true }).click();
+  await page.getByRole("button", { name: "Nova despesa" }).click();
+  await page.getByLabel("Descrição").fill("Pen drives para o evento");
+  await page.getByLabel("Valor (R$)").fill("89,90");
+  await page.getByRole("button", { name: "Enviar para aprovação" }).click();
+  await expect(page.getByText("Pen drives para o evento")).toBeVisible();
+  await semViolacoesSerias(page);
+
+  await page.getByRole("link", { name: "Relatórios", exact: true }).click();
+  await page.getByRole("button", { name: "Prestação de contas" }).click();
+  await expect(page.getByRole("cell", { name: "Pen drives para o evento" })).toBeVisible();
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: /Baixar CSV/ }).click();
+  expect((await download).suggestedFilename()).toMatch(/^relatorio-contas-.*\.csv$/);
+  await semViolacoesSerias(page);
+
+  await page.getByRole("link", { name: "Agenda", exact: true }).click();
+  await page.getByRole("button", { name: "Agendar por voz" }).click();
+  const voz = page.getByRole("dialog", { name: "Agendar por voz" });
+  await voz.getByRole("textbox").fill("reunião com o sindicato terça às nove");
+  await voz.getByRole("button", { name: "Preencher formulário" }).click();
+  const evento = page.getByRole("dialog", { name: "Novo evento" });
+  await expect(evento.getByLabel("Título")).toHaveValue("Reunião com o sindicato");
+  await expect(evento.getByText(/Preenchido por voz/)).toBeVisible();
+});

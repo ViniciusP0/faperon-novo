@@ -55,7 +55,7 @@ Portal da Transparência e páginas antigas ficam no site atual (www.faperon.com
 O botão "Acessar o sistema", no alto do site, leva à entrada da área logada. Hoje ela é um protótipo para a FAPERON avaliar: depois do login de demonstração, a pessoa escolhe um perfil de funcionário de exemplo. Os dados são fictícios e ficam salvos só no navegador de quem usa; nada é enviado ao servidor.
 
 ## [/sistema] Início do sistema
-Mostra o que vem pela frente nos próximos 7 dias e os atalhos para Agenda, Frotas e Espaços. Na barra do sistema há "Restaurar dados de exemplo", "Trocar de funcionário" e "Sair".
+Mostra o que vem pela frente nos próximos 7 dias e os atalhos para Agenda, Frotas e Espaços; a barra do sistema também leva a Contas (prestação de contas) e Relatórios. Na barra do sistema há "Restaurar dados de exemplo", "Trocar de funcionário" e "Sair".
 
 ## [/sistema/agenda] Agenda individual
 Cada funcionário tem a própria agenda, nas visões Mês e Lista (próximos 30 dias). "Novo evento" (ou o "+" de um dia) cria um evento com título, data, início e fim, tipo (reunião, viagem ou compromisso), local e descrição; clicar num evento próprio permite editar ou excluir. Aparecem também, só para leitura: os eventos institucionais da FAPERON (selo FAPERON), as viagens reservadas com veículo da frota (selo Frota) e os espaços aprovados (selo Espaço). Um funcionário não vê a agenda do outro.
@@ -75,3 +75,16 @@ Espaços: Auditório (até 150 pessoas), Hub (40), Sala de reuniões (12), Núcl
 - Fila: todo pedido entra como pendente, em ordem de chegada. O gestor dos espaços aprova ou recusa com motivo; não é possível aprovar um pedido que choque com outro já aprovado.
 - Painel de 7 dias: espaços nas linhas e dias nas colunas, com pendentes e aprovados e os conflitos destacados.
 - Meus pedidos: status de cada pedido, motivo da recusa e opção de cancelar. Pedidos aprovados entram na agenda de quem pediu.
+
+## Agendar por voz (Agenda, Frotas e Espaços)
+Na Agenda, na aba Reservas de Frotas e em Espaços há o botão "Agendar por voz". A pessoa clica em "Falar" e diz o que quer (ex.: "reunião com o sindicato de Vilhena terça às nove", "preciso da Hilux quinta das sete às dezoito para Cacoal", "auditório dia 20 à tarde, palestra para 80 pessoas com coffee break"). A fala é transcrita pelo reconhecimento de voz do navegador (Chrome e Edge); nos outros navegadores, digita-se a frase. O texto é interpretado e o formulário certo abre já preenchido, com aviso do que faltou, para a pessoa conferir e salvar: nada é salvo sem confirmação, e o texto não é guardado.
+
+## [/sistema/contas] Prestação de contas
+Abas: Minhas despesas, Aprovação (só o gestor das contas) e Por centro de custo.
+- "Nova despesa": data, valor, centro de custo (Presidência, Administrativo, Técnica, Comunicação, Sindical), categoria (material de escritório, combustível, alimentação, hospedagem, transporte, serviços, eventos, outros), descrição, fornecedor e comprovante (imagem ou PDF). Pode ser salva como rascunho ou enviada para aprovação.
+- Status: rascunho, enviada, aprovada ou devolvida. Rascunho e devolvida podem ser editados, excluídos e reenviados; a devolvida mostra o motivo dado pelo gestor.
+- Aprovação: o gestor aprova ou devolve cada despesa enviada, informando o que corrigir.
+- Por centro de custo: total das despesas enviadas e aprovadas no período, por centro e categoria.
+
+## [/sistema/relatorios] Relatórios
+Tipos: Frota (viagens, km rodados, litros, combustível, manutenção, custo total e custo por km de cada veículo), Espaços (pedidos, aprovados, pendentes, recusados, horas aprovadas, participantes e pendentes em conflito por espaço), Agenda (eventos da pessoa e da FAPERON no período) e Prestação de contas (despesas do período; o gestor das contas vê as de todos, os demais só as próprias). Período por datas ou pelos atalhos "Este mês", "Últimos 30 dias" e "Últimos 3 meses". "Imprimir / salvar PDF" imprime só o relatório; "Baixar CSV" gera planilha para o Excel.

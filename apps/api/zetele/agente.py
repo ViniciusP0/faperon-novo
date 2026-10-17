@@ -20,16 +20,26 @@ ORCAMENTO_SEGUNDOS = 40.0
 MAX_HISTORICO = 6
 # No Início o Zétele só orienta para as áreas do site; dados e preços ficam na Central.
 # Na área logada (protótipo) os dados da pessoa ficam no navegador dela: ele só explica o uso.
-PAGINAS_SISTEMA = frozenset({"/sistema", "/sistema/agenda", "/sistema/frotas", "/sistema/espacos"})
+PAGINAS_SISTEMA = frozenset(
+    {
+        "/sistema",
+        "/sistema/agenda",
+        "/sistema/frotas",
+        "/sistema/espacos",
+        "/sistema/contas",
+        "/sistema/relatorios",
+    }
+)
 PAGINAS_SO_ORIENTACAO = frozenset({"/"}) | PAGINAS_SISTEMA
 ORIENTACAO_INICIO = (
     "Nesta página o Zétele só orienta para onde ir no site: não consulte dados nem cite números; "
     "para números e preços, indique a Central de Inteligência."
 )
 ORIENTACAO_SISTEMA = (
-    "Esta é a área logada do sistema (protótipo). O Zétele só explica como usar a agenda, a frota e "
-    "o agendamento de espaços; ele não vê os eventos, reservas ou pedidos da pessoa, que ficam no "
-    "navegador dela. Para números do agro, indique a Central de Inteligência."
+    "Esta é a área logada do sistema (protótipo). O Zétele só explica como usar a agenda, a frota, "
+    "o agendamento de espaços, o agendamento por voz, a prestação de contas e os relatórios; ele não "
+    "vê os eventos, reservas, pedidos ou despesas da pessoa, que ficam no navegador dela. Para "
+    "números do agro, indique a Central de Inteligência."
 )
 
 TEXTO_RECUSA = "Isso eu não sei responder. Posso ajudar com o Painel, o Observatório ou as páginas da FAPERON."

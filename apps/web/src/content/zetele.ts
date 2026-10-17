@@ -11,6 +11,8 @@ export const PAGINAS_COM_ZETELE = [
   "/sistema/agenda",
   "/sistema/frotas",
   "/sistema/espacos",
+  "/sistema/contas",
+  "/sistema/relatorios",
 ] as const;
 export type PaginaComZetele = (typeof PAGINAS_COM_ZETELE)[number];
 
@@ -169,21 +171,62 @@ export const PERGUNTAS: PerguntaPronta[] = [
     href: "/sistema/espacos?aba=painel",
     rotuloLink: "Abrir o Painel de 7 dias",
   },
+  {
+    id: "sis-voz",
+    area: "sistema",
+    texto: "Como agendo por voz?",
+    tipo: "estatica",
+    resposta: 'Na Agenda, em Frotas (aba Reservas) ou em Espaços, clique em "Agendar por voz", depois em "Falar", e diga o que quer, como "reunião com o sindicato terça às nove". O formulário abre preenchido para você conferir e salvar. Funciona no Chrome e no Edge; nos outros navegadores, digite a frase.',
+    href: "/sistema/agenda",
+    rotuloLink: "Abrir a Agenda",
+  },
+  {
+    id: "sis-despesa",
+    area: "sistema",
+    texto: "Como lanço uma despesa na prestação de contas?",
+    tipo: "estatica",
+    resposta: 'Em Contas, clique em "Nova despesa" e informe data, valor, centro de custo, categoria, descrição, fornecedor e o comprovante (imagem ou PDF). Salve como rascunho ou envie para aprovação. Despesa devolvida pelo gestor mostra o motivo e pode ser corrigida e reenviada.',
+    href: "/sistema/contas",
+    rotuloLink: "Abrir as Contas",
+  },
+  {
+    id: "sis-aprovacao-contas",
+    area: "sistema",
+    texto: "Quem aprova as despesas?",
+    tipo: "estatica",
+    resposta: "O gestor das contas, na aba Aprovação: ele aprova ou devolve cada despesa enviada, com o motivo da devolução. A aba Por centro de custo soma as despesas enviadas e aprovadas no período, por centro e categoria.",
+    href: "/sistema/contas?aba=centros",
+    rotuloLink: "Ver por centro de custo",
+  },
+  {
+    id: "sis-relatorio",
+    area: "sistema",
+    texto: "Como gero um relatório?",
+    tipo: "estatica",
+    resposta: 'Em Relatórios, escolha o tipo (Frota, Espaços, Agenda ou Prestação de contas) e o período. A prévia mostra a tabela com os totais; "Imprimir / salvar PDF" imprime só o relatório e "Baixar CSV" gera a planilha para o Excel.',
+    href: "/sistema/relatorios",
+    rotuloLink: "Abrir os Relatórios",
+  },
 ];
 
 /** No Início o Zétele só orienta (sem dados); perguntas de dados e preços ficam na Central. */
 /** No sistema os dados ficam no navegador da pessoa: o Zétele só explica como usar cada módulo. */
-export const PAGINAS_SO_ORIENTACAO: readonly PaginaComZetele[] = ["/", "/sistema", "/sistema/agenda", "/sistema/frotas", "/sistema/espacos"];
+export const PAGINAS_SO_ORIENTACAO: readonly PaginaComZetele[] = [
+  "/",
+  ...PAGINAS_COM_ZETELE.filter((p) => p.startsWith("/sistema")),
+];
 
 export const ORDEM_POR_PAGINA: Record<PaginaComZetele, string[]> = {
   "/": ["central", "painel-observatorio", "informativos", "contato"],
   "/central-de-inteligencia": ["painel-observatorio", "soja", "preco", "pdf"],
   "/painel": ["pdf", "soja", "preco", "gado"],
   "/central-de-inteligencia/observatorio": ["painel-observatorio", "cafe", "preco", "soja"],
-  "/sistema": ["sis-evento", "sis-reserva", "sis-espaco", "sis-fila"],
-  "/sistema/agenda": ["sis-evento", "sis-agenda-outros", "sis-reserva", "sis-espaco"],
-  "/sistema/frotas": ["sis-reserva", "sis-km", "sis-revisao", "sis-custos"],
-  "/sistema/espacos": ["sis-espaco", "sis-fila", "sis-conflito", "sis-evento"],
+  "/sistema": ["sis-evento", "sis-voz", "sis-despesa", "sis-relatorio"],
+  "/sistema/agenda": ["sis-evento", "sis-voz", "sis-agenda-outros", "sis-reserva"],
+  "/sistema/frotas": ["sis-reserva", "sis-voz", "sis-km", "sis-custos"],
+  "/sistema/espacos": ["sis-espaco", "sis-voz", "sis-fila", "sis-conflito"],
+  "/sistema/contas": ["sis-despesa", "sis-aprovacao-contas", "sis-relatorio", "sis-evento"],
+  "/sistema/relatorios": ["sis-relatorio", "sis-custos", "sis-despesa", "sis-voz"],
 };
 
 export function perguntasDaPagina(pagina: PaginaComZetele): { visiveis: PerguntaPronta[]; demais: PerguntaPronta[] } {

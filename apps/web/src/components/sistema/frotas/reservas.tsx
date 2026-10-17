@@ -12,8 +12,10 @@ import { km } from "@/lib/sistema/formato";
 import { formatarPlaca } from "@/lib/sistema/placa";
 import { conflitoDeReserva, MENSAGEM_CONFLITO, validarRetorno } from "@/lib/sistema/reservas";
 import type { Reserva, SituacaoReserva } from "@/lib/sistema/tipos";
+import { aplicarReserva } from "@/lib/sistema/voz";
 import { Dialogo } from "../dialogo";
 import { Segmentado } from "../segmentado";
+import { AgendarPorVoz, AvisoVoz } from "../voz/agendar-por-voz";
 
 const ROTULO_RESERVA: Record<SituacaoReserva, string> = {
   agendada: "Agendada",
@@ -116,6 +118,7 @@ function PedidoDeKm({ titulo, rotulo, minimo, aoConfirmar, aoCancelar }: { titul
 export function Reservas() {
   const { funcionario, hoje, frota, atualizarFrota } = useSistema();
   const [nova, setNova] = useState<Reserva | null>(null);
+  const [faltandoVoz, setFaltandoVoz] = useState<string[] | null>(null);
   const [km_, setKm] = useState<{ reserva: Reserva; etapa: "saida" | "retorno" } | null>(null);
   const [filtro, setFiltro] = useState<"minhas" | "todas">("minhas");
   if (!funcionario) return null;
@@ -138,6 +141,18 @@ export function Reservas() {
   }
 
   const amanha = somarDias(hoje, 1);
+  const reservaNova = (): Reserva => ({
+    id: novoId("reserva"),
+    veiculoId: "",
+    funcionarioId: funcionario.id,
+    saida: `${amanha}T08:00`,
+    retorno: `${amanha}T18:00`,
+    destino: "",
+    motivo: "",
+    kmInicial: null,
+    kmFinal: null,
+    situacao: "agendada",
+  });
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -150,13 +165,25 @@ export function Reservas() {
             { valor: "todas", rotulo: "Todas" },
           ]}
         />
-        <Button variant="vidro"
-          onClick={() =>
-            setNova({ id: novoId("reserva"), veiculoId: "", funcionarioId: funcionario.id, saida: `${amanha}T08:00`, retorno: `${amanha}T18:00`, destino: "", motivo: "", kmInicial: null, kmFinal: null, situacao: "agendada" })
-          }
-        >
-          Nova reserva
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <AgendarPorVoz
+            tipo="reserva"
+            veiculos={frota.veiculos.map((v) => ({ id: v.id, descricao: `${v.modelo} (${formatarPlaca(v.placa)})` }))}
+            aoInterpretar={(campos, faltando) => {
+              setFaltandoVoz(faltando);
+              setNova(aplicarReserva(reservaNova(), campos));
+            }}
+          />
+          <Button
+            variant="vidro"
+            onClick={() => {
+              setFaltandoVoz(null);
+              setNova(reservaNova());
+            }}
+          >
+            Nova reserva
+          </Button>
+        </div>
       </div>
       {lista.length === 0 && <p className="text-sm text-ink-muted">Nenhuma reserva.</p>}
       <ul className="grid gap-2">
@@ -201,6 +228,7 @@ export function Reservas() {
 
       {nova && (
         <Dialogo titulo="Nova reserva" aoFechar={() => setNova(null)}>
+          {faltandoVoz && <AvisoVoz faltando={faltandoVoz} />}
           <FormularioReserva inicial={nova} aoSalvar={reservar} aoCancelar={() => setNova(null)} />
         </Dialogo>
       )}
