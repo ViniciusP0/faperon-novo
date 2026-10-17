@@ -55,6 +55,18 @@
 - `app/sistema/frotas/page.tsx` e `components/sistema/frotas/*` (abas Veículos, Reservas, Abastecimento e manutenção, Custos com gráfico).
 - Testes de componente.
 
+### Task G: Agendamento de espaços
+- `lib/sistema/espacos.ts`:
+  - `horarioDoPeriodo(periodo, inicio?, fim?)`
+  - `conflitosDoPedido(pedido, pedidos)`
+  - `excedeCapacidade(pedido, espaco)`
+  - `podeAprovar(pedido, pedidos)`
+- Os tipos `Espaco` e `PedidoEspaco` vão em `tipos.ts`, e `content/sistema/espacos.ts` traz os 5 espaços e os pedidos de exemplo.
+- `lib/sistema/use-espacos.ts`.
+- `app/sistema/espacos/page.tsx` e `components/sistema/espacos/*` (abas Painel da semana, Fila, Meus pedidos e o diálogo "Novo pedido" com o aviso de conflitos).
+- Os aprovados entram na agenda de quem pediu.
+- Testes de regra e de componente.
+
 ### Task F: E2E, privacidade, docs
 - `e2e/sistema.spec.ts` (fluxo do critério de sucesso e axe) e o caso de celular em `responsivo.spec.ts`.
 - `privacidade.ts`: o item do login passa a dizer que o protótipo guarda dados fictícios só no navegador; ajustar o teste.

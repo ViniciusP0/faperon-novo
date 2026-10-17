@@ -1,4 +1,4 @@
-# Sistema interno (protótipo): agenda individual e gestão de frotas — design
+# Sistema interno (protótipo): agenda individual, gestão de frotas e agendamento de espaços — design
 
 Data: 2026-10-17 · Status: aprovado no brainstorm
 
@@ -18,6 +18,7 @@ Critério de sucesso: em uma demonstração, alguém entra como "Carla (Comunica
 - **Frotas:** cadastro de veículos, reserva e uso, abastecimento e manutenção, e painel de custos.
 - **Papel de gestor da frota:** só o gestor cadastra e edita veículos e registra manutenção. Qualquer funcionário reserva veículo e registra abastecimento.
 - **Branch:** `feat/sistema-prototipo`, a partir de `feat/zetele`.
+- **Agendamento de espaços (pedido do usuário, 17/10/2026):** terceiro módulo, em `/sistema/espacos`, com fila de pedidos, painel de agendamentos e aviso de conflitos. O Marcos (Administrativo) é também o gestor dos espaços.
 
 ## Fora do escopo
 
@@ -76,12 +77,44 @@ Autenticação real, backend, persistência compartilhada entre pessoas e máqui
 - **Alerta de revisão:** revisão a cada 10.000 km ou 12 meses, o que vencer primeiro, a partir da última manutenção do tipo revisão. O alerta é "vencida" quando passou de um dos limites e "próxima" a menos de 1.000 km ou 30 dias.
 - **Custos:** por veículo e por mês (os últimos 6), mostra combustível, manutenção, total, km rodados (soma das reservas concluídas) e custo por km. Há um gráfico de barras empilhadas (combustível e manutenção por mês) com o componente `Grafico` do Painel.
 
-### 5. Regras puras e testáveis (`apps/web/src/lib/sistema/`)
+### 5. Agendamento de espaços
+- **Espaços** (capacidades fictícias, ajustáveis):
+
+  | Espaço | Capacidade |
+  |---|---|
+  | Auditório | 150 |
+  | Hub | 40 |
+  | Sala de reuniões | 12 |
+  | Núcleo técnico | 20 |
+  | Sala da presidência | 8 |
+
+- **Pedido:**
+  - espaço, dia e período;
+  - períodos: `dia_todo` (08:00–18:00), `manha` (08:00–12:00), `tarde` (13:00–18:00), `noite` (18:00–22:00) e `horario` (início e fim informados, fim maior que início);
+  - tipo de evento: `reuniao` | `curso` | `palestra` | `institucional` | `outro`;
+  - nome do evento (obrigatório), participantes aproximados (inteiro maior que 0), coffee break (sim ou não) e observações.
+- **Fila:**
+  - Todo pedido nasce `pendente`.
+  - O gestor dos espaços aprova (vira `aprovado`) ou recusa (`recusado`, com motivo obrigatório).
+  - Quem pediu pode cancelar (`cancelado`) enquanto o pedido estiver pendente ou aprovado.
+- **Conflitos (informar, não esconder):**
+  - Ao preencher o pedido, antes de enviar, a tela lista os choques com pedidos `aprovado` ou `pendente` do mesmo espaço, no mesmo dia, com horários sobrepostos (intervalo meio aberto), e avisa quando os participantes passam da capacidade.
+  - O pedido pode ir para a fila mesmo com conflito, e fica marcado "com conflito".
+  - O gestor vê os conflitos de cada pedido na fila. Aprovar um pedido que choca com outro já aprovado é bloqueado, com mensagem.
+- **Painel:**
+  - **Semana:** espaços nas linhas e dias da semana nas colunas, com navegação entre semanas. Os blocos mostram horário, nome e status (pendente, aprovado), e os conflitos aparecem destacados.
+  - **Fila:** pendentes em ordem de chegada. As ações de aprovar e recusar aparecem só para o gestor.
+  - **Meus pedidos:** todos os pedidos da pessoa logada, com status.
+- **Agenda:** pedidos aprovados aparecem na agenda de quem pediu, com o selo "Espaço".
+- **Estado:** `localStorage["sistema:espacos"]`, compartilhado neste navegador, com pedidos de exemplo gerados a partir de hoje.
+
+### 6. Regras puras e testáveis (`apps/web/src/lib/sistema/`)
 - `datas.ts`: grade do mês, intervalos, sobreposição e formatação.
 - `placa.ts`: validação e normalização da placa.
 - `reservas.ts`: conflito, situação do veículo e km.
 - `revisao.ts`: alerta de revisão.
 - `custos.ts`: agregação por mês e veículo.
+- `espacos.ts`: horário do período, conflitos de um pedido, excesso de lotação e se o pedido pode ser aprovado.
 - `armazenamento.ts`: storage seguro.
 
 Os componentes só chamam essas funções.
@@ -94,7 +127,12 @@ Os componentes só chamam essas funções.
   - km final menor que o inicial;
   - revisão vencida e próxima, por km e por data;
   - custos por mês com meses vazios;
-  - storage que lança erro.
+  - storage que lança erro;
+  - período para horário;
+  - conflito de espaço nas bordas;
+  - pendente e aprovado contam como conflito, recusado e cancelado não;
+  - lotação acima da capacidade;
+  - aprovação bloqueada por outro aprovado.
 - **Vitest de componentes:**
   - entrar como funcionário;
   - criar um evento e vê-lo no mês e na lista;
@@ -102,7 +140,10 @@ Os componentes só chamam essas funções.
   - institucional sem botão de editar;
   - não gestor não vê "Cadastrar veículo";
   - reserva com conflito mostra erro;
-  - reserva criada aparece na agenda.
+  - reserva criada aparece na agenda;
+  - pedido de espaço com conflito mostra o aviso e entra na fila;
+  - gestor aprova e o pedido aparece na agenda de quem pediu;
+  - não gestor não vê aprovar e recusar.
 - **Playwright:** o fluxo do critério de sucesso, o axe sem violações sérias em `/login`, `/sistema/agenda` e `/sistema/frotas`, e o layout no celular sem rolagem horizontal.
 
 ## Riscos
