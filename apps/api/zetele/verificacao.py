@@ -7,7 +7,7 @@ própria conversa. Links só para rotas reais e para as URLs que as ferramentas 
 import re
 from collections.abc import Iterable
 from dataclasses import dataclass
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -30,17 +30,24 @@ ROTAS_PERMITIDAS = frozenset(
     }
 )
 HOSTS_EXTERNOS = frozenset(
-    {"sidra.ibge.gov.br", "www.faperon.com.br", "sistemafaperon.org.br", "www.cnabrasil.org.br", "wa.me"}
+    {"sidra.ibge.gov.br", "www.faperon.com.br", "sistemafaperon.org.br", "www.cnabrasil.org.br"}
 )
+# Qualquer número cabe em wa.me: só o WhatsApp oficial (CONTATO.whatsapp no front) ou o que a
+# ferramenta devolveu.
+WHATSAPP_OFICIAL = "https://wa.me/556932247620"
 # Palavras inglesas comuns que não existem em português: sinal de raciocínio vazado em inglês
 # (um bot já trocou "camisinha" por "condomínio" passando por "condom").
 PALAVRAS_EM_INGLES = ("the", "with", "from", "which", "this", "and", "you", "your", "condom")
 # Contagens pequenas ("os 5 maiores") passam sem fonte; porcentagens nunca.
 PEQUENOS = frozenset(str(n) for n in range(11))
 
-RE_NUMERO = re.compile(r"(?<![\d.,])(\d{1,3}(?:\.\d{3})+(?:,\d+)?|\d+(?:,\d+)?)(?!\d)(\s?%)?")
-RE_LINK_MD = re.compile(r"\[([^\]]+)\]\(([^)\s]+)\)")
-RE_URL_SOLTA = re.compile(r"(?<!\]\()https?://[^\s)\]]+")
+# O token engole todos os separadores ("8.1", "1.234.567,5") para "8.1" não virar só "8".
+RE_NUMERO = re.compile(r"(?<![\d.,])(\d+(?:[.,]\d+)*)(?!\d)(\s?%)?")
+RE_NUMERO_PT_BR = re.compile(r"\d{1,3}(?:\.\d{3})+(?:,\d+)?|\d+(?:,\d+)?")
+# Texto com um nível de colchetes ("[a [b]]") e título opcional ('(url "título")').
+RE_LINK_MD = re.compile(r'\[((?:[^\[\]]|\[[^\[\]]*\])+)\]\(([^)\s]+)(?:\s+"[^"]*")?\)')
+# Sem lookbehind: a URL de um link que RE_LINK_MD não reconheceu ainda é conferida como solta.
+RE_URL_SOLTA = re.compile(r"https?://[^\s)\]]+")
 _LETRA = r"[^\W\d_]"
 
 
@@ -50,7 +57,13 @@ def _canonico(valor: Decimal) -> str:
 
 
 def normalizar(token: str) -> str:
-    return _canonico(Decimal(token.replace(".", "").replace(",", ".")))
+    if RE_NUMERO_PT_BR.fullmatch(token):
+        return _canonico(Decimal(token.replace(".", "").replace(",", ".")))
+    # Ponto fora do milhar pt-BR ("8.1", "7.5"): vale a leitura decimal, que é a do leitor.
+    try:
+        return _canonico(Decimal(token.replace(",", "")))
+    except InvalidOperation:
+        return token  # "17.10.2026" não tem leitura numérica: só passa se vier igual da fonte
 
 
 def numeros_permitidos(fontes: Iterable[Any]) -> set[str]:
@@ -76,12 +89,19 @@ def numeros_permitidos(fontes: Iterable[Any]) -> set[str]:
 
 
 def _link_permitido(url: str, urls_ferramentas: set[str]) -> bool:
-    if url.startswith("/"):
+    try:
         partes = urlsplit(url)
+    except ValueError:  # "https://[golpe": colchete sem par, urlsplit não lê
+        return False
+    if url.startswith("/"):
+        # "//golpe.example/painel" começa com "/" mas aponta para outro host
+        if partes.netloc or partes.scheme:
+            return False
         if partes.query:
             return url in urls_ferramentas
         return partes.path in ROTAS_PERMITIDAS
-    partes = urlsplit(url)
+    if partes.scheme == "https" and partes.hostname == "wa.me":
+        return url == WHATSAPP_OFICIAL or url in urls_ferramentas
     return partes.scheme == "https" and partes.hostname in HOSTS_EXTERNOS
 
 

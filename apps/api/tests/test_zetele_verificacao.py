@@ -94,3 +94,62 @@ def test_termos_bloqueados_configuraveis(settings: Any) -> None:
     settings.ZETELE_TERMOS_BLOQUEADOS = ["condomínio"]
     v = verificar("Condomínio pode ser retirado.", dados=[], referencias=[], urls_ferramentas=set())
     assert not v.aprovada
+
+
+@pytest.mark.parametrize(
+    "texto", ["Rondônia produz 8.1 milhões de toneladas.", "A produção cresceu 7.5% no ano."]
+)
+def test_reprova_decimal_com_ponto_no_padrao_ingles(texto: str) -> None:
+    v = verificar(texto, dados=DADOS, referencias=(), urls_ferramentas={URL})
+    assert not v.aprovada
+    assert any(m.startswith("número sem fonte: ") for m in v.motivos)
+
+
+def test_decimal_com_ponto_aceito_quando_esta_na_fonte() -> None:
+    assert aprova("O índice foi 8.1 no ano.", refs=("índice 8,1",))
+
+
+@pytest.mark.parametrize(
+    "texto", ["[Painel](//golpe.example/painel)", "[Home](//golpe.example/)"]
+)
+def test_link_sem_esquema_para_outro_host_e_removido(texto: str) -> None:
+    limpo, removidos = limpar_links(texto, set())
+    assert removidos == 1
+    assert "golpe" not in limpo
+
+
+def test_link_markdown_com_titulo_e_removido() -> None:
+    limpo, removidos = limpar_links('Veja [x](https://golpe.example "oficial").', set())
+    assert (limpo, removidos) == ("Veja x.", 1)
+
+
+def test_link_markdown_com_colchetes_no_texto_e_removido() -> None:
+    limpo, removidos = limpar_links("Veja [a [b]](https://golpe.example).", set())
+    assert (limpo, removidos) == ("Veja a [b].", 1)
+
+
+def test_links_aprovados_continuam_intactos_sem_contagem_dupla() -> None:
+    texto = (
+        "Veja [IBGE](https://sidra.ibge.gov.br/Tabela/5457), "
+        '[CNA](https://www.cnabrasil.org.br "site da CNA") e https://sidra.ibge.gov.br/Tabela/1612.'
+    )
+    assert limpar_links(texto, set()) == (texto, 0)
+
+
+def test_whatsapp_so_o_oficial() -> None:
+    oficial = "[WhatsApp](https://wa.me/556932247620)"
+    assert limpar_links(oficial, set()) == (oficial, 0)
+    limpo, removidos = limpar_links("Chame no [WhatsApp](https://wa.me/5569999991234).", set())
+    assert (limpo, removidos) == ("Chame no WhatsApp.", 1)
+    limpo, removidos = limpar_links("Ou https://wa.me/5569999991234 direto.", set())
+    assert (limpo, removidos) == ("Ou  direto.", 1)
+
+
+def test_whatsapp_devolvido_pela_ferramenta_passa() -> None:
+    url = "https://wa.me/556932247620?text=Ol%C3%A1"
+    assert limpar_links(f"[fale]({url})", {url}) == (f"[fale]({url})", 0)
+
+
+def test_url_malformada_e_removida_sem_derrubar_a_verificacao() -> None:
+    limpo, removidos = limpar_links("Veja [x](https://[golpe) e https://[golpe2 aqui.", set())
+    assert (limpo, removidos) == ("Veja x e  aqui.", 2)

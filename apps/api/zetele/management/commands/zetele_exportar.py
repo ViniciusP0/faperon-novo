@@ -7,6 +7,13 @@ from django.utils import timezone
 
 from zetele.models import Pergunta
 
+# Planilha executa célula que começa com estes caracteres como fórmula (injeção de CSV).
+_INICIO_DE_FORMULA = ("=", "+", "-", "@", "\t", "\r")
+
+
+def _celula(texto: str) -> str:
+    return f"'{texto}" if texto.startswith(_INICIO_DE_FORMULA) else texto
+
 
 class Command(BaseCommand):
     help = "Imprime em CSV as perguntas feitas ao Zétele nos últimos N dias (base do FAQ)."
@@ -19,4 +26,5 @@ class Command(BaseCommand):
         escritor = csv.writer(self.stdout)
         escritor.writerow(["texto", "status", "pagina", "criada_em"])
         for p in Pergunta.objects.filter(criada_em__gte=desde).order_by("criada_em"):
-            escritor.writerow([p.texto, p.status, p.pagina, p.criada_em.isoformat()])
+            linha = [_celula(p.texto), _celula(p.status), _celula(p.pagina)]
+            escritor.writerow([*linha, p.criada_em.isoformat()])

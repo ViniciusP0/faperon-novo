@@ -85,3 +85,37 @@ def test_exportar_gera_csv_das_perguntas_recentes() -> None:
     linhas = list(csv.reader(io.StringIO(saida.getvalue())))
     assert linhas[0] == ["texto", "status", "pagina", "criada_em"]
     assert [linha[0] for linha in linhas[1:]] == ["onde fica o painel?"]
+
+
+@pytest.mark.parametrize(
+    ("entrada", "esperado"),
+    [
+        ("cel 99999-1234", "cel [removido]"),
+        ("2021 12345678", "2021 [removido]"),
+        ("safra 2023-2024", "safra 2023-2024"),
+        ("entre 10 2024-2025", "entre 10 2024-2025"),
+        ("ligue (69) 3214-8371", "ligue [removido]"),
+    ],
+)
+def test_mascara_respeita_limites_de_digito(entrada: str, esperado: str) -> None:
+    assert mascarar(entrada) == esperado
+
+
+@pytest.mark.django_db
+def test_falha_ao_registrar_nao_aborta_a_transacao_de_quem_chama() -> None:
+    # status maior que max_length=20: o Postgres recusa o INSERT (DataError)
+    registrar("qual o maior produtor?", "x" * 40, "/painel")
+    assert Pergunta.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_exportar_neutraliza_formula_no_csv() -> None:
+    agora = timezone.now()
+    for texto in ["=HYPERLINK(\"x\")", "+1", "-2", "@SOMA(A1)", "normal"]:
+        Pergunta.objects.create(texto=texto, status="respondida", pagina="/", criada_em=agora)
+    saida = io.StringIO()
+    call_command("zetele_exportar", stdout=saida)
+    textos = [linha[0] for linha in csv.reader(io.StringIO(saida.getvalue()))][1:]
+    assert sorted(textos) == sorted(
+        ["'=HYPERLINK(\"x\")", "'+1", "'-2", "'@SOMA(A1)", "normal"]
+    )
