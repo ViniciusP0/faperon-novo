@@ -121,3 +121,7 @@ def test_limite_global(api: APIClient, com_chave: None, cliente_ok: ClienteLLMFa
     cache.clear()
     codigos = [pedir(api, ip=f"198.51.100.{i}").status_code for i in range(3)]
     assert codigos == [200, 200, 429]
+
+
+def test_pagina_da_area_logada_e_aceita(api: APIClient, com_chave: None, cliente_ok: ClienteLLMFalso, dados_soja: Produto) -> None:
+    assert pedir(api, pagina="/sistema/espacos").status_code == 200

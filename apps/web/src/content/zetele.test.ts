@@ -12,18 +12,22 @@ const SITE_MD = path.resolve(__dirname, "../../../api/zetele/conhecimento/site.m
 const ROTAS = sitemap().map((e) => new URL(e.url).pathname);
 
 describe("Zétele: conteúdo", () => {
-  it("aparece exatamente no Início, na Central, no Observatório e no Painel", () => {
-    expect([...PAGINAS_COM_ZETELE].sort()).toEqual(["/", "/central-de-inteligencia", "/central-de-inteligencia/observatorio", "/painel"]);
+  it("aparece no Início, na Central, no Observatório, no Painel e na área logada", () => {
+    expect([...PAGINAS_COM_ZETELE].sort()).toEqual([
+      "/", "/central-de-inteligencia", "/central-de-inteligencia/observatorio", "/painel",
+      "/sistema", "/sistema/agenda", "/sistema/espacos", "/sistema/frotas",
+    ]);
+    expect(ehPaginaComZetele("/sistema/frotas")).toBe(true);
     expect(ehPaginaComZetele("/painel")).toBe(true);
     expect(ehPaginaComZetele("/sobre")).toBe(false);
     expect(ehPaginaComZetele(null)).toBe(false);
   });
 
   it("tem 8 perguntas prontas; as estáticas têm resposta e link para página que existe", () => {
-    expect(PERGUNTAS).toHaveLength(9);
+    expect(PERGUNTAS).toHaveLength(18);
     for (const p of PERGUNTAS.filter((q) => q.tipo === "estatica")) {
       expect(p.resposta, p.id).toBeTruthy();
-      expect(ROTAS, p.id).toContain(p.href);
+      expect([...ROTAS, "/sistema/agenda", "/sistema/frotas", "/sistema/espacos"], p.id).toContain(p.href!.split("?")[0]);
     }
   });
 
@@ -31,8 +35,17 @@ describe("Zétele: conteúdo", () => {
     for (const pagina of PAGINAS_COM_ZETELE) {
       const { visiveis, demais } = perguntasDaPagina(pagina);
       expect(visiveis.map((p) => p.id)).toEqual(ORDEM_POR_PAGINA[pagina]);
-      expect(visiveis.length + demais.length).toBe(PERGUNTAS.length);
+      const area = pagina.startsWith("/sistema") ? "sistema" : "site";
+      expect(visiveis.length + demais.length).toBe(PERGUNTAS.filter((p) => (p.area ?? "site") === area).length);
     }
+  });
+
+  it("na área logada, as sugestões são só do sistema e não se misturam com as do site", () => {
+    for (const pagina of ["/sistema", "/sistema/agenda", "/sistema/frotas", "/sistema/espacos"] as const) {
+      const { visiveis, demais } = perguntasDaPagina(pagina);
+      expect([...visiveis, ...demais].every((p) => p.area === "sistema"), pagina).toBe(true);
+    }
+    expect(perguntasDaPagina("/").demais.some((p) => p.area === "sistema")).toBe(false);
   });
 
   it("no Início só há perguntas de orientação (estáticas)", () => {

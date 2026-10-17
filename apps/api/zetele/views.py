@@ -17,7 +17,16 @@ from zetele.throttles import ZeteleGlobalThrottle
 
 log = logging.getLogger(__name__)
 
-PAGINAS_COM_ZETELE = ("/", "/central-de-inteligencia", "/central-de-inteligencia/observatorio", "/painel")
+PAGINAS_COM_ZETELE = (
+    "/",
+    "/central-de-inteligencia",
+    "/central-de-inteligencia/observatorio",
+    "/painel",
+    "/sistema",
+    "/sistema/agenda",
+    "/sistema/frotas",
+    "/sistema/espacos",
+)
 # Uma pergunta prende uma thread do gunicorn por até 40 s: no máximo N por processo (ADR 0025).
 SEMAFORO = threading.BoundedSemaphore(settings.ZETELE_SIMULTANEOS)
 MENSAGENS = {

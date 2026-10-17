@@ -19,10 +19,17 @@ MAX_CHAMADAS = 4
 ORCAMENTO_SEGUNDOS = 40.0
 MAX_HISTORICO = 6
 # No Início o Zétele só orienta para as áreas do site; dados e preços ficam na Central.
-PAGINAS_SO_ORIENTACAO = frozenset({"/"})
+# Na área logada (protótipo) os dados da pessoa ficam no navegador dela: ele só explica o uso.
+PAGINAS_SISTEMA = frozenset({"/sistema", "/sistema/agenda", "/sistema/frotas", "/sistema/espacos"})
+PAGINAS_SO_ORIENTACAO = frozenset({"/"}) | PAGINAS_SISTEMA
 ORIENTACAO_INICIO = (
     "Nesta página o Zétele só orienta para onde ir no site: não consulte dados nem cite números; "
     "para números e preços, indique a Central de Inteligência."
+)
+ORIENTACAO_SISTEMA = (
+    "Esta é a área logada do sistema (protótipo). O Zétele só explica como usar a agenda, a frota e "
+    "o agendamento de espaços; ele não vê os eventos, reservas ou pedidos da pessoa, que ficam no "
+    "navegador dela. Para números do agro, indique a Central de Inteligência."
 )
 
 TEXTO_RECUSA = "Isso eu não sei responder. Posso ajudar com o Painel, o Observatório ou as páginas da FAPERON."
@@ -55,7 +62,12 @@ def _mensagens(historico: list[dict[str, str]], pergunta: str, pagina: str) -> l
             msgs[-1]["content"] += "\n\n" + item["texto"]
         else:
             msgs.append({"role": papel, "content": item["texto"]})
-    aviso = f" {ORIENTACAO_INICIO}" if pagina in PAGINAS_SO_ORIENTACAO else ""
+    if pagina in PAGINAS_SISTEMA:
+        aviso = f" {ORIENTACAO_SISTEMA}"
+    elif pagina in PAGINAS_SO_ORIENTACAO:
+        aviso = f" {ORIENTACAO_INICIO}"
+    else:
+        aviso = ""
     atual = f"(O visitante está em {pagina}.{aviso})\n\n{pergunta}"
     if msgs and msgs[-1]["role"] == "user":
         msgs[-1]["content"] += "\n\n" + atual

@@ -2,7 +2,16 @@ import { CENTRAL } from "./central";
 import { CONTATO } from "./contato";
 import { INFORMATIVOS } from "./informativos";
 
-export const PAGINAS_COM_ZETELE = ["/", "/central-de-inteligencia", "/central-de-inteligencia/observatorio", "/painel"] as const;
+export const PAGINAS_COM_ZETELE = [
+  "/",
+  "/central-de-inteligencia",
+  "/central-de-inteligencia/observatorio",
+  "/painel",
+  "/sistema",
+  "/sistema/agenda",
+  "/sistema/frotas",
+  "/sistema/espacos",
+] as const;
 export type PaginaComZetele = (typeof PAGINAS_COM_ZETELE)[number];
 
 export function ehPaginaComZetele(caminho: string | null): caminho is PaginaComZetele {
@@ -21,6 +30,8 @@ export interface PerguntaPronta {
   id: string;
   texto: string;
   tipo: "estatica" | "dados";
+  /** "sistema": perguntas da área logada; não se misturam com as do site público. */
+  area?: "site" | "sistema";
   resposta?: string;
   href?: string;
   rotuloLink?: string;
@@ -77,24 +88,111 @@ export const PERGUNTAS: PerguntaPronta[] = [
     href: "/fale-conosco",
     rotuloLink: "Abrir o Fale Conosco",
   },
+  {
+    id: "sis-evento",
+    area: "sistema",
+    texto: "Como crio um evento na minha agenda?",
+    tipo: "estatica",
+    resposta: 'Na Agenda, clique em "Novo evento" (ou no "+" de um dia do mês), preencha título, data, horário e tipo, e salve. Só você vê os seus eventos; os da FAPERON aparecem para todos.',
+    href: "/sistema/agenda",
+    rotuloLink: "Abrir a Agenda",
+  },
+  {
+    id: "sis-agenda-outros",
+    area: "sistema",
+    texto: "O que mais aparece na minha agenda?",
+    tipo: "estatica",
+    resposta: "Além dos seus eventos, aparecem os eventos institucionais da FAPERON, as suas viagens com veículo da frota e os espaços aprovados para você. Use a visão Lista para ver os próximos 30 dias.",
+    href: "/sistema/agenda",
+    rotuloLink: "Abrir a Agenda",
+  },
+  {
+    id: "sis-reserva",
+    area: "sistema",
+    texto: "Como reservo um veículo?",
+    tipo: "estatica",
+    resposta: 'Em Frotas, aba Reservas, clique em "Nova reserva", escolha o veículo, a saída e o retorno, o destino e o motivo. Se o veículo já estiver reservado ou em manutenção no período, o sistema avisa. A reserva entra na sua agenda.',
+    href: "/sistema/frotas?aba=reservas",
+    rotuloLink: "Abrir as Reservas",
+  },
+  {
+    id: "sis-km",
+    area: "sistema",
+    texto: "Como registro a saída e o retorno do veículo?",
+    tipo: "estatica",
+    resposta: 'Na sua reserva, use "Registrar saída" ao pegar o veículo e "Registrar retorno" ao devolver, informando o km. O km de retorno não pode ser menor que o de saída e atualiza o km do veículo.',
+    href: "/sistema/frotas?aba=reservas",
+    rotuloLink: "Abrir as Reservas",
+  },
+  {
+    id: "sis-revisao",
+    area: "sistema",
+    texto: "Quando o veículo precisa de revisão?",
+    tipo: "estatica",
+    resposta: "A cada 10.000 km ou 12 meses desde a última revisão, o que vencer primeiro. A aba Veículos mostra a próxima revisão e avisa quando está próxima ou vencida. Manutenções são registradas pelo gestor da frota.",
+    href: "/sistema/frotas?aba=veiculos",
+    rotuloLink: "Abrir os Veículos",
+  },
+  {
+    id: "sis-custos",
+    area: "sistema",
+    texto: "Onde vejo os custos da frota?",
+    tipo: "estatica",
+    resposta: "Na aba Custos: combustível e manutenção dos últimos 6 meses, km rodados nas viagens concluídas e custo por km, da frota toda ou de um veículo.",
+    href: "/sistema/frotas?aba=custos",
+    rotuloLink: "Abrir os Custos",
+  },
+  {
+    id: "sis-espaco",
+    area: "sistema",
+    texto: "Como peço um espaço, como o auditório?",
+    tipo: "estatica",
+    resposta: 'Em Espaços, clique em "Novo pedido" e informe o espaço, o dia, o período (dia todo, manhã, tarde, noite ou horário específico), o tipo e o nome do evento, os participantes e se haverá coffee break. O pedido vai para a fila.',
+    href: "/sistema/espacos",
+    rotuloLink: "Abrir os Espaços",
+  },
+  {
+    id: "sis-fila",
+    area: "sistema",
+    texto: "Como funciona a fila de pedidos de espaço?",
+    tipo: "estatica",
+    resposta: "Todo pedido entra como pendente, em ordem de chegada. O gestor dos espaços aprova ou recusa com um motivo. Você acompanha o status em Meus pedidos, e o que for aprovado entra na sua agenda.",
+    href: "/sistema/espacos?aba=fila",
+    rotuloLink: "Abrir a Fila",
+  },
+  {
+    id: "sis-conflito",
+    area: "sistema",
+    texto: "O que acontece se houver conflito de horário?",
+    tipo: "estatica",
+    resposta: "Antes de enviar, o pedido mostra os choques com pedidos aprovados ou pendentes do mesmo espaço e horário, e avisa se passar da capacidade. Ele pode ir para a fila assim mesmo, marcado; o gestor não consegue aprovar algo que choque com um pedido já aprovado.",
+    href: "/sistema/espacos?aba=painel",
+    rotuloLink: "Abrir o Painel de 7 dias",
+  },
 ];
 
 /** No Início o Zétele só orienta (sem dados); perguntas de dados e preços ficam na Central. */
-export const PAGINAS_SO_ORIENTACAO: readonly PaginaComZetele[] = ["/"];
+/** No sistema os dados ficam no navegador da pessoa: o Zétele só explica como usar cada módulo. */
+export const PAGINAS_SO_ORIENTACAO: readonly PaginaComZetele[] = ["/", "/sistema", "/sistema/agenda", "/sistema/frotas", "/sistema/espacos"];
 
 export const ORDEM_POR_PAGINA: Record<PaginaComZetele, string[]> = {
   "/": ["central", "painel-observatorio", "informativos", "contato"],
   "/central-de-inteligencia": ["painel-observatorio", "soja", "preco", "pdf"],
   "/painel": ["pdf", "soja", "preco", "gado"],
   "/central-de-inteligencia/observatorio": ["painel-observatorio", "cafe", "preco", "soja"],
+  "/sistema": ["sis-evento", "sis-reserva", "sis-espaco", "sis-fila"],
+  "/sistema/agenda": ["sis-evento", "sis-agenda-outros", "sis-reserva", "sis-espaco"],
+  "/sistema/frotas": ["sis-reserva", "sis-km", "sis-revisao", "sis-custos"],
+  "/sistema/espacos": ["sis-espaco", "sis-fila", "sis-conflito", "sis-evento"],
 };
 
 export function perguntasDaPagina(pagina: PaginaComZetele): { visiveis: PerguntaPronta[]; demais: PerguntaPronta[] } {
   const ids = ORDEM_POR_PAGINA[pagina];
   const porId = new Map(PERGUNTAS.map((p) => [p.id, p]));
+  const area = pagina.startsWith("/sistema") ? "sistema" : "site";
   return {
     visiveis: ids.map((id) => porId.get(id)).filter((p): p is PerguntaPronta => Boolean(p)),
-    demais: PERGUNTAS.filter((p) => !ids.includes(p.id)),
+    demais: PERGUNTAS.filter((p) => !ids.includes(p.id) && (p.area ?? "site") === area),
   };
 }
 

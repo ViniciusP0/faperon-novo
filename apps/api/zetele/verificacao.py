@@ -27,6 +27,11 @@ ROTAS_PERMITIDAS = frozenset(
         "/sindicatos-rurais",
         "/comissao-mulheres",
         "/politica-de-privacidade",
+        "/login",
+        "/sistema",
+        "/sistema/agenda",
+        "/sistema/frotas",
+        "/sistema/espacos",
     }
 )
 HOSTS_EXTERNOS = frozenset(

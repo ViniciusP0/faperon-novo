@@ -1,5 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { semAreaDoZetele } from "./sem-zetele";
+
+test.beforeEach(({ page }) => semAreaDoZetele(page));
 
 async function semViolacoesSerias(page: Page) {
   const resultado = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();

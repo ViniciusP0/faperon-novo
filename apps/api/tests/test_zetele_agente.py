@@ -137,3 +137,12 @@ def test_na_central_as_ferramentas_estao_disponiveis(dados_soja: Produto) -> Non
     responder(cli, "x", [], "/painel")
     assert len(cli.pedidos[0]["tools"]) == 4
     assert "só orienta" not in cli.pedidos[0]["messages"][-1]["content"]
+
+
+def test_na_area_logada_ele_so_explica_o_uso_sem_ferramentas(dados_soja: Produto) -> None:
+    cli = ClienteLLMFalso([final("resposta", "Em [Frotas](/sistema/frotas), aba Reservas, clique em Nova reserva.")])
+    r = responder(cli, "como reservo um carro?", [], "/sistema/frotas")
+    assert r.status == "respondida"
+    assert r.texto == "Em [Frotas](/sistema/frotas), aba Reservas, clique em Nova reserva."
+    assert cli.pedidos[0]["tools"] == []
+    assert "área logada do sistema" in cli.pedidos[0]["messages"][-1]["content"]

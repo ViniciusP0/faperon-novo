@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from django.conf import settings
 from django.core.management import call_command
 
 from zetele import agente, ferramentas
