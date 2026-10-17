@@ -12,6 +12,8 @@ const SECOES = [
   { href: "/sistema/agenda", rotulo: "Agenda" },
   { href: "/sistema/frotas", rotulo: "Frotas" },
   { href: "/sistema/espacos", rotulo: "Espaços" },
+  { href: "/sistema/contas", rotulo: "Contas" },
+  { href: "/sistema/relatorios", rotulo: "Relatórios" },
 ];
 
 const acao =

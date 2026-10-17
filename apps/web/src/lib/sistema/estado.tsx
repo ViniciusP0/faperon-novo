@@ -1,11 +1,11 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { agendaDeExemplo, eventosInstitucionais, frotaDeExemplo, pedidosDeExemplo } from "@/content/sistema/exemplo";
+import { agendaDeExemplo, despesasDeExemplo, eventosInstitucionais, frotaDeExemplo, pedidosDeExemplo } from "@/content/sistema/exemplo";
 import { funcionarioPorId } from "@/content/sistema/funcionarios";
 import { apagarTudo, gravar, gravarAcesso, gravarSessao, ler, lerAcesso, lerSessao } from "./armazenamento";
 import { hojeISO } from "./datas";
-import type { EstadoFrota, Evento, Funcionario, PedidoEspaco } from "./tipos";
+import type { Despesa, EstadoFrota, Evento, Funcionario, PedidoEspaco } from "./tipos";
 
 interface ContextoSistema {
   /** Falso até ler o storage (no servidor e no primeiro render): evita descompasso de hidratação. */
@@ -27,6 +27,8 @@ interface ContextoSistema {
   atualizarFrota: (muda: (atual: EstadoFrota) => EstadoFrota) => void;
   pedidos: PedidoEspaco[];
   atualizarPedidos: (muda: (atual: PedidoEspaco[]) => PedidoEspaco[]) => void;
+  despesas: Despesa[];
+  atualizarDespesas: (muda: (atual: Despesa[]) => Despesa[]) => void;
   restaurar: () => void;
 }
 
@@ -42,6 +44,7 @@ export function SistemaProvider({ children }: { children: ReactNode }) {
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [frota, setFrota] = useState<EstadoFrota>(FROTA_VAZIA);
   const [pedidos, setPedidos] = useState<PedidoEspaco[]>([]);
+  const [despesas, setDespesas] = useState<Despesa[]>([]);
 
   const carregar = useCallback(() => {
     const liberado = lerAcesso();
@@ -51,6 +54,7 @@ export function SistemaProvider({ children }: { children: ReactNode }) {
     setEventos(atual ? ler(`agenda:${atual.id}`, agendaDeExemplo(atual.id, hoje)) : []);
     setFrota(ler("frota", frotaDeExemplo(hoje)));
     setPedidos(ler("espacos", pedidosDeExemplo(hoje)));
+    setDespesas(ler("contas", despesasDeExemplo(hoje)));
     setPronto(true);
   }, [hoje]);
 
@@ -94,12 +98,19 @@ export function SistemaProvider({ children }: { children: ReactNode }) {
           gravar("espacos", nova);
           return nova;
         }),
+      despesas,
+      atualizarDespesas: (muda) =>
+        setDespesas((atual) => {
+          const nova = muda(atual);
+          gravar("contas", nova);
+          return nova;
+        }),
       restaurar: () => {
         apagarTudo();
         carregar();
       },
     };
-  }, [pronto, hoje, acesso, funcionario, eventos, frota, pedidos, carregar]);
+  }, [pronto, hoje, acesso, funcionario, eventos, frota, pedidos, despesas, carregar]);
 
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;
 }

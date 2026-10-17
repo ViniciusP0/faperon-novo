@@ -1,5 +1,5 @@
 import { somarDias } from "@/lib/sistema/datas";
-import type { Espaco, EstadoFrota, Evento, PedidoEspaco, Reserva } from "@/lib/sistema/tipos";
+import type { Despesa, Espaco, EstadoFrota, Evento, PedidoEspaco, Reserva } from "@/lib/sistema/tipos";
 
 /** Dados de exemplo calculados a partir de `hoje`, para o protótipo nunca parecer velho. Tudo fictício. */
 
@@ -149,5 +149,25 @@ export function pedidosDeExemplo(hoje: string): PedidoEspaco[] {
     p({ id: "e-ex-4", espacoId: "auditorio", funcionarioId: "joao", data: d3, nome: "Assembleia dos sindicatos rurais", tipo: "institucional", periodo: "tarde", inicio: "13:00", fim: "18:00", participantes: 120, status: "aprovado", coffeeBreak: true }),
     p({ id: "e-ex-5", espacoId: "sala-reunioes", funcionarioId: "marcos", data: d1, nome: "Alinhamento com a oficina parceira", periodo: "horario", inicio: "15:00", fim: "16:00", participantes: 4, criadoEm: `${hoje}T08:40` }),
     p({ id: "e-ex-6", espacoId: "nucleo-tecnico", funcionarioId: "ana", data: util(hoje, 1), nome: "Apresentação do diagnóstico da piscicultura", tipo: "palestra", periodo: "manha", participantes: 24, criadoEm: `${hoje}T11:05` }),
+  ];
+}
+
+export function despesasDeExemplo(hoje: string): Despesa[] {
+  const d = (n: number, parcial: Omit<Despesa, "id" | "comprovante" | "observacaoGestor" | "criadaEm">): Despesa => ({
+    id: `despesa-ex-${n}`,
+    comprovante: null,
+    observacaoGestor: "",
+    criadaEm: `${parcial.data}T10:00`,
+    ...parcial,
+  });
+  return [
+    d(1, { funcionarioId: "carla", data: somarDias(hoje, -20), centro: "Comunicação", categoria: "servicos", descricao: "Impressão de banners do dia de campo", fornecedor: "Gráfica Rondônia", valor: 680, status: "aprovada" }),
+    d(2, { funcionarioId: "carla", data: somarDias(hoje, -6), centro: "Comunicação", categoria: "material", descricao: "Cartões de memória para a câmera", fornecedor: "Loja Foto Digital", valor: 189.9, status: "enviada" }),
+    d(3, { funcionarioId: "ana", data: somarDias(hoje, -12), centro: "Técnica", categoria: "hospedagem", descricao: "Hospedagem na visita técnica a Ariquemes", fornecedor: "Hotel Vale do Jamari", valor: 340, status: "enviada" }),
+    d(4, { funcionarioId: "ana", data: somarDias(hoje, -12), centro: "Técnica", categoria: "alimentacao", descricao: "Refeições da visita técnica", fornecedor: "Restaurante Sabor do Campo", valor: 96.5, status: "aprovada" }),
+    d(5, { funcionarioId: "joao", data: somarDias(hoje, -3), centro: "Sindical", categoria: "transporte", descricao: "Passagem de ônibus a Vilhena", fornecedor: "Viação Rondônia", valor: 142, status: "rascunho" }),
+    { ...d(6, { funcionarioId: "joao", data: somarDias(hoje, -15), centro: "Sindical", categoria: "eventos", descricao: "Lanche da reunião com o sindicato", fornecedor: "Padaria Pão Nosso", valor: 210, status: "devolvida" }), observacaoGestor: "Falta o comprovante fiscal." },
+    d(7, { funcionarioId: "luiza", data: somarDias(hoje, -30), centro: "Presidência", categoria: "transporte", descricao: "Táxi para a Assembleia Legislativa", fornecedor: "Rádio Táxi PVH", valor: 58, status: "aprovada" }),
+    d(8, { funcionarioId: "marcos", data: somarDias(hoje, -9), centro: "Administrativo", categoria: "material", descricao: "Toner para a impressora", fornecedor: "Info Suprimentos", valor: 415, status: "aprovada" }),
   ];
 }

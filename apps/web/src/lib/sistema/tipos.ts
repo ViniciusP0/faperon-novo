@@ -7,6 +7,7 @@ export interface Funcionario {
   area: string;
   gestorFrota: boolean;
   gestorEspacos: boolean;
+  gestorContas: boolean;
 }
 
 export type TipoEvento = "reuniao" | "viagem" | "compromisso";
@@ -107,4 +108,31 @@ export interface PedidoEspaco {
   status: StatusPedido;
   motivoRecusa: string;
   criadoEm: string;
+}
+
+export const CENTROS_DE_CUSTO = ["Presidência", "Administrativo", "Técnica", "Comunicação", "Sindical"] as const;
+export type CentroDeCusto = (typeof CENTROS_DE_CUSTO)[number];
+export type CategoriaDespesa = "material" | "combustivel" | "alimentacao" | "hospedagem" | "transporte" | "servicos" | "eventos" | "outros";
+export type StatusDespesa = "rascunho" | "enviada" | "aprovada" | "devolvida";
+
+export interface Comprovante {
+  nome: string;
+  tipo: string;
+  /** data: URL do arquivo; null quando passou do limite e só o nome ficou guardado. */
+  dados: string | null;
+}
+
+export interface Despesa {
+  id: string;
+  funcionarioId: string;
+  data: string;
+  centro: CentroDeCusto;
+  categoria: CategoriaDespesa;
+  descricao: string;
+  fornecedor: string;
+  valor: number;
+  comprovante: Comprovante | null;
+  status: StatusDespesa;
+  observacaoGestor: string;
+  criadaEm: string;
 }
