@@ -68,3 +68,11 @@ Uma auditoria independente (dois agentes, segurança e integridade) achou falhas
 - A senha de demonstração está nos testes e na spec, sem dado real por trás.
 
 O login real do sistema definitivo fecha os dois primeiros riscos.
+
+## Atualização de 18/10/2026: tetos diários triplicados
+
+Por pedido do usuário, os tetos diários foram triplicados nos dois canais:
+- **site público:** `ZETELE_LIMITE_DIARIO` passou de 200 para **600**;
+- **sistema:** `ZETELE_SISTEMA_LIMITE_DIARIO` passou de 250 para **750**, ainda contando o áudio.
+
+Os limites por minuto (por IP e globais) continuam iguais, porque eles protegem contra rajadas, não contra o volume do dia. No pior caso, o gasto diário com o modelo também triplica. Os tetos continuam ajustáveis no `.env` de cada servidor.

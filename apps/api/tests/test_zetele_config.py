@@ -8,8 +8,8 @@ def test_limites_do_zetele_configurados() -> None:
     taxas = settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]
     assert taxas["zetele"] == "6/min"
     assert taxas["zetele_global"] == "30/min"
-    assert settings.ZETELE_LIMITE_DIARIO == 200
-    assert settings.ZETELE_SISTEMA_LIMITE_DIARIO == 250
+    assert settings.ZETELE_LIMITE_DIARIO == 600
+    assert settings.ZETELE_SISTEMA_LIMITE_DIARIO == 750
     assert taxas["zetele_sistema"] == "10/min"
     assert taxas["zetele_sistema_global"] == "30/min"
     assert settings.ZETELE_SIMULTANEOS == 3
