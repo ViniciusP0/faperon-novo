@@ -1,5 +1,5 @@
 """Recorta as 3 poses do Zétele da arte original, remove o fundo e grava em public/zetele/.
-Na pose acenando, troca o chapéu que ele segura por uma enxada desenhada no mesmo traço.
+Arte atual: Zétele com a camisa da FAPERON. Na pose acenando, desenha uma enxada no mesmo traço.
 
 Uso (raiz do repo):
   uv run --with pillow --with scipy --with "rembg[cpu]==2.0.85" \\
@@ -39,24 +39,23 @@ def recortar(pose: Image.Image, mascara: Image.Image) -> Image.Image:
     """Aplica a máscara do rembg corrigindo o que o u2net erra nesta arte."""
     rgb = np.asarray(pose).astype(int)
     bruta = np.asarray(mascara)
-    claro = rgb.min(axis=-1) >= 225
+    # Fundo da arte é branco puro; o bege do chapéu e o xadrez claro da camisa ficam abaixo disso.
+    branco = rgb.min(axis=-1) >= 250
 
     # Só o maior pedaço é o Zétele: folha ou trator que entre na caixa fica de fora.
     rotulos, areas = rotulos_por_area(bruta >= 128)
     corpo = rotulos == areas[1:].argmax() + 1
     alfa = np.where(ndimage.binary_dilation(corpo, iterations=3), bruta, 0)
 
-    # O u2net deixa o corpo levemente translúcido e vaza detalhes claros pequenos (decote):
-    # o miolo e os buracos pequenos voltam opacos.
-    rotulos, areas = rotulos_por_area(ndimage.binary_fill_holes(corpo) & ~corpo)
-    opaco = ndimage.binary_erosion(corpo, iterations=2)
-    opaco |= (areas < AREA_DETALHE)[rotulos] & (rotulos > 0)
+    # O u2net deixa partes claras translúcidas ou furadas (decote, chapéu bege): dentro da
+    # silhueta tudo volta opaco, menos o fundo visto entre braço e tronco, que é mancha grande
+    # de branco puro.
+    silhueta = ndimage.binary_fill_holes(corpo)
+    rotulos, areas = rotulos_por_area(branco & silhueta)
+    vao = ndimage.binary_dilation((areas >= AREA_DETALHE)[rotulos] & (rotulos > 0), iterations=2)
+    opaco = ndimage.binary_erosion(silhueta, iterations=2) & ~vao
     alfa[opaco] = 255
-
-    # E toma por corpo o fundo cercado pelo braço: mancha clara grande dentro do corpo é fundo.
-    rotulos, areas = rotulos_por_area(claro & corpo)
-    vao = (areas >= AREA_DETALHE)[rotulos] & (rotulos > 0)
-    alfa[ndimage.binary_dilation(vao, iterations=2)] = 0
+    alfa[vao] = 0
 
     # Sombra do chão: cinza claro sem saturação junto das botas (que são marrons).
     linhas = np.nonzero(corpo.any(axis=1))[0]
@@ -70,53 +69,38 @@ def recortar(pose: Image.Image, mascara: Image.Image) -> Image.Image:
     return Image.fromarray(np.dstack([cor, alfa]).astype(np.uint8), "RGBA")
 
 
-# Coordenadas da troca chapéu → enxada, pensadas na largura final (LARGURA = 320).
+# Coordenadas da enxada, pensadas na largura final (LARGURA = 320) da pose acenando.
 REF = 320
+FOLGA = 20  # à esquerda, para a lâmina caber
 
 
-def trocar_chapeu_por_enxada(img: Image.Image) -> Image.Image:
+def segurar_enxada(img: Image.Image) -> Image.Image:
+    """Enxada desenhada no mesmo traço, atrás do personagem: a mão aberta repousa sobre o cabo
+    e a lâmina fica rente ao chão, ao lado da bota."""
     s = img.width / REF
-    p = lambda x, y: (x * s, y * s)
-    a = np.asarray(img.convert("RGBA")).copy()
-    h, w = a.shape[:2]
-
-    # 1) a mão fecha sobre a aba: ela fica; o resto do chapéu sai
-    mao = Image.new("L", (w, h), 0)
-    ImageDraw.Draw(mao).polygon([p(34, 314), p(86, 314), p(86, 350), p(82, 368), p(70, 377), p(50, 377), p(37, 367), p(33, 340)], fill=255)
-    mao_arr = np.asarray(mao) > 0
-    ys, xs = np.mgrid[0:h, 0:w]
-    y320, x320 = ys / s, xs / s
-    borda = 84 - (y320 - 336) * (10 / 142)  # contorno esquerdo da perna esquerda
-    regiao = (y320 >= 336) & (y320 <= 478) & (x320 <= 114) & ~mao_arr
-    perna = regiao & (x320 > borda)
-    fora = regiao & ~perna
-
-    # 2) a calça coberta pelo chapéu volta com a textura da própria perna logo abaixo
-    linha_fonte = int(482 * s)
-    a[perna] = a[linha_fonte, xs[perna]]
-    a[fora, 3] = 0
-
-    img2 = Image.fromarray(a, "RGBA")
-    d2 = ImageDraw.Draw(img2)
+    p = lambda x, y: ((x + FOLGA) * s, y * s)
     contorno = (52, 36, 28, 255)
-    d2.line([p(84, 336), p(74, 482)], fill=contorno, width=round(2.6 * s))
-
-    # 3) enxada atrás do personagem: o cabo some atrás do braço e aparece no punho fechado
-    enxada = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-    d = ImageDraw.Draw(enxada)
-    topo, base = p(80, 210), p(41, 540)
-    d.line([topo, base], fill=contorno, width=round(9.4 * s))
-    d.line([topo, base], fill=(176, 122, 69, 255), width=round(5 * s))
-    d.line([p(79.2, 214), p(41.6, 530)], fill=(214, 160, 98, 255), width=round(1.4 * s))
-    # lâmina da enxada: estreita junto ao olho, larga no fio (à esquerda, rente ao chão)
-    lamina = [p(46, 533), p(7, 522), p(3, 554), p(45, 549)]
+    lona = Image.new("RGBA", (img.width + int(FOLGA * s), img.height + int(4 * s)), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lona)
+    topo, base = (66, 250), (22, 572)
+    d.line([p(*topo), p(*base)], fill=contorno, width=round(9.4 * s))
+    d.line([p(*topo), p(*base)], fill=(176, 122, 69, 255), width=round(5 * s))
+    d.line([p(65.2, 254), p(22.6, 562)], fill=(214, 160, 98, 255), width=round(1.4 * s))  # brilho
+    ox, oy = base[0] + 5, base[1] - 7  # olho da enxada, logo acima da ponta do cabo
+    lamina = [p(ox + 6, oy + 2), p(ox - 33, oy - 9), p(ox - 37, oy + 23), p(ox + 5, oy + 18)]
     d.polygon(lamina, fill=(142, 152, 156, 255))
-    d.polygon([p(7, 522), p(12, 523), p(9, 554), p(3, 554)], fill=(198, 206, 208, 255))  # fio afiado
-    d.line([p(14, 530), p(40, 537)], fill=(170, 180, 183, 255), width=round(1.4 * s))  # brilho
+    fio = [p(ox - 33, oy - 9), p(ox - 28, oy - 8), p(ox - 31, oy + 23), p(ox - 37, oy + 23)]
+    d.polygon(fio, fill=(198, 206, 208, 255))
     d.line(lamina + [lamina[0]], fill=contorno, width=round(2.6 * s), joint="curve")
-    d.rounded_rectangle([p(35, 531), p(51, 543)], radius=2 * s, fill=(110, 118, 122, 255), outline=contorno, width=round(2.2 * s))  # olho da enxada
-    enxada.alpha_composite(img2)
-    return enxada
+    d.rounded_rectangle(
+        [p(ox - 6, oy), p(ox + 10, oy + 12)],
+        radius=2 * s,
+        fill=(110, 118, 122, 255),
+        outline=contorno,
+        width=round(2.2 * s),
+    )
+    lona.alpha_composite(img, (int(FOLGA * s), 0))
+    return lona.crop(lona.getbbox())
 
 
 def main(arte: Path) -> None:
@@ -132,8 +116,8 @@ def main(arte: Path) -> None:
         recorte = recortar(pose, mascara)
         recorte = recorte.crop(recorte.getbbox())
         if nome == "acenando":
-            # pedido do usuário (17/10/2026): sai o chapéu da mão, entra uma enxada
-            recorte = trocar_chapeu_por_enxada(recorte)
+            # pedido do usuário (17/10/2026): o Zétele acenando segura uma enxada
+            recorte = segurar_enxada(recorte)
         altura = round(recorte.height * LARGURA / recorte.width)
         final = recorte.resize((LARGURA, altura), Image.Resampling.LANCZOS)
         png = DESTINO / f"{nome}.png"

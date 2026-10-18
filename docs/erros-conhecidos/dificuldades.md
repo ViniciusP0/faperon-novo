@@ -277,3 +277,9 @@ Registro cronológico por área, atualizado em 24/09/2026. Cada entrada tem sint
 - **Solução ou contorno:** `apps/web/scripts/recortar-zetele.py` fixa `u2net` e limpa a máscara (maior componente, buracos pequenos, vão do braço).
 - **Status:** resolvido.
 
+
+### Chapéu bege furado no recorte da arte nova do Zétele (camisa FAPERON)
+- **Sintoma:** com a arte nova, o chapéu claro saiu com furos e manchas translúcidas; a regra antiga só fechava buracos com menos de 2.000 px.
+- **Causa:** o `u2net` dá máscara parcial em áreas claras grandes dentro da figura; a regra do "vão do braço" (pixel com mínimo ≥ 225) também não distinguia fundo de bege claro.
+- **Solução ou contorno:** `recortar()` agora deixa opaco tudo dentro da silhueta preenchida, menos manchas grandes de branco puro (mínimo do canal ≥ 250), que são o fundo visível entre braço e tronco. Conferir sempre o recorte sobre fundo magenta e escuro antes de publicar.
+- **Status:** resolvido.
