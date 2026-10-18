@@ -1,7 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/feedback";
@@ -75,7 +75,8 @@ export function FiltroDeTag({ id, valor, aoMudar, compacto, className }: { id: s
 export function SeletorDeTags({ valor, aoMudar }: { valor: string[] | undefined; aoMudar: (ids: string[]) => void }) {
   const { tags, funcionario } = useSistema();
   const [gerindo, setGerindo] = useState(false);
-  const marcadas = valor ?? [];
+  // tag apagada com o formulário aberto não volta a ser gravada
+  const marcadas = (valor ?? []).filter((id) => tags.some((t) => t.id === id));
   return (
     <fieldset>
       <legend className="mb-1.5 text-sm font-medium text-ink">
@@ -130,13 +131,19 @@ function SeletorDeCor({ id, valor, aoMudar, rotulo }: { id: string; valor: CorTa
   );
 }
 
-function LinhaTag({ tag }: { tag: Tag }) {
+function LinhaTag({ tag, aoApagar }: { tag: Tag; aoApagar: () => void }) {
   const { tags, atualizarTags, apagarTag } = useSistema();
   const [nome, setNome] = useState(tag.nome);
   const [cor, setCor] = useState(tag.cor);
   const [erro, setErro] = useState<string | null>(null);
   const [confirmando, setConfirmando] = useState(false);
+  const botaoApagar = useRef<HTMLButtonElement>(null);
+  const botaoManter = useRef<HTMLButtonElement>(null);
   const mudou = nome.trim() !== tag.nome || cor !== tag.cor;
+  // o foco acompanha a confirmação: entra em "Manter" (o caminho seguro) e volta a "Apagar" ao desistir
+  useEffect(() => {
+    if (confirmando) botaoManter.current?.focus();
+  }, [confirmando]);
 
   function salvar(e: FormEvent) {
     e.preventDefault();
@@ -162,10 +169,11 @@ function LinhaTag({ tag }: { tag: Tag }) {
         <Input aria-label={`Nome da tag ${tag.nome}`} value={nome} maxLength={TAMANHO_MAXIMO_TAG} onChange={(e) => setNome(e.target.value)} className="min-w-0 flex-1 basis-40" />
         <SeletorDeCor id={`tag-${tag.id}-cor`} rotulo={`Cor da tag ${tag.nome}`} valor={cor} aoMudar={setCor} />
         <div className="flex gap-1">
-          <Button type="submit" size="sm" variant="vidro-claro" disabled={!mudou} aria-label={`Salvar a tag ${tag.nome}`}>
+          {/* aria-disabled, e não disabled: depois de salvar pelo teclado o foco fica no botão, e não cai no body */}
+          <Button type="submit" size="sm" variant="vidro-claro" aria-disabled={!mudou} className="aria-disabled:opacity-50" aria-label={`Salvar a tag ${tag.nome}`}>
             Salvar
           </Button>
-          <Button size="sm" variant="ghost" className="text-danger-ink" onClick={() => setConfirmando(true)} aria-label={`Apagar a tag ${tag.nome}`}>
+          <Button ref={botaoApagar} size="sm" variant="ghost" className="text-danger-ink" onClick={() => setConfirmando(true)} aria-label={`Apagar a tag ${tag.nome}`}>
             Apagar
           </Button>
         </div>
@@ -178,10 +186,25 @@ function LinhaTag({ tag }: { tag: Tag }) {
       {confirmando && (
         <div role="group" aria-label={`Confirmar: apagar a tag ${tag.nome}`} className="mt-2 flex flex-wrap items-center gap-2 rounded-xl bg-danger-soft px-3 py-2 text-sm text-danger-ink">
           <span className="min-w-0 flex-1">Apagar “{tag.nome}”? Ela sai de todos os itens que a usam.</span>
-          <Button size="sm" variant="ghost" onClick={() => setConfirmando(false)}>
+          <Button
+            ref={botaoManter}
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              setConfirmando(false);
+              botaoApagar.current?.focus();
+            }}
+          >
             Manter
           </Button>
-          <Button size="sm" variant="vidro" onClick={() => apagarTag(tag.id)}>
+          <Button
+            size="sm"
+            variant="vidro"
+            onClick={() => {
+              apagarTag(tag.id);
+              aoApagar();
+            }}
+          >
             Apagar tag
           </Button>
         </div>
@@ -196,6 +219,7 @@ export function GerenciarTags({ aoFechar }: { aoFechar: () => void }) {
   const [nome, setNome] = useState("");
   const [cor, setCor] = useState<CorTag>(() => CORES.find((c) => !tags.some((t) => t.cor === c)) ?? "azul");
   const [erro, setErro] = useState<string | null>(null);
+  const campoNova = useRef<HTMLInputElement>(null);
   if (!podeGerirTags(funcionario)) return null;
 
   function criar(e: FormEvent) {
@@ -218,7 +242,7 @@ export function GerenciarTags({ aoFechar }: { aoFechar: () => void }) {
           Nova tag
         </Label>
         <div className="flex flex-wrap items-center gap-2">
-          <Input id="tag-nova-nome" value={nome} maxLength={TAMANHO_MAXIMO_TAG} onChange={(e) => setNome(e.target.value)} placeholder="Ex.: Feira regional" className="min-w-0 flex-1 basis-40" />
+          <Input ref={campoNova} id="tag-nova-nome" value={nome} maxLength={TAMANHO_MAXIMO_TAG} onChange={(e) => setNome(e.target.value)} placeholder="Ex.: Feira regional" className="min-w-0 flex-1 basis-40" />
           <SeletorDeCor id="tag-nova-cor" rotulo="Cor da nova tag" valor={cor} aoMudar={setCor} />
           <Button type="submit" size="sm" variant="vidro">
             Criar tag
@@ -232,7 +256,8 @@ export function GerenciarTags({ aoFechar }: { aoFechar: () => void }) {
       ) : (
         <ul aria-label="Tags existentes" className="mt-1">
           {tags.map((t) => (
-            <LinhaTag key={t.id} tag={t} />
+            // a linha apagada some com o botão focado: o foco vai para o campo da nova tag, ainda no diálogo
+            <LinhaTag key={t.id} tag={t} aoApagar={() => campoNova.current?.focus()} />
           ))}
         </ul>
       )}

@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { gravarAcesso, gravarSessao, ler } from "@/lib/sistema/armazenamento";
+import { gravar, gravarAcesso, gravarSessao, ler } from "@/lib/sistema/armazenamento";
 import { SistemaProvider } from "@/lib/sistema/estado";
 import type { Atividade, Evento, RegistroHistorico, Tag } from "@/lib/sistema/tipos";
 import { BarraSistema } from "./barra-sistema";
@@ -104,5 +104,66 @@ describe("Gerenciar tags", () => {
     await user.click(within(dialogo).getByRole("button", { name: "Apagar a tag SENAR" }));
     await user.click(within(dialogo).getByRole("button", { name: "Apagar tag" }));
     expect(ler<Atividade[]>("atividades", []).some((a) => a.tags?.includes("tag-senar"))).toBe(false);
+  });
+
+  it("o foco não sai do diálogo: depois de apagar vai para Nova tag, e Esc continua fechando", async () => {
+    const user = userEvent.setup();
+    renderBarra("marcos");
+    await user.click(screen.getByRole("button", { name: "Gerenciar tags" }));
+    const dialogo = screen.getByRole("dialog", { name: "Gerenciar tags" });
+    await user.click(within(dialogo).getByRole("button", { name: "Apagar a tag Urgente" }));
+    expect(within(dialogo).getByRole("button", { name: "Manter" })).toHaveFocus();
+    await user.keyboard("{Enter}");
+    expect(within(dialogo).getByRole("button", { name: "Apagar a tag Urgente" })).toHaveFocus();
+
+    await user.click(within(dialogo).getByRole("button", { name: "Apagar a tag Urgente" }));
+    await user.click(within(dialogo).getByRole("button", { name: "Apagar tag" }));
+    expect(within(dialogo).getByLabelText("Nova tag")).toHaveFocus();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("salvar pelo teclado mantém o foco no botão (aria-disabled), e Esc fecha", async () => {
+    const user = userEvent.setup();
+    renderBarra("marcos");
+    await user.click(screen.getByRole("button", { name: "Gerenciar tags" }));
+    const dialogo = screen.getByRole("dialog", { name: "Gerenciar tags" });
+    const salvar = within(dialogo).getByRole("button", { name: "Salvar a tag SENAR" });
+    expect(salvar).toHaveAttribute("aria-disabled", "true");
+    await user.type(within(dialogo).getByLabelText("Nome da tag SENAR"), " RO");
+    expect(salvar).toHaveAttribute("aria-disabled", "false");
+    salvar.focus();
+    await user.keyboard("{Enter}");
+    expect(nomes()).toContain("SENAR RO");
+    const depois = within(dialogo).getByRole("button", { name: "Salvar a tag SENAR RO" });
+    expect(depois).toHaveFocus();
+    expect(depois).toHaveAttribute("aria-disabled", "true");
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("apagar tira a tag da agenda gravada de um colega", async () => {
+    gravar("agenda:joao", [
+      { id: "j1", titulo: "Reunião no sindicato", data: "2026-10-20", inicio: "09:00", fim: "10:00", local: "", descricao: "", tipo: "reuniao", origem: "pessoal", tags: ["tag-sindicatos", "tag-urgente"] },
+    ]);
+    const user = userEvent.setup();
+    renderBarra("marcos");
+    await user.click(screen.getByRole("button", { name: "Gerenciar tags" }));
+    const dialogo = screen.getByRole("dialog", { name: "Gerenciar tags" });
+    await user.click(within(dialogo).getByRole("button", { name: "Apagar a tag Sindicatos" }));
+    await user.click(within(dialogo).getByRole("button", { name: "Apagar tag" }));
+    expect(ler<Evento[]>("agenda:joao", [])[0]!.tags).toEqual(["tag-urgente"]);
+    // a da Carla nunca foi gravada: continua sem existir (os exemplos não se congelam)
+    expect(ler<Evento[] | null>("agenda:carla", null)).toBeNull();
+  });
+
+  it("lista de tags corrompida no navegador não quebra a tela", async () => {
+    gravar("tags", [{ id: "t1", nome: "Boa", cor: "azul" }, { id: "t2", nome: "Cor estranha", cor: "verde-limao" }, { nome: "Sem id" }, 42]);
+    const user = userEvent.setup();
+    renderBarra("marcos");
+    await user.click(screen.getByRole("button", { name: "Gerenciar tags" }));
+    const dialogo = screen.getByRole("dialog", { name: "Gerenciar tags" });
+    expect(within(dialogo).getAllByRole("textbox", { name: /^Nome da tag/ })).toHaveLength(2);
+    expect(within(dialogo).getByLabelText("Cor da tag Cor estranha")).toHaveValue("azul");
   });
 });
