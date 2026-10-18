@@ -96,9 +96,12 @@ if ! existe aws iam get-open-id-connect-provider --open-id-connect-provider-arn 
   aws iam create-open-id-connect-provider --url https://token.actions.githubusercontent.com \
     --client-id-list sts.amazonaws.com --tags "$TAG" > /dev/null
 fi
+# O formato do `sub` varia: repositórios novos usam o imutável (repo:dono@id/nome@id); lido do próprio GitHub
+PREFIXO_SUB=$(gh api "repos/$FORK/actions/oidc/customization/sub" --jq '.sub_claim_prefix // empty' 2>/dev/null || true)
+PREFIXO_SUB="${PREFIXO_SUB:-repo:$FORK}"
 cat > "$TMP/confianca-github.json" <<EOF
 {"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Federated":"$OIDC"},"Action":"sts:AssumeRoleWithWebIdentity",
- "Condition":{"StringEquals":{"token.actions.githubusercontent.com:aud":"sts.amazonaws.com","token.actions.githubusercontent.com:sub":"repo:$FORK:ref:refs/heads/servidor"}}}]}
+ "Condition":{"StringEquals":{"token.actions.githubusercontent.com:aud":"sts.amazonaws.com","token.actions.githubusercontent.com:sub":"$PREFIXO_SUB:ref:refs/heads/servidor"}}}]}
 EOF
 if ! existe aws iam get-role --role-name faperon-teste-github; then
   aws iam create-role --role-name faperon-teste-github --assume-role-policy-document "file://$TMP/confianca-github.json" --tags "$TAG" > /dev/null
