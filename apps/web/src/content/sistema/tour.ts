@@ -48,7 +48,7 @@ export const TOUR: PassoDoTour[] = [
     rota: "/sistema/agenda",
     alvo: "agenda-mes",
     titulo: "Ler o mês",
-    texto: "A legenda explica cada sinal: o ponto verde são os seus eventos; o prédio, os da FAPERON; o caminhão, as viagens com carro da frota, em faixa com o destino em todos os dias da viagem (a sua em faixa cheia; a dos colegas contornada, para saber quem estará fora); a chave, os espaços aprovados.",
+    texto: "A cor diz o tipo, igual em todo o sistema: reunião em verde, viagem em aço, compromisso em ameixa, e assim por diante; a legenda abaixo do mês mostra só os tipos que estão na tela. A forma diz a origem: o ponto cheio é evento seu (o único com fundo cheio, porque só ele se edita aqui); o prédio, os da FAPERON; a chave, os espaços aprovados; o caminhão, as viagens da frota, em faixa com o destino em todos os dias da viagem (a sua cheia; a dos colegas contornada, para saber quem estará fora).",
     passos: ["Clique no número de um dia para ver tudo dele no painel do dia.", "Passe o mouse sobre o dia e use o + para marcar algo nele.", "Mês e Lista trocam o jeito de ver."],
   },
   {
@@ -59,6 +59,19 @@ export const TOUR: PassoDoTour[] = [
     titulo: "O dia em foco",
     texto: "O painel verde mostra o dia escolhido, com horário e local de cada compromisso.",
     passos: ["Marcar neste dia abre um evento já com a data.", "Para editar ou excluir um evento seu, clique nele. Excluiu sem querer? Use Desfazer no aviso que aparece embaixo."],
+  },
+  {
+    id: "tags",
+    secao: "Agenda",
+    rota: "/sistema/agenda",
+    alvo: "agenda-acoes",
+    titulo: "Tags para achar por assunto",
+    texto: "Tags como Dia de campo, Sindicatos ou SENAR juntam o que é do mesmo assunto em eventos, reservas, pedidos, despesas e atividades.",
+    passos: [
+      "No formulário de qualquer item, marque as tags em Tags (são opcionais).",
+      "Use o filtro Tag de cada tela, e dos relatórios, para ver só o que tem aquela tag.",
+      "Os gestores criam, renomeiam e apagam tags em Gerenciar tags, na barra do sistema.",
+    ],
   },
   {
     id: "frotas-reservar",
