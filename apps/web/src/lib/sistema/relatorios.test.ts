@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { FUNCIONARIOS } from "@/content/sistema/funcionarios";
-import { comNotaDeTag, paraCSV, relatorioAgenda, relatorioAtividades, relatorioContas, relatorioEspacos, relatorioFrota, type Relatorio } from "./relatorios";
+import { comNotaDeTag, paraCSV, parametrosDoRelatorio, relatorioAgenda, relatorioAtividades, relatorioContas, relatorioEspacos, relatorioFrota, type Relatorio } from "./relatorios";
 import type { Atividade, Despesa, EstadoFrota, Evento, PedidoEspaco, Tag } from "./tipos";
 
 const tags: Tag[] = [
@@ -197,5 +197,12 @@ describe("relatórios", () => {
     expect(r.resumo[0]).toBe("1 viagem(ns) e 480 km rodados com a tag “SENAR”.");
     // sem tag, nada muda
     expect(relatorioFrota(comTagNaViagem, "2026-10-01", "2026-10-31").total!.at(-1)).toBe(3.29);
+  });
+
+  it("o link de outra tela abre o tipo e o período pedidos; valor inválido é ignorado", () => {
+    expect(parametrosDoRelatorio("?tipo=frota&de=2026-08-01&ate=2026-10-31")).toEqual({ tipo: "frota", de: "2026-08-01", ate: "2026-10-31" });
+    expect(parametrosDoRelatorio("?tipo=atividades")).toEqual({ tipo: "atividades" });
+    expect(parametrosDoRelatorio("?tipo=senhas&de=ontem&ate=2026-13")).toEqual({});
+    expect(parametrosDoRelatorio("")).toEqual({});
   });
 });

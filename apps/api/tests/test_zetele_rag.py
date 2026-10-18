@@ -76,6 +76,7 @@ def test_bases_dos_canais_sao_separadas() -> None:
         "/sistema/agenda",
         "/sistema/espacos",
         "/sistema/atividades",
+        "/sistema/indicadores",
     } <= rotas_sistema
     assert rotas_sistema - {None} <= {r for r in rotas_sistema if (r or "").startswith("/sistema")}
     assert "(69) 3214-8371" in recuperador_do_canal("publico").texto_completo()

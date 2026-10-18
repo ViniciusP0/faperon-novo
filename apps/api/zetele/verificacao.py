@@ -36,6 +36,7 @@ ROTAS_PERMITIDAS = frozenset(
         "/sistema/contas",
         "/sistema/relatorios",
         "/sistema/atividades",
+        "/sistema/indicadores",
     }
 )
 HOSTS_EXTERNOS = frozenset(
