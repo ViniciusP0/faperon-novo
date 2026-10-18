@@ -22,14 +22,14 @@ export default function PoliticaDePrivacidadePage() {
 
       <div className="border-t-2 border-ink">
         <div className="container max-w-3xl pt-14">
-          <p className="leading-relaxed text-ink-muted">{c.introducao}</p>
+          <p className="leading-relaxed text-justify hyphens-auto text-ink-muted">{c.introducao}</p>
           {c.secoes.map((s) => (
             <section key={s.id} id={s.id} aria-labelledby={`${s.id}-titulo`} className="mt-10 scroll-mt-32">
               <h2 id={`${s.id}-titulo`} className="text-[1.4rem] font-semibold tracking-tight">
                 {s.titulo}
               </h2>
               {s.paragrafos?.map((p) => (
-                <p key={p} className="mt-3 leading-relaxed text-ink-muted">
+                <p key={p} className="mt-3 leading-relaxed text-justify hyphens-auto text-ink-muted">
                   {p}
                 </p>
               ))}

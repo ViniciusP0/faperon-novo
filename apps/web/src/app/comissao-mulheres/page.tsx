@@ -39,7 +39,7 @@ export default function ComissaoMulheresPage() {
             {c.atuacao.itens.map((i) => (
               <li key={i.titulo} className="rounded-2xl border border-line border-t-4 border-t-brand-light bg-card p-6">
                 <p className="text-lg font-semibold leading-snug">{i.titulo}</p>
-                <p className="mt-2 leading-relaxed text-ink-muted">{i.texto}</p>
+                <p className="mt-2 leading-relaxed text-justify hyphens-auto text-ink-muted">{i.texto}</p>
               </li>
             ))}
           </ul>
@@ -51,7 +51,7 @@ export default function ComissaoMulheresPage() {
             {c.lideranca.titulo}
           </h2>
           <div>
-            <p className="leading-relaxed">{c.lideranca.texto}</p>
+            <p className="leading-relaxed text-justify hyphens-auto">{c.lideranca.texto}</p>
             <Fontes fontes={[c.lideranca.fonte]} />
           </div>
         </Revelar>
@@ -60,7 +60,7 @@ export default function ComissaoMulheresPage() {
           <h2 id="nacional-titulo" className="text-3xl font-semibold tracking-tight">
             {c.nacional.titulo}
           </h2>
-          <p className="mt-3 max-w-[66ch] leading-relaxed text-white/90">{c.nacional.texto}</p>
+          <p className="mt-3 max-w-[66ch] leading-relaxed text-justify hyphens-auto text-white/90">{c.nacional.texto}</p>
           <div className="mt-7 grid gap-8 lg:grid-cols-[auto_1fr] lg:gap-16">
             <ul className="flex gap-10">
               {c.nacional.numeros.map((n) => (
@@ -100,7 +100,7 @@ export default function ComissaoMulheresPage() {
                 <span aria-hidden="true" className="absolute -left-[1.95rem] top-1.5 h-3.5 w-3.5 rounded-full border-2 border-brand-fg bg-surface md:-left-[2.45rem]" />
                 <p className="text-sm font-bold uppercase tracking-wider text-brand-fg">{i.data}</p>
                 <h3 className="mt-1 text-xl font-semibold leading-snug">{i.titulo}</h3>
-                <p className="mt-2 max-w-[72ch] leading-relaxed text-ink-muted">{i.texto}</p>
+                <p className="mt-2 max-w-[72ch] leading-relaxed text-justify hyphens-auto text-ink-muted">{i.texto}</p>
                 <Fontes fontes={[i.fonte]} />
               </li>
             ))}

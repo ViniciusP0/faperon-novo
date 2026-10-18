@@ -32,7 +32,7 @@ export default function CentralPage() {
               <Icone nome={p.icone} className="h-6 w-6" />
             </span>
             <h2 className="mt-4 text-2xl font-semibold">{p.titulo}</h2>
-            <p className="mt-2 flex-1 leading-relaxed text-ink-muted">{p.texto}</p>
+            <p className="mt-2 flex-1 leading-relaxed text-justify hyphens-auto text-ink-muted">{p.texto}</p>
             <Link href={p.href} className={cn(buttonVariants({ size: "lg" }), "mt-6 self-start")}>
               {p.rotulo}
               <ArrowRight aria-hidden="true" className="h-5 w-5" />
@@ -44,7 +44,7 @@ export default function CentralPage() {
       <Revelar as="section" className="container mt-12">
         <div className="prose-faperon max-w-3xl text-ink">
           {c.paragrafos.map((p) => (
-            <p key={p}>{p}</p>
+            <p key={p} className="text-justify hyphens-auto">{p}</p>
           ))}
         </div>
       </Revelar>
