@@ -35,4 +35,31 @@ describe("Acessar o sistema (protótipo)", () => {
     expect(await screen.findByLabelText("E-mail")).toBeInTheDocument();
     expect(lerAcesso()).toBe(false);
   });
+
+  it("mostra e oculta a senha", async () => {
+    const user = userEvent.setup();
+    render(<AcessoSistema />);
+    const senha = await screen.findByLabelText("Senha");
+    expect(senha).toHaveAttribute("type", "password");
+    await user.click(screen.getByRole("button", { name: "Mostrar a senha" }));
+    expect(senha).toHaveAttribute("type", "text");
+    expect(screen.getByRole("button", { name: "Ocultar a senha" })).toHaveAttribute("aria-pressed", "true");
+    await user.click(screen.getByRole("button", { name: "Ocultar a senha" }));
+    expect(senha).toHaveAttribute("type", "password");
+  });
+
+  it("recuperar senha: valida o e-mail, explica que o protótipo não envia e volta ao login", async () => {
+    const user = userEvent.setup();
+    render(<AcessoSistema />);
+    await user.click(await screen.findByRole("button", { name: "Esqueci minha senha" }));
+    const form = screen.getByRole("form", { name: "Recuperar senha" });
+    await user.click(screen.getByRole("button", { name: "Enviar link de recuperação" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("Informe um e-mail válido.");
+    await user.type(screen.getByLabelText("E-mail"), "user@faperon.br");
+    await user.click(screen.getByRole("button", { name: "Enviar link de recuperação" }));
+    expect(form).toHaveTextContent("nenhum e-mail é enviado");
+    expect(form).toHaveTextContent("user@faperon.br");
+    await user.click(screen.getByRole("button", { name: "Voltar ao login" }));
+    expect(screen.getByRole("form", { name: "Acessar o sistema" })).toBeInTheDocument();
+  });
 });

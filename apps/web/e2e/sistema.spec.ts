@@ -14,7 +14,7 @@ async function login(page: Page) {
   await page.goto("/login");
   if (await page.getByLabel("E-mail").isVisible().catch(() => false)) {
     await page.getByLabel("E-mail").fill("user@faperon.br");
-    await page.getByLabel("Senha").fill("Senha@123");
+    await page.getByLabel("Senha", { exact: true }).fill("Senha@123");
     await page.getByRole("button", { name: "Entrar", exact: true }).click();
   }
 }
@@ -32,7 +32,7 @@ test("protótipo do sistema: agenda individual, reserva de veículo, frota e esp
   await expect(page.getByRole("heading", { name: "Acessar o sistema" })).toBeVisible();
   await semViolacoesSerias(page);
   await page.getByLabel("E-mail").fill("user@faperon.br");
-  await page.getByLabel("Senha").fill("errada");
+  await page.getByLabel("Senha", { exact: true }).fill("errada");
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await expect(page.getByRole("alert").filter({ hasText: "E-mail ou senha incorretos." })).toBeVisible();
 

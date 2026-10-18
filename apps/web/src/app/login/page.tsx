@@ -16,7 +16,7 @@ export default function LoginPage() {
         <div className="mb-6 flex flex-col items-center text-center">
           <Image src="/marca-faperon.png" alt="" width={56} height={56} className="h-14 w-14" />
           <h1 className="mt-3 text-xl font-semibold text-ink">Acessar o sistema</h1>
-          <p className="mt-1 text-sm text-ink-muted">Entre para conhecer a agenda, a frota e o agendamento de espaços.</p>
+          <p className="mt-1 text-sm text-ink-muted">Entre para conhecer a agenda, a frota, os espaços, a prestação de contas e os relatórios.</p>
         </div>
 
         <AcessoSistema />
