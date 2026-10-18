@@ -66,7 +66,8 @@ describe("Agendar por voz", () => {
     await user.click(screen.getByRole("button", { name: "Falar" }));
     const rec = ReconhecedorFalso.ultimo!;
     expect(rec.lang).toBe("pt-BR");
-    expect(screen.getByRole("status")).toHaveTextContent("Ouvindo…");
+    // a agenda também tem a região de avisos; aqui vale a do microfone
+    expect(screen.getByText(/Ouvindo…/).closest('[role="status"]')).not.toBeNull();
     act(() => rec.falar("reunião com o sindicato", " terça às nove na sede"));
     expect(screen.getByLabelText("O que entendi (pode corrigir)")).toHaveValue("reunião com o sindicato terça às nove na sede");
     await user.click(screen.getByRole("button", { name: "Preencher formulário" }));

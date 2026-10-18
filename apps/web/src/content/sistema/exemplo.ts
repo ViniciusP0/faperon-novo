@@ -98,7 +98,8 @@ export function frotaDeExemplo(hoje: string): EstadoFrota {
   const proxima = util(hoje, 3);
   reservas.push(
     { id: "r-ex-carla", veiculoId: "v3", funcionarioId: "carla", saida: `${proxima}T08:00`, retorno: `${proxima}T17:00`, destino: "Cacoal", motivo: "Cobertura do dia de campo", kmInicial: null, kmFinal: null, situacao: "agendada" },
-    { id: "r-ex-joao", veiculoId: "v1", funcionarioId: "joao", saida: `${util(hoje, 8)}T07:00`, retorno: `${util(hoje, 8)}T19:00`, destino: "Rolim de Moura", motivo: "Visita ao sindicato", kmInicial: null, kmFinal: null, situacao: "agendada" },
+    // viagem com pernoite: aparece nos três dias, na agenda do João e na dos colegas
+    { id: "r-ex-joao", veiculoId: "v1", funcionarioId: "joao", saida: `${util(hoje, 8)}T07:00`, retorno: `${somarDias(util(hoje, 8), 2)}T19:00`, destino: "Rolim de Moura", motivo: "Visita aos sindicatos da Zona da Mata", kmInicial: null, kmFinal: null, situacao: "agendada" },
   );
   const abastecimentos = veiculos.flatMap((v, i) =>
     [-80, -50, -20].map((dias, k) => ({

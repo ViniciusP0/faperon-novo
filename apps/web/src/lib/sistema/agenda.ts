@@ -1,7 +1,7 @@
 import { ESPACOS } from "@/content/sistema/exemplo";
-import { formatarHora } from "./datas";
+import { formatarHora, somarDias } from "./datas";
 import { formatarPlaca } from "./placa";
-import type { Evento, PedidoEspaco, Reserva, TipoEvento, Veiculo } from "./tipos";
+import type { Evento, Funcionario, PedidoEspaco, Reserva, TipoEvento, Veiculo } from "./tipos";
 
 export const ROTULO_TIPO_EVENTO: Record<TipoEvento, string> = {
   reuniao: "Reunião",
@@ -16,7 +16,34 @@ export const ROTULO_ORIGEM: Record<Evento["origem"], string | null> = {
   espaco: "Espaço",
 };
 
-/** Agenda da pessoa: eventos próprios, institucionais, viagens reservadas e espaços aprovados, em ordem. */
+// Teto de dias por viagem, para uma data de retorno errada não encher a agenda.
+const DIAS_MAXIMOS_DA_VIAGEM = 31;
+
+/** Um item por dia da viagem, da saída ao retorno: a ida a partir da saída, o meio o dia todo, a volta até o retorno. */
+export function diasDaViagem(r: Reserva, base: Omit<Evento, "id" | "data" | "inicio" | "fim" | "trecho">, prefixoId: string): Evento[] {
+  const ida = r.saida.slice(0, 10);
+  const volta = r.retorno.slice(0, 10) < ida ? ida : r.retorno.slice(0, 10);
+  if (ida === volta) return [{ ...base, id: prefixoId, data: ida, inicio: formatarHora(r.saida), fim: formatarHora(r.retorno), trecho: "unico" }];
+  const dias: Evento[] = [];
+  for (let dia = ida, n = 0; dia <= volta && n < DIAS_MAXIMOS_DA_VIAGEM; dia = somarDias(dia, 1), n++) {
+    const trecho = dia === ida ? "ida" : dia === volta ? "volta" : "meio";
+    dias.push({
+      ...base,
+      id: `${prefixoId}-${dia}`,
+      data: dia,
+      inicio: trecho === "ida" ? formatarHora(r.saida) : "00:00",
+      fim: trecho === "volta" ? formatarHora(r.retorno) : "23:59",
+      trecho,
+    });
+  }
+  return dias;
+}
+
+/**
+ * Agenda da pessoa: eventos próprios, institucionais, viagens reservadas (em todos os dias, da saída ao
+ * retorno) e espaços aprovados, em ordem. Com `equipe`, entram também as viagens dos colegas, para todos
+ * saberem quem estará fora.
+ */
 export function itensDaAgenda(
   funcionarioId: string,
   pessoais: Evento[],
@@ -24,24 +51,41 @@ export function itensDaAgenda(
   reservas: Reserva[],
   veiculos: Veiculo[],
   pedidos: PedidoEspaco[],
+  equipe?: Funcionario[],
 ): Evento[] {
-  const viagens: Evento[] = reservas
-    .filter((r) => r.funcionarioId === funcionarioId && r.situacao !== "cancelada")
-    .map((r) => {
+  const ativas = reservas.filter((r) => r.situacao !== "cancelada");
+  const viagens: Evento[] = ativas
+    .filter((r) => r.funcionarioId === funcionarioId)
+    .flatMap((r) => {
       const veiculo = veiculos.find((v) => v.id === r.veiculoId);
-      const mesmoDia = r.saida.slice(0, 10) === r.retorno.slice(0, 10);
-      return {
-        id: `frota-${r.id}`,
-        titulo: `Viagem a ${r.destino}`,
-        data: r.saida.slice(0, 10),
-        inicio: formatarHora(r.saida),
-        fim: mesmoDia ? formatarHora(r.retorno) : "23:59",
-        local: veiculo ? `${veiculo.modelo} (${formatarPlaca(veiculo.placa)})` : "",
-        descricao: r.motivo,
-        tipo: "viagem",
-        origem: "frota",
-      };
+      return diasDaViagem(
+        r,
+        {
+          titulo: `Viagem a ${r.destino}`,
+          local: veiculo ? `${veiculo.modelo} (${formatarPlaca(veiculo.placa)})` : "",
+          descricao: r.motivo,
+          tipo: "viagem",
+          origem: "frota",
+          destino: r.destino,
+        },
+        `frota-${r.id}`,
+      );
     });
+  const dosColegas: Evento[] = equipe
+    ? ativas
+        // dos colegas, só o que ainda vai acontecer ou está em curso: quem estará fora, não o histórico
+        .filter((r) => r.funcionarioId !== funcionarioId && r.situacao !== "concluida")
+        .flatMap((r) => {
+          const nome = equipe.find((f) => f.id === r.funcionarioId)?.nome;
+          if (!nome) return [];
+          const quem = nome.split(" ")[0]!;
+          return diasDaViagem(
+            r,
+            { titulo: `${nome} em viagem a ${r.destino}`, local: "", descricao: "", tipo: "viagem", origem: "frota", destino: r.destino, quem },
+            `equipe-${r.id}`,
+          );
+        })
+    : [];
   const espacos: Evento[] = pedidos
     .filter((p) => p.funcionarioId === funcionarioId && p.status === "aprovado")
     .map((p) => ({
@@ -55,7 +99,7 @@ export function itensDaAgenda(
       tipo: "reuniao",
       origem: "espaco",
     }));
-  return [...pessoais, ...institucionais, ...viagens, ...espacos].sort(
+  return [...pessoais, ...institucionais, ...viagens, ...dosColegas, ...espacos].sort(
     (a, b) => a.data.localeCompare(b.data) || a.inicio.localeCompare(b.inicio) || a.titulo.localeCompare(b.titulo),
   );
 }

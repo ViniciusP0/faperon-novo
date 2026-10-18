@@ -70,7 +70,61 @@ describe("Agenda individual", () => {
     await criarEvento(user, "Rascunho");
     await user.click(screen.getByRole("button", { name: /Editar Rascunho/ }));
     await user.click(screen.getByRole("button", { name: "Excluir evento" }));
-    expect(screen.queryByText(/Rascunho/)).toBeNull();
+    expect(screen.queryByRole("button", { name: /Editar Rascunho/ })).toBeNull();
+    expect(screen.getByRole("status")).toHaveTextContent("Evento “Rascunho” excluído.");
+  });
+
+  it("Desfazer devolve o evento excluído", async () => {
+    const user = userEvent.setup();
+    renderAgenda("ana");
+    await criarEvento(user, "Visita ao sindicato");
+    await user.click(screen.getByRole("button", { name: /Editar Visita ao sindicato/ }));
+    await user.click(screen.getByRole("button", { name: "Excluir evento" }));
+    await user.click(within(screen.getByRole("status")).getByRole("button", { name: "Desfazer" }));
+    expect(screen.getByRole("button", { name: /Editar Visita ao sindicato/ })).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("restaurado");
+  });
+
+  it("ao salvar, avisa a data e leva ao mês do evento", async () => {
+    const user = userEvent.setup();
+    renderAgenda("carla");
+    await user.click(screen.getByRole("button", { name: "Novo evento" }));
+    const dialogo = screen.getByRole("dialog", { name: "Novo evento" });
+    await user.type(within(dialogo).getByLabelText("Título"), "Feira de Ji-Paraná");
+    const data = within(dialogo).getByLabelText("Data");
+    await user.clear(data);
+    await user.type(data, "2031-03-14");
+    await user.click(within(dialogo).getByRole("button", { name: "Salvar" }));
+    expect(screen.getByRole("status")).toHaveTextContent(/Marcado para .*14 de março.*às 09:00/);
+    expect(screen.getByRole("heading", { level: 2, name: /Março 2031/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Editar Feira de Ji-Paraná/ })).toBeInTheDocument();
+  });
+
+  it("viagem de vários dias aparece em todos os dias, para quem viaja e para os colegas", async () => {
+    const hoje = hojeISO();
+    const depois = (n: number) => {
+      const d = new Date(`${hoje}T12:00`);
+      d.setDate(d.getDate() + n);
+      return d.toISOString().slice(0, 10);
+    };
+    gravar("frota", {
+      veiculos: [{ id: "v1", placa: "ABC1D23", modelo: "Hilux", ano: 2022, km: 1000 }],
+      reservas: [{ id: "r9", veiculoId: "v1", funcionarioId: "joao", saida: `${hoje}T07:00`, retorno: `${depois(2)}T18:00`, destino: "Vilhena", motivo: "x", kmInicial: null, kmFinal: null, situacao: "agendada" }],
+      abastecimentos: [],
+      manutencoes: [],
+    });
+    const user = userEvent.setup();
+    const { unmount } = renderAgenda("joao");
+    await user.click(screen.getByRole("button", { name: "Lista" }));
+    expect(screen.getAllByRole("link", { name: /Viagem a Vilhena/ })).toHaveLength(3);
+    expect(screen.getByText("dia todo")).toBeInTheDocument();
+    expect(screen.getByText("volta 18:00")).toBeInTheDocument();
+    unmount();
+    renderAgenda("carla");
+    await user.click(screen.getByRole("button", { name: "Lista" }));
+    // a colega vê os três dias, sem link para a reserva do João
+    expect(screen.getAllByText(/João Pereira em viagem a Vilhena/)).toHaveLength(3);
+    expect(screen.queryByRole("link", { name: /Vilhena/ })).toBeNull();
   });
 
   it("eventos da FAPERON aparecem para todos, sem edição; a reserva de veículo aparece como viagem", async () => {
@@ -83,6 +137,8 @@ describe("Agenda individual", () => {
     });
     const user = userEvent.setup();
     renderAgenda("luiza");
+    // no mês, a viagem vira faixa com o destino
+    expect(screen.getByRole("link", { name: /Viagem da frota, Cacoal/ })).toHaveAttribute("href", "/sistema/frotas?aba=reservas");
     await user.click(screen.getByRole("button", { name: "Lista" }));
     expect(screen.getByRole("link", { name: /Viagem a Cacoal/ })).toHaveAttribute("href", "/sistema/frotas?aba=reservas");
     const institucional = screen.getAllByText("FAPERON")[0]!;

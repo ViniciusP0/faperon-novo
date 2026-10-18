@@ -48,8 +48,8 @@ export const TOUR: PassoDoTour[] = [
     rota: "/sistema/agenda",
     alvo: "agenda-mes",
     titulo: "Ler o mês",
-    texto: "Cada cor tem um sentido, explicado na legenda: seus eventos, os da FAPERON, as viagens com carro da frota e os espaços aprovados.",
-    passos: ["Clique no número de um dia para ver tudo dele no painel ao lado.", "Passe o mouse sobre o dia e use o + para marcar algo nele.", "Mês e Lista trocam o jeito de ver."],
+    texto: "A legenda explica cada sinal: o ponto verde são os seus eventos; o prédio, os da FAPERON; o caminhão, as viagens com carro da frota, em faixa com o destino em todos os dias da viagem (a sua em faixa cheia; a dos colegas contornada, para saber quem estará fora); a chave, os espaços aprovados.",
+    passos: ["Clique no número de um dia para ver tudo dele no painel do dia.", "Passe o mouse sobre o dia e use o + para marcar algo nele.", "Mês e Lista trocam o jeito de ver."],
   },
   {
     id: "agenda-dia",
@@ -58,7 +58,7 @@ export const TOUR: PassoDoTour[] = [
     alvo: "agenda-dia",
     titulo: "O dia em foco",
     texto: "O painel verde mostra o dia escolhido, com horário e local de cada compromisso.",
-    passos: ["Marcar neste dia abre um evento já com a data.", "Para editar ou excluir um evento seu, clique nele."],
+    passos: ["Marcar neste dia abre um evento já com a data.", "Para editar ou excluir um evento seu, clique nele. Excluiu sem querer? Use Desfazer no aviso que aparece embaixo."],
   },
   {
     id: "frotas-reservar",

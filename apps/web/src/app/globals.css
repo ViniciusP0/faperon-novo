@@ -457,14 +457,14 @@ body {
    Uma elevação por elemento (borda clara + sombra suave com deslocamento), hover de 1px. */
 .vidro-primario {
   color: #fff;
-  background: linear-gradient(180deg, rgb(0 112 91 / 0.9), rgb(0 70 58 / 0.94));
+  background: linear-gradient(180deg, rgb(0 100 81 / 0.96), rgb(0 70 58 / 0.97));
   border: 1px solid rgb(255 255 255 / 0.16);
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), 0 6px 16px -8px rgb(0 70 58 / 0.55);
   backdrop-filter: blur(10px) saturate(140%);
   -webkit-backdrop-filter: blur(10px) saturate(140%);
 }
 .vidro-primario:hover {
-  background: linear-gradient(180deg, rgb(0 124 100 / 0.92), rgb(0 82 67 / 0.96));
+  background: linear-gradient(180deg, rgb(0 112 91 / 0.97), rgb(0 82 67 / 0.98));
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.3), 0 10px 22px -10px rgb(0 70 58 / 0.6);
   transform: translateY(-1px);
 }

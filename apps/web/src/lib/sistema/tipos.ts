@@ -25,6 +25,12 @@ export interface Evento {
   descricao: string;
   tipo: TipoEvento;
   origem: OrigemEvento;
+  /** Só nas viagens da frota: o município de destino, que a agenda mostra em faixa no dia. */
+  destino?: string;
+  /** Viagem de vários dias: ida, meio (o dia todo) ou volta; "unico" quando sai e volta no mesmo dia. */
+  trecho?: "unico" | "ida" | "meio" | "volta";
+  /** Viagem de um colega: o primeiro nome de quem viaja (só leitura, sem link para a reserva). */
+  quem?: string;
 }
 
 export interface Veiculo {

@@ -1,9 +1,10 @@
 "use client";
 
-import { CalendarPlus, ChevronLeft, ChevronRight, MapPin, Plus } from "lucide-react";
+import { CalendarPlus, ChevronLeft, ChevronRight, KeyRound, Landmark, type LucideIcon, MapPin, Plus, Truck } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { FUNCIONARIOS } from "@/content/sistema/funcionarios";
 import { itensDaAgenda, ROTULO_ORIGEM, ROTULO_TIPO_EVENTO } from "@/lib/sistema/agenda";
 import { dataPorExtenso, formatarDataBR, gradeDoMes, nomeDoMes, somarDias } from "@/lib/sistema/datas";
 import { novoId, useSistema } from "@/lib/sistema/estado";
@@ -29,13 +30,34 @@ const DIAS_DA_LISTA = 30;
 // Na célula do mês cabem três; o resto aparece no painel do dia.
 const NA_CELULA = 3;
 
-// A origem é dita pela cor (com legenda) e por texto para leitor de tela, sem selo em cada evento.
-const ORIGENS: Record<Evento["origem"], { rotulo: string; fundo: string; ponto: string }> = {
-  pessoal: { rotulo: "Meus eventos", fundo: "bg-brand-soft", ponto: "bg-brand" },
-  faperon: { rotulo: "FAPERON", fundo: "bg-warm", ponto: "bg-brand-lime" },
-  frota: { rotulo: "Viagens da frota", fundo: "bg-steel-soft", ponto: "bg-steel" },
-  espaco: { rotulo: "Espaços aprovados", fundo: "bg-surface-alt", ponto: "bg-brand-light" },
+// A origem é dita pela forma (ponto cheio no que é seu, ícone nos demais), pela cor da legenda e por texto
+// para leitor de tela. Só o evento próprio tem fundo cheio, porque só ele se edita aqui.
+const ORIGENS: Record<Evento["origem"], { rotulo: string; fundo: string; ponto: string; icone?: LucideIcon; tinta: string }> = {
+  pessoal: { rotulo: "Meus eventos", fundo: "bg-brand-soft", ponto: "bg-brand", tinta: "text-brand-fg" },
+  faperon: { rotulo: "FAPERON", fundo: "bg-card ring-1 ring-inset ring-line", ponto: "bg-brand-lime", icone: Landmark, tinta: "text-brand-fg" },
+  frota: { rotulo: "Viagens da frota", fundo: "bg-steel-soft", ponto: "bg-steel", icone: Truck, tinta: "text-steel" },
+  espaco: { rotulo: "Espaços aprovados", fundo: "bg-surface-alt", ponto: "bg-brand-light", icone: KeyRound, tinta: "text-brand-fg" },
 };
+
+const DURACAO_AVISO = 6000;
+// Faixas de viagem que cabem na célula; as demais entram no "mais N".
+const FAIXAS_NA_CELULA = 2;
+
+/** Horário legível, inclusive nos dias de viagem longa (saída, dia todo, volta). */
+function horario(e: Evento): string {
+  if (e.trecho === "meio") return "dia todo";
+  if (e.trecho === "ida") return `saída ${e.inicio}`;
+  if (e.trecho === "volta") return `volta ${e.fim}`;
+  return `${e.inicio}–${e.fim}`;
+}
+
+/** Sinal da origem: o ponto cheio é o evento próprio; FAPERON, frota e espaço têm ícone. */
+function Marca({ origem, escuro, className }: { origem: Evento["origem"]; escuro?: boolean; className?: string }) {
+  const o = ORIGENS[origem];
+  if (!o.icone) return <span aria-hidden="true" className={cn("h-1.5 w-1.5 shrink-0 rounded-full", escuro ? "bg-brand-lime" : o.ponto, className)} />;
+  const Icone = o.icone;
+  return <Icone aria-hidden="true" className={cn("h-3 w-3 shrink-0", escuro ? "text-white/80" : o.tinta, className)} />;
+}
 
 const origemFalada = (e: Evento) => ROTULO_ORIGEM[e.origem] ?? "Pessoal";
 
@@ -54,6 +76,7 @@ function useCelular(): boolean {
   return celular;
 }
 const comInicialMaiuscula = (s: string) => s.replace(/^./, (l) => l.toUpperCase());
+const movimentoReduzido = () => typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 export function Agenda() {
   const { funcionario, hoje, eventos, institucionais, frota, pedidos, salvarEvento, excluirEvento } = useSistema();
@@ -61,10 +84,20 @@ export function Agenda() {
   const [mes, setMes] = useState(() => ({ ano: Number(hoje.slice(0, 4)), mes0: Number(hoje.slice(5, 7)) - 1 }));
   const [selecionado, setSelecionado] = useState(hoje);
   const [editando, setEditando] = useState<{ evento: Evento; novo: boolean; faltandoVoz?: string[] } | null>(null);
+  // Retorno do que acabou de acontecer; a exclusão guarda o evento para o "Desfazer".
+  const [aviso, setAviso] = useState<{ texto: string; restaurar?: Evento } | null>(null);
+  const [avisoPreso, setAvisoPreso] = useState(false);
+  const painelDoDia = useRef<HTMLDivElement>(null);
   const celular = useCelular();
 
+  useEffect(() => {
+    if (!aviso || avisoPreso) return;
+    const t = window.setTimeout(() => setAviso(null), DURACAO_AVISO);
+    return () => window.clearTimeout(t);
+  }, [aviso, avisoPreso]);
+
   const itens = useMemo(
-    () => (funcionario ? itensDaAgenda(funcionario.id, eventos, institucionais, frota.reservas, frota.veiculos, pedidos) : []),
+    () => (funcionario ? itensDaAgenda(funcionario.id, eventos, institucionais, frota.reservas, frota.veiculos, pedidos, FUNCIONARIOS) : []),
     [funcionario, eventos, institucionais, frota, pedidos],
   );
   const porDia = useMemo(() => {
@@ -98,18 +131,29 @@ export function Agenda() {
     });
   }
 
+  function irPara(dia: string) {
+    setMes({ ano: Number(dia.slice(0, 4)), mes0: Number(dia.slice(5, 7)) - 1 });
+    setSelecionado(dia);
+  }
+
   function irParaHoje() {
-    setMes({ ano: Number(hoje.slice(0, 4)), mes0: Number(hoje.slice(5, 7)) - 1 });
-    setSelecionado(hoje);
+    irPara(hoje);
+  }
+
+  /** No celular o painel do dia fica abaixo do mês: ao tocar num dia, a tela desce até ele. */
+  function escolherDia(dia: string) {
+    setSelecionado(dia);
+    if (!celular) return;
+    window.requestAnimationFrame(() => painelDoDia.current?.scrollIntoView?.({ behavior: movimentoReduzido() ? "auto" : "smooth", block: "start" }));
   }
 
   /** Evento clicável: o próprio abre a edição, a viagem leva à reserva; os demais só se leem. */
   function Item({ e, compacto, escuro }: { e: Evento; compacto?: boolean; escuro?: boolean }) {
     const conteudo = (
       <>
-        <span aria-hidden="true" className={cn("mt-[0.45rem] h-1.5 w-1.5 shrink-0 rounded-full", ORIGENS[e.origem].ponto)} />
+        <Marca origem={e.origem} escuro={escuro} className={ORIGENS[e.origem].icone ? "mt-[0.2rem]" : "mt-[0.45rem]"} />
         <span className="min-w-0">
-          <span className="font-semibold tabular-nums">{e.inicio}</span> <span className={cn(compacto && "line-clamp-2")}>{e.titulo}</span>
+          <span className="font-semibold tabular-nums">{e.trecho && e.trecho !== "unico" ? horario(e) : e.inicio}</span> <span className={cn(compacto && "line-clamp-2")}>{e.titulo}</span>
           <span className="sr-only">
             , <span>{origemFalada(e)}</span>
           </span>
@@ -137,7 +181,8 @@ export function Agenda() {
         </button>
       );
     }
-    if (e.origem === "frota") {
+    // só a viagem da própria pessoa leva à reserva; a do colega é aviso de quem estará fora
+    if (e.origem === "frota" && !e.quem) {
       return (
         <Link href="/sistema/frotas?aba=reservas" className={cn(classe, realce)}>
           {conteudo}
@@ -220,9 +265,15 @@ export function Agenda() {
                   <tr key={semana[0]}>
                     {semana.map((dia, i) => {
                       const doMes = dia.startsWith(mesAtual);
-                      const lista = porDia.get(dia) ?? [];
+                      // fora do mês a célula mostra só o número; o dia escolhido mostra tudo no painel
+                      const lista = doMes ? (porDia.get(dia) ?? []) : [];
                       const fimDeSemana = i === 0 || i === 6;
                       const escolhido = dia === selecionado;
+                      const viagens = lista.filter((e) => e.origem === "frota");
+                      const outros = lista.filter((e) => e.origem !== "frota");
+                      const faixas = viagens.slice(0, FAIXAS_NA_CELULA);
+                      const cabem = Math.max(1, NA_CELULA - faixas.length);
+                      const escondidos = viagens.length - faixas.length + Math.max(0, outros.length - cabem);
                       return (
                         <td
                           key={dia}
@@ -236,10 +287,10 @@ export function Agenda() {
                           <div className="flex items-center justify-between gap-1">
                             <button
                               type="button"
-                              onClick={() => setSelecionado(dia)}
+                              onClick={() => escolherDia(dia)}
                               aria-current={dia === hoje ? "date" : undefined}
                               aria-pressed={escolhido}
-                              aria-label={`${comInicialMaiuscula(dataPorExtenso(dia))}${lista.length ? `, ${lista.length} evento(s)` : ""}`}
+                              aria-label={`${comInicialMaiuscula(dataPorExtenso(dia))}${lista.length ? `, ${lista.length} ${lista.length === 1 ? "evento" : "eventos"}` : ""}`}
                               className={cn(
                                 "mx-auto inline-flex h-7 min-w-7 items-center justify-center rounded-full px-1.5 text-xs tabular-nums transition md:mx-0",
                                 dia === hoje ? "bg-brand font-semibold text-white" : doMes ? "font-medium text-ink hover:bg-brand-soft" : "text-ink-muted hover:bg-surface-alt",
@@ -257,23 +308,48 @@ export function Agenda() {
                             </button>
                           </div>
                           {/* no celular, só os pontos; o painel do dia mostra os eventos */}
-                          {lista.length > 0 && (
+                          {viagens.length > 0 && <span aria-hidden="true" className="mt-1 block h-1 rounded-full bg-steel md:hidden" />}
+                          {outros.length > 0 && (
                             <div aria-hidden="true" className="mt-1 flex justify-center gap-0.5 md:hidden">
-                              {lista.slice(0, 4).map((e) => (
+                              {outros.slice(0, 4).map((e) => (
                                 <span key={e.id} className={cn("h-1.5 w-1.5 rounded-full", ORIGENS[e.origem].ponto)} />
                               ))}
                             </div>
                           )}
+                          {/* a viagem ocupa o dia (todos os dias, da saída ao retorno): vira faixa com o destino.
+                              A sua é cheia e leva à reserva; a do colega é contornada e só avisa quem estará fora. */}
+                          {faixas.map((e) => {
+                            const texto = (
+                              <>
+                                <Truck aria-hidden="true" className="mt-0.5 h-3 w-3 shrink-0" />
+                                <span className="line-clamp-2 min-w-0 break-words">
+                                  <span className="sr-only">{e.quem ? "Viagem de colega, " : "Viagem da frota, "}</span>
+                                  {e.quem ? `${e.quem} em ${e.destino}` : e.destino ?? e.titulo}
+                                  {!e.quem && <span className="font-normal tabular-nums"> {e.trecho === "unico" ? e.inicio : horario(e)}</span>}
+                                </span>
+                              </>
+                            );
+                            const base = "mt-1 hidden min-w-0 items-start gap-1 rounded-md px-1.5 py-1 text-xs font-semibold text-steel md:flex";
+                            return e.quem ? (
+                              <span key={e.id} title={e.titulo} className={cn(base, "bg-card ring-1 ring-inset ring-steel")}>
+                                {texto}
+                              </span>
+                            ) : (
+                              <Link key={e.id} href="/sistema/frotas?aba=reservas" title={e.titulo} className={cn(base, "border-l-[3px] border-steel bg-steel-soft transition hover:brightness-95")}>
+                                {texto}
+                              </Link>
+                            );
+                          })}
                           <ul className="mt-1 hidden gap-1 md:grid">
-                            {lista.slice(0, NA_CELULA).map((e) => (
+                            {outros.slice(0, cabem).map((e) => (
                               <li key={e.id}>
                                 <Item e={e} compacto />
                               </li>
                             ))}
-                            {lista.length > NA_CELULA && (
+                            {escondidos > 0 && (
                               <li>
-                                <button type="button" onClick={() => setSelecionado(dia)} className="px-1.5 text-xs font-medium text-brand-fg hover:underline">
-                                  mais {lista.length - NA_CELULA}
+                                <button type="button" onClick={() => escolherDia(dia)} className="px-1.5 text-xs font-medium text-brand-fg hover:underline">
+                                  mais {escondidos}
                                 </button>
                               </li>
                             )}
@@ -286,10 +362,10 @@ export function Agenda() {
               </tbody>
             </table>
 
-            <ul aria-label="Legenda das cores" className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-ink-muted">
+            <ul aria-label="Legenda" className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-ink-muted">
               {Object.values(ORIGENS).map((o) => (
                 <li key={o.rotulo} className="flex items-center gap-1.5">
-                  <span aria-hidden="true" className={cn("h-2 w-2 rounded-full", o.ponto)} />
+                  {o.icone ? <o.icone aria-hidden="true" className={cn("h-3.5 w-3.5", o.tinta)} /> : <span aria-hidden="true" className={cn("h-2 w-2 rounded-full", o.ponto)} />}
                   {o.rotulo}
                 </li>
               ))}
@@ -298,7 +374,7 @@ export function Agenda() {
 
           {/* abaixo de 1280 px o painel vai para baixo do mês, lado a lado com "Na sequência" */}
           <aside aria-labelledby="titulo-dia" className="grid min-w-0 items-start gap-6 md:grid-cols-2 xl:sticky xl:top-40 xl:block" data-tour="agenda-dia">
-            <div className="rounded-2xl bg-brand-dark p-5 text-white shadow-[0_18px_40px_-24px_rgb(0_70_58/0.7)]">
+            <div ref={painelDoDia} className="scroll-mt-40 rounded-2xl bg-brand-dark p-5 text-white shadow-[0_18px_40px_-24px_rgb(0_70_58/0.7)]">
               <h2 id="titulo-dia" className="text-xl font-semibold tracking-[-0.02em]">
                 {comInicialMaiuscula(dataPorExtenso(selecionado))}
                 {selecionado === hoje && <span className="ml-2 inline-block rounded-full bg-brand-lime px-2 py-0.5 align-middle text-xs font-semibold text-brand-dark">hoje</span>}
@@ -315,11 +391,9 @@ export function Agenda() {
                       ) : (
                       <div className="text-sm">
                         <div className="flex gap-2 rounded-lg bg-white/[0.08] px-2.5 py-2">
-                          <span aria-hidden="true" className={cn("mt-[0.45rem] h-1.5 w-1.5 shrink-0 rounded-full", ORIGENS[e.origem].ponto)} />
+                          <Marca origem={e.origem} escuro className={ORIGENS[e.origem].icone ? "mt-[0.2rem]" : "mt-[0.45rem]"} />
                           <span className="min-w-0">
-                            <span className="font-semibold tabular-nums">
-                              {e.inicio}–{e.fim}
-                            </span>{" "}
+                            <span className="font-semibold tabular-nums">{horario(e)}</span>{" "}
                             {e.titulo}
                             <span className="sr-only">, {origemFalada(e)}</span>
                             {e.local && (
@@ -359,15 +433,15 @@ export function Agenda() {
                 <ol className="mt-2 grid gap-3">
                   {proximos.map((dia) => (
                     <li key={dia} className="min-w-0">
-                      <button type="button" onClick={() => setSelecionado(dia)} className="text-left text-xs font-medium text-brand-fg hover:underline">
+                      <button type="button" onClick={() => escolherDia(dia)} className="text-left text-xs font-medium text-brand-fg hover:underline">
                         {comInicialMaiuscula(dataPorExtenso(dia))}
                       </button>
                       <ul className="mt-1 grid gap-0.5 text-sm text-ink">
                         {porDia.get(dia)!.map((e) => (
                           <li key={e.id} className="flex min-w-0 gap-2" title={e.titulo}>
-                            <span aria-hidden="true" className={cn("mt-[0.5rem] h-1.5 w-1.5 shrink-0 rounded-full", ORIGENS[e.origem].ponto)} />
+                            <Marca origem={e.origem} className={ORIGENS[e.origem].icone ? "mt-[0.25rem]" : "mt-[0.5rem]"} />
                             <span className="min-w-0 truncate">
-                              <span className="tabular-nums text-ink-muted">{e.inicio}</span> {e.titulo}
+                              <span className="tabular-nums text-ink-muted">{e.trecho && e.trecho !== "unico" ? horario(e) : e.inicio}</span> {e.titulo}
                             </span>
                           </li>
                         ))}
@@ -395,7 +469,7 @@ export function Agenda() {
                     <li key={e.id}>
                       <Item e={e} />
                       <span className="sr-only">
-                        {ROTULO_TIPO_EVENTO[e.tipo]}, de {e.inicio} a {e.fim}
+                        {ROTULO_TIPO_EVENTO[e.tipo]}, {e.trecho === "meio" ? "o dia todo" : `de ${e.inicio} a ${e.fim}`}
                       </span>
                     </li>
                   ))}
@@ -415,15 +489,52 @@ export function Agenda() {
             aoCancelar={() => setEditando(null)}
             aoExcluir={() => {
               excluirEvento(editando.evento.id);
+              setAviso({ texto: `Evento “${editando.evento.titulo}” excluído.`, restaurar: editando.evento });
               setEditando(null);
             }}
             aoSalvar={(evento) => {
               salvarEvento(evento);
+              // leva ao dia do evento, mesmo que caia em outro mês
+              irPara(evento.data);
+              setAviso({ texto: `Marcado para ${dataPorExtenso(evento.data)}, às ${evento.inicio}.` });
               setEditando(null);
             }}
           />
         </Dialogo>
       )}
+
+      {/* fica sempre na página para o leitor de tela anunciar; à esquerda, longe do Zétele */}
+      <div
+        role="status"
+        aria-live="polite"
+        className="pointer-events-none fixed inset-x-4 bottom-6 z-40 flex sm:left-6 sm:right-auto"
+        onMouseEnter={() => setAvisoPreso(true)}
+        onMouseLeave={() => setAvisoPreso(false)}
+        onFocus={() => setAvisoPreso(true)}
+        onBlur={() => setAvisoPreso(false)}
+      >
+        {aviso && (
+          <div className="pointer-events-auto flex max-w-md items-center gap-3 rounded-xl bg-brand-dark px-4 py-3 text-sm text-white shadow-[0_18px_40px_-20px_rgb(0_70_58/0.8)]">
+            <span className="min-w-0">{aviso.texto}</span>
+            {aviso.restaurar && (
+              <button
+                type="button"
+                onClick={() => {
+                  salvarEvento(aviso.restaurar!);
+                  irPara(aviso.restaurar!.data);
+                  setAviso({ texto: `Evento “${aviso.restaurar!.titulo}” restaurado.` });
+                }}
+                className="shrink-0 rounded-lg px-2 py-1 font-semibold text-brand-lime transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+              >
+                Desfazer
+              </button>
+            )}
+            <button type="button" onClick={() => setAviso(null)} aria-label="Fechar aviso" className="shrink-0 rounded-lg px-1.5 py-1 text-white/70 transition hover:bg-white/10 hover:text-white">
+              ×
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

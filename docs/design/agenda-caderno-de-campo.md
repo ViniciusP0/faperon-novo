@@ -98,3 +98,28 @@ A revisão contra os padrões genéricos da skill encontrou três vícios na age
 | Rótulo acima do título ("Hoje", "Dia escolhido") | Painel do dia | Rótulo removido ("tirar um acessório"); hoje ganha o selo lima "hoje" na linha da data, como na Lista |
 
 Na captura de autocrítica, as células brancas sumiam contra o fundo sem a sombra. Por isso entrou o contorno de 1 px.
+
+## Crítica do Impeccable e rodada dos P1 (18/10/2026)
+
+O `critique` do Impeccable rodou com duas avaliações isoladas.
+
+- **Avaliação A** (revisão de design): nota **25/40**, com 3 problemas P1.
+- **Avaliação B** (detector + navegador): o código saiu limpo e o axe não achou violações. Só um achado é real: o vidro verde ativo tem contraste de 4,49:1.
+- **Registro:** `.impeccable/critique/2026-10-18T18-09-12Z__apps-web-src-components-sistema-agenda-agenda-tsx.md`.
+
+O usuário escolheu os 3 P1 e a viagem em faixa no dia:
+
+| Achado | Correção |
+|---|---|
+| No celular, tocar num dia não mostrava nada (painel abaixo da dobra) | A tela desce até o painel do dia, respeitando o movimento reduzido. `scroll-mt-40` evita que o painel fique sob o cabeçalho. |
+| Origem e possibilidade de editar dependiam só da cor | Cada origem tem uma forma:<br>• ponto cheio: o evento próprio (o único com fundo cheio e editável);<br>• prédio: FAPERON (o chip saiu da palha do fim de semana);<br>• caminhão: frota;<br>• chave: espaço.<br>A legenda usa as mesmas formas. |
+| Excluir sem desfazer e salvar sem retorno | Aviso por 6 s, que não some com o mouse ou o foco em cima:<br>• ao excluir: "Evento … excluído" com **Desfazer**;<br>• ao salvar: "Marcado para …", e a agenda vai para o mês e o dia do evento. |
+| Contraste do vidro verde (4,49:1) | O gradiente do `.vidro-primario` ficou mais opaco. |
+| Viagem como chip de 1 h | A viagem vira **faixa** com o destino, em **todos os dias**, da saída ao retorno:<br>• o primeiro dia mostra "saída 07:00", o meio "dia todo" e o último "volta 19:00";<br>• a faixa da própria pessoa é cheia e leva à reserva;<br>• a do colega ("João em Rolim de Moura") é contornada e só de leitura. |
+| Viagens dos colegas | Entram na agenda de todos (`itensDaAgenda(…, equipe)`), mas só as agendadas ou em uso. O histórico concluído não polui a agenda. |
+
+Mudanças de leitura no mês:
+- **Dias de fora do mês:** a célula mostra só o número.
+- **Rótulo para leitor de tela:** diz "1 evento" ou "N eventos".
+
+Os relatórios continuam só com as viagens da própria pessoa, uma linha por dia.
