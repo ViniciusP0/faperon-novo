@@ -2,17 +2,20 @@
 
 import { MapPin, Plus, Users } from "lucide-react";
 import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select } from "@/components/ui/field";
 import { FUNCIONARIOS } from "@/content/sistema/funcionarios";
 import { historicoVisivel, horasDaAtividade, LIMITE_HISTORICO, resumoPorFuncionario, ROTULO_MODULO, ROTULO_TIPO_ATIVIDADE } from "@/lib/sistema/atividades";
 import { agoraISO, formatarDataBR, formatarHora, somarDias } from "@/lib/sistema/datas";
 import { novoId, useSistema } from "@/lib/sistema/estado";
+import { TIPO_DA_ATIVIDADE } from "@/lib/sistema/legenda";
+import { comTag } from "@/lib/sistema/tags";
 import type { Atividade, ModuloHistorico } from "@/lib/sistema/tipos";
 import { aplicarAtividade } from "@/lib/sistema/voz";
 import { Abas } from "../abas";
 import { Dialogo } from "../dialogo";
+import { SeloDeTipo } from "../legenda-de-tipos";
+import { ChipsDeTags, FiltroDeTag, useFiltroDeTag } from "../tags";
 import { AgendarPorVoz, AvisoVoz } from "../voz/agendar-por-voz";
 import { FormularioAtividade } from "./formulario-atividade";
 
@@ -25,7 +28,7 @@ function LinhaAtividade({ a, mostrarQuem, acoes }: { a: Atividade; mostrarQuem: 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="font-medium text-ink">
-            {a.titulo} <Badge className="ml-1 px-2 py-0">{ROTULO_TIPO_ATIVIDADE[a.tipo]}</Badge>
+            {a.titulo} <SeloDeTipo tipo={TIPO_DA_ATIVIDADE[a.tipo]} className="ml-1">{ROTULO_TIPO_ATIVIDADE[a.tipo]}</SeloDeTipo>
           </p>
           <p className="text-ink-muted">
             {formatarDataBR(a.data)} · {a.inicio}–{a.fim} ({horas(horasDaAtividade(a))})
@@ -47,6 +50,7 @@ function LinhaAtividade({ a, mostrarQuem, acoes }: { a: Atividade; mostrarQuem: 
           </p>
           {a.descricao && <p className="mt-1 text-ink">{a.descricao}</p>}
           {a.resultados && <p className="mt-1 text-ink-muted">Resultados: {a.resultados}</p>}
+          <ChipsDeTags ids={a.tags} className="mt-2" />
         </div>
         {acoes && <div className="flex gap-2">{acoes}</div>}
       </div>
@@ -54,7 +58,8 @@ function LinhaAtividade({ a, mostrarQuem, acoes }: { a: Atividade; mostrarQuem: 
   );
 }
 
-function Periodo({ de, ate, aoMudar }: { de: string; ate: string; aoMudar: (de: string, ate: string) => void }) {
+/** Período e filtro de tag das abas de atividades (a tag escolhida vale para as duas abas). */
+function Periodo({ de, ate, aoMudar, tag, aoMudarTag }: { de: string; ate: string; aoMudar: (de: string, ate: string) => void; tag: string; aoMudarTag: (id: string) => void }) {
   return (
     <div className="mb-4 flex flex-wrap items-end gap-3">
       <div>
@@ -65,16 +70,22 @@ function Periodo({ de, ate, aoMudar }: { de: string; ate: string; aoMudar: (de: 
         <Label htmlFor="atividades-ate">Até</Label>
         <Input id="atividades-ate" type="date" value={ate} onChange={(e) => aoMudar(de, e.target.value)} />
       </div>
+      <FiltroDeTag id="atividades-tag" valor={tag} aoMudar={aoMudarTag} />
     </div>
   );
 }
 
-function MinhasAtividades({ aoEditar }: { aoEditar: (a: Atividade) => void }) {
+interface FiltroTag {
+  tag: string;
+  aoMudarTag: (id: string) => void;
+}
+
+function MinhasAtividades({ aoEditar, tag, aoMudarTag }: { aoEditar: (a: Atividade) => void } & FiltroTag) {
   const { funcionario, hoje, atividades, atualizarAtividades } = useSistema();
   const [de, setDe] = useState(somarDias(hoje, -29));
   const [ate, setAte] = useState(hoje);
   if (!funcionario) return null;
-  const minhas = atividades
+  const minhas = comTag(atividades, tag)
     .filter((a) => a.funcionarioId === funcionario.id && a.data >= de && a.data <= ate)
     .sort((a, b) => b.data.localeCompare(a.data) || b.inicio.localeCompare(a.inicio));
   const total = minhas.reduce((s, a) => s + horasDaAtividade(a), 0);
@@ -88,6 +99,8 @@ function MinhasAtividades({ aoEditar }: { aoEditar: (a: Atividade) => void }) {
           setDe(d);
           setAte(a);
         }}
+        tag={tag}
+        aoMudarTag={aoMudarTag}
       />
       <p className="mb-3 text-sm text-ink-muted">
         {minhas.length} atividade(s) · {horas(Math.round(total * 100) / 100)} · {publico} pessoa(s) atendida(s)
@@ -121,8 +134,9 @@ function MinhasAtividades({ aoEditar }: { aoEditar: (a: Atividade) => void }) {
   );
 }
 
-function Equipe() {
-  const { hoje, atividades } = useSistema();
+function Equipe({ tag, aoMudarTag }: FiltroTag) {
+  const { hoje, atividades: todas } = useSistema();
+  const atividades = comTag(todas, tag);
   const [de, setDe] = useState(`${hoje.slice(0, 7)}-01`);
   const [ate, setAte] = useState(hoje);
   const [quem, setQuem] = useState("");
@@ -139,6 +153,8 @@ function Equipe() {
           setDe(d);
           setAte(a);
         }}
+        tag={tag}
+        aoMudarTag={aoMudarTag}
       />
       <div className="mb-6 overflow-x-auto">
         <table className="w-full min-w-[480px] text-sm">
@@ -233,6 +249,7 @@ function Historico() {
 export function Atividades() {
   const { funcionario, hoje, atualizarAtividades } = useSistema();
   const [editando, setEditando] = useState<{ atividade: Atividade; nova: boolean; faltandoVoz?: string[] } | null>(null);
+  const [tag, setTag] = useFiltroDeTag();
   if (!funcionario) return null;
 
   const atividadeNova = (): Atividade => ({
@@ -251,8 +268,8 @@ export function Atividades() {
   });
 
   const abas = [
-    { id: "minhas", rotulo: "Minhas atividades", conteudo: <MinhasAtividades aoEditar={(a) => setEditando({ atividade: a, nova: false })} /> },
-    ...(funcionario.coordenador ? [{ id: "equipe", rotulo: "Equipe", conteudo: <Equipe /> }] : []),
+    { id: "minhas", rotulo: "Minhas atividades", conteudo: <MinhasAtividades aoEditar={(a) => setEditando({ atividade: a, nova: false })} tag={tag} aoMudarTag={setTag} /> },
+    ...(funcionario.coordenador ? [{ id: "equipe", rotulo: "Equipe", conteudo: <Equipe tag={tag} aoMudarTag={setTag} /> }] : []),
     { id: "historico", rotulo: "Histórico", conteudo: <Historico /> },
   ];
 

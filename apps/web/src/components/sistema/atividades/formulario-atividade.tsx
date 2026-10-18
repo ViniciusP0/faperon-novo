@@ -7,6 +7,7 @@ import { Input, Label, Select, Textarea } from "@/components/ui/field";
 import { MUNICIPIOS_RO } from "@/content/sistema/municipios";
 import { ROTULO_TIPO_ATIVIDADE, validarAtividade } from "@/lib/sistema/atividades";
 import type { Atividade, TipoAtividade } from "@/lib/sistema/tipos";
+import { SeletorDeTags } from "../tags";
 
 interface Props {
   inicial: Atividade;
@@ -87,6 +88,7 @@ export function FormularioAtividade({ inicial, aoSalvar, aoCancelar }: Props) {
         <Label htmlFor="atividade-resultados">Resultados e encaminhamentos</Label>
         <Textarea id="atividade-resultados" value={a.resultados} onChange={(e) => setA({ ...a, resultados: e.target.value })} className="min-h-20" />
       </div>
+      <SeletorDeTags valor={a.tags} aoMudar={(tags) => setA((atual) => ({ ...atual, tags }))} />
       {erro && <Alert tone="erro">{erro}</Alert>}
       <div className="flex justify-end gap-2">
         <Button variant="ghost" onClick={aoCancelar}>

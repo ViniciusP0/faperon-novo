@@ -7,6 +7,7 @@ import { Alert } from "@/components/ui/feedback";
 import { Input, Label, Select } from "@/components/ui/field";
 import { comprovanteSeguro, LIMITE_COMPROVANTE, ROTULO_CATEGORIA, TIPOS_COMPROVANTE, validarDespesa } from "@/lib/sistema/contas";
 import { CENTROS_DE_CUSTO, type CategoriaDespesa, type CentroDeCusto, type Despesa } from "@/lib/sistema/tipos";
+import { SeletorDeTags } from "../tags";
 
 interface Props {
   inicial: Despesa;
@@ -113,6 +114,7 @@ export function FormularioDespesa({ inicial, aoSalvar, aoCancelar }: Props) {
         )}
         {avisoArquivo && <p className="mt-1 text-xs text-ink-muted">{avisoArquivo}</p>}
       </div>
+      <SeletorDeTags valor={d.tags} aoMudar={(tags) => setD((a) => ({ ...a, tags }))} />
       {erro && <Alert tone="erro">{erro}</Alert>}
       <div className="flex flex-wrap justify-end gap-2">
         <Button variant="ghost" onClick={aoCancelar}>

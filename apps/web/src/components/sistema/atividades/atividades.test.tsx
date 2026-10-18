@@ -87,4 +87,24 @@ describe("Registro de atividades", () => {
     expect(screen.getByRole("rowheader", { name: "Ana Ribeiro" }).closest("tr")).toHaveTextContent("20");
     expect(screen.getByText("Curso de pastagem")).toBeInTheDocument();
   });
+
+  it("aplica tag numa atividade, mostra o chip e filtra por ela", async () => {
+    const user = userEvent.setup();
+    renderAtividades("ana");
+    // o selo de tipo usa a cor da legenda única
+    expect(screen.getByText("Capacitação ou curso")).toHaveClass("bg-tipo-capacitacao-suave", "text-tipo-capacitacao");
+    await user.click(screen.getByRole("button", { name: "Registrar atividade" }));
+    const dialogo = screen.getByRole("dialog", { name: "Registrar atividade" });
+    await user.type(within(dialogo).getByLabelText("Atividade"), "Dia de campo do café");
+    await user.click(within(dialogo).getByRole("checkbox", { name: "Dia de campo" }));
+    await user.click(within(dialogo).getByRole("button", { name: "Salvar atividade" }));
+    expect(ler<Atividade[]>("atividades", []).find((a) => a.titulo === "Dia de campo do café")?.tags).toEqual(["tag-dia-de-campo"]);
+
+    await user.selectOptions(screen.getByLabelText("Tag"), "Dia de campo");
+    const item = screen.getByText("Dia de campo do café").closest("li")!;
+    expect(within(within(item).getByRole("list", { name: "Tags" })).getByText("Dia de campo")).toBeInTheDocument();
+    expect(screen.queryByText("Curso de pastagem")).toBeNull();
+    await user.selectOptions(screen.getByLabelText("Tag"), "Todas");
+    expect(screen.getByText("Curso de pastagem")).toBeInTheDocument();
+  });
 });

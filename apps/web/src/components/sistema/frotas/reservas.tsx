@@ -11,10 +11,12 @@ import { novoId, useSistema } from "@/lib/sistema/estado";
 import { km } from "@/lib/sistema/formato";
 import { formatarPlaca } from "@/lib/sistema/placa";
 import { conflitoDeReserva, MENSAGEM_CONFLITO, validarRetorno } from "@/lib/sistema/reservas";
+import { comTag } from "@/lib/sistema/tags";
 import type { Reserva, SituacaoReserva } from "@/lib/sistema/tipos";
 import { aplicarReserva } from "@/lib/sistema/voz";
 import { Dialogo } from "../dialogo";
 import { Segmentado } from "../segmentado";
+import { ChipsDeTags, FiltroDeTag, SeletorDeTags, useFiltroDeTag } from "../tags";
 import { AgendarPorVoz, AvisoVoz } from "../voz/agendar-por-voz";
 
 const ROTULO_RESERVA: Record<SituacaoReserva, string> = {
@@ -74,6 +76,7 @@ function FormularioReserva({ inicial, aoSalvar, aoCancelar }: { inicial: Reserva
         <Label htmlFor="reserva-motivo">Motivo</Label>
         <Input id="reserva-motivo" value={r.motivo} onChange={(e) => setR({ ...r, motivo: e.target.value })} />
       </div>
+      <SeletorDeTags valor={r.tags} aoMudar={(tags) => setR((a) => ({ ...a, tags }))} />
       {erro && <Alert tone="erro">{erro}</Alert>}
       <div className="flex justify-end gap-2">
         <Button variant="ghost" onClick={aoCancelar}>
@@ -121,10 +124,11 @@ export function Reservas() {
   const [faltandoVoz, setFaltandoVoz] = useState<string[] | null>(null);
   const [km_, setKm] = useState<{ reserva: Reserva; etapa: "saida" | "retorno" } | null>(null);
   const [filtro, setFiltro] = useState<"minhas" | "todas">("minhas");
+  const [tag, setTag] = useFiltroDeTag();
   if (!funcionario) return null;
 
   const veiculo = (id: string) => frota.veiculos.find((v) => v.id === id);
-  const lista = frota.reservas
+  const lista = comTag(frota.reservas, tag)
     .filter((r) => filtro === "todas" || r.funcionarioId === funcionario.id)
     .sort((a, b) => b.saida.localeCompare(a.saida));
 
@@ -161,15 +165,18 @@ export function Reservas() {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <Segmentado
-          rotulo="Quais reservas mostrar"
-          valor={filtro}
-          aoMudar={setFiltro}
-          opcoes={[
-            { valor: "minhas", rotulo: "Minhas reservas" },
-            { valor: "todas", rotulo: "Todas" },
-          ]}
-        />
+        <div className="flex flex-wrap items-center gap-3">
+          <Segmentado
+            rotulo="Quais reservas mostrar"
+            valor={filtro}
+            aoMudar={setFiltro}
+            opcoes={[
+              { valor: "minhas", rotulo: "Minhas reservas" },
+              { valor: "todas", rotulo: "Todas" },
+            ]}
+          />
+          <FiltroDeTag id="reservas-tag" valor={tag} aoMudar={setTag} compacto />
+        </div>
         <div className="flex flex-wrap gap-2" data-tour="frotas-reservas">
           <AgendarPorVoz
             tipo="reserva"
@@ -190,7 +197,7 @@ export function Reservas() {
           </Button>
         </div>
       </div>
-      {lista.length === 0 && <p className="text-sm text-ink-muted">Nenhuma reserva.</p>}
+      {lista.length === 0 && <p className="text-sm text-ink-muted">{tag ? "Nenhuma reserva com essa tag." : "Nenhuma reserva."}</p>}
       <ul className="grid gap-2">
         {lista.map((r) => {
           const v = veiculo(r.veiculoId);
@@ -206,6 +213,7 @@ export function Reservas() {
                   {filtro === "todas" && ` · ${FUNCIONARIOS.find((f) => f.id === r.funcionarioId)?.nome ?? ""}`}
                   {r.kmInicial != null && r.kmFinal != null && ` · ${km(r.kmFinal - r.kmInicial)} rodados`}
                 </p>
+                <ChipsDeTags ids={r.tags} className="mt-1.5" />
               </div>
               {minha && (r.situacao === "agendada" || r.situacao === "em_uso") && (
                 <div className="flex gap-2">

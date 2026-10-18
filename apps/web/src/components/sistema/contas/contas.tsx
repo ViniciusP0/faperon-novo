@@ -10,11 +10,13 @@ import { Input, Label, Textarea } from "@/components/ui/field";
 import { comprovanteSeguro, podeEditar, ROTULO_CATEGORIA, ROTULO_STATUS_DESPESA, totaisPorCentro } from "@/lib/sistema/contas";
 import { agoraISO, formatarDataBR, somarDias } from "@/lib/sistema/datas";
 import { novoId, useSistema } from "@/lib/sistema/estado";
+import { comTag } from "@/lib/sistema/tags";
 import { reais } from "@/lib/sistema/formato";
 import { CENTROS_DE_CUSTO, type CentroDeCusto, type Despesa, type StatusDespesa } from "@/lib/sistema/tipos";
 import { cn } from "@/lib/utils";
 import { Abas } from "../abas";
 import { Dialogo } from "../dialogo";
+import { ChipsDeTags, FiltroDeTag, useFiltroDeTag } from "../tags";
 import { FormularioDespesa } from "./formulario-despesa";
 
 const corStatus: Record<StatusDespesa, string> = {
@@ -51,6 +53,7 @@ function LinhaDespesa({ d, mostrarQuem, acoes }: { d: Despesa; mostrarQuem: bool
             </p>
           ))}
         {d.status === "devolvida" && d.observacaoGestor && <p className="mt-1 text-danger-ink">Devolvida: {d.observacaoGestor}</p>}
+        <ChipsDeTags ids={d.tags} className="mt-2" />
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-semibold tabular-nums text-ink">{reais(d.valor)}</span>
@@ -60,14 +63,14 @@ function LinhaDespesa({ d, mostrarQuem, acoes }: { d: Despesa; mostrarQuem: bool
   );
 }
 
-function MinhasDespesas({ aoEditar }: { aoEditar: (d: Despesa) => void }) {
+function MinhasDespesas({ aoEditar, tag }: { aoEditar: (d: Despesa) => void; tag: string }) {
   const { funcionario, despesas, atualizarDespesas } = useSistema();
   if (!funcionario) return null;
-  const minhas = despesas.filter((d) => d.funcionarioId === funcionario.id).sort((a, b) => b.data.localeCompare(a.data));
+  const minhas = comTag(despesas, tag).filter((d) => d.funcionarioId === funcionario.id).sort((a, b) => b.data.localeCompare(a.data));
   const mudar = (id: string, muda: Partial<Despesa>, acao: string) => atualizarDespesas((l) => l.map((d) => (d.id === id ? { ...d, ...muda } : d)), acao);
   return (
     <div>
-      {minhas.length === 0 && <p className="text-sm text-ink-muted">Nenhuma despesa lançada.</p>}
+      {minhas.length === 0 && <p className="text-sm text-ink-muted">{tag ? "Nenhuma despesa sua com essa tag." : "Nenhuma despesa lançada."}</p>}
       <ul className="grid gap-2">
         {minhas.map((d) => (
           <LinhaDespesa
@@ -96,8 +99,9 @@ function MinhasDespesas({ aoEditar }: { aoEditar: (d: Despesa) => void }) {
   );
 }
 
-function Aprovacao() {
-  const { despesas, atualizarDespesas } = useSistema();
+function Aprovacao({ tag }: { tag: string }) {
+  const { despesas: todas, atualizarDespesas } = useSistema();
+  const despesas = comTag(todas, tag);
   const [devolvendo, setDevolvendo] = useState<Despesa | null>(null);
   const [obs, setObs] = useState("");
   const [erro, setErro] = useState<string | null>(null);
@@ -160,8 +164,9 @@ function Aprovacao() {
   );
 }
 
-function PorCentro() {
-  const { hoje, despesas } = useSistema();
+function PorCentro({ tag }: { tag: string }) {
+  const { hoje, despesas: todas } = useSistema();
+  const despesas = comTag(todas, tag);
   const [de, setDe] = useState(`${hoje.slice(0, 7)}-01`);
   const [ate, setAte] = useState(hoje);
   const inicioPadrao = somarDias(hoje, -90);
@@ -215,6 +220,7 @@ function PorCentro() {
 export function Contas() {
   const { funcionario, atualizarDespesas } = useSistema();
   const [editando, setEditando] = useState<Despesa | null>(null);
+  const [tag, setTag] = useFiltroDeTag();
   if (!funcionario) return null;
   const centroPadrao = (CENTROS_DE_CUSTO as readonly string[]).includes(funcionario.area) ? (funcionario.area as CentroDeCusto) : "Administrativo";
 
@@ -236,9 +242,9 @@ export function Contas() {
   }
 
   const abas = [
-    { id: "minhas", rotulo: "Minhas despesas", conteudo: <MinhasDespesas aoEditar={setEditando} /> },
-    ...(funcionario.gestorContas ? [{ id: "aprovacao", rotulo: "Aprovação", conteudo: <Aprovacao /> }] : []),
-    { id: "centros", rotulo: "Por centro de custo", conteudo: <PorCentro /> },
+    { id: "minhas", rotulo: "Minhas despesas", conteudo: <MinhasDespesas aoEditar={setEditando} tag={tag} /> },
+    ...(funcionario.gestorContas ? [{ id: "aprovacao", rotulo: "Aprovação", conteudo: <Aprovacao tag={tag} /> }] : []),
+    { id: "centros", rotulo: "Por centro de custo", conteudo: <PorCentro tag={tag} /> },
   ];
 
   return (
@@ -250,6 +256,8 @@ export function Contas() {
           Nova despesa
         </Button>
       </div>
+      {/* a tag escolhida vale para as três abas */}
+      <FiltroDeTag id="contas-tag" valor={tag} aoMudar={setTag} className="mb-4" />
       <Abas rotulo="Prestação de contas" base="/sistema/contas" abas={abas} tour="contas-abas" />
       {editando && (
         <Dialogo titulo={editando.descricao ? "Editar despesa" : "Nova despesa"} aoFechar={() => setEditando(null)}>

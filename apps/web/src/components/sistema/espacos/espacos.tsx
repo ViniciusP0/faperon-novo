@@ -11,11 +11,15 @@ import { Label, Textarea } from "@/components/ui/field";
 import { agoraISO, formatarDataBR, somarDias } from "@/lib/sistema/datas";
 import { conflitosDoPedido, excedeCapacidade, podeAprovar, ROTULO_PERIODO, ROTULO_STATUS, ROTULO_TIPO_ESPACO, sugestaoDeCorrecao } from "@/lib/sistema/espacos";
 import { novoId, useSistema } from "@/lib/sistema/estado";
+import { TIPO_DO_ESPACO } from "@/lib/sistema/legenda";
+import { comTag } from "@/lib/sistema/tags";
 import type { PedidoEspaco, StatusPedido } from "@/lib/sistema/tipos";
 import { aplicarEspaco } from "@/lib/sistema/voz";
 import { cn } from "@/lib/utils";
 import { Abas } from "../abas";
 import { Dialogo } from "../dialogo";
+import { SeloDeTipo } from "../legenda-de-tipos";
+import { ChipsDeTags, FiltroDeTag, useFiltroDeTag } from "../tags";
 import { AgendarPorVoz, AvisoVoz } from "../voz/agendar-por-voz";
 import { FormularioPedido } from "./formulario-pedido";
 
@@ -34,12 +38,12 @@ function StatusPedidoSelo({ status }: { status: StatusPedido }) {
   return <Badge className={cn("px-2 py-0", corStatus[status])}>{ROTULO_STATUS[status]}</Badge>;
 }
 
-function PainelSemana() {
+function PainelSemana({ tag }: { tag: string }) {
   const { hoje, pedidos } = useSistema();
   // começa hoje: os pedidos que importam são os que vêm pela frente
   const [inicio, setInicio] = useState(hoje);
   const dias = Array.from({ length: 7 }, (_, i) => somarDias(inicio, i));
-  const visiveis = pedidos.filter((p) => p.status === "pendente" || p.status === "aprovado");
+  const visiveis = comTag(pedidos, tag).filter((p) => p.status === "pendente" || p.status === "aprovado");
 
   return (
     <div>
@@ -122,10 +126,11 @@ function DetalhesPedido({ p, mostrarQuem }: { p: PedidoEspaco; mostrarQuem: bool
   return (
     <div className="text-sm">
       <p className="font-medium text-ink">
-        {p.nome} <StatusPedidoSelo status={p.status} />
+        {p.nome} <StatusPedidoSelo status={p.status} />{" "}
+        <SeloDeTipo tipo={TIPO_DO_ESPACO[p.tipo]}>{ROTULO_TIPO_ESPACO[p.tipo]}</SeloDeTipo>
       </p>
       <p className="text-ink-muted">
-        {espaco.nome} · {formatarDataBR(p.data)} · {p.periodo === "horario" ? `${p.inicio}–${p.fim}` : `${ROTULO_PERIODO[p.periodo]}`} · {ROTULO_TIPO_ESPACO[p.tipo]} · {p.participantes} participantes
+        {espaco.nome} · {formatarDataBR(p.data)} · {p.periodo === "horario" ? `${p.inicio}–${p.fim}` : `${ROTULO_PERIODO[p.periodo]}`} · {p.participantes} participantes
         {p.coffeeBreak && (
           <>
             {" · "}
@@ -147,11 +152,12 @@ function DetalhesPedido({ p, mostrarQuem }: { p: PedidoEspaco; mostrarQuem: bool
           {lotado && <li>Passa da capacidade ({espaco.capacidade} pessoas)</li>}
         </ul>
       )}
+      <ChipsDeTags ids={p.tags} className="mt-2" />
     </div>
   );
 }
 
-function Fila() {
+function Fila({ tag }: { tag: string }) {
   const { funcionario, pedidos, atualizarPedidos } = useSistema();
   const [aviso, setAviso] = useState<string | null>(null);
   const [recusando, setRecusando] = useState<PedidoEspaco | null>(null);
@@ -161,7 +167,7 @@ function Fila() {
   const [correcao, setCorrecao] = useState("");
   const [erroCorrecao, setErroCorrecao] = useState<string | null>(null);
   const gestor = funcionario?.gestorEspacos ?? false;
-  const fila = pedidos.filter((p) => p.status === "pendente").sort((a, b) => a.criadoEm.localeCompare(b.criadoEm));
+  const fila = comTag(pedidos, tag).filter((p) => p.status === "pendente").sort((a, b) => a.criadoEm.localeCompare(b.criadoEm));
 
   function aprovar(p: PedidoEspaco) {
     const bloqueio = podeAprovar(p, pedidos);
@@ -272,14 +278,14 @@ function Fila() {
   );
 }
 
-function MeusPedidos() {
+function MeusPedidos({ tag }: { tag: string }) {
   const { funcionario, pedidos, atualizarPedidos } = useSistema();
   const [corrigindo, setCorrigindo] = useState<PedidoEspaco | null>(null);
   if (!funcionario) return null;
-  const meus = pedidos.filter((p) => p.funcionarioId === funcionario.id).sort((a, b) => b.data.localeCompare(a.data));
+  const meus = comTag(pedidos, tag).filter((p) => p.funcionarioId === funcionario.id).sort((a, b) => b.data.localeCompare(a.data));
   return (
     <div>
-      {meus.length === 0 && <p className="text-sm text-ink-muted">Você ainda não pediu nenhum espaço.</p>}
+      {meus.length === 0 && <p className="text-sm text-ink-muted">{tag ? "Nenhum pedido seu com essa tag." : "Você ainda não pediu nenhum espaço."}</p>}
       <ul className="grid gap-2">
         {meus.map((p) => (
           <li key={p.id} className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-line bg-card p-3">
@@ -328,6 +334,7 @@ export function Espacos() {
   const [novo, setNovo] = useState<PedidoEspaco | null>(null);
   const [enviado, setEnviado] = useState<string | null>(null);
   const [faltandoVoz, setFaltandoVoz] = useState<string[] | null>(null);
+  const [tag, setTag] = useFiltroDeTag();
   if (!funcionario) return null;
 
   function abrirNovo(pedido = pedidoNovo()) {
@@ -384,20 +391,22 @@ export function Espacos() {
           {enviado}
         </Alert>
       )}
+      {/* a tag escolhida vale para o painel, a fila e os seus pedidos */}
+      <FiltroDeTag id="espacos-tag" valor={tag} aoMudar={setTag} className="mb-4" />
       <Abas
         rotulo="Agendamento de espaços"
         tour="espacos-abas"
         base="/sistema/espacos"
         abas={[
-          { id: "painel", rotulo: "Painel de 7 dias", conteudo: <PainelSemana /> },
-          { id: "fila", rotulo: `Fila (${pedidos.filter((p) => p.status === "pendente").length})`, conteudo: <Fila /> },
+          { id: "painel", rotulo: "Painel de 7 dias", conteudo: <PainelSemana tag={tag} /> },
+          { id: "fila", rotulo: `Fila (${pedidos.filter((p) => p.status === "pendente").length})`, conteudo: <Fila tag={tag} /> },
           {
             id: "meus",
             rotulo: (() => {
               const n = pedidos.filter((p) => p.status === "devolvido" && p.funcionarioId === funcionario.id).length;
               return n ? `Meus pedidos (${n} para corrigir)` : "Meus pedidos";
             })(),
-            conteudo: <MeusPedidos />,
+            conteudo: <MeusPedidos tag={tag} />,
           },
         ]}
       />

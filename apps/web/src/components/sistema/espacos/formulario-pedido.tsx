@@ -7,6 +7,7 @@ import { Alert } from "@/components/ui/feedback";
 import { Input, Label, Select, Textarea } from "@/components/ui/field";
 import { conflitosDoPedido, excedeCapacidade, horarioDoPeriodo, ROTULO_PERIODO, ROTULO_STATUS, ROTULO_TIPO_ESPACO } from "@/lib/sistema/espacos";
 import type { IdEspaco, PedidoEspaco, PeriodoEspaco, TipoEventoEspaco } from "@/lib/sistema/tipos";
+import { SeletorDeTags } from "../tags";
 
 interface Rascunho {
   espacoId: IdEspaco;
@@ -19,6 +20,7 @@ interface Rascunho {
   participantes: string;
   coffeeBreak: boolean;
   observacoes: string;
+  tags: string[];
 }
 
 interface Props {
@@ -50,6 +52,7 @@ export function FormularioPedido({ base, pedidos, aoEnviar, aoCancelar, rotuloEn
     participantes: base.participantes ? String(base.participantes) : "",
     coffeeBreak: base.coffeeBreak,
     observacoes: base.observacoes,
+    tags: base.tags ?? [],
   });
   const [erro, setErro] = useState<string | null>(null);
   const espaco = ESPACOS.find((e) => e.id === r.espacoId)!;
@@ -134,6 +137,7 @@ export function FormularioPedido({ base, pedidos, aoEnviar, aoCancelar, rotuloEn
         <Label htmlFor="pedido-observacoes">Observações</Label>
         <Textarea id="pedido-observacoes" value={r.observacoes} onChange={(e) => setR({ ...r, observacoes: e.target.value })} className="min-h-20" />
       </div>
+      <SeletorDeTags valor={r.tags} aoMudar={(tags) => setR((a) => ({ ...a, tags }))} />
 
       {(conflitos.length > 0 || lotado) && (
         <div role="status" className="rounded-xl border border-danger/40 bg-danger-soft p-4 text-sm text-danger-ink">

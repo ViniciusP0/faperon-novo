@@ -117,4 +117,22 @@ describe("Prestação de contas", () => {
     await user.upload(campo, new File([new Uint8Array([137, 80, 78, 71])], "recibo.png", { type: "image/png" }));
     expect(await within(dialogo).findByText("recibo.png")).toBeInTheDocument();
   });
+
+  it("aplica tag numa despesa e filtra por ela em todas as abas", async () => {
+    const user = userEvent.setup();
+    renderContas("carla");
+    await user.click(screen.getByRole("button", { name: "Nova despesa" }));
+    const dialogo = screen.getByRole("dialog");
+    await user.type(within(dialogo).getByLabelText("Descrição"), "Faixa da assembleia");
+    await user.type(within(dialogo).getByLabelText("Valor (R$)"), "90");
+    await user.click(within(dialogo).getByRole("checkbox", { name: "Assembleia" }));
+    await user.click(within(dialogo).getByRole("button", { name: "Salvar rascunho" }));
+    expect(salvas().find((d) => d.descricao === "Faixa da assembleia")?.tags).toEqual(["tag-assembleia"]);
+
+    await user.selectOptions(screen.getByLabelText("Tag"), "Assembleia");
+    expect(screen.getByText("Faixa da assembleia")).toBeInTheDocument();
+    expect(screen.queryByText("Papel A4")).toBeNull();
+    const item = screen.getByText("Faixa da assembleia").closest("li")!;
+    expect(within(item).getByRole("list", { name: "Tags" })).toHaveTextContent("Assembleia");
+  });
 });
