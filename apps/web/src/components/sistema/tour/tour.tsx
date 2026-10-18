@@ -12,8 +12,7 @@ import { cn } from "@/lib/utils";
 const CHAVE_VISTO = "tour:visto";
 const FOLGA = 8;
 const LARGURA_CARTAO = 352;
-// altura estimada do cartão e do cabeçalho fixo do site com a barra do sistema
-const ALTURA_CARTAO = 320;
+// altura do cabeçalho fixo do site com a barra do sistema
 const TOPO_FIXO = 200;
 
 interface ContextoTour {
@@ -62,6 +61,13 @@ function TourAtivo({ indice, aoMudar, aoFechar }: { indice: number; aoMudar: (i:
   const [caixa, setCaixa] = useState<DOMRect | null>(null);
   const [procurando, setProcurando] = useState(true);
   const titulo = useRef<HTMLHeadingElement>(null);
+  const cartao = useRef<HTMLDivElement>(null);
+  // altura real do cartão (muda com o texto de cada passo): decide se ele cabe acima ou abaixo
+  const [alturaCartao, setAlturaCartao] = useState(320);
+  useLayoutEffect(() => {
+    const h = cartao.current?.offsetHeight;
+    if (h && h !== alturaCartao) setAlturaCartao(h);
+  }, [indice, alturaCartao]);
 
   // abre a tela do passo
   useEffect(() => {
@@ -136,8 +142,9 @@ function TourAtivo({ indice, aoMudar, aoFechar }: { indice: number; aoMudar: (i:
   let posicao: React.CSSProperties | undefined;
   if (caixa && !celular) {
     const left = Math.min(Math.max(caixa.left, 16), largura - LARGURA_CARTAO - 16);
-    if (altura - caixa.bottom - FOLGA >= ALTURA_CARTAO) posicao = { left, top: caixa.bottom + FOLGA + 12 };
-    else if (caixa.top - FOLGA - TOPO_FIXO >= ALTURA_CARTAO) posicao = { left, bottom: altura - caixa.top + FOLGA + 12 };
+    const precisa = alturaCartao + FOLGA + 24;
+    if (altura - caixa.bottom >= precisa) posicao = { left, top: caixa.bottom + FOLGA + 12 };
+    else if (caixa.top - TOPO_FIXO >= precisa) posicao = { left, bottom: altura - caixa.top + FOLGA + 12 };
     else posicao = { left: 24, bottom: 24 };
   }
 
@@ -160,12 +167,13 @@ function TourAtivo({ indice, aoMudar, aoFechar }: { indice: number; aoMudar: (i:
         }
       />
       <div
+        ref={cartao}
         role="dialog"
         aria-modal="false"
         aria-labelledby="tour-titulo"
         aria-describedby="tour-texto"
         className={cn(
-          "fixed z-[71] w-[calc(100vw-2rem)] rounded-2xl bg-card p-5 text-ink shadow-[0_24px_60px_-20px_rgb(0_40_33/0.6)] sm:w-[22rem]",
+          "fixed z-[71] max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] overflow-y-auto overscroll-contain rounded-2xl bg-card p-5 text-ink shadow-[0_24px_60px_-20px_rgb(0_40_33/0.6)] sm:w-[22rem]",
           celular ? "inset-x-4 bottom-4 w-auto" : !posicao && "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
         )}
         style={posicao}
