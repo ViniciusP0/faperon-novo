@@ -35,8 +35,14 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-card">
-      <div className="mx-auto flex h-[72px] w-full max-w-[1920px] items-center justify-between gap-4 px-4 md:px-6 lg:gap-3 lg:px-4 min-[1400px]:gap-4 min-[1400px]:px-8">
-        <Link href="/" aria-label="FAPERON – página inicial" className="flex shrink-0 items-center gap-1">
+      <div
+        className={cn(
+          "mx-auto flex h-[72px] w-full max-w-[1920px] items-center justify-between gap-4 px-4 md:px-6 lg:gap-3 lg:px-4 min-[1400px]:gap-4 min-[1400px]:px-8",
+          // na área logada, três colunas: marca, menu no centro exato da tela e as ações à direita
+          logado && "lg:grid lg:grid-cols-[1fr_auto_1fr]",
+        )}
+      >
+        <Link href="/" aria-label="FAPERON – página inicial" className="flex shrink-0 items-center gap-1 justify-self-start">
           <Image
             src="/marca-faperon.png"
             alt=""
@@ -53,8 +59,8 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <div className="hidden items-center gap-1 lg:flex min-[1400px]:gap-2">
-          <nav aria-label={rotuloMenu} data-tour={logado ? "barra" : undefined}>
+        <div className={cn("hidden items-center gap-1 lg:flex min-[1400px]:gap-2", logado && "lg:contents")}>
+          <nav aria-label={rotuloMenu} data-tour={logado ? "barra" : undefined} className={cn(logado && "justify-self-center")}>
             <ul className="flex items-center">
               {itens.map((item) => (
                 <li key={item.href}>
@@ -81,10 +87,13 @@ export function SiteHeader() {
           </nav>
 
           {logado ? (
-            <button type="button" onClick={sair} className={cn(buttonVariants({ size: "sm" }), BOTAO_ACESSO, "ml-1 shrink-0 min-[1200px]:ml-2")}>
-              <LogOut aria-hidden="true" className="h-4 w-4" />
-              Sair
-            </button>
+            <div className="flex items-center justify-self-end">
+              <button type="button" onClick={sair} className={cn(buttonVariants({ size: "sm" }), BOTAO_ACESSO, "shrink-0")}>
+                <LogOut aria-hidden="true" className="h-4 w-4" />
+                Sair
+              </button>
+              <BotaoTema className="ml-2 min-[1200px]:ml-3" />
+            </div>
           ) : (
             <Link href={ROTAS.login} className={cn(buttonVariants({ size: "sm" }), BOTAO_ACESSO, "ml-1 shrink-0 min-[1200px]:ml-2")}>
               <LogIn aria-hidden="true" className="h-4 w-4" />
@@ -94,7 +103,7 @@ export function SiteHeader() {
               </span>
             </Link>
           )}
-          <BotaoTema className="ml-2 min-[1200px]:ml-3" />
+          {!logado && <BotaoTema className="ml-2 min-[1200px]:ml-3" />}
         </div>
 
         <div className="flex items-center gap-1 lg:hidden">
