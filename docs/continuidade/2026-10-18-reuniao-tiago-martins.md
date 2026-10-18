@@ -53,7 +53,7 @@ Também entraram as atualizações do Vinicius: mapa dos sindicatos, Galeria, ca
 
 ## Estado técnico
 
-- **Testes:** 495 testes unitários no front e 429 no backend, todos aprovados. O e2e passou nas rodadas de 17/10; a rodada da madrugada foi interrompida porque a máquina hibernou.
+- **Testes:** 495 testes unitários no front e 429 no backend, todos aprovados. No e2e, 41 de 44 passaram na rodada completa de 18/10; as 3 falhas foram de lentidão da máquina. Isolados, o Observatório e o sistema passam; o teste de comparação do Painel era intermitente por causa do seletor e foi corrigido (5 de 5).
 - **Golden do Zétele:** 34 de 35 contra a API real (meta de 95%).
 - **Decisões:** ADR 0029 a 0032, sobre o Zétele, o registro anônimo, o protótipo no front e os dois canais com RAG.
 - **Logs de erros:** `docs/erros-conhecidos/` (do projeto) e o log global do Claude Code.

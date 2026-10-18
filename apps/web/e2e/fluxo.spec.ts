@@ -121,7 +121,8 @@ test("comparação: municípios, produtos e bloqueio de unidades diferentes", as
   await expect(page.getByText("Selecione pelo menos 2 municípios")).toBeVisible();
 
   await page.getByRole("button", { name: "Usar os 3 maiores do ranking" }).click();
-  await expect(page.getByTestId("grafico").locator("svg")).toBeVisible();
+  // na troca de dados o ECharts deixa por um instante o svg antigo e o novo lado a lado
+  await expect(page.getByTestId("grafico").locator("svg").first()).toBeVisible();
   await expect(page.getByRole("list", { name: "Itens selecionados" }).getByRole("listitem")).toHaveCount(3);
 
   // limite de 5 (espera cada inclusão aparecer antes da próxima, senão sob carga a segunda seleção repete a primeira)
