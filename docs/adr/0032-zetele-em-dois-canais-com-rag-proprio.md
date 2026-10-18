@@ -47,3 +47,24 @@ O Zétele nasceu no site público (ADR 0029) e foi levado para a área logada do
 - A base pode crescer (FAQ, documentos) sem inflar cada chamada: entram só os trechos relevantes.
 - Trocar para busca vetorial é implementar outro `Recuperador` e apontar `recuperador_do_canal` para ele. As fontes em Markdown e o fatiamento continuam.
 - Uma resposta pode precisar de um trecho que a busca não trouxe. A página atual entra sempre, e as perguntas de ouro (`pytest -m llm`, agora com casos do sistema) medem isso antes de cada mudança de base ou prompt.
+
+## Atualização de 18/10/2026: auditoria de segurança e integridade
+
+Uma auditoria independente (dois agentes, segurança e integridade) achou falhas no limite de gasto. Todas foram corrigidas e testadas em `tests/test_zetele_seguranca.py`:
+
+- **Teto diário no Postgres** (`zetele_contagem_diaria`, por canal e dia, com incremento atômico `F() + 1`).
+  - No cache em arquivo, o `incr` do Django regravava a chave com o prazo padrão de 300 s, e o teto zerava depois de 5 minutos sem perguntas.
+  - Além disso, o limite padrão de 300 entradas despejava chaves ao acaso. O cache agora aceita até 20.000 entradas.
+  - O expurgo de 90 dias apaga também os contadores antigos.
+- **Gasto só com vaga no semáforo:** a cota é contada depois de pegar a vaga, então resposta "ocupado" não gasta o dia. Quando o teto já estourou, a contagem é devolvida.
+- **Só JSON** (`JSONParser`) nos endpoints que gastam a cota: um formulário simples de outro site não consegue mais disparar perguntas pelo navegador de quem o visita.
+- **Disjuntor só para falha do provedor:** abre com 429, 5xx/529 ou falha de rede. Um 4xx do pedido vira `PedidoRecusado` e não tira o assistente do ar.
+- **Tempo de cada chamada** limitado ao que resta dos 40 s do agente, abaixo do timeout de 60 s do gunicorn.
+- **Links:** um link dentro do texto de outro link vira texto puro, porque o front leria o link de dentro, sem conferência. O front recusa rota com barra invertida ou caractere de controle, que o navegador leria como outro domínio.
+
+**Riscos aceitos no protótipo:**
+- Os endpoints do sistema são abertos, porque o login do protótipo só existe no navegador (ADR 0031). A contenção é por IP, teto global e teto diário de 250.
+- Os números citados em turnos anteriores do próprio histórico do cliente contam como referência, então um histórico forjado pode fazer o Zétele repetir um número falso. Não há dano além de uma captura de tela.
+- A senha de demonstração está nos testes e na spec, sem dado real por trás.
+
+O login real do sistema definitivo fecha os dois primeiros riscos.

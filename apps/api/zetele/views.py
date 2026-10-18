@@ -5,6 +5,7 @@ from typing import Any, cast
 from django.conf import settings
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers
+from rest_framework.parsers import JSONParser
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
@@ -12,7 +13,13 @@ from rest_framework.views import APIView
 
 from zetele import agente, disponibilidade, registro, voz
 from zetele.canais import PUBLICO, SISTEMA, Canal
-from zetele.cliente import ClienteAnthropic, ClienteLLM, ProvedorIndisponivel, TempoEsgotado
+from zetele.cliente import (
+    ClienteAnthropic,
+    ClienteLLM,
+    PedidoRecusado,
+    ProvedorIndisponivel,
+    TempoEsgotado,
+)
 from zetele.models import Pergunta
 from zetele.throttles import ZeteleGlobalThrottle, ZeteleSistemaGlobalThrottle
 
@@ -100,6 +107,8 @@ class LimitesDoZetele(APIView):
 
     throttle_classes = [ScopedRateThrottle, ZeteleGlobalThrottle]
     throttle_scope = "zetele"
+    # só JSON: formulário simples de outro site não chega aqui sem preflight de CORS
+    parser_classes = [JSONParser]
 
     def check_throttles(self, request: Request) -> None:
         """Para no primeiro limite que recusa: pedido barrado por IP não gasta o teto global."""
@@ -133,11 +142,15 @@ class PerguntarView(LimitesDoZetele):
         if not situacao["disponivel"]:
             registro.registrar(pergunta, Pergunta.Status.INDISPONIVEL, pagina, canal=canal)
             return _indisponivel(situacao["motivo"])
+        # o orçamento só é gasto por quem conseguiu vaga: "ocupado" não consome o teto do dia
+        if not SEMAFORO.acquire(blocking=False):
+            registro.registrar(pergunta, Pergunta.Status.INDISPONIVEL, pagina, canal=canal)
+            return _indisponivel("ocupado")
         if disponibilidade.contar_pergunta(canal) > self.canal.limite_diario:
+            disponibilidade.devolver_pergunta(canal)
+            SEMAFORO.release()
             registro.registrar(pergunta, Pergunta.Status.INDISPONIVEL, pagina, canal=canal)
             return _indisponivel("orcamento_diario")
-        if not SEMAFORO.acquire(blocking=False):
-            return _indisponivel("ocupado")
         try:
             resposta = agente.responder(
                 obter_cliente(), pergunta, historico, pagina, canal=self.canal
@@ -145,6 +158,10 @@ class PerguntarView(LimitesDoZetele):
         except ProvedorIndisponivel as exc:
             log.warning("zetele: provedor indisponível (%s)", exc)
             disponibilidade.abrir_disjuntor()
+            registro.registrar(pergunta, Pergunta.Status.ERRO, pagina, canal=canal)
+            return _indisponivel("indisponivel")
+        except PedidoRecusado as exc:
+            log.warning("zetele: pedido recusado pela Anthropic (%s)", exc)
             registro.registrar(pergunta, Pergunta.Status.ERRO, pagina, canal=canal)
             return _indisponivel("indisponivel")
         finally:
@@ -223,10 +240,12 @@ class InterpretarView(LimitesDoZeteleSistema):
         situacao = disponibilidade.estado(SISTEMA.nome)
         if not situacao["disponivel"]:
             return _indisponivel(situacao["motivo"])
-        if disponibilidade.contar_pergunta(SISTEMA.nome) > SISTEMA.limite_diario:
-            return _indisponivel("orcamento_diario")
         if not SEMAFORO.acquire(blocking=False):
             return _indisponivel("ocupado")
+        if disponibilidade.contar_pergunta(SISTEMA.nome) > SISTEMA.limite_diario:
+            disponibilidade.devolver_pergunta(SISTEMA.nome)
+            SEMAFORO.release()
+            return _indisponivel("orcamento_diario")
         try:
             resultado = voz.interpretar(
                 obter_cliente(), d["tipo"], d["texto"], d["hoje"], veiculos, espacos
@@ -235,7 +254,7 @@ class InterpretarView(LimitesDoZeteleSistema):
             log.warning("voz: provedor indisponível (%s)", exc)
             disponibilidade.abrir_disjuntor()
             return _indisponivel("indisponivel")
-        except TempoEsgotado:
+        except (TempoEsgotado, PedidoRecusado):
             return _indisponivel("indisponivel")
         except voz.InterpretacaoFalhou as exc:
             log.info("voz: interpretação falhou (%s)", exc)

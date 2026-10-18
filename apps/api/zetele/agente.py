@@ -165,14 +165,19 @@ def responder(
         return Resposta(status, texto, _fontes(resultados), [], tokens[0], tokens[1])
 
     for rodada in range(MAX_RODADAS):
-        if relogio() - inicio > ORCAMENTO_SEGUNDOS:
+        decorrido = relogio() - inicio
+        if decorrido > ORCAMENTO_SEGUNDOS:
             return reserva("erro", textos.demora)
+        # cada chamada (com a nova tentativa do SDK) cabe no que resta dos 40 s, abaixo dos 60 s
+        # do gunicorn
+        restante = ORCAMENTO_SEGUNDOS - decorrido
         try:
             r = cliente.criar(
                 system=system,
                 messages=messages,
                 tools=ferramentas_da_pagina,
                 ultima_rodada=rodada == MAX_RODADAS - 1,
+                timeout=max(restante / 2, 3.0),
             )
         except TempoEsgotado:
             return reserva("erro", textos.demora)

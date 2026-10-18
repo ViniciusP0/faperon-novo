@@ -31,7 +31,10 @@ def mascarar(texto: str) -> str:
     return texto[:500]
 
 
-MODELOS: dict[str, type[Pergunta] | type[PerguntaSistema]] = {"publico": Pergunta, "sistema": PerguntaSistema}
+MODELOS: dict[str, type[Pergunta] | type[PerguntaSistema]] = {
+    "publico": Pergunta,
+    "sistema": PerguntaSistema,
+}
 
 
 def registrar(

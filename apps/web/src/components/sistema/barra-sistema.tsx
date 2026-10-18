@@ -1,8 +1,10 @@
 "use client";
 
 import { Compass, LogOut, RotateCcw, UserRoundCog } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PROTOTIPO } from "@/content/sistema/funcionarios";
+import { ARMAZENAMENTO_CHEIO } from "@/lib/sistema/armazenamento";
 import { useSistema } from "@/lib/sistema/estado";
 import { useTour } from "./tour/tour";
 
@@ -13,6 +15,12 @@ const acao =
 export function BarraSistema() {
   const { funcionario, sair, encerrar, restaurar } = useSistema();
   const { iniciar } = useTour();
+  const [semEspaco, setSemEspaco] = useState(false);
+  useEffect(() => {
+    const avisar = () => setSemEspaco(true);
+    window.addEventListener(ARMAZENAMENTO_CHEIO, avisar);
+    return () => window.removeEventListener(ARMAZENAMENTO_CHEIO, avisar);
+  }, []);
   const router = useRouter();
 
   function trocar() {
@@ -62,6 +70,11 @@ export function BarraSistema() {
       <p role="note" className="border-t border-line py-1 text-center text-[11px] font-medium tracking-wide text-ink-muted">
         {PROTOTIPO.faixa}
       </p>
+      {semEspaco && (
+        <p role="alert" className="border-t border-line bg-danger-soft px-4 py-1.5 text-center text-xs font-medium text-danger-ink">
+          O espaço do navegador para o protótipo acabou: as últimas mudanças valem só até fechar esta aba. Exclua comprovantes ou use “Restaurar dados de exemplo”.
+        </p>
+      )}
     </div>
   );
 }

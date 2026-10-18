@@ -36,3 +36,18 @@ class PerguntaSistema(PerguntaBase):
 
     class Meta(PerguntaBase.Meta):
         db_table = "zetele_pergunta_sistema"
+
+
+class ContagemDiaria(models.Model):
+    """Chamadas ao modelo por canal e dia (teto diário, ADR 0032). No banco e com incremento atômico:
+    no cache de arquivo o incr regravava sem prazo (a chave expirava em 5 min) e podia ser despejado."""
+
+    canal = models.CharField(max_length=16)
+    dia = models.DateField()
+    total = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        db_table = "zetele_contagem_diaria"
+        constraints = [
+            models.UniqueConstraint(fields=["canal", "dia"], name="zetele_contagem_canal_dia")
+        ]

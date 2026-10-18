@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/feedback";
 import { Input, Label, Textarea } from "@/components/ui/field";
-import { podeEditar, ROTULO_CATEGORIA, ROTULO_STATUS_DESPESA, totaisPorCentro } from "@/lib/sistema/contas";
+import { comprovanteSeguro, podeEditar, ROTULO_CATEGORIA, ROTULO_STATUS_DESPESA, totaisPorCentro } from "@/lib/sistema/contas";
 import { agoraISO, formatarDataBR, somarDias } from "@/lib/sistema/datas";
 import { novoId, useSistema } from "@/lib/sistema/estado";
 import { reais } from "@/lib/sistema/formato";
@@ -39,8 +39,8 @@ function LinhaDespesa({ d, mostrarQuem, acoes }: { d: Despesa; mostrarQuem: bool
           {mostrarQuem && ` · ${nomeDe(d.funcionarioId)}`}
         </p>
         {d.comprovante &&
-          (d.comprovante.dados ? (
-            <a href={d.comprovante.dados} download={d.comprovante.nome} className="mt-1 inline-flex items-center gap-1 text-brand-fg underline-offset-2 hover:underline">
+          (comprovanteSeguro(d.comprovante.dados) ? (
+            <a href={d.comprovante.dados!} download={d.comprovante.nome} className="mt-1 inline-flex items-center gap-1 text-brand-fg underline-offset-2 hover:underline">
               <Paperclip aria-hidden="true" className="h-3.5 w-3.5" />
               {d.comprovante.nome}
             </a>

@@ -104,4 +104,17 @@ describe("Prestação de contas", () => {
     expect(linha).toHaveTextContent("R$ 100,00");
     expect(screen.getByRole("rowheader", { name: "Sindical" }).closest("tr")).toHaveTextContent("R$ 100,00");
   });
+
+  it("comprovante: recusa HTML (não vira link para abrir) e aceita imagem pequena", async () => {
+    const user = userEvent.setup({ applyAccept: false });
+    renderContas("ana");
+    await user.click(screen.getByRole("button", { name: "Nova despesa" }));
+    const dialogo = screen.getByRole("dialog");
+    const campo = within(dialogo).getByLabelText("Comprovante (imagem ou PDF)");
+    await user.upload(campo, new File(["<script>alert(1)</script>"], "nota.html", { type: "text/html" }));
+    expect(await within(dialogo).findByText("Envie uma imagem (PNG, JPEG ou WebP) ou um PDF.")).toBeInTheDocument();
+    expect(within(dialogo).queryByText("nota.html")).toBeNull();
+    await user.upload(campo, new File([new Uint8Array([137, 80, 78, 71])], "recibo.png", { type: "image/png" }));
+    expect(await within(dialogo).findByText("recibo.png")).toBeInTheDocument();
+  });
 });

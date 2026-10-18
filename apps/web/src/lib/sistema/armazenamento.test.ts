@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { apagarTudo, gravar, gravarSessao, ler, lerSessao } from "./armazenamento";
+import { apagarTudo, ARMAZENAMENTO_CHEIO, gravar, gravarSessao, ler, lerSessao } from "./armazenamento";
 
 beforeEach(() => {
   window.localStorage.clear();
@@ -44,5 +44,29 @@ describe("armazenamento do protótipo", () => {
     expect(lerSessao()).toBe("f1");
     gravarSessao(null);
     expect(lerSessao()).toBeNull();
+  });
+
+  it("dado com formato errado volta ao padrão; com a cota cheia, vale o que ficou na memória e a barra é avisada", () => {
+    window.localStorage.setItem("sistema:frota", JSON.stringify({ veiculos: [] }));
+    expect(ler("frota", { veiculos: [], reservas: [] })).toEqual({ veiculos: [], reservas: [] });
+    window.localStorage.setItem("sistema:lista", "null");
+    expect(ler("lista", [1])).toEqual([1]);
+
+    gravar("contas", ["antigo"]);
+    const avisos: Event[] = [];
+    window.addEventListener(ARMAZENAMENTO_CHEIO, (e) => avisos.push(e));
+    const original = Storage.prototype.setItem;
+    Storage.prototype.setItem = () => {
+      throw new DOMException("cheio", "QuotaExceededError");
+    };
+    try {
+      gravar("contas", ["novo"]);
+    } finally {
+      Storage.prototype.setItem = original;
+    }
+    expect(ler("contas", [] as string[])).toEqual(["novo"]);
+    expect(avisos).toHaveLength(1);
+    gravar("contas", ["coube"]);
+    expect(window.localStorage.getItem("sistema:contas")).toBe(JSON.stringify(["coube"]));
   });
 });

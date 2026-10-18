@@ -18,8 +18,16 @@ export const ROTULO_STATUS_DESPESA: Record<StatusDespesa, string> = {
   devolvida: "Devolvida",
 };
 
-/** Comprovante maior que isto guarda só o nome: o localStorage do protótipo é pequeno. */
-export const LIMITE_COMPROVANTE = 300_000;
+/** Comprovante cujo data: URL (base64, ~4/3 do arquivo) passa disto guarda só o nome: o
+ *  localStorage do protótipo tem uns 5 MB para tudo. */
+export const LIMITE_COMPROVANTE = 400_000;
+
+/** Só imagem e PDF: o comprovante volta como link de download e não deve ser HTML nem SVG. */
+export const TIPOS_COMPROVANTE = ["image/png", "image/jpeg", "image/webp", "application/pdf"] as const;
+
+export function comprovanteSeguro(dados: string | null): boolean {
+  return dados != null && TIPOS_COMPROVANTE.some((tipo) => dados.startsWith(`data:${tipo};base64,`));
+}
 
 export function validarDespesa(d: Pick<Despesa, "descricao" | "data" | "valor">): string | null {
   if (!d.descricao.trim()) return "Descreva a despesa.";

@@ -118,6 +118,8 @@ CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
         "LOCATION": os.environ.get("CACHE_DIR", "/tmp/faperon-cache"),  # noqa: S108
+        # o padrão (300) despejava ao acaso as chaves de limite por IP e o disjuntor com tráfego normal
+        "OPTIONS": {"MAX_ENTRIES": 20000},
     }
 }
 

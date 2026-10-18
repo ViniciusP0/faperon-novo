@@ -5,7 +5,7 @@ import { useState, type ChangeEvent, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/feedback";
 import { Input, Label, Select } from "@/components/ui/field";
-import { LIMITE_COMPROVANTE, ROTULO_CATEGORIA, validarDespesa } from "@/lib/sistema/contas";
+import { comprovanteSeguro, LIMITE_COMPROVANTE, ROTULO_CATEGORIA, TIPOS_COMPROVANTE, validarDespesa } from "@/lib/sistema/contas";
 import { CENTROS_DE_CUSTO, type CategoriaDespesa, type CentroDeCusto, type Despesa } from "@/lib/sistema/tipos";
 
 interface Props {
@@ -31,12 +31,17 @@ export function FormularioDespesa({ inicial, aoSalvar, aoCancelar }: Props) {
   async function anexar(e: ChangeEvent<HTMLInputElement>) {
     const arquivo = e.target.files?.[0];
     if (!arquivo) return;
-    if (arquivo.size > LIMITE_COMPROVANTE) {
+    if (!(TIPOS_COMPROVANTE as readonly string[]).includes(arquivo.type)) {
+      e.target.value = "";
+      setAvisoArquivo("Envie uma imagem (PNG, JPEG ou WebP) ou um PDF.");
+      return;
+    }
+    const dados = await lerArquivo(arquivo);
+    if (dados.length > LIMITE_COMPROVANTE || !comprovanteSeguro(dados)) {
       setD((a) => ({ ...a, comprovante: { nome: arquivo.name, tipo: arquivo.type, dados: null } }));
       setAvisoArquivo("Arquivo grande para o protótipo: guardamos só o nome. No sistema definitivo, o arquivo irá para o servidor.");
       return;
     }
-    const dados = await lerArquivo(arquivo);
     setD((a) => ({ ...a, comprovante: { nome: arquivo.name, tipo: arquivo.type, dados } }));
     setAvisoArquivo(null);
   }
@@ -96,7 +101,7 @@ export function FormularioDespesa({ inicial, aoSalvar, aoCancelar }: Props) {
         <input
           id="despesa-comprovante"
           type="file"
-          accept="image/*,application/pdf"
+          accept={TIPOS_COMPROVANTE.join(",")}
           onChange={anexar}
           className="block w-full text-sm text-ink-muted file:mr-3 file:rounded-lg file:border-0 file:bg-brand-soft file:px-3 file:py-2 file:text-sm file:font-medium file:text-brand-strong hover:file:brightness-95"
         />

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { obterEstado, partesDoTexto, perguntar, baseDoZetele } from "./zetele";
+import { obterEstado, partesDoTexto, perguntar, baseDoZetele, ehRotaInterna } from "./zetele";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -60,5 +60,13 @@ describe("cliente da API", () => {
     expect(await perguntar("x", [], "/")).toEqual({ tipo: "espera", segundos: 12 });
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(json({ erro: "x", motivo: "orcamento_diario" }, 503)));
     expect(await perguntar("x", [], "/")).toEqual({ tipo: "indisponivel", motivo: "orcamento_diario" });
+  });
+});
+
+describe("rota interna (auditoria de 18/10/2026)", () => {
+  it("recusa o que o navegador leria como outro domínio", () => {
+    expect(ehRotaInterna("/painel")).toBe(true);
+    expect(ehRotaInterna("/sistema/agenda?aba=lista")).toBe(true);
+    for (const ruim of ["//evil.example", "/\\evil.example", "/\\/evil", "/pai nel", "/a\tb", "https://x", "painel"]) expect(ehRotaInterna(ruim), ruim).toBe(false);
   });
 });

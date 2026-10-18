@@ -120,6 +120,11 @@ def limpar_links(texto: str, urls_ferramentas: set[str]) -> tuple[str, int]:
 
     def markdown(m: re.Match[str]) -> str:
         nonlocal removidos
+        rotulo = m.group(1)
+        if RE_LINK_MD.search(rotulo) or "](" in rotulo:
+            # link dentro do texto de outro link: o front leria o de dentro, que não foi conferido
+            removidos += 1
+            return RE_LINK_MD.sub(r"\1", rotulo).replace("](", " ")
         if _link_permitido(m.group(2), urls_ferramentas):
             return m.group(0)
         removidos += 1

@@ -74,9 +74,10 @@ export type ParteTexto = { tipo: "texto"; texto: string } | { tipo: "link"; text
 
 const RE_LINK = /\[([^\]]+)\]\(([^)\s]+)\)/g;
 
-/** Rota do próprio site; "//host" é URL de outro domínio (sem protocolo), não rota interna. */
+/** Rota do próprio site. "//host" e "/\\host" são outro domínio para o navegador; barra invertida,
+ *  espaço e caractere de controle nunca entram. */
 export function ehRotaInterna(href: string): boolean {
-  return href.startsWith("/") && !href.startsWith("//");
+  return /^\/(?![/\\])[^\\\s\x00-\x1f]*$/.test(href);
 }
 
 /** O servidor já conferiu os links; aqui só se transforma Markdown em partes, aceitando rota interna ou https. */
