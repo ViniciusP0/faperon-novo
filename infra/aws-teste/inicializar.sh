@@ -1,17 +1,19 @@
 #!/bin/bash
-# Primeiro boot da máquina de teste (user-data da EC2). Instala Docker, clona o nosso fork, gera os
-# segredos locais, sobe o site atrás do Caddy (HTTPS automático) e agenda a atualização a cada 2 min.
-# __HOST__ e __BUCKET__ são trocados pelo criar-servidor.sh (endereço público e bucket em sa-east-1).
+# Primeiro boot da máquina de teste (user-data da EC2, ADR 0033). Instala Docker, clona o nosso fork,
+# gera os segredos locais, liga o Caddy (HTTPS automático) e agenda a atualização a cada 2 min, que
+# baixa do ECR as imagens ARM geradas pelo GitHub do fork (a máquina não faz build).
+# __HOST__, __BUCKET__ e __REGISTRO__ são trocados pelo criar-servidor.sh.
 set -euxo pipefail
 exec > /var/log/faperon-inicializar.log 2>&1
 
 HOST="__HOST__"
 BUCKET="__BUCKET__"
+REGISTRO="__REGISTRO__"
 REPO="https://github.com/justr1de/faperon-novo.git"
 DIR=/opt/faperon
 
-# 2 GB de RAM não bastam para o build do Next com a API no ar: 4 GB de swap
-fallocate -l 4G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+# Folga para picos (migrações, PDF, Zétele) numa máquina de 2 GB
+fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
 echo '/swapfile none swap sw 0 0' >> /etc/fstab
 
 timedatectl set-timezone America/Porto_Velho
@@ -19,11 +21,15 @@ apt-get update
 apt-get install -y ca-certificates curl git unzip unattended-upgrades
 systemctl enable --now unattended-upgrades
 curl -fsSL https://get.docker.com | sh
-curl -fsSL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o /tmp/awscli.zip
+# AWS CLI para a arquitetura da máquina (aarch64 na t4g, x86_64 na t3)
+curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o /tmp/awscli.zip
 unzip -q /tmp/awscli.zip -d /tmp && /tmp/aws/install
 
-git clone "$REPO" "$DIR"
+# -b main: o branch padrão do fork é o `servidor`, que só guarda o workflow das imagens
+git clone -b main "$REPO" "$DIR"
 cd "$DIR"
+mkdir -p /etc/faperon
+echo "$REGISTRO" > /etc/faperon/registro
 
 # Segredos gerados aqui mesmo; nunca saem da máquina
 alea() { python3 -c "import secrets; print(secrets.token_urlsafe($1))"; }
@@ -35,6 +41,7 @@ sed -i \
   -e "s|^DJANGO_CSRF_TRUSTED_ORIGINS=.*|DJANGO_CSRF_TRUSTED_ORIGINS=https://$HOST|" \
   -e "s|^SITE_URL=.*|SITE_URL=https://$HOST|" \
   -e "s|^GITHUB_WEBHOOK_SECRET=.*|GITHUB_WEBHOOK_SECRET=$(alea 32)|" \
+  -e "s|^GUNICORN_WORKERS=.*|GUNICORN_WORKERS=2|" \
   .env
 chmod 600 .env
 
@@ -56,29 +63,29 @@ EOF
 docker run -d --name caddy --restart always --network host \
   -v /etc/caddy/Caddyfile:/etc/caddy/Caddyfile:ro -v caddy_data:/data -v caddy_config:/config caddy:2
 
-docker compose up -d --build
-
-# Atualização: o mesmo infra/deploy.sh da vinicin, puxando o main do fork a cada 2 min
-cat > /etc/systemd/system/faperon-deploy.service <<EOF
+# Atualização a cada 2 min: compose do fork + imagens do ECR (infra/aws-teste/atualizar.sh)
+install -m 755 infra/aws-teste/atualizar.sh /usr/local/bin/faperon-atualizar
+cat > /etc/systemd/system/faperon-atualizar.service <<EOF
 [Unit]
-Description=Atualiza o FAPERON de teste a partir do main do fork
+Description=Atualiza o FAPERON de teste (fork + imagens do ECR)
 After=docker.service
 
 [Service]
 Type=oneshot
-ExecStart=$DIR/infra/deploy.sh
+ExecStart=/usr/local/bin/faperon-atualizar
 EOF
-cat > /etc/systemd/system/faperon-deploy.timer <<EOF
+cat > /etc/systemd/system/faperon-atualizar.timer <<EOF
 [Unit]
-Description=Confere o main do fork a cada 2 minutos
+Description=Confere o fork e o ECR a cada 2 minutos
 
 [Timer]
-OnBootSec=3min
+OnBootSec=1min
 OnUnitActiveSec=2min
 
 [Install]
 WantedBy=timers.target
 EOF
+
 # Cópia diária do banco para o S3 (no Brasil), às 3 h; o bucket apaga as de mais de 30 dias
 cat > /usr/local/bin/faperon-backup <<EOF
 #!/bin/bash
@@ -108,14 +115,13 @@ Persistent=true
 WantedBy=timers.target
 EOF
 
-# O build a cada push acumula cache: limpeza semanal do que tem mais de 7 dias
+# Imagens antigas acumulam a cada versão: limpeza semanal
 cat > /etc/cron.weekly/faperon-docker-limpeza <<'EOF'
 #!/bin/sh
-docker builder prune -af --filter until=168h > /dev/null
-docker image prune -f > /dev/null
+docker image prune -af --filter until=168h > /dev/null
 EOF
 chmod 755 /etc/cron.weekly/faperon-docker-limpeza
 
 systemctl daemon-reload
-systemctl enable --now faperon-deploy.timer faperon-backup.timer
-echo "pronto: https://$HOST"
+systemctl enable --now faperon-atualizar.timer faperon-backup.timer
+echo "pronto: https://$HOST (o site sobe quando as imagens estiverem no ECR)"

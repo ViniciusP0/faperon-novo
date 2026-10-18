@@ -72,6 +72,19 @@ Com tudo no ar, a pilha usa cerca de 0,6 GB. O pico vem do build do Next.
    - migração das regras de `apps/web/src/lib/sistema/` para o Django.
    Uma ADR própria vai tratar disso antes da primeira fase do WhatsApp.
 
+## Atualização de 18/10/2026: plano gratuito da conta, t4g.small e imagens geradas no GitHub
+
+A primeira tentativa de criar a t3.medium falhou. A conta da DATA-RO está no **plano gratuito** da AWS, que só libera tipos elegíveis ao Free Tier. Em São Paulo, os únicos com 4 GB ou mais são a c7i-flex.large (~US$ 95/mês) e a m7i-flex.large (~US$ 111/mês). Além disso, quando os créditos do plano gratuito acabam, a conta é encerrada se não tiver passado para o plano pago. Isso também afetaria o IntegraData, que roda na mesma conta.
+
+O que ocupava memória era o build do Next, não a pilha no ar (~0,6 GB). A decisão foi tirar o build da máquina:
+
+- **Máquina:** **t4g.small** (ARM Graviton2, 2 vCPU, 2 GB + 2 GB de swap), com créditos de CPU no modo *standard*. Custa ~US$ 19,6/mês, e o servidor todo fica em **~US$ 30/mês**. O usuário descartou x86 e confirmou que o ARM não atrapalha o Vinicius, porque ele envia código e não binários.
+- **Imagens:** o build para ARM roda no GitHub Actions do fork, em máquinas ARM gratuitas para repositório público. As imagens ficam no **ECR de São Paulo**, privado. O GitHub publica por OIDC (papel `faperon-teste-github`, limitado ao branch `servidor` do fork). A máquina baixa as imagens com o próprio papel IAM.
+- **Sincronização:** o workflow fica **só** no branch `servidor` do fork, que é o branch padrão de lá. Assim ele não vai para o repositório do Vinicius nem gera execuções no Actions dele, e o `main` dos dois continua idêntico.
+- **Rotina do workflow:** a cada 10 min, traz o `main` do Vinicius e gera as imagens de um commit ainda sem imagem.
+- **Limite da sincronização:** se o Vinicius mudar arquivos em `.github/workflows`, o token do Actions não pode publicar essa mudança no fork, e a sincronização avisa e espera um ajuste manual.
+- **Crescimento:** quando a conta for para o plano pago, a máquina vira t4g.medium (4 GB, ARM), com o mesmo disco e o mesmo IP.
+
 ## Consequências
 
 - **Ambiente de teste estável:** a DATA-RO passa a ter um ambiente próprio, no Brasil, que não depende da `vinicin`. Cada push precisa ir para os dois remotos: `origin` (Vinicius) e `fork`.

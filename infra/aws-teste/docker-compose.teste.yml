@@ -1,0 +1,10 @@
+# Sobreposição do docker-compose.yml para o servidor de teste (ADR 0033): usa as imagens ARM que o
+# GitHub do fork publica no ECR de São Paulo, em vez de construir na máquina. __REGISTRO__ é trocado
+# pelo atualizar.sh (ex.: 350402309335.dkr.ecr.sa-east-1.amazonaws.com).
+services:
+  api:
+    image: __REGISTRO__/faperon-teste/api:main
+  scheduler:
+    image: __REGISTRO__/faperon-teste/api:main
+  web:
+    image: __REGISTRO__/faperon-teste/web:main
