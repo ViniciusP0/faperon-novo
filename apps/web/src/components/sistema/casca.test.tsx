@@ -7,6 +7,7 @@ import { SistemaProvider } from "@/lib/sistema/estado";
 import { BarraSistema } from "./barra-sistema";
 import { ExigeLogin } from "./exige-login";
 import { InicioSistema } from "./inicio-sistema";
+import { TourProvider } from "./tour/tour";
 
 const push = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }), usePathname: () => "/sistema" }));
@@ -21,8 +22,10 @@ beforeEach(() => {
 function Sistema({ children }: { children: React.ReactNode }) {
   return (
     <SistemaProvider>
+      <TourProvider>
       <BarraSistema />
       <ExigeLogin>{children}</ExigeLogin>
+      </TourProvider>
     </SistemaProvider>
   );
 }

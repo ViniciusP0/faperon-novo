@@ -1,11 +1,12 @@
 "use client";
 
-import { LogOut, RotateCcw, UserRoundCog } from "lucide-react";
+import { Compass, LogOut, RotateCcw, UserRoundCog } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { PROTOTIPO } from "@/content/sistema/funcionarios";
 import { useSistema } from "@/lib/sistema/estado";
 import { cn } from "@/lib/utils";
+import { useTour } from "./tour/tour";
 
 const SECOES = [
   { href: "/sistema", rotulo: "Início do sistema" },
@@ -23,6 +24,7 @@ const acao =
 /** Barra do sistema em vidro, fixa sob o cabeçalho do site: o conteúdo rola por trás dela. */
 export function BarraSistema() {
   const { funcionario, sair, encerrar, restaurar } = useSistema();
+  const { iniciar } = useTour();
   const caminho = usePathname();
   const router = useRouter();
 
@@ -39,7 +41,7 @@ export function BarraSistema() {
   return (
     <div className="vidro-barra z-30 md:sticky md:top-[72px] print:hidden">
       <div className="container flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-2.5">
-        <nav aria-label="Seções do sistema">
+        <nav aria-label="Seções do sistema" data-tour="barra">
           <ul className="flex flex-wrap gap-1">
             {SECOES.map((s) => {
               const ativa = caminho === s.href;
@@ -71,6 +73,12 @@ export function BarraSistema() {
             <RotateCcw aria-hidden="true" className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
             <span className="sr-only sm:not-sr-only">{PROTOTIPO.restaurar}</span>
           </button>
+          {funcionario && (
+            <button type="button" onClick={iniciar} className={acao}>
+              <Compass aria-hidden="true" className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+              <span className="sr-only sm:not-sr-only">Tour guiado</span>
+            </button>
+          )}
           {funcionario && (
             <button type="button" onClick={trocar} className={acao}>
               <UserRoundCog aria-hidden="true" className="h-4 w-4 sm:h-3.5 sm:w-3.5" />

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { BarraSistema } from "@/components/sistema/barra-sistema";
 import { ExigeLogin } from "@/components/sistema/exige-login";
+import { TourProvider } from "@/components/sistema/tour/tour";
 import { SistemaProvider } from "@/lib/sistema/estado";
 
 export const metadata: Metadata = {
@@ -12,12 +13,14 @@ export const metadata: Metadata = {
 export default function SistemaLayout({ children }: { children: ReactNode }) {
   return (
     <SistemaProvider>
-      <div className="area-sistema">
-        <BarraSistema />
-        <div className="container py-10">
-          <ExigeLogin>{children}</ExigeLogin>
+      <TourProvider>
+        <div className="area-sistema">
+          <BarraSistema />
+          <div className="container py-10">
+            <ExigeLogin>{children}</ExigeLogin>
+          </div>
         </div>
-      </div>
+      </TourProvider>
     </SistemaProvider>
   );
 }

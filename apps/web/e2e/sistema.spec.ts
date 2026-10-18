@@ -130,3 +130,21 @@ test("contas, relatórios e agendamento por voz digitado; o Zétele está em tod
   await expect(evento.getByLabel("Título")).toHaveValue("Reunião com o sindicato");
   await expect(evento.getByText(/Preenchido por voz/)).toBeVisible();
 });
+
+test("tour guiado percorre todas as áreas com o elemento de cada passo destacado", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await entrarComo(page, "Marcos Oliveira");
+  await page.getByRole("button", { name: "Começar o tour" }).click();
+  const { TOUR } = await import("../src/content/sistema/tour");
+  for (const [i, passo] of TOUR.entries()) {
+    const cartao = page.getByRole("dialog", { name: passo.titulo });
+    await expect(cartao).toBeVisible();
+    await expect(cartao).toContainText(`passo ${i + 1} de ${TOUR.length}`);
+    await expect(page).toHaveURL(new RegExp(passo.rota.replace("?", "\\?") + "$"));
+    if (passo.alvo) await expect(page.locator(`[data-tour="${passo.alvo}"]`).first()).toBeAttached();
+    if (i === 3) await semViolacoesSerias(page);
+    await cartao.getByRole("button", { name: i === TOUR.length - 1 ? "Concluir o tour" : "Próximo", exact: true }).click();
+  }
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByText("Primeira vez por aqui?")).toHaveCount(0);
+});

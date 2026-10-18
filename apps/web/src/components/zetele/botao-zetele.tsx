@@ -18,6 +18,7 @@ export const BotaoZetele = forwardRef<HTMLButtonElement, Props>(function BotaoZe
       aria-haspopup="dialog"
       aria-expanded={aberto}
       aria-controls="zetele-painel"
+      data-tour="zetele"
       className="group pointer-events-none relative block h-60 w-[9.375rem] sm:h-[22.5rem] sm:w-[14.0625rem] rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
     >
       {/* no tema escuro a arte (cores fixas) pousa num disco para não parecer recortada */}

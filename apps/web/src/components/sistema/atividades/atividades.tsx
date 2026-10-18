@@ -260,7 +260,7 @@ export function Atividades() {
     <div>
       <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold text-ink">Registro de atividades</h1>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2" data-tour="atividades-acoes">
           <AgendarPorVoz
             tipo="atividade"
             rotulo="Registrar por voz"
@@ -275,7 +275,7 @@ export function Atividades() {
       <p className="mb-4 text-sm text-ink-muted">
         Lance as atividades que você realizou: visitas, atendimentos, reuniões, capacitações. O histórico guarda sozinho o que foi feito no sistema.
       </p>
-      <Abas rotulo="Registro de atividades" base="/sistema/atividades" abas={abas} />
+      <Abas rotulo="Registro de atividades" base="/sistema/atividades" abas={abas} tour="atividades-abas" />
       {editando && (
         <Dialogo titulo={editando.nova ? "Registrar atividade" : "Editar atividade"} aoFechar={() => setEditando(null)}>
           {editando.faltandoVoz && <AvisoVoz faltando={editando.faltandoVoz} />}

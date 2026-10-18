@@ -359,7 +359,7 @@ export function Espacos() {
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold text-ink">Agendamento de espaços</h1>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2" data-tour="espacos-acoes">
           <AgendarPorVoz
             tipo="espaco"
             espacos={ESPACOS.map((e) => ({ id: e.id, descricao: e.nome }))}
@@ -386,6 +386,7 @@ export function Espacos() {
       )}
       <Abas
         rotulo="Agendamento de espaços"
+        tour="espacos-abas"
         base="/sistema/espacos"
         abas={[
           { id: "painel", rotulo: "Painel de 7 dias", conteudo: <PainelSemana /> },

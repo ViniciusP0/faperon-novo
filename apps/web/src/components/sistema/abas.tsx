@@ -11,7 +11,8 @@ export interface Aba {
 }
 
 /** Abas acessíveis (setas trocam de aba) com a aba ativa no ?aba= da URL, para o link reproduzir a tela. */
-export function Abas({ abas, rotulo, base }: { abas: Aba[]; rotulo: string; base: string }) {
+/** `tour`: marca a lista de abas para o tour guiado destacar. */
+export function Abas({ abas, rotulo, base, tour }: { abas: Aba[]; rotulo: string; base: string; tour?: string }) {
   const params = useSearchParams();
   const router = useRouter();
   const lista = useRef<HTMLDivElement>(null);
@@ -27,6 +28,7 @@ export function Abas({ abas, rotulo, base }: { abas: Aba[]; rotulo: string; base
       <div
         ref={lista}
         role="tablist"
+        data-tour={tour}
         aria-label={rotulo}
         className="flex flex-wrap gap-1 border-b border-line"
         onKeyDown={(e) => {

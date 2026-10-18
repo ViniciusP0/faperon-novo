@@ -76,3 +76,12 @@ export function rotuloMesCurto(mes: string): string {
   const [ano, m] = mes.split("-");
   return `${MESES[Number(m) - 1]!.slice(0, 3)}/${ano!.slice(2)}`;
 }
+
+const DIAS_DA_SEMANA = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"];
+
+/** "sábado, 17 de outubro" (sem o ano: a agenda já mostra o mês e o ano no alto). */
+export function dataPorExtenso(iso: string): string {
+  const [ano, mes, dia] = iso.split("-").map(Number);
+  const semana = DIAS_DA_SEMANA[new Date(ano!, mes! - 1, dia!).getDay()]!;
+  return `${semana}, ${dia} de ${nomeDoMes(mes! - 1)}`;
+}

@@ -245,12 +245,12 @@ export function Contas() {
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold text-ink">Prestação de contas</h1>
-        <Button variant="vidro" onClick={nova}>
+        <Button variant="vidro" onClick={nova} data-tour="contas-acoes">
           <Plus aria-hidden="true" className="h-4 w-4" />
           Nova despesa
         </Button>
       </div>
-      <Abas rotulo="Prestação de contas" base="/sistema/contas" abas={abas} />
+      <Abas rotulo="Prestação de contas" base="/sistema/contas" abas={abas} tour="contas-abas" />
       {editando && (
         <Dialogo titulo={editando.descricao ? "Editar despesa" : "Nova despesa"} aoFechar={() => setEditando(null)}>
           <FormularioDespesa

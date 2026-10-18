@@ -125,7 +125,7 @@ export function Relatorios() {
   return (
     <div className="relatorio-impressao">
       <h1 className="mb-4 text-2xl font-semibold text-ink print:hidden">Relatórios</h1>
-      <div className="mb-6 grid gap-4 print:hidden">
+      <div className="mb-6 grid gap-4 print:hidden" data-tour="relatorios-tipos">
         <Segmentado rotulo="Tipo de relatório" opcoes={TIPOS} valor={tipo} aoMudar={setTipo} />
         <div className="flex flex-wrap items-end gap-3">
           <div>
@@ -158,7 +158,7 @@ export function Relatorios() {
         // Na tela: capa e contracapa em miniatura, lado a lado, e o relatório embaixo.
         // No papel (display: block, a ordem do DOM vale): capa, relatório, contracapa.
         <div className="doc-paginas flex flex-wrap items-start gap-4">
-          <div className="order-1 flex w-full flex-wrap items-center justify-between gap-2 print:hidden">
+          <div className="order-1 flex w-full flex-wrap items-center justify-between gap-2 print:hidden" data-tour="relatorios-documento">
             <p className="text-sm font-medium text-ink">Capa e contracapa (padrão do boletim da FAPERON)</p>
             <Button size="sm" variant="vidro-claro" onClick={() => setPersonalizando(true)}>
               <FileCog aria-hidden="true" className="h-4 w-4" />

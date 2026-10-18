@@ -170,7 +170,7 @@ export function Reservas() {
             { valor: "todas", rotulo: "Todas" },
           ]}
         />
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2" data-tour="frotas-reservas">
           <AgendarPorVoz
             tipo="reserva"
             veiculos={frota.veiculos.map((v) => ({ id: v.id, descricao: `${v.modelo} (${formatarPlaca(v.placa)})` }))}

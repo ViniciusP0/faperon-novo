@@ -2,16 +2,22 @@
 
 import { CalendarDays, Car, ChevronRight, DoorOpen, ClipboardList } from "lucide-react";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { itensDaAgenda, ROTULO_ORIGEM } from "@/lib/sistema/agenda";
 import { formatarDataBR, somarDias } from "@/lib/sistema/datas";
 import { useSistema } from "@/lib/sistema/estado";
+import { Button } from "@/components/ui/button";
+import { marcarTourVisto, tourJaVisto, useTour } from "./tour/tour";
 
 const PROXIMOS = 6;
 
 export function InicioSistema() {
   const { funcionario, hoje, eventos, institucionais, frota, pedidos, atividades } = useSistema();
+  const { iniciar, ativo } = useTour();
+  // o convite aparece até a pessoa fazer o tour ou dispensar; lido depois da hidratação
+  const [convidar, setConvidar] = useState(false);
+  useEffect(() => setConvidar(!tourJaVisto()), [ativo]);
   const semana = somarDias(hoje, 7);
   const proximos = useMemo(
     () =>
@@ -50,6 +56,32 @@ export function InicioSistema() {
         {funcionario.area} · hoje é {formatarDataBR(hoje)}
       </p>
 
+      {convidar && !ativo && (
+        <section aria-labelledby="titulo-convite-tour" className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-brand-soft px-5 py-4">
+          <div className="max-w-[60ch]">
+            <h2 id="titulo-convite-tour" className="font-semibold text-brand-strong">
+              Primeira vez por aqui?
+            </h2>
+            <p className="text-sm text-ink">O tour guiado passa por cada área e mostra, passo a passo, como fazer as tarefas do dia a dia. Leva uns 3 minutos.</p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                marcarTourVisto();
+                setConvidar(false);
+              }}
+            >
+              Agora não
+            </Button>
+            <Button variant="vidro" size="sm" onClick={iniciar}>
+              Começar o tour
+            </Button>
+          </div>
+        </section>
+      )}
+
       <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <section aria-labelledby="titulo-proximos">
           <h2 id="titulo-proximos" className="text-sm font-semibold text-ink">
@@ -80,7 +112,7 @@ export function InicioSistema() {
           )}
         </section>
 
-        <nav aria-labelledby="titulo-atalhos">
+        <nav aria-labelledby="titulo-atalhos" data-tour="inicio-atalhos">
           <h2 id="titulo-atalhos" className="text-sm font-semibold text-ink">
             Atalhos
           </h2>

@@ -12,6 +12,7 @@ export function Frotas() {
       <h1 className="mb-4 text-2xl font-semibold text-ink">Gestão de frotas</h1>
       <Abas
         rotulo="Áreas da gestão de frotas"
+        tour="frotas-abas"
         base="/sistema/frotas"
         abas={[
           { id: "veiculos", rotulo: "Veículos", conteudo: <Veiculos /> },
