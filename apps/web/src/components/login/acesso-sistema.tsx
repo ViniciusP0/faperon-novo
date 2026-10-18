@@ -126,6 +126,9 @@ export function AcessoSistema() {
       <Button variant="vidro" type="submit" size="lg" className="mt-1 w-full" disabled={conferindo}>
         Entrar
       </Button>
+      <p className="text-center text-xs leading-relaxed text-ink-muted">
+        Área restrita à equipe do sistema FAPERON/SENAR e demais instituições. Solicite seu acesso à Administração.
+      </p>
     </form>
   );
 }
