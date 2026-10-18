@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { AcessoSistema } from "@/components/login/acesso-sistema";
+import { OndasRodape } from "@/components/login/ondas-rodape";
 
 export const metadata: Metadata = {
   title: "Acessar o sistema",
@@ -9,10 +10,11 @@ export const metadata: Metadata = {
 };
 
 export default function LoginPage() {
+  // -mb-20 anula a margem de topo do rodapé do site: as ondas encostam nele
   return (
-    <div className="area-sistema flex min-h-[calc(100vh-72px)] items-center justify-center px-4 py-12">
+    <div className="area-sistema relative -mb-20 flex min-h-[calc(100vh-72px)] items-center justify-center overflow-hidden px-4 pb-32 pt-12 sm:pb-40 lg:pb-48">
       {/* cartão em vidro sobre o fundo de folhas do site */}
-      <div className="vidro-cartao w-full max-w-md rounded-2xl p-8">
+      <div className="vidro-cartao relative z-10 w-full max-w-md rounded-2xl p-8">
         <div className="mb-6 flex flex-col items-center text-center">
           <Image src="/marca-faperon.png" alt="" width={56} height={56} className="h-14 w-14" />
           <h1 className="mt-3 text-xl font-semibold text-ink">Acessar o sistema</h1>
@@ -27,6 +29,7 @@ export default function LoginPage() {
           </Link>
         </p>
       </div>
+      <OndasRodape />
     </div>
   );
 }
