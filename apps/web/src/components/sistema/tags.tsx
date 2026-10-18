@@ -51,12 +51,15 @@ export function useFiltroDeTag(): [string, (id: string) => void] {
   return [tags.some((t) => t.id === id) ? id : "", setId];
 }
 
-export function FiltroDeTag({ id, valor, aoMudar, className }: { id: string; valor: string; aoMudar: (id: string) => void; className?: string }) {
+/** Filtro "Tag" (Todas ou uma tag). Compacto: rótulo ao lado, na altura dos botões da barra de ações. */
+export function FiltroDeTag({ id, valor, aoMudar, compacto, className }: { id: string; valor: string; aoMudar: (id: string) => void; compacto?: boolean; className?: string }) {
   const { tags } = useSistema();
   return (
-    <div className={cn("w-full max-w-[14rem]", className)}>
-      <Label htmlFor={id}>Tag</Label>
-      <Select id={id} value={valor} onChange={(e) => aoMudar(e.target.value)}>
+    <div className={cn(compacto ? "flex items-center gap-2" : "w-full max-w-[14rem]", className)}>
+      <Label htmlFor={id} className={cn(compacto && "mb-0 text-ink-muted")}>
+        Tag
+      </Label>
+      <Select id={id} value={valor} onChange={(e) => aoMudar(e.target.value)} className={cn(compacto && "h-9 w-40")}>
         <option value="">Todas</option>
         {tags.map((t) => (
           <option key={t.id} value={t.id}>

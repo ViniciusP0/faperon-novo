@@ -6,6 +6,7 @@ import { Alert } from "@/components/ui/feedback";
 import { Input, Label, Select, Textarea } from "@/components/ui/field";
 import { ROTULO_TIPO_EVENTO, validarEvento } from "@/lib/sistema/agenda";
 import type { Evento, TipoEvento } from "@/lib/sistema/tipos";
+import { SeletorDeTags } from "../tags";
 
 interface Props {
   inicial: Evento;
@@ -67,6 +68,7 @@ export function FormularioEvento({ inicial, novo, aoSalvar, aoExcluir, aoCancela
         <Label htmlFor="evento-descricao">Descrição</Label>
         <Textarea id="evento-descricao" value={evento.descricao} onChange={muda("descricao")} className="min-h-20" />
       </div>
+      <SeletorDeTags valor={evento.tags} aoMudar={(tags) => setEvento((a) => ({ ...a, tags }))} />
       {erro && <Alert tone="erro">{erro}</Alert>}
       <div className="flex flex-wrap justify-between gap-2">
         {!novo ? (

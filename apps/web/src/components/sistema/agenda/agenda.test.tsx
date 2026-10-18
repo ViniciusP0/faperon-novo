@@ -144,4 +144,56 @@ describe("Agenda individual", () => {
     const institucional = screen.getAllByText("FAPERON")[0]!;
     expect(institucional.closest("button")).toBeNull();
   });
+
+  it("aplica tag ao evento próprio, mostra o chip na lista e filtra o mês e a lista pela tag", async () => {
+    const user = userEvent.setup();
+    renderAgenda("carla");
+    await user.click(screen.getByRole("button", { name: "Novo evento" }));
+    const dialogo = screen.getByRole("dialog", { name: "Novo evento" });
+    // só quem gere tem o atalho
+    expect(within(dialogo).queryByRole("button", { name: "Gerenciar tags" })).toBeNull();
+    await user.type(within(dialogo).getByLabelText("Título"), "Conversa com o sindicato");
+    const sindicatos = within(dialogo).getByRole("checkbox", { name: "Sindicatos" });
+    await user.click(sindicatos);
+    expect(sindicatos).toBeChecked();
+    await user.click(within(dialogo).getByRole("button", { name: "Salvar" }));
+
+    await user.selectOptions(screen.getByLabelText("Tag"), "Sindicatos");
+    expect(screen.getByRole("button", { name: /Editar Conversa com o sindicato/ })).toBeInTheDocument();
+    // o evento próprio sem a tag some do mês
+    expect(screen.queryByRole("button", { name: /Editar Pauta do informativo mensal/ })).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Lista" }));
+    const item = screen.getByRole("button", { name: /Editar Conversa com o sindicato/ }).closest("li")!;
+    expect(within(within(item).getByRole("list", { name: "Tags" })).getByText("Sindicatos")).toBeInTheDocument();
+    expect(screen.queryByText(/Pauta do informativo mensal/)).toBeNull();
+    await user.selectOptions(screen.getByLabelText("Tag"), "Todas");
+    expect(screen.getByText(/Pauta do informativo mensal/)).toBeInTheDocument();
+  });
+
+  it("legenda mostra os tipos presentes (cor) e as origens (forma)", () => {
+    renderAgenda("carla");
+    const tipos = screen.getByRole("list", { name: "Cores por tipo" });
+    expect(within(tipos).getByText("Reunião")).toBeInTheDocument();
+    expect(within(tipos).queryByText("Atendimento ao produtor")).toBeNull();
+    const origens = screen.getByRole("list", { name: "Origem dos eventos" });
+    for (const o of ["Meus eventos", "FAPERON", "Viagens da frota", "Espaços aprovados"]) expect(within(origens).getByText(o)).toBeInTheDocument();
+  });
+
+  it("o gestor abre Gerenciar tags de dentro do formulário sem perder o evento", async () => {
+    const user = userEvent.setup();
+    renderAgenda("marcos");
+    await user.click(screen.getByRole("button", { name: "Novo evento" }));
+    const formulario = screen.getByRole("dialog", { name: "Novo evento" });
+    await user.type(within(formulario).getByLabelText("Título"), "Visita à feira");
+    await user.click(within(formulario).getByRole("button", { name: "Gerenciar tags" }));
+    const gerir = screen.getByRole("dialog", { name: "Gerenciar tags" });
+    await user.type(within(gerir).getByLabelText("Nova tag"), "Feira regional{Enter}");
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog", { name: "Gerenciar tags" })).toBeNull();
+    // o formulário continua aberto, com o título digitado e a tag nova para marcar
+    expect(within(formulario).getByLabelText("Título")).toHaveValue("Visita à feira");
+    await user.click(within(formulario).getByRole("checkbox", { name: "Feira regional" }));
+    await user.click(within(formulario).getByRole("button", { name: "Salvar" }));
+    expect(screen.getByRole("button", { name: /Editar Visita à feira/ })).toBeInTheDocument();
+  });
 });

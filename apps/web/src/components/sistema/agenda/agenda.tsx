@@ -5,14 +5,18 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FUNCIONARIOS } from "@/content/sistema/funcionarios";
-import { itensDaAgenda, ROTULO_ORIGEM, ROTULO_TIPO_EVENTO } from "@/lib/sistema/agenda";
+import { itensDaAgenda, ROTULO_ORIGEM } from "@/lib/sistema/agenda";
 import { dataPorExtenso, formatarDataBR, gradeDoMes, nomeDoMes, somarDias } from "@/lib/sistema/datas";
 import { novoId, useSistema } from "@/lib/sistema/estado";
-import type { Evento } from "@/lib/sistema/tipos";
+import { COR_TIPO, LEGENDA, tipoDoEvento } from "@/lib/sistema/legenda";
+import { comTag } from "@/lib/sistema/tags";
+import type { Evento, TipoLegenda } from "@/lib/sistema/tipos";
 import { aplicarEvento } from "@/lib/sistema/voz";
 import { cn } from "@/lib/utils";
 import { Dialogo } from "../dialogo";
+import { LegendaDeTipos } from "../legenda-de-tipos";
 import { Segmentado } from "../segmentado";
+import { ChipsDeTags, FiltroDeTag, useFiltroDeTag } from "../tags";
 import { AgendarPorVoz, AvisoVoz } from "../voz/agendar-por-voz";
 import { FormularioEvento } from "./formulario-evento";
 
@@ -30,14 +34,21 @@ const DIAS_DA_LISTA = 30;
 // Na célula do mês cabem três; o resto aparece no painel do dia.
 const NA_CELULA = 3;
 
-// A origem é dita pela forma (ponto cheio no que é seu, ícone nos demais), pela cor da legenda e por texto
-// para leitor de tela. Só o evento próprio tem fundo cheio, porque só ele se edita aqui.
-const ORIGENS: Record<Evento["origem"], { rotulo: string; fundo: string; ponto: string; icone?: LucideIcon; tinta: string }> = {
-  pessoal: { rotulo: "Meus eventos", fundo: "bg-brand-soft", ponto: "bg-brand", tinta: "text-brand-fg" },
-  faperon: { rotulo: "FAPERON", fundo: "bg-card ring-1 ring-inset ring-line", ponto: "bg-brand-lime", icone: Landmark, tinta: "text-brand-fg" },
-  frota: { rotulo: "Viagens da frota", fundo: "bg-steel-soft", ponto: "bg-steel", icone: Truck, tinta: "text-steel" },
-  espaco: { rotulo: "Espaços aprovados", fundo: "bg-surface-alt", ponto: "bg-brand-light", icone: KeyRound, tinta: "text-brand-fg" },
+// A cor diz o tipo (legenda única); a forma diz a origem: ponto cheio no que é seu, ícone nos demais, e texto
+// para leitor de tela. Só o evento próprio tem fundo cheio do tipo, porque só ele se edita aqui; FAPERON e
+// espaço vêm contornados na cor do tipo.
+const ORIGENS: Record<Evento["origem"], { rotulo: string; icone?: LucideIcon }> = {
+  pessoal: { rotulo: "Meus eventos" },
+  faperon: { rotulo: "FAPERON", icone: Landmark },
+  frota: { rotulo: "Viagens da frota", icone: Truck },
+  espaco: { rotulo: "Espaços aprovados", icone: KeyRound },
 };
+
+/** Fundo do item: cheio no próprio e na sua viagem; contorno na cor do tipo no que só se lê. */
+function fundoDoItem(e: Evento): string {
+  const cor = COR_TIPO[tipoDoEvento(e)];
+  return e.origem === "pessoal" || (e.origem === "frota" && !e.quem) ? cor.fundo : cn("bg-card ring-1 ring-inset", cor.contorno);
+}
 
 const DURACAO_AVISO = 6000;
 // Faixas de viagem que cabem na célula; as demais entram no "mais N".
@@ -51,15 +62,17 @@ function horario(e: Evento): string {
   return `${e.inicio}–${e.fim}`;
 }
 
-/** Sinal da origem: o ponto cheio é o evento próprio; FAPERON, frota e espaço têm ícone. */
-function Marca({ origem, escuro, className }: { origem: Evento["origem"]; escuro?: boolean; className?: string }) {
-  const o = ORIGENS[origem];
-  if (!o.icone) return <span aria-hidden="true" className={cn("h-1.5 w-1.5 shrink-0 rounded-full", escuro ? "bg-brand-lime" : o.ponto, className)} />;
+/** Sinal da origem, na cor do tipo: o ponto cheio é o evento próprio; FAPERON, frota e espaço têm ícone. */
+function Marca({ e, escuro, className }: { e: Evento; escuro?: boolean; className?: string }) {
+  const o = ORIGENS[e.origem];
+  const cor = COR_TIPO[tipoDoEvento(e)];
+  const ajuste = o.icone ? "mt-[0.2rem]" : "mt-[0.45rem]";
+  if (!o.icone) return <span aria-hidden="true" className={cn("h-1.5 w-1.5 shrink-0 rounded-full", ajuste, escuro ? "bg-brand-lime" : cor.ponto, className)} />;
   const Icone = o.icone;
-  return <Icone aria-hidden="true" className={cn("h-3 w-3 shrink-0", escuro ? "text-white/80" : o.tinta, className)} />;
+  return <Icone aria-hidden="true" className={cn("h-3 w-3 shrink-0", ajuste, escuro ? "text-white/80" : cor.texto, className)} />;
 }
 
-const origemFalada = (e: Evento) => ROTULO_ORIGEM[e.origem] ?? "Pessoal";
+const origemFalada = (e: Evento) => `${LEGENDA[tipoDoEvento(e)]}, ${ROTULO_ORIGEM[e.origem] ?? "Pessoal"}`;
 
 /** Celular: o painel do dia é onde se edita (as células só mostram pontos). Sem matchMedia (testes,
  *  servidor), vale o computador, em que a edição fica na célula do mês. */
@@ -78,6 +91,23 @@ function useCelular(): boolean {
 const comInicialMaiuscula = (s: string) => s.replace(/^./, (l) => l.toUpperCase());
 const movimentoReduzido = () => typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+/** Legenda da agenda: a cor diz o tipo (só os presentes na tela); a forma diz a origem. */
+function Legenda({ tipos, className }: { tipos: TipoLegenda[]; className?: string }) {
+  return (
+    <div className={cn("mt-4 grid gap-2", className)}>
+      <LegendaDeTipos tipos={tipos} />
+      <ul aria-label="Origem dos eventos" className="flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-ink-muted">
+        {Object.values(ORIGENS).map((o) => (
+          <li key={o.rotulo} className="flex items-center gap-1.5">
+            {o.icone ? <o.icone aria-hidden="true" className="h-3.5 w-3.5" /> : <span aria-hidden="true" className="h-2 w-2 rounded-full bg-ink-muted" />}
+            {o.rotulo}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function Agenda() {
   const { funcionario, hoje, eventos, institucionais, frota, pedidos, salvarEvento, excluirEvento } = useSistema();
   const [visao, setVisao] = useState<"mes" | "lista">("mes");
@@ -89,6 +119,7 @@ export function Agenda() {
   const [avisoPreso, setAvisoPreso] = useState(false);
   const painelDoDia = useRef<HTMLDivElement>(null);
   const celular = useCelular();
+  const [tagFiltro, setTagFiltro] = useFiltroDeTag();
 
   useEffect(() => {
     if (!aviso || avisoPreso) return;
@@ -96,9 +127,10 @@ export function Agenda() {
     return () => window.clearTimeout(t);
   }, [aviso, avisoPreso]);
 
+  // o filtro de tag vale para o mês e para a lista
   const itens = useMemo(
-    () => (funcionario ? itensDaAgenda(funcionario.id, eventos, institucionais, frota.reservas, frota.veiculos, pedidos, FUNCIONARIOS) : []),
-    [funcionario, eventos, institucionais, frota, pedidos],
+    () => (funcionario ? comTag(itensDaAgenda(funcionario.id, eventos, institucionais, frota.reservas, frota.veiculos, pedidos, FUNCIONARIOS), tagFiltro) : []),
+    [funcionario, eventos, institucionais, frota, pedidos, tagFiltro],
   );
   const porDia = useMemo(() => {
     const mapa = new Map<string, Evento[]>();
@@ -151,7 +183,7 @@ export function Agenda() {
   function Item({ e, compacto, escuro }: { e: Evento; compacto?: boolean; escuro?: boolean }) {
     const conteudo = (
       <>
-        <Marca origem={e.origem} escuro={escuro} className={ORIGENS[e.origem].icone ? "mt-[0.2rem]" : "mt-[0.45rem]"} />
+        <Marca e={e} escuro={escuro} />
         <span className="min-w-0">
           <span className="font-semibold tabular-nums">{e.trecho && e.trecho !== "unico" ? horario(e) : e.inicio}</span> <span className={cn(compacto && "line-clamp-2")}>{e.titulo}</span>
           <span className="sr-only">
@@ -169,7 +201,7 @@ export function Agenda() {
     const classe = cn(
       "flex w-full gap-1.5 rounded-lg text-left transition duration-150 ease-out",
       compacto ? "px-1.5 py-1 text-xs" : "px-2.5 py-2 text-sm",
-      escuro ? "bg-white/[0.08] text-white" : cn(ORIGENS[e.origem].fundo, "text-ink"),
+      escuro ? "bg-white/[0.08] text-white" : cn(fundoDoItem(e), "text-ink"),
     );
     const realce = escuro
       ? "hover:bg-white/[0.16] focus-visible:bg-white/[0.16]"
@@ -196,6 +228,8 @@ export function Agenda() {
   const mesAtual = `${mes.ano}-${String(mes.mes0 + 1).padStart(2, "0")}`;
   const diasDaLista = Array.from({ length: DIAS_DA_LISTA }, (_, i) => somarDias(hoje, i)).filter((d) => porDia.has(d));
   const doDia = porDia.get(selecionado) ?? [];
+  // a legenda mostra só os tipos que estão na tela: os do mês, ou os da lista
+  const naTela = visao === "mes" ? itens.filter((e) => e.data.startsWith(mesAtual)) : diasDaLista.flatMap((d) => porDia.get(d) ?? []);
   const proximos = Array.from({ length: 14 }, (_, i) => somarDias(selecionado, i + 1))
     .filter((d) => porDia.has(d))
     .slice(0, 4);
@@ -208,6 +242,7 @@ export function Agenda() {
           <p className="mt-1 max-w-[60ch] text-sm text-ink-muted">Seus compromissos, os eventos da FAPERON, suas viagens e os espaços aprovados para você, num lugar só.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2" data-tour="agenda-acoes">
+          <FiltroDeTag id="agenda-tag" valor={tagFiltro} aoMudar={setTagFiltro} compacto />
           <Segmentado
             rotulo="Visão da agenda"
             valor={visao}
@@ -308,11 +343,11 @@ export function Agenda() {
                             </button>
                           </div>
                           {/* no celular, só os pontos; o painel do dia mostra os eventos */}
-                          {viagens.length > 0 && <span aria-hidden="true" className="mt-1 block h-1 rounded-full bg-steel md:hidden" />}
+                          {viagens.length > 0 && <span aria-hidden="true" className={cn("mt-1 block h-1 rounded-full md:hidden", COR_TIPO.viagem.ponto)} />}
                           {outros.length > 0 && (
                             <div aria-hidden="true" className="mt-1 flex justify-center gap-0.5 md:hidden">
                               {outros.slice(0, 4).map((e) => (
-                                <span key={e.id} className={cn("h-1.5 w-1.5 rounded-full", ORIGENS[e.origem].ponto)} />
+                                <span key={e.id} className={cn("h-1.5 w-1.5 rounded-full", COR_TIPO[tipoDoEvento(e)].ponto)} />
                               ))}
                             </div>
                           )}
@@ -362,14 +397,7 @@ export function Agenda() {
               </tbody>
             </table>
 
-            <ul aria-label="Legenda" className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-ink-muted">
-              {Object.values(ORIGENS).map((o) => (
-                <li key={o.rotulo} className="flex items-center gap-1.5">
-                  {o.icone ? <o.icone aria-hidden="true" className={cn("h-3.5 w-3.5", o.tinta)} /> : <span aria-hidden="true" className={cn("h-2 w-2 rounded-full", o.ponto)} />}
-                  {o.rotulo}
-                </li>
-              ))}
-            </ul>
+            <Legenda tipos={naTela.map(tipoDoEvento)} />
           </section>
 
           {/* abaixo de 1280 px o painel vai para baixo do mês, lado a lado com "Na sequência" */}
@@ -391,7 +419,7 @@ export function Agenda() {
                       ) : (
                       <div className="text-sm">
                         <div className="flex gap-2 rounded-lg bg-white/[0.08] px-2.5 py-2">
-                          <Marca origem={e.origem} escuro className={ORIGENS[e.origem].icone ? "mt-[0.2rem]" : "mt-[0.45rem]"} />
+                          <Marca e={e} escuro />
                           <span className="min-w-0">
                             <span className="font-semibold tabular-nums">{horario(e)}</span>{" "}
                             {e.titulo}
@@ -439,7 +467,7 @@ export function Agenda() {
                       <ul className="mt-1 grid gap-0.5 text-sm text-ink">
                         {porDia.get(dia)!.map((e) => (
                           <li key={e.id} className="flex min-w-0 gap-2" title={e.titulo}>
-                            <Marca origem={e.origem} className={ORIGENS[e.origem].icone ? "mt-[0.25rem]" : "mt-[0.5rem]"} />
+                            <Marca e={e} className={ORIGENS[e.origem].icone ? "mt-[0.25rem]" : "mt-[0.5rem]"} />
                             <span className="min-w-0 truncate">
                               <span className="tabular-nums text-ink-muted">{e.trecho && e.trecho !== "unico" ? horario(e) : e.inicio}</span> {e.titulo}
                             </span>
@@ -456,7 +484,12 @@ export function Agenda() {
       ) : (
         <div className="mt-8 max-w-3xl">
           <h2 className="mb-4 text-xl font-semibold tracking-[-0.02em] text-ink">Próximos {DIAS_DA_LISTA} dias</h2>
-          {diasDaLista.length === 0 && <p className="text-sm text-ink-muted">Nada marcado nos próximos {DIAS_DA_LISTA} dias. Use “Novo evento” para começar.</p>}
+          {diasDaLista.length === 0 && (
+            <p className="text-sm text-ink-muted">
+              {tagFiltro ? `Nada com essa tag nos próximos ${DIAS_DA_LISTA} dias. Escolha “Todas” no filtro Tag para ver tudo.` : `Nada marcado nos próximos ${DIAS_DA_LISTA} dias. Use “Novo evento” para começar.`}
+            </p>
+          )}
+          <Legenda tipos={naTela.map(tipoDoEvento)} className="mb-5 mt-0" />
           <ol className="grid gap-5">
             {diasDaLista.map((dia) => (
               <li key={dia} className="grid gap-3 sm:grid-cols-[9rem_minmax(0,1fr)]">
@@ -468,9 +501,8 @@ export function Agenda() {
                   {porDia.get(dia)!.map((e) => (
                     <li key={e.id}>
                       <Item e={e} />
-                      <span className="sr-only">
-                        {ROTULO_TIPO_EVENTO[e.tipo]}, {e.trecho === "meio" ? "o dia todo" : `de ${e.inicio} a ${e.fim}`}
-                      </span>
+                      <ChipsDeTags ids={e.tags} className="mt-1 pl-2.5" />
+                      <span className="sr-only">{e.trecho === "meio" ? "o dia todo" : `de ${e.inicio} a ${e.fim}`}</span>
                     </li>
                   ))}
                 </ul>
