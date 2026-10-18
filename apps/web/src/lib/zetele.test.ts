@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { obterEstado, partesDoTexto, perguntar, baseDoZetele, ehRotaInterna } from "./zetele";
+import { obterEstado, partesDoTexto, perguntar, baseDoZetele, ehRotaInterna, falarTexto, nomeDoAudio, ouvirAudio } from "./zetele";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -68,5 +68,39 @@ describe("rota interna (auditoria de 18/10/2026)", () => {
     expect(ehRotaInterna("/painel")).toBe(true);
     expect(ehRotaInterna("/sistema/agenda?aba=lista")).toBe(true);
     for (const ruim of ["//evil.example", "/\\evil.example", "/\\/evil", "/pai nel", "/a\tb", "https://x", "painel"]) expect(ehRotaInterna(ruim), ruim).toBe(false);
+  });
+});
+
+describe("voz do Zétele do sistema", () => {
+  it("nomeDoAudio dá a extensão que o servidor aceita", () => {
+    expect(nomeDoAudio("audio/webm;codecs=opus")).toBe("pergunta.webm");
+    expect(nomeDoAudio("audio/mp4")).toBe("pergunta.mp4");
+    expect(nomeDoAudio("audio/ogg; codecs=opus")).toBe("pergunta.ogg");
+    expect(nomeDoAudio("")).toBe("pergunta.webm");
+  });
+
+  it("ouvirAudio manda multipart ao /ouvir do sistema e traduz as respostas", async () => {
+    const respostas = [json({ texto: "oi" }), json({ erro: "x" }, 422), json({ erro: "x" }, 413), json({ erro: "x" }, 429, { "retry-after": "7" }), json({ erro: "x", motivo: "voz_desligada" }, 503)];
+    const f = vi.fn(async () => respostas.shift()!);
+    vi.stubGlobal("fetch", f);
+    const audio = new Blob(["som"], { type: "audio/webm" });
+    expect(await ouvirAudio(audio, "/sistema/agenda")).toEqual({ tipo: "ok", texto: "oi" });
+    expect(String((f.mock.calls[0] as unknown[])[0])).toBe("/api/v1/sistema/zetele/ouvir");
+    expect(await ouvirAudio(audio, "/sistema")).toEqual({ tipo: "nao_entendi" });
+    expect(await ouvirAudio(audio, "/sistema")).toEqual({ tipo: "recusado" });
+    expect(await ouvirAudio(audio, "/sistema")).toEqual({ tipo: "espera", segundos: 7 });
+    expect(await ouvirAudio(audio, "/sistema")).toEqual({ tipo: "indisponivel", motivo: "voz_desligada" });
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("rede")));
+    expect(await ouvirAudio(audio, "/sistema")).toEqual({ tipo: "falha" });
+  });
+
+  it("falarTexto pede o WAV em JSON", async () => {
+    const f = vi.fn(async () => new Response(new Uint8Array([82, 73, 70, 70]), { headers: { "content-type": "audio/wav" } }));
+    vi.stubGlobal("fetch", f);
+    const r = await falarTexto("Olá", "/sistema");
+    expect(r.tipo).toBe("ok");
+    const [url, init] = f.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("/api/v1/sistema/zetele/falar");
+    expect(JSON.parse(init.body as string)).toEqual({ texto: "Olá" });
   });
 });

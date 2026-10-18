@@ -1,15 +1,17 @@
 "use client";
 
-import { SendHorizontal, X } from "lucide-react";
+import { Mic, SendHorizontal, Square, X } from "lucide-react";
 import Link from "next/link";
 import { useState, type FormEvent, type RefObject } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { ROTAS } from "@/lib/site";
 import { cn } from "@/lib/utils";
-import { TEXTOS_DA_AREA, ZETELE, type AreaZetele, type PerguntaPronta, type Pose } from "@/content/zetele";
+import { TEXTOS_DA_AREA, ZETELE, ZETELE_VOZ, type AreaZetele, type PerguntaPronta, type Pose } from "@/content/zetele";
+import { ouvirAudio, type EstadoVoz } from "@/lib/zetele";
 import { Chips } from "./chips";
-import { Mensagens, type Mensagem } from "./mensagens";
+import { Mensagens, type Mensagem, type OuvirMensagens } from "./mensagens";
 import { Personagem } from "./personagem";
+import { suportaGravacao, textoDoErroDaVoz, useGravador } from "./voz";
 
 interface Props {
   pose: Pose;
@@ -26,22 +28,73 @@ interface Props {
   campoRef: RefObject<HTMLTextAreaElement | null>;
   fecharRef: RefObject<HTMLButtonElement | null>;
   onFechar: () => void;
-  onEnviar: (texto: string) => void;
+  /** `porVoz`: a pergunta veio do microfone, então a resposta é lida em voz alta. */
+  onEnviar: (texto: string, porVoz?: boolean) => void;
   onEscolher: (p: PerguntaPronta) => void;
   onMostrarChips: () => void;
   onOcultarChips: () => void;
+  /** Voz do Zétele do sistema (ADR 0034); ausente no site público ou sem fornecedor. */
+  pagina?: string;
+  voz?: EstadoVoz | null;
+  ouvir?: OuvirMensagens;
+  responderEmVoz?: boolean;
+  onResponderEmVoz?: (ligado: boolean) => void;
+  avisoVoz?: string | null;
+  onAvisoVoz?: (mensagem: string | null) => void;
+  /** Chamado num toque da pessoa, para o navegador deixar tocar a resposta depois. */
+  onPrepararAudio?: () => void;
 }
+
+const relogio = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
 export function PainelZetele(p: Props) {
   const [texto, setTexto] = useState("");
+  const [porVoz, setPorVoz] = useState(false);
+  const [transcrevendo, setTranscrevendo] = useState(false);
+  const [suporta] = useState(suportaGravacao);
   const bloqueado = p.carregando || !p.disponivel || p.espera > 0;
+  const avisar = (m: string | null) => p.onAvisoVoz?.(m);
+  const gravador = useGravador({ onPronto: (audio) => void transcrever(audio), onErro: avisar });
+  const gravando = gravador.estado === "gravando";
+  const podeGravar = Boolean(p.voz?.ouvir) && suporta && p.disponivel;
+  const comVoz = podeGravar || Boolean(p.voz?.falar);
+  const statusVoz = gravando ? ZETELE_VOZ.gravando : transcrevendo ? ZETELE_VOZ.transcrevendo : (p.avisoVoz ?? "");
+
+  async function transcrever(audio: Blob) {
+    setTranscrevendo(true);
+    const r = await ouvirAudio(audio, p.pagina ?? "/sistema");
+    setTranscrevendo(false);
+    if (r.tipo === "ok") {
+      setTexto(r.texto.slice(0, ZETELE.tamanhoMaximo));
+      setPorVoz(true);
+      avisar(ZETELE_VOZ.confira);
+      p.campoRef.current?.focus();
+      return;
+    }
+    if (r.tipo === "nao_entendi") avisar(ZETELE_VOZ.erros.naoEntendi);
+    else if (r.tipo === "recusado") avisar(ZETELE_VOZ.erros.recusado);
+    else avisar(textoDoErroDaVoz(r));
+  }
+
+  function alternarGravacao() {
+    p.onPrepararAudio?.();
+    if (gravando) {
+      gravador.parar();
+      return;
+    }
+    avisar(null);
+    void gravador.iniciar();
+  }
 
   function enviar(e?: FormEvent) {
     e?.preventDefault();
     const pergunta = texto.trim();
     if (!pergunta || bloqueado) return;
-    p.onEnviar(pergunta);
+    p.onPrepararAudio?.();
+    p.onEnviar(pergunta, porVoz);
     setTexto("");
+    setPorVoz(false);
+    avisar(null);
   }
 
   return (
@@ -53,6 +106,12 @@ export function PainelZetele(p: Props) {
       onKeyDown={(e) => {
         if (e.key === "Escape") {
           e.stopPropagation();
+          // gravando, o Esc só cancela a gravação
+          if (gravando) {
+            gravador.cancelar();
+            avisar(null);
+            return;
+          }
           p.onFechar();
         }
       }}
@@ -75,9 +134,15 @@ export function PainelZetele(p: Props) {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-3">
+      {/* rolável pelo teclado: com os controles de voz, a conversa rola mesmo sem links (axe) */}
+      <div
+        tabIndex={0}
+        role="region"
+        aria-label={ZETELE.rotuloConversa}
+        className="flex-1 overflow-y-auto px-4 py-3 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-fg"
+      >
         <p className="mb-3 text-sm text-ink-muted">{TEXTOS_DA_AREA[p.area].boasVindas}</p>
-        <Mensagens mensagens={p.mensagens} onTentarDeNovo={p.onEnviar} />
+        <Mensagens mensagens={p.mensagens} onTentarDeNovo={(t) => p.onEnviar(t)} ouvir={p.ouvir} />
         {p.carregando && (
           <p role="status" className="mt-3 text-sm text-ink-muted">
             {ZETELE.consultando}
@@ -117,7 +182,10 @@ export function PainelZetele(p: Props) {
             value={texto}
             disabled={!p.disponivel}
             placeholder={TEXTOS_DA_AREA[p.area].placeholder}
-            onChange={(e) => setTexto(e.target.value)}
+            onChange={(e) => {
+              setTexto(e.target.value);
+              if (!e.target.value.trim()) setPorVoz(false);
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -126,6 +194,17 @@ export function PainelZetele(p: Props) {
             }}
             className="min-h-[2.75rem] flex-1 resize-none rounded-xl border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-muted focus:border-brand-fg focus:outline-none disabled:opacity-60"
           />
+          {podeGravar && (
+            <button
+              type="button"
+              onClick={alternarGravacao}
+              disabled={transcrevendo || gravador.estado === "pedindo" || (!gravando && bloqueado)}
+              aria-label={gravando ? ZETELE_VOZ.pararGravacao : ZETELE_VOZ.gravar}
+              className={cn(buttonVariants({ variant: gravando ? "primary" : "outline" }), "h-auto shrink-0 p-2.5", gravando && "animate-pulse motion-reduce:animate-none")}
+            >
+              {gravando ? <Square aria-hidden="true" className="h-5 w-5" /> : <Mic aria-hidden="true" className="h-5 w-5" />}
+            </button>
+          )}
           <button
             type="submit"
             disabled={bloqueado || !texto.trim()}
@@ -135,11 +214,39 @@ export function PainelZetele(p: Props) {
             <SendHorizontal aria-hidden="true" className="h-5 w-5" />
           </button>
         </form>
+        {comVoz && (
+          <div className="mt-1 flex min-h-[1.25rem] items-start justify-between gap-2 text-xs text-ink-muted">
+            <p role="status" className="flex-1">
+              {statusVoz}
+            </p>
+            {gravando && (
+              <span aria-hidden="true" className="shrink-0 font-medium tabular-nums text-brand-fg">
+                {relogio(gravador.segundos)} / {relogio(ZETELE_VOZ.limiteSegundos)}
+              </span>
+            )}
+          </div>
+        )}
         {texto.length > 400 && (
           <p className="mt-1 text-right text-xs text-ink-muted">
             {texto.length}/{ZETELE.tamanhoMaximo}
           </p>
         )}
+        {p.voz?.falar && (
+          <label className="mt-2 flex w-fit cursor-pointer items-center gap-2 text-xs font-medium text-ink">
+            <input
+              type="checkbox"
+              role="switch"
+              checked={Boolean(p.responderEmVoz)}
+              onChange={(e) => {
+                if (e.target.checked) p.onPrepararAudio?.();
+                p.onResponderEmVoz?.(e.target.checked);
+              }}
+              className="h-4 w-4 accent-[var(--brand)]"
+            />
+            {ZETELE_VOZ.responderEmVoz}
+          </label>
+        )}
+        {comVoz && <p className="mt-2 text-[11px] leading-snug text-ink-muted">{ZETELE_VOZ.avisoPrototipo}</p>}
         <p className="mt-2 text-[11px] leading-snug text-ink-muted">
           {ZETELE.avisoPrivacidade}{" "}
           <Link href={ROTAS.privacidade} className="underline">

@@ -1,6 +1,7 @@
+import { Square, Volume2 } from "lucide-react";
 import Link from "next/link";
 import { Fragment, type ReactNode } from "react";
-import { ZETELE } from "@/content/zetele";
+import { ZETELE, ZETELE_VOZ } from "@/content/zetele";
 import { cn } from "@/lib/utils";
 import { ehRotaInterna, partesDoTexto, type FonteZetele } from "@/lib/zetele";
 
@@ -12,6 +13,35 @@ export interface Mensagem {
   link?: { href: string; rotulo: string };
   /** Presente quando a resposta falhou: o botão "Tentar de novo" reenvia esta pergunta. */
   perguntaOriginal?: string;
+  /** Resposta de verdade (não aviso nem erro): pode ser lida em voz alta. */
+  falavel?: boolean;
+}
+
+/** Botão "Ouvir" de cada resposta; ausente quando a voz do sistema não fala. */
+export interface OuvirMensagens {
+  tocando: number | null;
+  preparando: number | null;
+  onOuvir: (m: Mensagem) => void;
+  onParar: () => void;
+}
+
+function BotaoOuvir({ m, ouvir }: { m: Mensagem; ouvir: OuvirMensagens }) {
+  const tocando = ouvir.tocando === m.id;
+  const preparando = ouvir.preparando === m.id;
+  const ativo = tocando || preparando;
+  const Icone = ativo ? Square : Volume2;
+  return (
+    <button
+      type="button"
+      onClick={() => (ativo ? ouvir.onParar() : ouvir.onOuvir(m))}
+      aria-label={ativo ? ZETELE_VOZ.pararRotulo : ZETELE_VOZ.ouvirRotulo}
+      aria-busy={preparando || undefined}
+      className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-line px-2 py-1 text-xs font-medium text-brand-fg hover:bg-surface-alt"
+    >
+      <Icone aria-hidden="true" className="h-3.5 w-3.5" />
+      {ativo ? ZETELE_VOZ.parar : ZETELE_VOZ.ouvir}
+    </button>
+  );
 }
 
 const estiloLink = "font-medium text-brand-fg underline underline-offset-2";
@@ -64,7 +94,15 @@ function CartaoFonte({ fonte }: { fonte: FonteZetele }) {
   );
 }
 
-export function Mensagens({ mensagens, onTentarDeNovo }: { mensagens: Mensagem[]; onTentarDeNovo: (pergunta: string) => void }) {
+export function Mensagens({
+  mensagens,
+  onTentarDeNovo,
+  ouvir,
+}: {
+  mensagens: Mensagem[];
+  onTentarDeNovo: (pergunta: string) => void;
+  ouvir?: OuvirMensagens;
+}) {
   return (
     <ol aria-live="polite" aria-relevant="additions" className="flex flex-col gap-3">
       {mensagens.map((m) => (
@@ -92,6 +130,7 @@ export function Mensagens({ mensagens, onTentarDeNovo }: { mensagens: Mensagem[]
               {ZETELE.tentarDeNovo}
             </button>
           )}
+          {ouvir && m.autor === "zetele" && m.falavel && <BotaoOuvir m={m} ouvir={ouvir} />}
         </li>
       ))}
     </ol>

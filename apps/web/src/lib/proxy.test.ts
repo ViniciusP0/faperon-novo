@@ -165,4 +165,67 @@ describe("proxyParaApi", () => {
     expect(await res.json()).toEqual({ erro: "Corpo inválido" });
     expect(fetchFalso).not.toHaveBeenCalled();
   });
+
+  describe("áudio do Zétele do sistema (ADR 0034)", () => {
+    const ROTA = "http://site.test/api/v1/sistema/zetele/ouvir";
+    // o FormData do jsdom não vira corpo de Request no Node: o multipart é montado à mão
+    const FRONTEIRA = "----zetele";
+    const TIPO = { "content-type": `multipart/form-data; boundary=${FRONTEIRA}` };
+    function multipart(audio: Uint8Array): Uint8Array<ArrayBuffer> {
+      const cabeca = new TextEncoder().encode(
+        `--${FRONTEIRA}\r\nContent-Disposition: form-data; name="audio"; filename="pergunta.webm"\r\nContent-Type: audio/webm\r\n\r\n`,
+      );
+      const pe = new TextEncoder().encode(`\r\n--${FRONTEIRA}--\r\n`);
+      const tudo = new Uint8Array(cabeca.length + audio.length + pe.length);
+      tudo.set(cabeca);
+      tudo.set(audio, cabeca.length);
+      tudo.set(pe, cabeca.length + audio.length);
+      return tudo;
+    }
+
+    it("repassa o multipart byte a byte, sem decodificar como texto", async () => {
+      const fetchFalso = vi.fn().mockResolvedValue(new Response("{}", { status: 200 }));
+      vi.stubGlobal("fetch", fetchFalso);
+      // bytes que não são UTF-8 válido: decodificar como texto os trocaria por U+FFFD
+      const corpo = multipart(new Uint8Array(200_000).map((_, i) => (i * 37) % 256));
+      const res = await proxyParaApi(new Request(ROTA, { method: "POST", headers: TIPO, body: corpo }));
+      expect(res.status).toBe(200);
+      const [, init] = fetchFalso.mock.calls[0]!;
+      expect(init.body).toBeInstanceOf(Uint8Array);
+      expect(init.body).toEqual(corpo);
+      expect((init.headers as Headers).get("content-type")).toBe(TIPO["content-type"]);
+    });
+
+    it("recusa áudio acima de 3 MB mais os cabeçalhos", async () => {
+      const fetchFalso = vi.fn();
+      vi.stubGlobal("fetch", fetchFalso);
+      const corpo = multipart(new Uint8Array(3 * 1024 * 1024 + 70 * 1024));
+      const res = await proxyParaApi(new Request(ROTA, { method: "POST", headers: TIPO, body: corpo }));
+      expect(res.status).toBe(413);
+      expect(fetchFalso).not.toHaveBeenCalled();
+    });
+
+    it("o limite maior vale só para multipart na rota do áudio", async () => {
+      const fetchFalso = vi.fn();
+      vi.stubGlobal("fetch", fetchFalso);
+      const json = { "content-type": "application/json" };
+      const naRota = await proxyParaApi(new Request(ROTA, { method: "POST", headers: json, body: "x".repeat(16_385) }));
+      const foraDaRota = await proxyParaApi(
+        new Request("http://site.test/api/v1/sistema/zetele/perguntar", { method: "POST", headers: TIPO, body: multipart(new Uint8Array(20_000)) }),
+      );
+      expect([naRota.status, foraDaRota.status]).toEqual([413, 413]);
+      expect(fetchFalso).not.toHaveBeenCalled();
+    });
+
+    it("devolve o WAV do /falar sem mexer nos bytes", async () => {
+      const wav = new Uint8Array([82, 73, 70, 70, 0, 255, 1, 2]);
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(wav, { status: 200, headers: { "content-type": "audio/wav", "cache-control": "no-store" } })));
+      const res = await proxyParaApi(
+        new Request("http://site.test/api/v1/sistema/zetele/falar", { method: "POST", headers: { "content-type": "application/json" }, body: '{"texto":"oi"}' }),
+      );
+      expect(res.headers.get("content-type")).toBe("audio/wav");
+      expect(res.headers.get("cache-control")).toBe("no-store");
+      expect(new Uint8Array(await res.arrayBuffer())).toEqual(wav);
+    });
+  });
 });
