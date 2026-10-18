@@ -275,6 +275,7 @@ export const ZETELE = {
   enviar: "Enviar pergunta",
   fechar: "Fechar o Zétele",
   rotuloSugestoes: "Perguntas sugeridas",
+  rotuloConversa: "Conversa com o Zétele",
   sugestoes: "Sugestões",
   maisSugestoes: "Mais sugestões",
   ocultarSugestoes: "Ocultar sugestões",
@@ -305,3 +306,29 @@ export const TEXTOS_DA_AREA: Record<AreaZetele, { boasVindas: string; placeholde
     descansando: "O Zétele está descansando. Tente de novo em instantes.",
   },
 };
+
+/** Voz do Zétele do sistema (ADR 0034): microfone, "Ouvir" e "Responder em voz". */
+export const ZETELE_VOZ = {
+  gravar: "Gravar pergunta",
+  pararGravacao: "Parar gravação",
+  gravando: "Gravando… Toque de novo para parar ou aperte Esc para cancelar.",
+  transcrevendo: "Transcrevendo…",
+  confira: "Confira o texto e envie a pergunta.",
+  ouvir: "Ouvir",
+  ouvirRotulo: "Ouvir resposta",
+  parar: "Parar",
+  pararRotulo: "Parar áudio",
+  responderEmVoz: "Responder em voz",
+  avisoPrototipo: "Protótipo: o áudio é processado pela Groq e pelo Google (plano gratuito).",
+  limiteSegundos: 60,
+  erros: {
+    bloqueado: "O microfone está bloqueado. Libere o acesso no navegador para gravar.",
+    semMicrofone: "Não encontrei um microfone neste aparelho.",
+    microfone: "Não consegui usar o microfone. Digite a pergunta.",
+    naoEntendi: "Não entendi o áudio. Tente de novo ou digite a pergunta.",
+    recusado: "Não consegui enviar o áudio. Tente uma gravação mais curta.",
+    indisponivel: "A voz está indisponível agora. Digite a pergunta ou tente mais tarde.",
+    limiteDoDia: "O Zétele atingiu o limite de hoje.",
+    tocar: "Não consegui tocar o áudio. Toque em Ouvir para tentar de novo.",
+  },
+} as const;

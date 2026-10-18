@@ -15,9 +15,16 @@ export interface RespostaZetele {
   sugestoes: string[];
 }
 
+/** Só no Zétele do sistema (ADR 0034): o que a voz pode fazer agora. */
+export interface EstadoVoz {
+  ouvir: boolean;
+  falar: boolean;
+}
+
 export interface EstadoZetele {
   disponivel: boolean;
   motivo: string | null;
+  voz?: EstadoVoz;
 }
 
 export interface MensagemHistorico {
@@ -65,6 +72,67 @@ export async function perguntar(
       return { tipo: "indisponivel", motivo: corpo.motivo ?? "indisponivel" };
     }
     return { tipo: "falha" };
+  } catch {
+    return { tipo: "falha" };
+  }
+}
+
+// ---------- voz do Zétele do sistema (ADR 0034) ----------
+
+export type ErroDaVoz = { tipo: "espera"; segundos: number } | { tipo: "indisponivel"; motivo: string } | { tipo: "falha" };
+export type ResultadoOuvir = { tipo: "ok"; texto: string } | { tipo: "nao_entendi" } | { tipo: "recusado" } | ErroDaVoz;
+export type ResultadoFalar = { tipo: "ok"; audio: Blob } | ErroDaVoz;
+
+const EXTENSOES: Record<string, string> = {
+  "audio/mp4": "mp4",
+  "video/mp4": "mp4",
+  "audio/ogg": "ogg",
+  "audio/wav": "wav",
+  "audio/mpeg": "mp3",
+};
+
+/** Nome do arquivo enviado ao /ouvir: o servidor confere a extensão e o tipo. */
+export function nomeDoAudio(tipo: string): string {
+  return `pergunta.${EXTENSOES[tipo.split(";")[0]!.trim().toLowerCase()] ?? "webm"}`;
+}
+
+async function erroDaVoz(r: Response): Promise<ErroDaVoz> {
+  if (r.status === 429) return { tipo: "espera", segundos: Number.parseInt(r.headers.get("retry-after") ?? "", 10) || 30 };
+  if (r.status === 503) {
+    const corpo = (await r.json().catch(() => ({}))) as { motivo?: string };
+    return { tipo: "indisponivel", motivo: corpo.motivo ?? "indisponivel" };
+  }
+  return { tipo: "falha" };
+}
+
+/** Manda a gravação para virar texto. Não gasta o limite do dia: a pergunta conta no /perguntar. */
+export async function ouvirAudio(audio: Blob, pagina: string): Promise<ResultadoOuvir> {
+  try {
+    const corpo = new FormData();
+    corpo.append("audio", audio, nomeDoAudio(audio.type));
+    const r = await fetch(`${baseDoZetele(pagina)}/ouvir`, { method: "POST", body: corpo });
+    if (r.ok) {
+      const { texto } = (await r.json()) as { texto?: string };
+      return texto ? { tipo: "ok", texto } : { tipo: "nao_entendi" };
+    }
+    if (r.status === 422) return { tipo: "nao_entendi" };
+    if (r.status === 400 || r.status === 413) return { tipo: "recusado" };
+    return await erroDaVoz(r);
+  } catch {
+    return { tipo: "falha" };
+  }
+}
+
+/** Pede a resposta em áudio (WAV). Cada pedido conta no limite do dia do sistema. */
+export async function falarTexto(texto: string, pagina: string): Promise<ResultadoFalar> {
+  try {
+    const r = await fetch(`${baseDoZetele(pagina)}/falar`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ texto }),
+    });
+    if (r.ok) return { tipo: "ok", audio: await r.blob() };
+    return await erroDaVoz(r);
   } catch {
     return { tipo: "falha" };
   }

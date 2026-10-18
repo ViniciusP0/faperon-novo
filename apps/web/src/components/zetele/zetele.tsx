@@ -3,11 +3,22 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { areaDaPagina, ehPaginaComZetele, type PaginaComZetele, PAGINAS_SO_ORIENTACAO, type PerguntaPronta, perguntasDaPagina, type Pose, TEXTOS_DA_AREA, ZETELE } from "@/content/zetele";
-import { obterEstado, perguntar, type MensagemHistorico } from "@/lib/zetele";
+import { obterEstado, perguntar, type EstadoVoz, type MensagemHistorico } from "@/lib/zetele";
 import { BotaoZetele } from "./botao-zetele";
 import type { Mensagem } from "./mensagens";
 import { PainelZetele } from "./painel-zetele";
 import { SaudacaoZetele, marcarSaudou } from "./saudacao-zetele";
+import { useLeitor } from "./voz";
+
+const CHAVE_RESPONDER_EM_VOZ = "zetele-responder-em-voz";
+
+function lerResponderEmVoz(): boolean {
+  try {
+    return window.localStorage.getItem(CHAVE_RESPONDER_EM_VOZ) === "1";
+  } catch {
+    return false;
+  }
+}
 
 /** Assistente do site (ADR 0029) e do sistema (ADR 0032). A conversa sobrevive à navegação dentro da
  *  mesma área; ao trocar de área (site ↔ sistema) começa outra, com o outro Zétele.
@@ -27,22 +38,41 @@ function ZeteleNaPagina({ pagina }: { pagina: PaginaComZetele }) {
   const [pose, setPose] = useState<Pose>("acenando");
   const [mostrarChips, setMostrarChips] = useState(true);
   const [sugeridas, setSugeridas] = useState<PerguntaPronta[]>([]);
+  // voz só no Zétele do sistema (ADR 0034)
+  const [voz, setVoz] = useState<EstadoVoz | null>(null);
+  const [responderEmVoz, setResponderEmVoz] = useState(false);
+  const [avisoVoz, setAvisoVoz] = useState<string | null>(null);
   const botaoRef = useRef<HTMLButtonElement>(null);
   const campoRef = useRef<HTMLTextAreaElement>(null);
   const fecharRef = useRef<HTMLButtonElement>(null);
   const proximoId = useRef(1);
 
   const area = areaDaPagina(pagina);
+  const leitor = useLeitor({ pagina, onErro: setAvisoVoz });
+  const falar = area === "sistema" && Boolean(voz?.falar);
 
   useEffect(() => {
     let vivo = true;
     void obterEstado(area === "sistema" ? "/sistema" : "/").then((e) => {
-      if (vivo) setDisponivel(e.disponivel);
+      if (!vivo) return;
+      setDisponivel(e.disponivel);
+      if (area === "sistema" && e.voz) setVoz(e.voz);
     });
     return () => {
       vivo = false;
     };
   }, [area]);
+
+  useEffect(() => setResponderEmVoz(lerResponderEmVoz()), []);
+
+  function mudarResponderEmVoz(ligado: boolean) {
+    setResponderEmVoz(ligado);
+    try {
+      window.localStorage.setItem(CHAVE_RESPONDER_EM_VOZ, ligado ? "1" : "0");
+    } catch {
+      // sem armazenamento: vale só nesta visita
+    }
+  }
 
   useEffect(() => {
     if (espera <= 0) return;
@@ -56,7 +86,11 @@ function ZeteleNaPagina({ pagina }: { pagina: PaginaComZetele }) {
     else fecharRef.current?.focus();
   }, [aberto, disponivel]);
 
-  const adicionar = (m: Omit<Mensagem, "id">) => setMensagens((lista) => [...lista, { ...m, id: proximoId.current++ }]);
+  const adicionar = (m: Omit<Mensagem, "id">) => {
+    const id = proximoId.current++;
+    setMensagens((lista) => [...lista, { ...m, id }]);
+    return id;
+  };
 
   function abrir() {
     marcarSaudou();
@@ -64,11 +98,13 @@ function ZeteleNaPagina({ pagina }: { pagina: PaginaComZetele }) {
   }
 
   function fechar() {
+    leitor.parar();
+    setAvisoVoz(null);
     setAberto(false);
     botaoRef.current?.focus();
   }
 
-  async function enviarPergunta(texto: string) {
+  async function enviarPergunta(texto: string, porVoz = false) {
     const historico: MensagemHistorico[] = mensagens
       .filter((m) => !m.perguntaOriginal)
       .map((m) => ({ papel: m.autor, texto: m.texto }));
@@ -81,7 +117,9 @@ function ZeteleNaPagina({ pagina }: { pagina: PaginaComZetele }) {
     setCarregando(false);
     if (r.tipo === "ok") {
       const { resposta } = r;
-      adicionar({ autor: "zetele", texto: resposta.texto, fontes: resposta.fontes });
+      const id = adicionar({ autor: "zetele", texto: resposta.texto, fontes: resposta.fontes, falavel: true });
+      // só toca sozinho quando a pergunta veio por voz ou a pessoa ligou "Responder em voz"
+      if (falar && (porVoz || responderEmVoz)) void leitor.tocar(id, resposta.texto);
       const temLink = resposta.fontes.length > 0 || resposta.texto.includes("](");
       setPose(temLink || resposta.status === "recusada" ? "apontando" : "acenando");
       if (resposta.sugestoes.length) {
@@ -107,11 +145,13 @@ function ZeteleNaPagina({ pagina }: { pagina: PaginaComZetele }) {
   function escolher(p: PerguntaPronta) {
     if (p.tipo === "estatica") {
       adicionar({ autor: "visitante", texto: p.texto });
-      adicionar({
+      const id = adicionar({
         autor: "zetele",
         texto: p.resposta ?? "",
         link: p.href ? { href: p.href, rotulo: p.rotuloLink ?? p.href } : undefined,
+        falavel: true,
       });
+      if (falar && responderEmVoz && p.resposta) void leitor.tocar(id, p.resposta);
       setPose(p.href ? "apontando" : "acenando");
       setMostrarChips(false);
       return;
@@ -152,10 +192,30 @@ function ZeteleNaPagina({ pagina }: { pagina: PaginaComZetele }) {
           campoRef={campoRef}
           fecharRef={fecharRef}
           onFechar={fechar}
-          onEnviar={(t) => void enviarPergunta(t)}
+          onEnviar={(t, porVoz) => void enviarPergunta(t, porVoz)}
           onEscolher={escolher}
           onMostrarChips={() => setMostrarChips(true)}
           onOcultarChips={() => setMostrarChips(false)}
+          pagina={pagina}
+          voz={area === "sistema" ? voz : null}
+          ouvir={
+            falar
+              ? {
+                  tocando: leitor.tocando,
+                  preparando: leitor.preparando,
+                  onOuvir: (m) => {
+                    setAvisoVoz(null);
+                    void leitor.tocar(m.id, m.texto);
+                  },
+                  onParar: leitor.parar,
+                }
+              : undefined
+          }
+          responderEmVoz={responderEmVoz}
+          onResponderEmVoz={mudarResponderEmVoz}
+          avisoVoz={avisoVoz}
+          onAvisoVoz={setAvisoVoz}
+          onPrepararAudio={leitor.preparar}
         />
       )}
     </>

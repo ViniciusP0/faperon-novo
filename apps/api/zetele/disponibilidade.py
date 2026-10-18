@@ -47,6 +47,20 @@ def abrir_disjuntor() -> None:
     cache.set(CHAVE_DISJUNTOR, True, timeout=DISJUNTOR_SEGUNDOS)
 
 
+def abrir_disjuntor_voz(funcao: str) -> None:
+    """Fornecedor de voz falhou ("ouvir" ou "falar"): só aquela metade da voz descansa; o texto segue."""
+    cache.set(f"{CHAVE_DISJUNTOR}:{funcao}", True, timeout=DISJUNTOR_SEGUNDOS)
+
+
+def voz_bloqueada(funcao: str) -> str | None:
+    """Motivo para recusar ouvir/falar antes de chamar o fornecedor, ou None. O teto é o do sistema."""
+    if cache.get(CHAVE_DISJUNTOR) or cache.get(f"{CHAVE_DISJUNTOR}:{funcao}"):
+        return "indisponivel"
+    if perguntas_hoje("sistema") >= CANAIS["sistema"].limite_diario:
+        return "orcamento_diario"
+    return None
+
+
 def estado(canal: str = "publico") -> dict[str, Any]:
     if not settings.ANTHROPIC_API_KEY:
         return {"disponivel": False, "motivo": "sem_chave"}

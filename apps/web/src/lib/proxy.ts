@@ -5,6 +5,9 @@ const PERMITIDOS = ["/api/v1/"];
 /** Acima do timeout do gunicorn (60 s): uma API travada não segura a conexão do Next para sempre. */
 const TEMPO_LIMITE_MS = 65_000;
 const CORPO_MAXIMO = 16_384; // bytes; o Zétele manda no máximo ~9 KB (pergunta + 6 mensagens)
+/** A pergunta gravada (ADR 0034) vai em multipart, com até 3 MB de áudio mais os cabeçalhos das partes. */
+const ROTA_DO_AUDIO = "/api/v1/sistema/zetele/ouvir";
+const CORPO_MAXIMO_AUDIO = 3 * 1024 * 1024 + 64 * 1024;
 
 /** Último item do X-Forwarded-For: o que o Funnel (único proxy confiável) acrescentou. O resto pode ter vindo do cliente. */
 export function ipDoCliente(valor: string | null): string | null {
@@ -16,10 +19,10 @@ export function ipDoCliente(valor: string | null): string | null {
  * Lê o corpo contando bytes e para assim que passa do limite: route handlers do App Router não limitam o corpo,
  * e ler tudo antes de checar deixaria um POST de centenas de MB derrubar o container.
  */
-async function lerCorpoLimitado(req: Request): Promise<string | Response> {
+async function lerCorpoLimitado(req: Request, limite: number): Promise<Uint8Array<ArrayBuffer> | Response> {
   const grandeDemais = () => Response.json({ erro: "Corpo grande demais" }, { status: 413 });
-  if (Number(req.headers.get("content-length")) > CORPO_MAXIMO) return grandeDemais();
-  if (!req.body) return "";
+  if (Number(req.headers.get("content-length")) > limite) return grandeDemais();
+  if (!req.body) return new Uint8Array(0);
   const leitor = req.body.getReader();
   const pedacos: Uint8Array[] = [];
   let total = 0;
@@ -28,7 +31,7 @@ async function lerCorpoLimitado(req: Request): Promise<string | Response> {
       const { done, value } = await leitor.read();
       if (done) break;
       total += value.byteLength;
-      if (total > CORPO_MAXIMO) {
+      if (total > limite) {
         leitor.cancel().catch(() => {});
         return grandeDemais();
       }
@@ -44,7 +47,7 @@ async function lerCorpoLimitado(req: Request): Promise<string | Response> {
     bytes.set(pedaco, posicao);
     posicao += pedaco.byteLength;
   }
-  return new TextDecoder().decode(bytes);
+  return bytes;
 }
 
 /** Encaminha ao Django só a API pública (schema e docs ficam fora do Funnel); GET/HEAD sem corpo, POST com corpo limitado. Lê API_INTERNAL_URL em runtime (rewrites do next.config são fixados no build). */
@@ -66,12 +69,14 @@ export async function proxyParaApi(req: Request): Promise<Response> {
   if (ip) headers.set("x-forwarded-for", ip);
 
   const temCorpo = req.method !== "GET" && req.method !== "HEAD";
-  let corpo: string | undefined;
+  let corpo: string | Uint8Array<ArrayBuffer> | undefined;
   if (temCorpo) {
-    const lido = await lerCorpoLimitado(req);
-    if (lido instanceof Response) return lido;
-    corpo = lido;
     const tipo = req.headers.get("content-type");
+    // só a rota do áudio recebe multipart (binário, com limite maior); o resto é texto (JSON)
+    const audio = origem.pathname === ROTA_DO_AUDIO && (tipo ?? "").startsWith("multipart/form-data");
+    const lido = await lerCorpoLimitado(req, audio ? CORPO_MAXIMO_AUDIO : CORPO_MAXIMO);
+    if (lido instanceof Response) return lido;
+    corpo = audio ? lido : new TextDecoder().decode(lido);
     if (tipo) headers.set("content-type", tipo);
   }
 

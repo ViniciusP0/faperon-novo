@@ -1,17 +1,22 @@
 import logging
 import threading
+from pathlib import Path
 from typing import Any, cast
 
 from django.conf import settings
-from drf_spectacular.utils import extend_schema
+from django.core.files.uploadedfile import UploadedFile
+from django.http import HttpResponse
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import serializers
-from rest_framework.parsers import JSONParser
+from rest_framework.parsers import JSONParser, MultiPartParser
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
-from zetele import agente, disponibilidade, registro, voz
+from zetele import agente, audio, disponibilidade, registro, voz
+from zetele.audio.sintese import texto_para_fala
 from zetele.canais import PUBLICO, SISTEMA, Canal
 from zetele.cliente import (
     ClienteAnthropic,
@@ -21,7 +26,11 @@ from zetele.cliente import (
     TempoEsgotado,
 )
 from zetele.models import Pergunta
-from zetele.throttles import ZeteleGlobalThrottle, ZeteleSistemaGlobalThrottle
+from zetele.throttles import (
+    ZeteleGlobalThrottle,
+    ZeteleSistemaGlobalThrottle,
+    ZeteleVozGlobalThrottle,
+)
 
 log = logging.getLogger(__name__)
 
@@ -33,12 +42,27 @@ MENSAGENS = {
     "orcamento_diario": "O assistente atingiu o limite de hoje; use as perguntas prontas.",
     "indisponivel": "O assistente está indisponível no momento; tente de novo em instantes.",
     "ocupado": "O assistente está atendendo muitas pessoas; tente de novo em instantes.",
+    "voz_desligada": "A voz do assistente está desligada; digite a pergunta.",
 }
-RETRY = {"sem_chave": 3600, "orcamento_diario": 3600, "indisponivel": 60, "ocupado": 10}
+RETRY = {
+    "sem_chave": 3600,
+    "orcamento_diario": 3600,
+    "indisponivel": 60,
+    "ocupado": 10,
+    "voz_desligada": 3600,
+}
 
 
 def obter_cliente() -> ClienteLLM:
     return ClienteAnthropic(settings.ANTHROPIC_API_KEY, settings.ZETELE_MODELO)
+
+
+def obter_transcritor() -> audio.Transcritor | None:
+    return audio.obter_transcritor()
+
+
+def obter_sintetizador() -> audio.Sintetizador | None:
+    return audio.obter_sintetizador()
 
 
 class MensagemSerializer(serializers.Serializer):
@@ -98,8 +122,21 @@ class EstadoView(APIView):
         return Response(disponibilidade.estado(self.canal.nome))
 
 
+class EstadoVozZeteleSerializer(serializers.Serializer):
+    ouvir = serializers.BooleanField()
+    falar = serializers.BooleanField()
+
+
+class EstadoSistemaZeteleSerializer(EstadoSerializer):
+    voz = EstadoVozZeteleSerializer()
+
+
 class EstadoSistemaView(EstadoView):
     canal = SISTEMA
+
+    @extend_schema(responses={200: EstadoSistemaZeteleSerializer})
+    def get(self, request: Request) -> Response:
+        return Response({**disponibilidade.estado(SISTEMA.nome), "voz": audio.estado_voz()})
 
 
 class LimitesDoZetele(APIView):
@@ -273,3 +310,155 @@ class InterpretarView(LimitesDoZeteleSistema):
         return Response(
             {"tipo": d["tipo"], "campos": resultado.campos, "faltando": resultado.faltando}
         )
+
+
+# ---------- voz do Zétele do sistema (ADR 0034) ----------
+
+TAMANHO_MAXIMO_AUDIO = 3 * 1024 * 1024
+# folga para os cabeçalhos do multipart: acima disso, recusa sem ler o corpo
+FOLGA_MULTIPART = 64 * 1024
+EXTENSOES_DE_AUDIO = frozenset({"flac", "mp3", "mp4", "mpeg", "mpga", "m4a", "ogg", "wav", "webm"})
+TIPOS_DE_AUDIO = frozenset(
+    {
+        "audio/flac",
+        "audio/x-flac",
+        "audio/mpeg",
+        "audio/mp3",
+        "audio/mpga",
+        "audio/mp4",
+        "audio/m4a",
+        "audio/x-m4a",
+        "audio/aac",
+        "audio/ogg",
+        "audio/wav",
+        "audio/wave",
+        "audio/x-wav",
+        "audio/webm",
+        # alguns navegadores rotulam a gravação só de áudio com o tipo do contêiner de vídeo
+        "video/mp4",
+        "video/webm",
+    }
+)
+
+
+class OuvirZeteleSerializer(serializers.Serializer):
+    audio = serializers.FileField(allow_empty_file=False)
+
+    def validate_audio(self, arquivo: UploadedFile) -> UploadedFile:
+        if (arquivo.size or 0) > TAMANHO_MAXIMO_AUDIO:
+            raise serializers.ValidationError("O áudio passa de 3 MB.")
+        tipo = (arquivo.content_type or "").split(";")[0].strip().lower()
+        extensao = Path(arquivo.name or "").suffix.lower().lstrip(".")
+        if tipo not in TIPOS_DE_AUDIO or extensao not in EXTENSOES_DE_AUDIO:
+            raise serializers.ValidationError("Formato de áudio não aceito.")
+        return arquivo
+
+
+class TranscricaoZeteleSerializer(serializers.Serializer):
+    texto = serializers.CharField()
+
+
+class FalarZeteleSerializer(serializers.Serializer):
+    texto = serializers.CharField(max_length=4000)
+
+
+class LimitesDaVoz(LimitesDoZetele):
+    """Ouvir e falar dividem um limite por IP e um teto por minuto próprios."""
+
+    throttle_classes = [ScopedRateThrottle, ZeteleVozGlobalThrottle]
+    throttle_scope = "zetele_voz"
+
+
+class OuvirView(LimitesDaVoz):
+    """Transcreve a pergunta falada. Não conta no teto do dia (a pergunta conta no /perguntar)."""
+
+    parser_classes = [MultiPartParser]
+
+    @extend_schema(
+        request={"multipart/form-data": OuvirZeteleSerializer},
+        responses={200: TranscricaoZeteleSerializer},
+    )
+    def post(self, request: Request) -> Response:
+        try:
+            tamanho = int(request.META.get("CONTENT_LENGTH") or 0)
+        except ValueError:
+            tamanho = 0
+        if tamanho > TAMANHO_MAXIMO_AUDIO + FOLGA_MULTIPART:
+            return Response({"erro": "O áudio passa de 3 MB."}, status=413)
+        entrada = OuvirZeteleSerializer(data=request.data)
+        entrada.is_valid(raise_exception=True)
+        arquivo: UploadedFile = entrada.validated_data["audio"]
+
+        transcritor = obter_transcritor()
+        if transcritor is None:
+            return _indisponivel("voz_desligada")
+        motivo = disponibilidade.voz_bloqueada("ouvir")
+        if motivo:
+            return _indisponivel(motivo)
+        if not SEMAFORO.acquire(blocking=False):
+            return _indisponivel("ocupado")
+        try:
+            texto = transcritor.transcrever(
+                arquivo.read(), arquivo.name or "audio", arquivo.content_type or ""
+            )
+        except ProvedorIndisponivel as exc:
+            log.warning("voz: transcrição indisponível (%s)", exc)
+            disponibilidade.abrir_disjuntor_voz("ouvir")
+            return _indisponivel("indisponivel")
+        except PedidoRecusado as exc:
+            log.warning("voz: transcrição recusada (%s)", exc)
+            return _indisponivel("indisponivel")
+        finally:
+            SEMAFORO.release()
+        texto = " ".join(texto.split())[:500].strip()
+        if not texto:
+            return Response(
+                {"erro": "Não entendi o áudio. Tente de novo ou digite a pergunta."}, status=422
+            )
+        return Response({"texto": texto})
+
+
+class FalarView(LimitesDaVoz):
+    """Lê a resposta em voz alta. Conta no teto diário do sistema, como uma pergunta."""
+
+    parser_classes = [JSONParser]
+
+    @extend_schema(
+        request=FalarZeteleSerializer,
+        responses={(200, "audio/wav"): OpenApiResponse(OpenApiTypes.BINARY)},
+    )
+    def post(self, request: Request) -> HttpResponse:
+        entrada = FalarZeteleSerializer(data=request.data)
+        entrada.is_valid(raise_exception=True)
+        texto = texto_para_fala(entrada.validated_data["texto"])
+        if not texto:
+            raise serializers.ValidationError({"texto": ["Nada para ler em voz alta."]})
+
+        sintetizador = obter_sintetizador()
+        if sintetizador is None:
+            return _indisponivel("voz_desligada")
+        motivo = disponibilidade.voz_bloqueada("falar")
+        if motivo:
+            return _indisponivel(motivo)
+        if not SEMAFORO.acquire(blocking=False):
+            return _indisponivel("ocupado")
+        if disponibilidade.contar_pergunta(SISTEMA.nome) > SISTEMA.limite_diario:
+            disponibilidade.devolver_pergunta(SISTEMA.nome)
+            SEMAFORO.release()
+            return _indisponivel("orcamento_diario")
+        try:
+            wav = sintetizador.sintetizar(texto)
+        except ProvedorIndisponivel as exc:
+            log.warning("voz: síntese indisponível (%s)", exc)
+            disponibilidade.devolver_pergunta(SISTEMA.nome)
+            disponibilidade.abrir_disjuntor_voz("falar")
+            return _indisponivel("indisponivel")
+        except PedidoRecusado as exc:
+            log.warning("voz: síntese recusada (%s)", exc)
+            disponibilidade.devolver_pergunta(SISTEMA.nome)
+            return _indisponivel("indisponivel")
+        finally:
+            SEMAFORO.release()
+        resposta = HttpResponse(wav, content_type="audio/wav")
+        resposta["Cache-Control"] = "no-store"
+        return resposta

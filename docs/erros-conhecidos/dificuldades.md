@@ -283,3 +283,35 @@ Registro cronológico por área, atualizado em 24/09/2026. Cada entrada tem sint
 - **Causa:** o `u2net` dá máscara parcial em áreas claras grandes dentro da figura; a regra do "vão do braço" (pixel com mínimo ≥ 225) também não distinguia fundo de bege claro.
 - **Solução ou contorno:** `recortar()` agora deixa opaco tudo dentro da silhueta preenchida, menos manchas grandes de branco puro (mínimo do canal ≥ 250), que são o fundo visível entre braço e tronco. Conferir sempre o recorte sobre fundo magenta e escuro antes de publicar.
 - **Status:** resolvido.
+
+## Voz do Zétele do sistema (18/10/2026, ADR 0034)
+
+### `Permissions-Policy: microphone=()` bloqueava o microfone no próprio site
+- **Sintoma:** risco de o `getUserMedia` falhar com `NotAllowedError` em todas as páginas, mesmo com a pessoa permitindo.
+- **Causa:** o `next.config.mjs` mandava `microphone=()`, que proíbe o microfone também para o próprio site. Como a navegação do Next é feita no cliente, a política vale para o documento em que a pessoa entrou, não só para `/sistema`.
+- **Solução ou contorno:** `microphone=(self)` no site inteiro. Sites embutidos continuam sem microfone, e o navegador ainda pede permissão.
+- **Status:** resolvido.
+
+### O proxy do Next decodificava o corpo como texto
+- **Sintoma:** risco de o áudio enviado ao `/ouvir` chegar corrompido ao Django (bytes que não são UTF-8 viram U+FFFD) ou levar `413` (limite de 16 KB).
+- **Causa:** `src/lib/proxy.ts` lia o POST e fazia `TextDecoder().decode()`, com o limite pensado para o JSON do Zétele.
+- **Solução ou contorno:** só a rota `/api/v1/sistema/zetele/ouvir` com `multipart/form-data` passa os bytes intactos, com limite de 3 MB + 64 KB. O resto continua como texto e com 16 KB. Há testes em `proxy.test.ts`.
+- **Status:** resolvido.
+
+### `ruff format .` reformata arquivos que não são do Zétele
+- **Sintoma:** `ruff format .` (ou `--check .`) mexe em cerca de 21 arquivos de `analise/`, `observatorio/`, `ingestao/`, `indicadores/` e testes.
+- **Causa:** o CI roda só `ruff check`, não `ruff format --check`. O formato do repositório nunca foi aplicado por inteiro.
+- **Solução ou contorno:** formatar só os arquivos alterados (`ruff format zetele tests/test_zetele_audio.py`). Se o formato for aplicado ao repositório inteiro um dia, isso deve sair num commit separado.
+- **Status:** contornado.
+
+### Testes de voz no Vitest (jsdom)
+- **Sintoma:** `Not implemented: HTMLMediaElement.prototype.pause` no fim dos testes, e o corpo de um `Request` montado com `FormData` vira o texto `[object FormData]`.
+- **Causa:** o jsdom não implementa áudio. Além disso, o `afterEach` do teste devolvia o `pause` original antes do `cleanup` do `vitest.setup.ts` desmontar o componente. O `FormData` do jsdom também não é o do Node, que monta o `Request`.
+- **Solução ou contorno:** simular `play` e `pause` com `vi.spyOn`, chamar `cleanup()` antes do `vi.restoreAllMocks()` e montar o multipart à mão nos testes do proxy. O limite de 60 s é testado no hook, com um limite de 1 s (os temporizadores falsos travam o `findBy`).
+- **Status:** contornado.
+
+### Worktree sem `.env` não roda o `docker compose`
+- **Sintoma:** `docker compose run ... api-dev` falha com `env file .../.env not found`.
+- **Causa:** o `.env` fica fora do git (o compose exige o arquivo), e um worktree novo não o tem.
+- **Solução ou contorno:** `cp .env.example .env` no worktree. É suficiente para os testes, que criam o próprio banco `test_*`.
+- **Status:** contornado.

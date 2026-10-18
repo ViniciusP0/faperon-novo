@@ -228,6 +228,34 @@ Detalhes e motivos: ADR 0032. Base de conhecimento, tabela de perguntas e limite
 - `200 {"tipo", "campos": {...}, "faltando": ["data", ...]}`: campos conferidos em código (datas reais, horas `HH:mm` com fim depois do início, veículo e espaço da lista); o que não passa volta vazio.
 - `422` quando o modelo recusa ou foge do formato; `429` e `503` como no Zétele do sistema (a voz gasta o mesmo teto diário).
 
+## Voz do Zétele do sistema (ouvir e falar)
+
+Detalhes e motivos: ADR 0034. Só no canal sistema. Não confundir com o `/api/v1/sistema/interpretar` do "Agendar por voz".
+
+`GET /api/v1/sistema/zetele/estado` também traz `"voz": {"ouvir": bool, "falar": bool}`. `ouvir` é falso sem `GROQ_API_KEY` e `falar` é falso sem `GEMINI_API_KEY`: o front esconde o microfone ou o botão "Ouvir".
+
+`POST /api/v1/sistema/zetele/ouvir`, corpo `multipart/form-data` com o campo `audio`:
+
+- até 3 MB; tipo e extensão entre flac, mp3, mp4, mpeg, mpga, m4a, ogg, wav e webm (ex.: `pergunta.webm` com `audio/webm;codecs=opus`, `pergunta.mp4` com `audio/mp4`);
+- `200 {"texto": "..."}` (até 500 caracteres): só transcreve; quem envia a pergunta é o `/perguntar`. **Não conta** no teto diário;
+- `400 {"erro": "Parâmetros inválidos", "campos": {"audio": [...]}}` (tipo, extensão ou tamanho); `413` quando o corpo passa de 3 MB + 64 KB; `415` fora de multipart; `422` quando não há fala no áudio.
+
+`POST /api/v1/sistema/zetele/falar`, corpo JSON `{"texto": "..."}` (até 4.000 caracteres):
+
+- `200` com `Content-Type: audio/wav` (24 kHz, mono, 16 bits) e `Cache-Control: no-store`. O servidor tira markdown, links, listas e emojis e lê até 1.200 caracteres, cortando na última frase inteira;
+- **conta** no teto diário do sistema (`ZETELE_SISTEMA_LIMITE_DIARIO`), e a contagem é devolvida se a síntese falhar;
+- `400` quando não sobra nada para ler; `415` fora de JSON.
+
+Nas duas rotas:
+
+- `429` com `Retry-After`: 10/min por IP e 30/min no total, somando ouvir e falar;
+- `503 {"erro", "motivo"}` com `Retry-After`:
+  - `voz_desligada`: sem chave do fornecedor;
+  - `orcamento_diario`;
+  - `indisponivel`: fornecedor fora (2 minutos de descanso só daquela metade da voz) ou disjuntor do Zétele aberto;
+  - `ocupado`.
+- O proxy do Next aceita multipart de até 3 MB + 64 KB só no `/ouvir`.
+
 ## Saúde
 
 `GET /api/v1/saude` → `{"status": "ok", "banco": "ok"}` (usado pelo healthcheck do Compose).
