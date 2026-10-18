@@ -35,7 +35,7 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-card">
-      <div className="mx-auto flex h-[72px] w-full max-w-[1920px] items-center justify-between gap-4 px-4 md:px-6 lg:gap-3 lg:px-4 xl:gap-4 xl:px-8">
+      <div className="mx-auto flex h-[72px] w-full max-w-[1920px] items-center justify-between gap-4 px-4 md:px-6 lg:gap-3 lg:px-4 min-[1400px]:gap-4 min-[1400px]:px-8">
         <Link href="/" aria-label="FAPERON – página inicial" className="flex shrink-0 items-center gap-1">
           <Image
             src="/marca-faperon.png"
@@ -47,13 +47,13 @@ export function SiteHeader() {
           />
           <span>
             <span className="block text-[1.35rem] font-bold leading-none tracking-tight text-brand-fg">FAPERON</span>
-            <span className="mt-0.5 hidden max-w-[11rem] xl:block text-[0.7rem] leading-tight text-ink-muted">
+            <span className="mt-0.5 hidden max-w-[11rem] min-[1400px]:block text-[0.7rem] leading-tight text-ink-muted">
               Federação da Agricultura e Pecuária de Rondônia
             </span>
           </span>
         </Link>
 
-        <div className="hidden items-center gap-1 lg:flex xl:gap-2">
+        <div className="hidden items-center gap-1 lg:flex min-[1400px]:gap-2">
           <nav aria-label={rotuloMenu} data-tour={logado ? "barra" : undefined}>
             <ul className="flex items-center">
               {itens.map((item) => (

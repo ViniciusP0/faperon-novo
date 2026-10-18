@@ -85,8 +85,9 @@ test("a 1024 px o cabeçalho com 7 itens cabe numa linha, sem transbordar", asyn
 
 test("o cabeçalho não transborda nem encosta na borda entre 1024 e 1280 px", async ({ page }) => {
   await page.goto("/noticias");
-  // 1024 e 1104–1120 são as larguras em que o menu de 6 itens estourava no Linux (a renderização do texto lá é um pouco mais larga).
-  for (const largura of [1024, 1040, 1072, 1100, 1104, 1120, 1152, 1200, 1280]) {
+  // 1024 e 1104–1120 são as larguras em que o menu estourava no Linux (a renderização do texto lá é um pouco mais larga);
+  // com 7 itens (Galeria), 1280 passava 2 px enquanto o subtítulo da marca aparecia a partir de 1280 (agora, de 1400).
+  for (const largura of [1024, 1040, 1072, 1100, 1104, 1120, 1152, 1200, 1280, 1366, 1400, 1440]) {
     await page.setViewportSize({ width: largura, height: 768 });
     const medidas = await page.evaluate(() => {
       const visiveis = [...document.querySelectorAll("header a, header button")].map((e) => e.getBoundingClientRect()).filter((r) => r.width > 0 && r.height > 0);
