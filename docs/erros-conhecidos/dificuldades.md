@@ -315,3 +315,29 @@ Registro cronológico por área, atualizado em 24/09/2026. Cada entrada tem sint
 - **Causa:** o `.env` fica fora do git (o compose exige o arquivo), e um worktree novo não o tem.
 - **Solução ou contorno:** `cp .env.example .env` no worktree. É suficiente para os testes, que criam o próprio banco `test_*`.
 - **Status:** contornado.
+
+## Indicadores do sistema (18/10/2026)
+
+### Legenda do ECharts com a cor errada
+- **Sintoma:** nas barras empilhadas, os quadradinhos da legenda saíam na paleta padrão do ECharts (azul, verde-claro) e não batiam com as barras.
+- **Causa:** a cor estava só em cada barra (`data[].itemStyle.color`); a legenda usa a cor da série.
+- **Solução ou contorno:** `components/sistema/indicadores/graficos.ts` põe a cor também em `series.itemStyle.color`.
+- **Status:** resolvido.
+
+### Rótulo do eixo cortado na borda esquerda
+- **Sintoma:** "Evento institucional", "Comunicação" e "Sala da presidência" perdiam a primeira letra nas barras deitadas.
+- **Causa:** o `containLabel` mede o rótulo com a fonte do eixo; sem `fontFamily` no `axisLabel`, mediu com a fonte padrão, mais estreita que a Poppins.
+- **Solução ou contorno:** fonte explícita no `axisLabel` e `grid.left` de 10 px.
+- **Status:** resolvido.
+
+### Captura de página inteira pega os gráficos se redesenhando
+- **Sintoma:** no `page.screenshot({ fullPage: true })` a 390 px, barras saíam deslocadas e rótulos sumiam; na tela real estava certo.
+- **Causa:** a captura de página inteira muda a janela no meio, e o `ResizeObserver` do `Grafico` redesenha.
+- **Solução ou contorno:** abrir a janela na altura da página, esperar e capturar sem `fullPage`.
+- **Status:** contornado.
+
+### Medida do cabeçalho logo depois de abrir a página
+- **Sintoma:** a 1024 px a primeira medida deu folga de 16 px e 18 px de rolagem horizontal; repetida, deu 40 px e zero.
+- **Causa:** a medida saiu antes de a Poppins carregar, com a fonte de reserva, mais larga.
+- **Solução ou contorno:** o e2e espera `document.fonts.ready` antes de medir.
+- **Status:** resolvido.
