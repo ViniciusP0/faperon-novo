@@ -14,7 +14,7 @@ export function Personagem({ pose, className }: { pose: Pose; className?: string
           src={POSES[p]}
           alt=""
           fill
-          sizes="(min-width: 640px) 225px, 150px"
+          sizes="(min-width: 640px) 192px, 128px"
           data-pose={p}
           data-ativa={p === pose}
           className={cn(
