@@ -1,7 +1,7 @@
 "use client";
 
 import { Download, FileCog, Printer } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/feedback";
 import { Input, Label } from "@/components/ui/field";
@@ -16,6 +16,7 @@ import {
   comNotaDeTag,
   formatarCelula,
   paraCSV,
+  parametrosDoRelatorio,
   relatorioAgenda,
   relatorioAtividades,
   relatorioContas,
@@ -99,6 +100,13 @@ export function Relatorios() {
   const [personalizando, setPersonalizando] = useState(false);
   const [versaoModelo, setVersaoModelo] = useState(0);
   const [tagId, setTagId] = useFiltroDeTag();
+  // link dos Indicadores (?tipo=&de=&ate=): lido depois da hidratação, sem useSearchParams (a página fica estática)
+  useEffect(() => {
+    const p = parametrosDoRelatorio(window.location.search);
+    if (p.tipo) setTipo(p.tipo);
+    if (p.de) setDe(p.de);
+    if (p.ate) setAte(p.ate);
+  }, []);
   if (!funcionario) return null;
 
   // lido a cada render: muda ao trocar de tipo e depois de salvar (versaoModelo força o render)

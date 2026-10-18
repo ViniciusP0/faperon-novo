@@ -36,6 +36,14 @@ describe("Relatórios", () => {
     expect(screen.queryByRole("columnheader", { name: "Funcionário" })).toBeNull();
   });
 
+  it("abre no tipo e no período do link (vindo dos Indicadores)", async () => {
+    window.history.replaceState(null, "", "/sistema/relatorios?tipo=atividades&de=2026-01-01&ate=2026-03-31");
+    renderRelatorios("carla");
+    expect(await screen.findByRole("heading", { name: "Minhas atividades" })).toBeInTheDocument();
+    expect(screen.getByLabelText("De")).toHaveValue("2026-01-01");
+    window.history.replaceState(null, "", "/");
+  });
+
   it("o gestor vê as despesas de todos", async () => {
     const user = userEvent.setup();
     renderRelatorios("marcos");

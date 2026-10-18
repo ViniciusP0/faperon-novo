@@ -41,6 +41,21 @@ export const ROTULO_RELATORIO: Record<TipoRelatorio, string> = {
   atividades: "Atividades",
 };
 
+/** `?tipo=frota&de=2026-08-01&ate=2026-10-31`: outras telas (os Indicadores) abrem o relatório já no tipo e no
+ *  período. O que não for válido fica de fora, e a tela usa o padrão. */
+export function parametrosDoRelatorio(busca: string): { tipo?: TipoRelatorio; de?: string; ate?: string } {
+  const p = new URLSearchParams(busca);
+  const tipo = p.get("tipo");
+  const data = (v: string | null) => (v && /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(v) ? v : undefined);
+  const de = data(p.get("de"));
+  const ate = data(p.get("ate"));
+  return {
+    ...(tipo && tipo in ROTULO_RELATORIO ? { tipo: tipo as TipoRelatorio } : {}),
+    ...(de && { de }),
+    ...(ate && { ate }),
+  };
+}
+
 const arredondar = (v: number, casas = 2) => Math.round(v * 10 ** casas) / 10 ** casas;
 const noPeriodo = (data: string, de: string, ate: string) => data.slice(0, 10) >= de && data.slice(0, 10) <= ate;
 const minutos = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
