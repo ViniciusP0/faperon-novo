@@ -36,7 +36,7 @@ export default function SindicatosRuraisPage() {
           <h2 id="lista-titulo" className={tituloSecao}>
             Sindicatos dos Produtores Rurais
           </h2>
-          <p className="mt-2 mb-8 max-w-[70ch] leading-relaxed text-ink-muted">
+          <p className="mt-2 mb-8 max-w-[70ch] leading-relaxed text-justify hyphens-auto text-ink-muted">
             Clique em um pin para ver a foto da sede, o endereço e os contatos, conforme o cadastro publicado no site da FAPERON. Alguns sindicatos atendem mais de um município e aparecem com os dois nomes.
           </p>
           <MapaSindicatos sindicatos={SINDICATOS} />
@@ -47,7 +47,7 @@ export default function SindicatosRuraisPage() {
           <h2 id="acao-titulo" className="text-3xl font-semibold tracking-tight">
             {c.acao.titulo}
           </h2>
-          <p className="mt-3 max-w-[66ch] leading-relaxed text-white/90">{c.acao.texto}</p>
+          <p className="mt-3 max-w-[66ch] leading-relaxed text-justify hyphens-auto text-white/90">{c.acao.texto}</p>
           <ol className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {c.acao.etapas.map((e, i) => (
               <li key={e} className="rounded-xl border border-white/15 bg-white/[0.06] p-4">

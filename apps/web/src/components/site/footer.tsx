@@ -7,7 +7,7 @@ export function SiteFooter() {
     <footer className="mt-20 bg-brand-dark text-white">
       <div className="container grid gap-10 py-12 md:grid-cols-[1.5fr_1fr_1fr]">
         <div>
-          <span className="inline-block rounded-xl bg-white p-4 shadow-sm">
+          <span className="inline-block rounded-xl bg-white/50 p-4 shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
             <Image
               src="/logos-sistema-faperon.png"
               alt="FAPERON, SENAR Rondônia e Sindicato dos Produtores Rurais de Rondônia"

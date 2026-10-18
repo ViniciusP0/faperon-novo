@@ -61,14 +61,14 @@ export default function IpagroPage() {
           <h2 id="diagnostico-titulo" className="mt-3 max-w-[24ch] text-3xl font-semibold leading-tight tracking-tight">
             {d.titulo}
           </h2>
-          <p className="mt-3 max-w-[62ch] leading-relaxed text-white/90">{d.texto}</p>
+          <p className="mt-3 max-w-[62ch] leading-relaxed text-justify hyphens-auto text-white/90">{d.texto}</p>
 
           <div className="mt-8 grid gap-8 lg:grid-cols-[1.4fr_1fr]">
             <ol className="grid gap-5">
               {d.linha.map((e) => (
                 <li key={e.data} className="rounded-xl border border-white/15 bg-white/[0.06] p-5">
                   <p className="text-sm font-bold uppercase tracking-wider text-brand-lime">{e.data}</p>
-                  <p className="mt-2 leading-relaxed text-white/95">{e.texto}</p>
+                  <p className="mt-2 leading-relaxed text-justify hyphens-auto text-white/95">{e.texto}</p>
                   <p className="mt-3 text-sm text-white/80">
                     Fonte:{" "}
                     <a href={e.fonte.url} target="_blank" rel="noopener noreferrer" className="font-medium text-white underline underline-offset-2 hover:no-underline">
@@ -97,7 +97,7 @@ export default function IpagroPage() {
           <h2 id="transparencia-titulo" className={tituloSecao}>
             {c.transparencia.titulo}
           </h2>
-          <p className="mt-3 max-w-[66ch] leading-relaxed text-ink-muted">{c.transparencia.texto}</p>
+          <p className="mt-3 max-w-[66ch] leading-relaxed text-justify hyphens-auto text-ink-muted">{c.transparencia.texto}</p>
           <div className="mt-7 grid gap-8 lg:grid-cols-[1.5fr_1fr] lg:gap-12">
             <dl className="grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2">
               {c.transparencia.dados.map((d, i) => (
@@ -109,7 +109,7 @@ export default function IpagroPage() {
             </dl>
             <div className="flex flex-col">
               <h3 className="text-lg font-semibold">Objeto</h3>
-              <p className="mt-2 leading-relaxed text-ink-muted">{c.transparencia.objeto}</p>
+              <p className="mt-2 leading-relaxed text-justify hyphens-auto text-ink-muted">{c.transparencia.objeto}</p>
               <div className="mt-auto flex flex-col items-start gap-3 pt-6">
                 <a href={c.transparencia.arquivo.url} download={c.transparencia.arquivo.nome} className={cn(buttonVariants({ size: "lg" }))}>
                   <Download aria-hidden="true" className="h-5 w-5" />

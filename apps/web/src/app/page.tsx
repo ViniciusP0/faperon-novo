@@ -192,7 +192,7 @@ export default async function InicioPage() {
             <h2 id="sistema-titulo" className="mt-4 text-3xl font-bold leading-tight tracking-tight text-brand-strong md:text-4xl">
               {sistema.titulo}
             </h2>
-            <p className="mt-4 max-w-[62ch] leading-relaxed text-ink-muted">{sistema.texto}</p>
+            <p className="mt-4 max-w-[62ch] leading-relaxed text-justify hyphens-auto text-ink-muted">{sistema.texto}</p>
             <ul className="mt-6 flex gap-8">
               {SOBRE.quem_somos.numeros.slice(1).map((n) => (
                 <li key={n.rotulo}>
@@ -244,7 +244,7 @@ export default async function InicioPage() {
             <CardTitle className="text-white">{commodities.titulo}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="leading-relaxed text-white/90">{commodities.texto}</p>
+            <p className="leading-relaxed text-justify hyphens-auto text-white/90">{commodities.texto}</p>
             <a
               href={commodities.url}
               target="_blank"
@@ -302,7 +302,7 @@ export default async function InicioPage() {
           <h2 id="central-titulo" className="max-w-[36ch] text-3xl font-semibold leading-tight tracking-tight">
             {central.titulo}
           </h2>
-          <p className="mt-3.5 max-w-[60ch] leading-relaxed text-white/90">{central.texto}</p>
+          <p className="mt-3.5 max-w-[60ch] leading-relaxed text-justify hyphens-auto text-white/90">{central.texto}</p>
           <Link href={central.cta_url} className={cn(buttonVariants({ size: "lg" }), "mt-6 bg-brand-lime text-brand-dark hover:bg-[#9bdc60]")}>
             {central.cta_texto}
           </Link>
@@ -314,7 +314,7 @@ export default async function InicioPage() {
           <h2 id="nosso-agro-titulo" className="text-2xl font-semibold md:text-3xl">
             {nosso_agro.titulo}
           </h2>
-          <p className="mt-2 max-w-2xl leading-relaxed text-ink-muted">{nosso_agro.texto}</p>
+          <p className="mt-2 max-w-2xl leading-relaxed text-justify hyphens-auto text-ink-muted">{nosso_agro.texto}</p>
           <ul className="mt-6 grid gap-10 md:grid-cols-3">
             {numeros.map((n) => (
               <li key={n.rotulo}>
