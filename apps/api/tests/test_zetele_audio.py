@@ -428,7 +428,7 @@ def test_texto_para_fala_tira_markdown_links_listas_e_emojis() -> None:
 
 def test_texto_para_fala_pronuncia_ze_tele() -> None:
     assert texto_para_fala("Eu sou o Zétele. O ZETELE e o zetele também.") == (
-        "Eu sou o Zé-Téle. O Zé-Téle e o Zé-Téle também."
+        "Eu sou o Zé TÉle. O Zé TÉle e o Zé TÉle também."
     )
 
 
@@ -520,7 +520,7 @@ def test_gemini_manda_o_corpo_da_interactions_api_e_devolve_o_wav() -> None:
     assert corpo["input"][0]["type"] == "user_input"
     assert (bloco["type"], bloco["text"]) == ("text", "Olá, tudo bem?")
     assert bloco["annotations"][0]["type"] == "speech_metadata"
-    assert "sotaque brasileiro" in bloco["annotations"][0]["style"]
+    assert "português do Brasil neutro e urbano" in bloco["annotations"][0]["style"]
 
 
 @responses.activate

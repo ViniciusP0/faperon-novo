@@ -12,7 +12,12 @@ from zetele.cliente import PedidoRecusado
 URL_GEMINI = "https://generativelanguage.googleapis.com/v1beta/interactions"
 TIMEOUT_FALAR = 25.0
 LIMITE_FALA = 1200
-ESTILO = "tom calmo e acolhedor, sotaque brasileiro"
+# Perfil pedido pelo usuário (18/10/2026): um profissional do agro, não um "caipira".
+ESTILO = (
+    "homem de cerca de 45 anos, profissional experiente do agro brasileiro, que conhece bem a estrutura da FAPERON "
+    "e a agropecuária de Rondônia; fala com segurança, cordialidade e clareza, em ritmo natural de conversa; "
+    "português do Brasil neutro e urbano, sem sotaque caipira nem jeito de interior"
+)
 # o Gemini devolve WAV; se vier PCM cru, o cabeçalho usa o formato documentado
 TAXA_PCM = 24000
 
@@ -23,7 +28,8 @@ _INICIO_DE_LINHA = re.compile(r"^(?:#{1,6}\s*|>\s*|[-*+•]\s+|\d+[.)]\s+)+")
 _ENFASE = re.compile(r"[*`~]+|(?<!\w)_+|_+(?!\w)")
 _EMOJI = re.compile("[\U0001f000-\U0001faff\U0001f1e6-\U0001f1ff☀-➿⬀-⯿️‍⃣]")
 _FIM_DE_FRASE = re.compile(r"[.!?…](?=\s|$)")
-# Pronúncia pedida pelo usuário (18/10/2026): o nome se fala "Zé-Téle", com a tônica no "té".
+# Pronúncia pedida pelo usuário (18/10/2026): "Zé Téle", com a tônica no "té". O hífen fazia o modelo
+# ler "Telê"; a maiúscula marca a tônica (o Gemini TTS lê maiúscula como ênfase).
 _ZETELE = re.compile(r"\bz[eé]tele\b", re.IGNORECASE)
 
 
@@ -31,7 +37,7 @@ def texto_para_fala(texto: str, limite: int = LIMITE_FALA) -> str:
     """O TTS lê tudo ao pé da letra: tira markdown, links, listas e emojis e corta numa frase inteira."""
     texto = _LINK.sub(r"\1", texto)
     texto = _URL.sub("", texto)
-    texto = _ZETELE.sub("Zé-Téle", texto)
+    texto = _ZETELE.sub("Zé TÉle", texto)
     linhas = []
     for linha in texto.splitlines():
         linha = _EMOJI.sub("", _ENFASE.sub("", _INICIO_DE_LINHA.sub("", linha.strip()))).strip()

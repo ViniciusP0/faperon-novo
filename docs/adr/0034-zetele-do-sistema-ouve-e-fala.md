@@ -106,5 +106,8 @@ O WhatsApp manda áudios em OGG/Opus, um formato que o Whisper aceita. O trabalh
 O usuário ouviu três vozes masculinas nativas do português do Brasil, da biblioteca de vozes do Gemini, e escolheu a **`pt-br-podcaster-1`** (48 anos, tom de conversa). Ela passou a ser o padrão de `ZETELE_FALAR_VOZ`.
 
 - **Velocidade:** a fala toca em **1,25x** no navegador (`playbackRate` com `preservesPitch`). Assim a velocidade é exata e não custa nada a mais. Pedir "fale rápido" ao modelo não dá um número preciso.
-- **Pronúncia:** antes da síntese, "Zétele" vira "**Zé-Téle**", com a tônica no "té", só no texto falado. Na tela, o nome continua escrito como sempre.
+- **Pronúncia:** antes da síntese, "Zétele" vira "**Zé TÉle**", com a tônica no "té", só no texto falado. Na tela, o nome continua escrito como sempre.
+  - O primeiro teste usou "Zé-Téle", e o hífen fez o modelo ler "Telê", com a tônica no fim.
+  - O usuário ouviu quatro grafias ("Zé Téle", "Zé TÉle", "Zé Téli" e "Zétele") e escolheu "Zé TÉle", porque a maiúscula marca a tônica.
+- **Perfil da voz e do texto:** um homem de cerca de 45 anos, profissional experiente do agro, que conhece a estrutura da FAPERON e a agropecuária de Rondônia. Fala com segurança e cordialidade, em português do Brasil neutro e urbano, sem sotaque caipira nem jeito de interior. Esse perfil é a instrução de estilo da síntese (`ESTILO`) e também o tom da persona do Zétele do sistema; o assunto continua só o uso do sistema.
 
