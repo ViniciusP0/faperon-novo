@@ -14,6 +14,7 @@ export const PAGINAS_COM_ZETELE = [
   "/sistema/contas",
   "/sistema/relatorios",
   "/sistema/atividades",
+  "/sistema/indicadores",
 ] as const;
 export type PaginaComZetele = (typeof PAGINAS_COM_ZETELE)[number];
 
@@ -216,6 +217,15 @@ export const PERGUNTAS: PerguntaPronta[] = [
     rotuloLink: "Abrir os Relatórios",
   },
   {
+    id: "sis-indicadores",
+    area: "sistema",
+    texto: "O que mostram os Indicadores?",
+    tipo: "estatica",
+    resposta: 'Os números de cada área em gráficos: agenda, frota, espaços, contas e atividades, no período escolhido (este mês ou os últimos 3, 6 ou 12 meses) e, se quiser, só com uma tag. Gestores e o coordenador veem a equipe toda e podem escolher um funcionário; os demais veem os próprios números e o uso geral da frota e dos espaços. Cada gráfico tem a tabela em "Ver tabela".',
+    href: "/sistema/indicadores",
+    rotuloLink: "Abrir os Indicadores",
+  },
+  {
     id: "sis-atividade",
     area: "sistema",
     texto: "Como registro uma atividade que fiz?",
@@ -254,6 +264,7 @@ export const ORDEM_POR_PAGINA: Record<PaginaComZetele, string[]> = {
   "/sistema/contas": ["sis-despesa", "sis-aprovacao-contas", "sis-relatorio", "sis-evento"],
   "/sistema/relatorios": ["sis-relatorio", "sis-custos", "sis-despesa", "sis-voz"],
   "/sistema/atividades": ["sis-atividade", "sis-historico", "sis-voz", "sis-relatorio"],
+  "/sistema/indicadores": ["sis-indicadores", "sis-relatorio", "sis-custos", "sis-atividade"],
 };
 
 export function perguntasDaPagina(pagina: PaginaComZetele): { visiveis: PerguntaPronta[]; demais: PerguntaPronta[] } {

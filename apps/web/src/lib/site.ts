@@ -42,6 +42,7 @@ export const MENU_SISTEMA: ItemMenu[] = [
   { label: "Espaços", href: "/sistema/espacos" },
   { label: "Contas", href: "/sistema/contas" },
   { label: "Atividades", href: "/sistema/atividades" },
+  { label: "Indicadores", href: "/sistema/indicadores" },
   { label: "Relatórios", href: "/sistema/relatorios" },
 ];
 

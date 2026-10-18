@@ -166,6 +166,15 @@ export const TOUR: PassoDoTour[] = [
     passos: ["Em Equipe, escolha o período e o funcionário para ver o detalhe.", "Em Histórico, filtre por módulo (agenda, frota, espaços, contas, atividades) para achar uma ação."],
   },
   {
+    id: "indicadores",
+    secao: "Indicadores",
+    rota: "/sistema/indicadores",
+    alvo: "indicadores-filtros",
+    titulo: "Indicadores: os números de cada área em gráficos",
+    texto: "Agenda, frota, espaços, contas e atividades num painel só, com os totais do período e um gráfico por assunto. Embaixo de cada gráfico, Ver tabela mostra os números.",
+    passos: ["Escolha o período e, se quiser, uma tag.", "Gestores e o coordenador veem a equipe toda e podem escolher um funcionário; os demais veem os próprios números."],
+  },
+  {
     id: "relatorios",
     secao: "Relatórios",
     rota: "/sistema/relatorios",
