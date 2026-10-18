@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Zetele } from "./zetele";
@@ -102,7 +102,24 @@ describe("Zetele", () => {
     await abrir(user);
     expect(screen.getByRole("button", { name: "O que é a Central de Inteligência?" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Qual município mais produz soja em Rondônia?" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Mais sugestões" })).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Mais sugestões" }));
+    expect(screen.queryByRole("button", { name: "Qual município mais produz soja em Rondônia?" })).toBeNull();
+  });
+
+  it("as sugestões podem ser ocultadas e voltam pelo botão Sugestões; só as da página aparecem de início", async () => {
+    caminho = "/sistema/espacos";
+    stubFetch();
+    const user = userEvent.setup();
+    render(<Zetele />);
+    await abrir(user);
+    const lista = screen.getByRole("list", { name: "Perguntas sugeridas" });
+    expect(within(lista).getAllByRole("listitem")).toHaveLength(4);
+    await user.click(screen.getByRole("button", { name: "Mais sugestões" }));
+    expect(within(screen.getByRole("list", { name: "Perguntas sugeridas" })).getAllByRole("listitem").length).toBeGreaterThan(4);
+    await user.click(screen.getByRole("button", { name: "Ocultar sugestões" }));
+    expect(screen.queryByRole("list", { name: "Perguntas sugeridas" })).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Sugestões" }));
+    expect(screen.getByRole("list", { name: "Perguntas sugeridas" })).toBeInTheDocument();
   });
 
   it("sem o modelo: campo desabilitado e só perguntas estáticas", async () => {

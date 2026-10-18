@@ -273,6 +273,7 @@ export const ZETELE = {
   rotuloSugestoes: "Perguntas sugeridas",
   sugestoes: "Sugestões",
   maisSugestoes: "Mais sugestões",
+  ocultarSugestoes: "Ocultar sugestões",
   consultando: "Zétele está consultando os dados…",
   indisponivel: "Hoje só respondo às perguntas prontas.",
   descansando: "O Zétele está descansando. Tente de novo em instantes ou abra o Painel.",

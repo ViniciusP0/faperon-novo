@@ -159,6 +159,7 @@ function ZeteleNaPagina({ pagina }: { pagina: PaginaComZetele }) {
           onEnviar={(t) => void enviarPergunta(t)}
           onEscolher={escolher}
           onMostrarChips={() => setMostrarChips(true)}
+          onOcultarChips={() => setMostrarChips(false)}
         />
       )}
     </>

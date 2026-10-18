@@ -28,6 +28,7 @@ interface Props {
   onEnviar: (texto: string) => void;
   onEscolher: (p: PerguntaPronta) => void;
   onMostrarChips: () => void;
+  onOcultarChips: () => void;
 }
 
 export function PainelZetele(p: Props) {
@@ -85,7 +86,13 @@ export function PainelZetele(p: Props) {
 
       <div className="border-t border-line px-4 py-3">
         {p.mostrarChips ? (
-          <Chips visiveis={p.visiveis} demais={p.demais} soEstaticas={!p.disponivel || p.soOrientacao} onEscolher={p.onEscolher} />
+          <Chips
+            visiveis={p.visiveis}
+            demais={p.demais}
+            soEstaticas={!p.disponivel || p.soOrientacao}
+            onEscolher={p.onEscolher}
+            onOcultar={p.onOcultarChips}
+          />
         ) : (
           <button type="button" onClick={p.onMostrarChips} className="text-xs font-medium text-brand-fg underline">
             {ZETELE.sugestoes}
