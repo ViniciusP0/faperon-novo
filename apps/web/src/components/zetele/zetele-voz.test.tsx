@@ -99,6 +99,10 @@ describe("Zétele do sistema com voz", () => {
     await user.keyboard("{Enter}");
     expect(await screen.findByText(/clique em Novo evento/)).toBeInTheDocument();
     await waitFor(() => expect(play).toHaveBeenCalled());
+    // fala em 1,25x, sem mudar o tom
+    const tocado = play.mock.contexts[0] as HTMLAudioElement;
+    expect(tocado.playbackRate).toBe(1.25);
+    expect(tocado.preservesPitch).toBe(true);
     expect(JSON.parse(chamadas(f, "/falar")[0]![1]!.body as string)).toEqual({ texto: RESPOSTA.texto });
     expect(await screen.findByRole("button", { name: "Parar áudio" })).toBeInTheDocument();
   });

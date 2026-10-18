@@ -172,7 +172,7 @@ ZETELE_OUVIR_PROVEDOR = os.environ.get("ZETELE_OUVIR_PROVEDOR", "groq")
 ZETELE_FALAR_PROVEDOR = os.environ.get("ZETELE_FALAR_PROVEDOR", "gemini")
 ZETELE_OUVIR_MODELO = os.environ.get("ZETELE_OUVIR_MODELO", "whisper-large-v3-turbo")
 ZETELE_FALAR_MODELO = os.environ.get("ZETELE_FALAR_MODELO", "gemini-3.8-flash-lite-tts")
-ZETELE_FALAR_VOZ = os.environ.get("ZETELE_FALAR_VOZ", "Kore")
+ZETELE_FALAR_VOZ = os.environ.get("ZETELE_FALAR_VOZ", "pt-br-podcaster-1")
 
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "same-origin"

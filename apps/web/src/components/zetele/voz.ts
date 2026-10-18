@@ -7,6 +7,9 @@ import { falarTexto, type ErroDaVoz } from "@/lib/zetele";
 /** Gravação e leitura em voz do Zétele do sistema (ADR 0034). O "Agendar por voz" usa outro caminho
  *  (reconhecimento do navegador, components/sistema/voz) e não passa por aqui. */
 
+/** Velocidade em que o Zétele fala (1 = a do modelo). */
+export const VELOCIDADE_DA_FALA = 1.25;
+
 export function suportaGravacao(): boolean {
   return (
     typeof window !== "undefined" &&
@@ -166,6 +169,10 @@ export function useLeitor({ pagina, onErro }: { pagina: string; onErro: (mensage
         enderecos.current.set(id, url);
       }
       a.src = url;
+      // pedido do usuário (18/10/2026): fala em 1,25x, sem mudar o tom da voz
+      a.preservesPitch = true;
+      a.defaultPlaybackRate = VELOCIDADE_DA_FALA;
+      a.playbackRate = VELOCIDADE_DA_FALA;
       a.onended = () => setTocando((atual) => (atual === id ? null : atual));
       try {
         await a.play();

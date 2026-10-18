@@ -23,12 +23,15 @@ _INICIO_DE_LINHA = re.compile(r"^(?:#{1,6}\s*|>\s*|[-*+•]\s+|\d+[.)]\s+)+")
 _ENFASE = re.compile(r"[*`~]+|(?<!\w)_+|_+(?!\w)")
 _EMOJI = re.compile("[\U0001f000-\U0001faff\U0001f1e6-\U0001f1ff☀-➿⬀-⯿️‍⃣]")
 _FIM_DE_FRASE = re.compile(r"[.!?…](?=\s|$)")
+# Pronúncia pedida pelo usuário (18/10/2026): o nome se fala "Zé-Téle", com a tônica no "té".
+_ZETELE = re.compile(r"\bz[eé]tele\b", re.IGNORECASE)
 
 
 def texto_para_fala(texto: str, limite: int = LIMITE_FALA) -> str:
     """O TTS lê tudo ao pé da letra: tira markdown, links, listas e emojis e corta numa frase inteira."""
     texto = _LINK.sub(r"\1", texto)
     texto = _URL.sub("", texto)
+    texto = _ZETELE.sub("Zé-Téle", texto)
     linhas = []
     for linha in texto.splitlines():
         linha = _EMOJI.sub("", _ENFASE.sub("", _INICIO_DE_LINHA.sub("", linha.strip()))).strip()

@@ -100,3 +100,11 @@ O WhatsApp manda áudios em OGG/Opus, um formato que o Whisper aceita. O trabalh
 - O custo é baixo: uma pergunta de 10 s na Groq custa cerca de US$ 0,0001, e uma resposta de 30 s no Gemini custa cerca de US$ 0,0045 em 2026 (o dobro em 2027). Mesmo assim, ele passa a existir na contratação.
 - Há dois fornecedores novos, com chaves, termos e disponibilidade próprios. Os disjuntores separados evitam que a queda de um derrube o texto.
 - Os testes não usam rede: fornecedores falsos e `responses` para o REST (`tests/test_zetele_audio.py`). O front usa `MediaRecorder` e `fetch` falsos no Vitest e um e2e com microfone falso do Chromium e rotas simuladas.
+
+## Atualização de 18/10/2026: voz masculina, 1,25x e pronúncia
+
+O usuário ouviu três vozes masculinas nativas do português do Brasil, da biblioteca de vozes do Gemini, e escolheu a **`pt-br-podcaster-1`** (48 anos, tom de conversa). Ela passou a ser o padrão de `ZETELE_FALAR_VOZ`.
+
+- **Velocidade:** a fala toca em **1,25x** no navegador (`playbackRate` com `preservesPitch`). Assim a velocidade é exata e não custa nada a mais. Pedir "fale rápido" ao modelo não dá um número preciso.
+- **Pronúncia:** antes da síntese, "Zétele" vira "**Zé-Téle**", com a tônica no "té", só no texto falado. Na tela, o nome continua escrito como sempre.
+

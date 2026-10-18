@@ -426,6 +426,12 @@ def test_texto_para_fala_tira_markdown_links_listas_e_emojis() -> None:
     )
 
 
+def test_texto_para_fala_pronuncia_ze_tele() -> None:
+    assert texto_para_fala("Eu sou o Zétele. O ZETELE e o zetele também.") == (
+        "Eu sou o Zé-Téle. O Zé-Téle e o Zé-Téle também."
+    )
+
+
 def test_texto_para_fala_corta_na_ultima_frase_inteira() -> None:
     frase = "Esta é uma frase de teste com algumas palavras. "
     texto = frase * 40  # ~1.960 caracteres

@@ -23,7 +23,7 @@ def test_voz_do_sistema_configurada() -> None:
     assert (settings.ZETELE_OUVIR_PROVEDOR, settings.ZETELE_FALAR_PROVEDOR) == ("groq", "gemini")
     assert settings.ZETELE_OUVIR_MODELO == "whisper-large-v3-turbo"
     assert settings.ZETELE_FALAR_MODELO == "gemini-3.8-flash-lite-tts"
-    assert settings.ZETELE_FALAR_VOZ == "Kore"
+    assert settings.ZETELE_FALAR_VOZ == "pt-br-podcaster-1"
 
 
 def test_testes_comuns_nunca_veem_a_chave_real() -> None:
