@@ -1,12 +1,14 @@
 "use client";
 
-import { Download, Printer } from "lucide-react";
+import { Download, FileCog, Printer } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/feedback";
 import { Input, Label } from "@/components/ui/field";
 import { PROTOTIPO } from "@/content/sistema/funcionarios";
 import { itensDaAgenda } from "@/lib/sistema/agenda";
+import { gravar, ler } from "@/lib/sistema/armazenamento";
+import { completar, preencher, type ModeloDocumento } from "@/lib/sistema/documento";
 import { formatarDataBR, somarDias, somarMeses } from "@/lib/sistema/datas";
 import { useSistema } from "@/lib/sistema/estado";
 import {
@@ -22,7 +24,10 @@ import {
   type TipoRelatorio,
 } from "@/lib/sistema/relatorios";
 import { cn } from "@/lib/utils";
+import { Dialogo } from "../dialogo";
 import { Segmentado } from "../segmentado";
+import { FormularioDocumento } from "./formulario-documento";
+import { Capa, Contracapa, Faixa } from "./paginas-documento";
 
 const TIPOS = (Object.keys(ROTULO_RELATORIO) as TipoRelatorio[]).map((valor) => ({ valor, rotulo: ROTULO_RELATORIO[valor] }));
 
@@ -42,12 +47,12 @@ function Tabela({ r }: { r: Relatorio }) {
   if (r.linhas.length === 0) return <p className="py-6 text-sm text-ink-muted">Nada registrado no período.</p>;
   return (
     <div className="overflow-x-auto print:overflow-visible">
-      <table className="w-full min-w-[640px] text-sm print:min-w-0 print:text-[11px]">
+      <table className="w-full min-w-[640px] text-sm print:min-w-0 print:text-[9.5px]">
         <caption className="sr-only">{r.titulo}</caption>
         <thead>
           <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-ink-muted">
             {r.colunas.map((c, i) => (
-              <th key={c.rotulo} scope="col" className={cn("px-2 py-2 font-medium first:pl-0", numerica[i] && "text-right")}>
+              <th key={c.rotulo} scope="col" className={cn("px-2 py-2 font-medium first:pl-0 print:px-1 print:py-1", numerica[i] && "text-right")}>
                 {c.rotulo}
               </th>
             ))}
@@ -55,9 +60,9 @@ function Tabela({ r }: { r: Relatorio }) {
         </thead>
         <tbody>
           {r.linhas.map((l, li) => (
-            <tr key={li} className="border-b border-line">
+            <tr key={li} className="border-b border-line print:break-inside-avoid">
               {l.map((c, i) => (
-                <td key={i} className={cn("px-2 py-2 first:pl-0", numerica[i] ? "text-right tabular-nums" : "text-ink")}>
+                <td key={i} className={cn("px-2 py-2 first:pl-0 print:px-1 print:py-1", numerica[i] ? "text-right tabular-nums" : "text-ink")}>
                   {formatarCelula(c, r.colunas[i]!.formato)}
                 </td>
               ))}
@@ -68,7 +73,7 @@ function Tabela({ r }: { r: Relatorio }) {
           <tfoot>
             <tr className="font-semibold text-ink">
               {r.total.map((c, i) => (
-                <td key={i} className={cn("px-2 py-2 first:pl-0", numerica[i] && "text-right tabular-nums")}>
+                <td key={i} className={cn("px-2 py-2 first:pl-0 print:px-1 print:py-1", numerica[i] && "text-right tabular-nums")}>
                   {formatarCelula(c, r.colunas[i]!.formato)}
                 </td>
               ))}
@@ -87,8 +92,14 @@ export function Relatorios() {
   const [tipo, setTipo] = useState<TipoRelatorio>("frota");
   const [de, setDe] = useState(inicioDoMes);
   const [ate, setAte] = useState(fimDoMes);
+  const [personalizando, setPersonalizando] = useState(false);
+  const [versaoModelo, setVersaoModelo] = useState(0);
   if (!funcionario) return null;
 
+  // lido a cada render: muda ao trocar de tipo e depois de salvar (versaoModelo força o render)
+  void versaoModelo;
+  const modelo = completar(ler<Partial<ModeloDocumento> | null>(`documento:${tipo}`, null), tipo);
+  const documento = preencher(modelo, { de, ate, hoje, funcionario });
   const periodoValido = /^\d{4}-\d{2}-\d{2}$/.test(de) && /^\d{4}-\d{2}-\d{2}$/.test(ate) && de <= ate;
   const gerar = (): Relatorio => {
     switch (tipo) {
@@ -144,38 +155,70 @@ export function Relatorios() {
       {!relatorio ? (
         <Alert tone="erro">Escolha um período válido: a data inicial não pode vir depois da final.</Alert>
       ) : (
-        <section aria-labelledby="titulo-relatorio" className="vidro-cartao rounded-2xl p-5 print:rounded-none print:border-0 print:bg-white print:p-0 print:shadow-none">
-          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-brand-fg">FAPERON · Relatório de {ROTULO_RELATORIO[tipo].toLowerCase()}</p>
-              <h2 id="titulo-relatorio" className="text-lg font-semibold text-ink">
-                {relatorio.titulo}
-              </h2>
-              <p className="text-sm text-ink-muted">
-                {formatarDataBR(de)} a {formatarDataBR(ate)} · gerado em {formatarDataBR(hoje)} por {funcionario.nome}
+        // Na tela: capa e contracapa em miniatura, lado a lado, e o relatório embaixo.
+        // No papel (display: block, a ordem do DOM vale): capa, relatório, contracapa.
+        <div className="doc-paginas flex flex-wrap items-start gap-4">
+          <div className="order-1 flex w-full flex-wrap items-center justify-between gap-2 print:hidden">
+            <p className="text-sm font-medium text-ink">Capa e contracapa (padrão do boletim da FAPERON)</p>
+            <Button size="sm" variant="vidro-claro" onClick={() => setPersonalizando(true)}>
+              <FileCog aria-hidden="true" className="h-4 w-4" />
+              Personalizar capa e contracapa
+            </Button>
+          </div>
+          {documento.incluirCapa && <Capa m={documento} className="order-2 w-40 sm:w-48" />}
+          {!documento.incluirCapa && !documento.incluirContracapa && (
+            <p className="order-2 text-sm text-ink-muted print:hidden">Sem capa nem contracapa neste tipo de relatório.</p>
+          )}
+          <section aria-labelledby="titulo-relatorio" className="vidro-cartao order-4 w-full rounded-2xl p-5 print:rounded-none print:border-0 print:bg-white print:px-[14mm] print:py-0 print:shadow-none">
+            <Faixa m={documento} className="doc-faixa-interna" />
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-brand-fg">FAPERON · Relatório de {ROTULO_RELATORIO[tipo].toLowerCase()}</p>
+                <h2 id="titulo-relatorio" className="text-lg font-semibold text-ink">
+                  {relatorio.titulo}
+                </h2>
+                <p className="text-sm text-ink-muted">
+                  {formatarDataBR(de)} a {formatarDataBR(ate)} · gerado em {formatarDataBR(hoje)} por {funcionario.nome}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2 print:hidden">
+                <Button size="sm" variant="vidro-claro" onClick={() => window.print()}>
+                  <Printer aria-hidden="true" className="h-4 w-4" />
+                  Imprimir / salvar PDF
+                </Button>
+                <Button size="sm" variant="vidro" onClick={() => baixar(`relatorio-${tipo}-${de}-a-${ate}.csv`, paraCSV(relatorio))}>
+                  <Download aria-hidden="true" className="h-4 w-4" />
+                  Baixar CSV
+                </Button>
+              </div>
+            </div>
+            {relatorio.resumo.map((linha) => (
+              <p key={linha} className="mb-1 text-sm text-ink">
+                {linha}
               </p>
+            ))}
+            <div className="mt-3">
+              <Tabela r={relatorio} />
             </div>
-            <div className="flex flex-wrap gap-2 print:hidden">
-              <Button size="sm" variant="vidro-claro" onClick={() => window.print()}>
-                <Printer aria-hidden="true" className="h-4 w-4" />
-                Imprimir / salvar PDF
-              </Button>
-              <Button size="sm" variant="vidro" onClick={() => baixar(`relatorio-${tipo}-${de}-a-${ate}.csv`, paraCSV(relatorio))}>
-                <Download aria-hidden="true" className="h-4 w-4" />
-                Baixar CSV
-              </Button>
-            </div>
-          </div>
-          {relatorio.resumo.map((linha) => (
-            <p key={linha} className="mb-1 text-sm text-ink">
-              {linha}
-            </p>
-          ))}
-          <div className="mt-3">
-            <Tabela r={relatorio} />
-          </div>
-          <p className="mt-4 hidden text-[10px] text-ink-muted print:block">{PROTOTIPO.faixa}</p>
-        </section>
+            <p className="mt-4 hidden text-[10px] text-ink-muted print:block">{PROTOTIPO.faixa}</p>
+          </section>
+          {documento.incluirContracapa && <Contracapa m={documento} className="order-3 w-40 sm:w-48" />}
+        </div>
+      )}
+      {personalizando && (
+        <Dialogo titulo={`Capa e contracapa: relatório de ${ROTULO_RELATORIO[tipo].toLowerCase()}`} aoFechar={() => setPersonalizando(false)}>
+          <FormularioDocumento
+            key={tipo}
+            tipo={tipo}
+            inicial={modelo}
+            aoCancelar={() => setPersonalizando(false)}
+            aoSalvar={(m) => {
+              gravar(`documento:${tipo}`, m);
+              setVersaoModelo((v) => v + 1);
+              setPersonalizando(false);
+            }}
+          />
+        </Dialogo>
       )}
     </div>
   );

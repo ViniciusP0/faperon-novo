@@ -1,12 +1,13 @@
 "use client";
 
-import { ExternalLink, LogIn, Menu, X } from "lucide-react";
+import { ExternalLink, LogIn, LogOut, Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { BotaoTema } from "@/components/site/botao-tema";
 import { buttonVariants } from "@/components/ui/button";
+import { gravarAcesso, gravarSessao } from "@/lib/sistema/armazenamento";
 import { MENU, ROTAS } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
@@ -15,7 +16,17 @@ const BOTAO_ACESSO = "dark:bg-brand-lime dark:text-brand-dark dark:hover:bg-bran
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const router = useRouter();
   const [aberto, setAberto] = useState(false);
+  // na área logada o botão do cabeçalho deixa de levar ao login e passa a sair do sistema
+  const logado = pathname.startsWith("/sistema");
+
+  function sair() {
+    gravarSessao(null);
+    gravarAcesso(false);
+    setAberto(false);
+    router.push(ROTAS.login);
+  }
 
   const ativo = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
 
@@ -66,13 +77,20 @@ export function SiteHeader() {
             </ul>
           </nav>
 
-          <Link href={ROTAS.login} className={cn(buttonVariants({ size: "sm" }), BOTAO_ACESSO, "ml-1 shrink-0 min-[1200px]:ml-2")}>
-            <LogIn aria-hidden="true" className="h-4 w-4" />
-            {/* Abaixo de 1200 px o menu de 6 itens não deixa folga (no Linux o texto sai um pouco mais largo): o rótulo encurta, e o nome acessível continua inteiro. */}
-            <span>
-              Acessar<span className="sr-only min-[1200px]:not-sr-only"> o sistema</span>
-            </span>
-          </Link>
+          {logado ? (
+            <button type="button" onClick={sair} className={cn(buttonVariants({ size: "sm" }), BOTAO_ACESSO, "ml-1 shrink-0 min-[1200px]:ml-2")}>
+              <LogOut aria-hidden="true" className="h-4 w-4" />
+              Sair
+            </button>
+          ) : (
+            <Link href={ROTAS.login} className={cn(buttonVariants({ size: "sm" }), BOTAO_ACESSO, "ml-1 shrink-0 min-[1200px]:ml-2")}>
+              <LogIn aria-hidden="true" className="h-4 w-4" />
+              {/* Abaixo de 1200 px o menu de 6 itens não deixa folga (no Linux o texto sai um pouco mais largo): o rótulo encurta, e o nome acessível continua inteiro. */}
+              <span>
+                Acessar<span className="sr-only min-[1200px]:not-sr-only"> o sistema</span>
+              </span>
+            </Link>
+          )}
           <BotaoTema className="ml-2 min-[1200px]:ml-3" />
         </div>
 
@@ -114,14 +132,21 @@ export function SiteHeader() {
               </li>
             ))}
             <li className="mt-2 border-t border-line pt-2">
-              <Link
-                href={ROTAS.login}
-                onClick={() => setAberto(false)}
-                className={cn(buttonVariants(), BOTAO_ACESSO, "w-full justify-center")}
-              >
-                <LogIn aria-hidden="true" className="h-4 w-4" />
-                Acessar o sistema
-              </Link>
+              {logado ? (
+                <button type="button" onClick={sair} className={cn(buttonVariants(), BOTAO_ACESSO, "w-full justify-center")}>
+                  <LogOut aria-hidden="true" className="h-4 w-4" />
+                  Sair do sistema
+                </button>
+              ) : (
+                <Link
+                  href={ROTAS.login}
+                  onClick={() => setAberto(false)}
+                  className={cn(buttonVariants(), BOTAO_ACESSO, "w-full justify-center")}
+                >
+                  <LogIn aria-hidden="true" className="h-4 w-4" />
+                  Acessar o sistema
+                </Link>
+              )}
             </li>
           </ul>
         </nav>

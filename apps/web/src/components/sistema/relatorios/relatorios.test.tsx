@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { gravarAcesso, gravarSessao } from "@/lib/sistema/armazenamento";
@@ -73,5 +73,36 @@ describe("Relatórios", () => {
     expect(clique).toHaveBeenCalledOnce();
     await user.click(screen.getByRole("button", { name: /Imprimir/ }));
     expect(imprimir).toHaveBeenCalledOnce();
+  });
+
+  it("capa e contracapa no padrão do boletim, personalizáveis por tipo e salvas para a próxima vez", async () => {
+    const user = userEvent.setup();
+    const { unmount } = renderRelatorios("carla");
+    const capa = screen.getByRole("region", { name: "Capa" });
+    expect(within(capa).getByRole("heading", { name: "Relatório de Gestão da Frota" })).toBeInTheDocument();
+    expect(capa).toHaveTextContent(/Período de análise: \d{2}\/\d{2}\/\d{4} a \d{2}\/\d{2}\/\d{4}/);
+    const contracapa = screen.getByRole("region", { name: "Contracapa" });
+    expect(contracapa).toHaveTextContent("Carla Mendes - Comunicação");
+
+    await user.click(screen.getByRole("button", { name: "Personalizar capa e contracapa" }));
+    const dialogo = screen.getByRole("dialog");
+    await user.clear(within(dialogo).getByLabelText("Título"));
+    await user.type(within(dialogo).getByLabelText("Título"), "Frota da Regional Sul");
+    await user.click(within(dialogo).getByRole("button", { name: "Adicionar campo" }));
+    await user.type(within(dialogo).getByLabelText("Rótulo do campo 5"), "Regional");
+    await user.type(within(dialogo).getByLabelText("Valor do campo 5"), "Vilhena");
+    await user.click(within(dialogo).getByLabelText("Incluir contracapa"));
+    await user.click(within(dialogo).getByRole("button", { name: "Salvar modelo" }));
+
+    expect(within(screen.getByRole("region", { name: "Capa" })).getByRole("heading", { name: "Frota da Regional Sul" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Capa" })).toHaveTextContent("Regional: Vilhena");
+    expect(screen.queryByRole("region", { name: "Contracapa" })).toBeNull();
+    // outro tipo tem o próprio modelo
+    await user.click(screen.getByRole("button", { name: "Espaços" }));
+    expect(within(screen.getByRole("region", { name: "Capa" })).getByRole("heading", { name: "Relatório de Ocupação dos Espaços" })).toBeInTheDocument();
+    unmount();
+
+    renderRelatorios("carla");
+    expect(within(screen.getByRole("region", { name: "Capa" })).getByRole("heading", { name: "Frota da Regional Sul" })).toBeInTheDocument();
   });
 });
