@@ -34,6 +34,17 @@ export const MENU: ItemMenu[] = [
   { label: "Fale Conosco", href: ROTAS.faleConosco },
 ];
 
+/** Na área logada o cabeçalho troca o menu do site por este (as páginas públicas ficam com MENU). */
+export const MENU_SISTEMA: ItemMenu[] = [
+  { label: "Início do sistema", href: "/sistema" },
+  { label: "Agenda", href: "/sistema/agenda" },
+  { label: "Frotas", href: "/sistema/frotas" },
+  { label: "Espaços", href: "/sistema/espacos" },
+  { label: "Contas", href: "/sistema/contas" },
+  { label: "Atividades", href: "/sistema/atividades" },
+  { label: "Relatórios", href: "/sistema/relatorios" },
+];
+
 export const LINKS_INSTITUCIONAIS: ItemMenu[] = [
   { label: "Transparência", href: WIX_PAGINAS.transparencia, externo: true },
   { label: "Sistema FAPERON – SENAR", href: "https://sistemafaperon.org.br/", externo: true },

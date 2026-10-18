@@ -86,3 +86,15 @@ Seguiu `reference/polish.md` do Impeccable, com as evidências coletadas na agen
 | Fora do escopo | No celular, o Zétele cobre parte do painel do dia | sobreposição conhecida do Zétele | Registrado para revisão do tamanho do Zétele no celular |
 
 Na confirmação, a rolagem horizontal ficou em zero nas 10 combinações de largura e tema, sem erro no console.
+
+## Segunda passada da frontend-design (18/10/2026): crítica com captura
+
+A revisão contra os padrões genéricos da skill encontrou três vícios na agenda já construída:
+
+| Padrão genérico | Onde | Ajuste |
+|---|---|---|
+| Kit de cartões de SaaS (todas as células como cartões iguais, com a mesma sombra) | Células do mês | Células planas, com raio de 8 px e contorno de 1 px (a única elevação). A sombra fica só para o painel do dia. |
+| Uma palavra destacada em outra cor no título | "Outubro **2026**" com o ano em verde | O ano se diferencia só pelo peso (extralight), na mesma cor |
+| Rótulo acima do título ("Hoje", "Dia escolhido") | Painel do dia | Rótulo removido ("tirar um acessório"); hoje ganha o selo lima "hoje" na linha da data, como na Lista |
+
+Na captura de autocrítica, as células brancas sumiam contra o fundo sem a sombra. Por isso entrou o contorno de 1 px.

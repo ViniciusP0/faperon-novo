@@ -1,31 +1,18 @@
 "use client";
 
 import { Compass, LogOut, RotateCcw, UserRoundCog } from "lucide-react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { PROTOTIPO } from "@/content/sistema/funcionarios";
 import { useSistema } from "@/lib/sistema/estado";
-import { cn } from "@/lib/utils";
 import { useTour } from "./tour/tour";
-
-const SECOES = [
-  { href: "/sistema", rotulo: "Início do sistema" },
-  { href: "/sistema/agenda", rotulo: "Agenda" },
-  { href: "/sistema/frotas", rotulo: "Frotas" },
-  { href: "/sistema/espacos", rotulo: "Espaços" },
-  { href: "/sistema/contas", rotulo: "Contas" },
-  { href: "/sistema/atividades", rotulo: "Atividades" },
-  { href: "/sistema/relatorios", rotulo: "Relatórios" },
-];
 
 const acao =
   "inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium sm:min-h-0 text-ink-muted transition duration-150 ease-out hover:bg-white/60 hover:text-ink dark:hover:bg-white/5";
 
-/** Barra do sistema em vidro, fixa sob o cabeçalho do site: o conteúdo rola por trás dela. */
+/** Barra do sistema em vidro, fixa sob o cabeçalho: quem está logado e as ações. As seções ficam no cabeçalho. */
 export function BarraSistema() {
   const { funcionario, sair, encerrar, restaurar } = useSistema();
   const { iniciar } = useTour();
-  const caminho = usePathname();
   const router = useRouter();
 
   function trocar() {
@@ -41,27 +28,6 @@ export function BarraSistema() {
   return (
     <div className="vidro-barra z-30 md:sticky md:top-[72px] print:hidden">
       <div className="container flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-2.5">
-        <nav aria-label="Seções do sistema" data-tour="barra">
-          <ul className="flex flex-wrap gap-1">
-            {SECOES.map((s) => {
-              const ativa = caminho === s.href;
-              return (
-                <li key={s.href}>
-                  <Link
-                    href={s.href}
-                    aria-current={ativa ? "page" : undefined}
-                    className={cn(
-                      "inline-flex rounded-lg px-3 py-1.5 text-sm font-medium transition duration-150 ease-out",
-                      ativa ? "vidro-claro" : "text-ink-muted hover:bg-white/60 hover:text-ink dark:hover:bg-white/5",
-                    )}
-                  >
-                    {s.rotulo}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
         <div className="flex flex-wrap items-center gap-1 text-sm">
           {funcionario && (
             <span className="mr-2 text-ink">

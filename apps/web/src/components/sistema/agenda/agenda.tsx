@@ -185,7 +185,7 @@ export function Agenda() {
           <section aria-labelledby="titulo-mes" className="min-w-0" data-tour="agenda-mes">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <h2 id="titulo-mes" className="text-3xl tracking-[-0.03em] text-ink">
-                <span className="font-semibold">{comInicialMaiuscula(nomeDoMes(mes.mes0))}</span> <span className="font-light text-brand-fg">{mes.ano}</span>
+                <span className="font-semibold">{comInicialMaiuscula(nomeDoMes(mes.mes0))}</span> <span className="font-extralight">{mes.ano}</span>
               </h2>
               <div className="flex items-center gap-1">
                 <Button variant="ghost" size="sm" onClick={() => andarMes(-1)} aria-label="Mês anterior">
@@ -227,10 +227,10 @@ export function Agenda() {
                         <td
                           key={dia}
                           className={cn(
-                            "group h-14 rounded-xl p-1 align-top transition-colors duration-150 md:h-32 md:p-1.5",
+                            "group h-14 rounded-lg p-1 align-top transition-colors duration-150 md:h-32 md:p-1.5",
                             doMes ? (fimDeSemana ? "bg-warm" : "bg-card") : "bg-transparent",
-                            doMes && "shadow-[0_1px_2px_rgb(0_70_58/0.08)]",
-                            dia === hoje ? "ring-2 ring-brand-lime" : escolhido && "ring-2 ring-brand-light",
+                            // contorno de 1 px é a única elevação da célula; hoje e o dia escolhido trocam por 2 px
+                            dia === hoje ? "ring-2 ring-brand-lime" : escolhido ? "ring-2 ring-brand-light" : doMes && "ring-1 ring-inset ring-line",
                           )}
                         >
                           <div className="flex items-center justify-between gap-1">
@@ -299,9 +299,9 @@ export function Agenda() {
           {/* abaixo de 1280 px o painel vai para baixo do mês, lado a lado com "Na sequência" */}
           <aside aria-labelledby="titulo-dia" className="grid min-w-0 items-start gap-6 md:grid-cols-2 xl:sticky xl:top-40 xl:block" data-tour="agenda-dia">
             <div className="rounded-2xl bg-brand-dark p-5 text-white shadow-[0_18px_40px_-24px_rgb(0_70_58/0.7)]">
-              <p className="text-sm text-white/75">{selecionado === hoje ? "Hoje" : selecionado < hoje ? "Dia que passou" : "Dia escolhido"}</p>
-              <h2 id="titulo-dia" className="mt-0.5 text-xl font-semibold tracking-[-0.02em]">
+              <h2 id="titulo-dia" className="text-xl font-semibold tracking-[-0.02em]">
                 {comInicialMaiuscula(dataPorExtenso(selecionado))}
+                {selecionado === hoje && <span className="ml-2 inline-block rounded-full bg-brand-lime px-2 py-0.5 align-middle text-xs font-semibold text-brand-dark">hoje</span>}
               </h2>
               {doDia.length === 0 ? (
                 <p className="mt-4 text-sm text-white/80">Nada marcado. Dia livre para o campo ou para planejar a semana.</p>

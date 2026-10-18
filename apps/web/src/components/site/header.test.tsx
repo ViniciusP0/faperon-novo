@@ -41,4 +41,19 @@ describe("SiteHeader", () => {
     expect(lerSessao()).toBeNull();
     expect(push).toHaveBeenCalledWith("/login");
   });
+
+  it("na área logada o menu é o do sistema; nas páginas públicas, o do site", () => {
+    caminho = "/sistema/agenda";
+    const { unmount } = render(<SiteHeader />);
+    const sistema = screen.getByRole("navigation", { name: "Seções do sistema" });
+    expect(sistema).toHaveTextContent("Início do sistema");
+    expect(screen.getByRole("link", { name: "Agenda" })).toHaveAttribute("aria-current", "page");
+    expect(screen.queryByRole("link", { name: "Central de Inteligência" })).toBeNull();
+    unmount();
+
+    caminho = "/noticias";
+    render(<SiteHeader />);
+    expect(screen.getByRole("navigation", { name: "Principal" })).toHaveTextContent("Central de Inteligência");
+    expect(screen.queryByRole("link", { name: "Início do sistema" })).toBeNull();
+  });
 });

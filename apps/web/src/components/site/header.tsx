@@ -8,7 +8,7 @@ import { useState } from "react";
 import { BotaoTema } from "@/components/site/botao-tema";
 import { buttonVariants } from "@/components/ui/button";
 import { gravarAcesso, gravarSessao } from "@/lib/sistema/armazenamento";
-import { MENU, ROTAS } from "@/lib/site";
+import { MENU, MENU_SISTEMA, ROTAS } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 /** Botão sólido; no escuro troca para lima, que destaca mais sobre o grafite. */
@@ -28,7 +28,10 @@ export function SiteHeader() {
     router.push(ROTAS.login);
   }
 
-  const ativo = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
+  // "/" e "/sistema" só ficam ativos neles mesmos; as demais seções, em qualquer subpágina
+  const ativo = (href: string) => (href === "/" || href === "/sistema" ? pathname === href : pathname.startsWith(href));
+  const itens = logado ? MENU_SISTEMA : MENU;
+  const rotuloMenu = logado ? "Seções do sistema" : "Principal";
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-card">
@@ -51,9 +54,9 @@ export function SiteHeader() {
         </Link>
 
         <div className="hidden items-center gap-1 lg:flex xl:gap-2">
-          <nav aria-label="Principal">
+          <nav aria-label={rotuloMenu} data-tour={logado ? "barra" : undefined}>
             <ul className="flex items-center">
-              {MENU.map((item) => (
+              {itens.map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
@@ -110,9 +113,9 @@ export function SiteHeader() {
       </div>
 
       {aberto && (
-        <nav id="menu-mobile" aria-label="Principal (móvel)" className="border-t border-line bg-card lg:hidden">
+        <nav id="menu-mobile" aria-label={`${rotuloMenu} (móvel)`} className="border-t border-line bg-card lg:hidden">
           <ul className="container flex flex-col py-2">
-            {MENU.map((item) => (
+            {itens.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}
