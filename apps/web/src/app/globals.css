@@ -42,6 +42,41 @@
   --field: #647f71;
   --danger-soft: #fdf2f1;
   --danger-ink: #7a1810;
+  /*
+   * Legenda única de tipos: forte (texto, ícone, contorno) e suave (fundo). Forte sobre suave, WCAG:
+   *   reunião 6,6 · viagem 6,6 · compromisso 7,4 · capacitação 6,0 · palestra 7,4 · institucional 6,6
+   *   visita técnica 6,7 · atendimento 6,5 · administrativo 8,6 · outro 5,9 (todos acima de 4,5:1).
+   * Reunião é o verde FAPERON e viagem é o aço, os mesmos tons da marca e da faixa de viagem.
+   */
+  --tipo-reuniao: var(--brand-fg);
+  --tipo-reuniao-suave: var(--brand-soft);
+  --tipo-viagem: var(--steel);
+  --tipo-viagem-suave: var(--steel-soft);
+  --tipo-compromisso: #6b3a6e;
+  --tipo-compromisso-suave: #f4ebf4;
+  --tipo-capacitacao: #7a5210;
+  --tipo-capacitacao-suave: #f8efdc;
+  --tipo-palestra: #8a2442;
+  --tipo-palestra-suave: #f9e9ee;
+  --tipo-institucional: #3b5d17;
+  --tipo-institucional-suave: #ebf2e2;
+  --tipo-visita-tecnica: #0a5a6e;
+  --tipo-visita-tecnica-suave: #e2f1f4;
+  --tipo-atendimento: #8f3b1c;
+  --tipo-atendimento-suave: #f9ece5;
+  --tipo-administrativo: #3d434a;
+  --tipo-administrativo-suave: #eceef0;
+  --tipo-outro: #565e5a;
+  --tipo-outro-suave: #f0f2f1;
+  /* Paleta das tags (só o ponto ao lado do nome), distinta da dos tipos; todas acima de 4,5:1 sobre o cartão. */
+  --tag-azul: #2563eb;
+  --tag-violeta: #7c3aed;
+  --tag-rosa: #db2777;
+  --tag-laranja: #c2410c;
+  --tag-amarelo: #a16207;
+  --tag-ciano: #0e7490;
+  --tag-magenta: #a21caf;
+  --tag-indigo: #4338ca;
   /* Fixos nos dois temas: controles brancos sobre foto (setas do carrossel), indicador inativo e hover do botão lima. */
   --on-light: #14261f;
   --dot-off: #8a9c92;
@@ -75,6 +110,32 @@
   --danger: #ff9a90;
   --danger-soft: #3a1714;
   --danger-ink: #ffd5d1;
+  /* Tipos no escuro, forte sobre suave: reunião 7,4 · viagem 7,1 · compromisso 8,2 · capacitação 8,8 · palestra 8,2
+   * institucional 9,4 · visita técnica 8,7 · atendimento 8,1 · administrativo 9,2 · outro 7,8. */
+  --tipo-compromisso: #dcaadf;
+  --tipo-compromisso-suave: #2c1d2e;
+  --tipo-capacitacao: #e6bf73;
+  --tipo-capacitacao-suave: #2d2413;
+  --tipo-palestra: #f2a0b8;
+  --tipo-palestra-suave: #34171f;
+  --tipo-institucional: #b0dc8a;
+  --tipo-institucional-suave: #1e2c15;
+  --tipo-visita-tecnica: #7fd3e2;
+  --tipo-visita-tecnica-suave: #132b30;
+  --tipo-atendimento: #f2aa88;
+  --tipo-atendimento-suave: #331f18;
+  --tipo-administrativo: #c5cbd3;
+  --tipo-administrativo-suave: #22272c;
+  --tipo-outro: #b3bbb7;
+  --tipo-outro-suave: #212725;
+  --tag-azul: #7aa7ff;
+  --tag-violeta: #b89dff;
+  --tag-rosa: #ff8fc0;
+  --tag-laranja: #ffa36b;
+  --tag-amarelo: #f2c94c;
+  --tag-ciano: #5fd4ea;
+  --tag-magenta: #e98ef3;
+  --tag-indigo: #a7aaff;
   color-scheme: dark;
 }
 

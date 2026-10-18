@@ -31,6 +31,10 @@ export interface Evento {
   trecho?: "unico" | "ida" | "meio" | "volta";
   /** Viagem de um colega: o primeiro nome de quem viaja (só leitura, sem link para a reserva). */
   quem?: string;
+  /** Tipo na legenda única quando o item vem de outro lugar (espaço, FAPERON); sem ele, vale o `tipo`. */
+  tipoNaLegenda?: TipoLegenda;
+  /** Ids das tags; só o evento próprio as edita, os demais herdam da reserva ou do pedido. */
+  tags?: string[];
 }
 
 export interface Veiculo {
@@ -54,6 +58,7 @@ export interface Reserva {
   kmInicial: number | null;
   kmFinal: number | null;
   situacao: SituacaoReserva;
+  tags?: string[];
 }
 
 export interface Abastecimento {
@@ -118,6 +123,7 @@ export interface PedidoEspaco {
   /** O que o gestor pediu para corrigir ao devolver o pedido (status "devolvido"). */
   correcao?: string;
   criadoEm: string;
+  tags?: string[];
 }
 
 export const CENTROS_DE_CUSTO = ["Presidência", "Administrativo", "Técnica", "Comunicação", "Sindical"] as const;
@@ -145,6 +151,7 @@ export interface Despesa {
   status: StatusDespesa;
   observacaoGestor: string;
   criadaEm: string;
+  tags?: string[];
 }
 
 export type TipoAtividade =
@@ -172,9 +179,33 @@ export interface Atividade {
   descricao: string;
   resultados: string;
   criadaEm: string;
+  tags?: string[];
 }
 
-export type ModuloHistorico = "acesso" | "agenda" | "frota" | "espacos" | "contas" | "atividades";
+/** Catálogo único de tipos: a cor diz o tipo em todo o sistema (ver `legenda.ts`). */
+export type TipoLegenda =
+  | "reuniao"
+  | "viagem"
+  | "compromisso"
+  | "capacitacao"
+  | "palestra"
+  | "institucional"
+  | "visita_tecnica"
+  | "atendimento"
+  | "administrativo"
+  | "outro";
+
+/** Paleta própria das tags, distinta da dos tipos: aparece só como ponto ao lado do nome. */
+export type CorTag = "azul" | "violeta" | "rosa" | "laranja" | "amarelo" | "ciano" | "magenta" | "indigo";
+
+/** Etiqueta livre, criada pelos gestores e aplicada por todos. */
+export interface Tag {
+  id: string;
+  nome: string;
+  cor: CorTag;
+}
+
+export type ModuloHistorico = "acesso" | "agenda" | "frota" | "espacos" | "contas" | "atividades" | "tags";
 
 /** Trilha automática do que foi feito no sistema: quem, quando, onde e o quê. */
 export interface RegistroHistorico {

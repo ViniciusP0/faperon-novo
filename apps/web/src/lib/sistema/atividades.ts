@@ -18,6 +18,7 @@ export const ROTULO_MODULO: Record<ModuloHistorico, string> = {
   espacos: "Espaços",
   contas: "Contas",
   atividades: "Atividades",
+  tags: "Tags",
 };
 
 /** O histórico guarda as ações mais recentes; o protótipo vive no localStorage, que é pequeno. */
