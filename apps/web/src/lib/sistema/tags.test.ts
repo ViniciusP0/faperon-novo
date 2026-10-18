@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { FUNCIONARIOS } from "@/content/sistema/funcionarios";
-import { alternarTag, comTag, nomesDasTags, podeGerirTags, removerTag, tagsDoItem, tagsDeExemplo, validarNomeTag } from "./tags";
+import { alternarTag, comTag, limparTags, nomesDasTags, podeGerirTags, removerTag, sanearTags, tagsDoItem, tagsDeExemplo, validarNomeTag } from "./tags";
 import type { Funcionario, Tag } from "./tipos";
 
 const tags: Tag[] = [
@@ -91,5 +91,33 @@ describe("tags de exemplo", () => {
     expect(exemplo.map((t) => t.nome)).toEqual(["Dia de campo", "Sindicatos", "SENAR", "Assembleia", "Safra 2026/27", "Urgente"]);
     expect(new Set(exemplo.map((t) => t.id)).size).toBe(6);
     expect(new Set(exemplo.map((t) => t.cor)).size).toBe(6);
+  });
+});
+
+describe("saneamento", () => {
+  it("limparTags tira ids de tags que não existem e não mexe no que já está limpo", () => {
+    const itens = [{ id: "a", tags: ["t1", "sumiu"] }, { id: "b", tags: ["t2"] }, { id: "c" }];
+    const depois = limparTags(itens, tags);
+    expect(depois.map((i) => i.tags)).toEqual([["t1"], ["t2"], undefined]);
+    expect(depois[1]).toBe(itens[1]);
+    expect(depois[2]).toBe(itens[2]);
+  });
+
+  it("sanearTags descarta entradas sem id ou nome e troca cor desconhecida", () => {
+    expect(
+      sanearTags([
+        { id: "t1", nome: " SENAR ", cor: "ciano" },
+        { id: "t2", nome: "Sem cor", cor: "verde-limao" },
+        { id: "t1", nome: "Repetida", cor: "azul" },
+        { id: "", nome: "Sem id", cor: "azul" },
+        { id: "t3", nome: "  ", cor: "azul" },
+        { id: 4, nome: "Id número" },
+        "texto solto",
+        null,
+      ]),
+    ).toEqual([
+      { id: "t1", nome: "SENAR", cor: "ciano" },
+      { id: "t2", nome: "Sem cor", cor: "azul" },
+    ]);
   });
 });

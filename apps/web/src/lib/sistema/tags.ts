@@ -62,6 +62,26 @@ export function nomesDasTags(ids: string[] | undefined, tags: Tag[]): string {
     .join(", ");
 }
 
+/** Itens só com ids de tags que existem (formulário aberto com tag já apagada, agenda de exemplo antiga);
+ *  os que já estão limpos voltam iguais (mesma referência). */
+export function limparTags<T extends { tags?: string[] }>(itens: T[], tags: Tag[]): T[] {
+  const existe = new Set(tags.map((t) => t.id));
+  return itens.map((i) => (i.tags?.some((id) => !existe.has(id)) ? { ...i, tags: i.tags.filter((id) => existe.has(id)) } : i));
+}
+
+/** Lista lida do storage, que pode ter sido editada à mão: descarta entrada sem id ou nome (ou com id
+ *  repetido) e troca cor desconhecida pela primeira da paleta, para nenhum chip quebrar. */
+export function sanearTags(valor: unknown[]): Tag[] {
+  const vistos = new Set<string>();
+  return valor.flatMap((v) => {
+    if (!v || typeof v !== "object") return [];
+    const { id, nome, cor } = v as Record<string, unknown>;
+    if (typeof id !== "string" || !id || vistos.has(id) || typeof nome !== "string" || !nome.trim()) return [];
+    vistos.add(id);
+    return [{ id, nome: nome.trim(), cor: typeof cor === "string" && cor in CORES_TAG ? (cor as CorTag) : "azul" }];
+  });
+}
+
 /** Lista inicial, a validar com o Tiago Martins. Os ids ficam fixos para os dados de exemplo usarem. */
 export function tagsDeExemplo(): Tag[] {
   return [

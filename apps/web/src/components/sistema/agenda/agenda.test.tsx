@@ -1,9 +1,10 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { gravar, gravarAcesso, gravarSessao } from "@/lib/sistema/armazenamento";
+import { gravar, gravarAcesso, gravarSessao, ler } from "@/lib/sistema/armazenamento";
 import { hojeISO } from "@/lib/sistema/datas";
 import { SistemaProvider } from "@/lib/sistema/estado";
+import type { Evento } from "@/lib/sistema/tipos";
 import { Agenda } from "./agenda";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }), usePathname: () => "/sistema/agenda" }));
@@ -188,6 +189,11 @@ describe("Agenda individual", () => {
     await user.click(within(formulario).getByRole("button", { name: "Gerenciar tags" }));
     const gerir = screen.getByRole("dialog", { name: "Gerenciar tags" });
     await user.type(within(gerir).getByLabelText("Nova tag"), "Feira regional{Enter}");
+    // o Enter enviou só o formulário de dentro: o evento não foi salvo e os dois diálogos seguem abertos
+    expect(within(gerir).getByLabelText("Nome da tag Feira regional")).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Novo evento" })).toBeInTheDocument();
+    expect(ler<Evento[]>("agenda:marcos", []).some((e) => e.titulo === "Visita à feira")).toBe(false);
+    // Esc fecha só o de cima
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("dialog", { name: "Gerenciar tags" })).toBeNull();
     // o formulário continua aberto, com o título digitado e a tag nova para marcar
@@ -195,5 +201,19 @@ describe("Agenda individual", () => {
     await user.click(within(formulario).getByRole("checkbox", { name: "Feira regional" }));
     await user.click(within(formulario).getByRole("button", { name: "Salvar" }));
     expect(screen.getByRole("button", { name: /Editar Visita à feira/ })).toBeInTheDocument();
+  });
+
+  it("id de tag que não existe mais não volta a ser gravado", async () => {
+    const hoje = hojeISO();
+    gravar("agenda:carla", [
+      { id: "c1", titulo: "Pauta antiga", data: hoje, inicio: "09:00", fim: "10:00", local: "", descricao: "", tipo: "reuniao", origem: "pessoal", tags: ["tag-apagada", "tag-sindicatos"] },
+    ]);
+    const user = userEvent.setup();
+    renderAgenda("carla");
+    await user.click(screen.getByRole("button", { name: /Editar Pauta antiga/ }));
+    const dialogo = screen.getByRole("dialog", { name: "Editar evento" });
+    expect(within(dialogo).getByRole("checkbox", { name: "Sindicatos" })).toBeChecked();
+    await user.click(within(dialogo).getByRole("button", { name: "Salvar" }));
+    expect(ler<Evento[]>("agenda:carla", []).find((e) => e.id === "c1")?.tags).toEqual(["tag-sindicatos"]);
   });
 });

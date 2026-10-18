@@ -14,7 +14,7 @@ import { FUNCIONARIOS, funcionarioPorId } from "@/content/sistema/funcionarios";
 import { apagarTudo, gravar, gravarAcesso, gravarSessao, ler, lerAcesso, lerSessao } from "./armazenamento";
 import { anotar } from "./atividades";
 import { agoraISO, hojeISO } from "./datas";
-import { removerTag, tagsDeExemplo } from "./tags";
+import { limparTags, removerTag, sanearTags, tagsDeExemplo } from "./tags";
 import type { Atividade, Despesa, EstadoFrota, Evento, Funcionario, ModuloHistorico, PedidoEspaco, RegistroHistorico, Tag } from "./tipos";
 
 /** Mudança com a descrição do que foi feito: entra no histórico (registro automático de atividades). */
@@ -76,12 +76,15 @@ export function SistemaProvider({ children }: { children: ReactNode }) {
     setAcesso(liberado);
     const atual = liberado ? funcionarioPorId(lerSessao()) : null;
     setFuncionario(atual);
-    setEventos(atual ? ler(`agenda:${atual.id}`, agendaDeExemplo(atual.id, hoje)) : []);
-    setFrota(ler("frota", frotaDeExemplo(hoje)));
-    setPedidos(ler("espacos", pedidosDeExemplo(hoje)));
-    setDespesas(ler("contas", despesasDeExemplo(hoje)));
-    setAtividades(ler("atividades", atividadesDeExemplo(hoje)));
-    setTags(ler("tags", tagsDeExemplo()));
+    // as tags vêm primeiro: os itens perdem, já na leitura, os ids de tags que não existem mais
+    const lidas = sanearTags(ler<unknown[]>("tags", tagsDeExemplo()));
+    setTags(lidas);
+    setEventos(atual ? limparTags(ler(`agenda:${atual.id}`, agendaDeExemplo(atual.id, hoje)), lidas) : []);
+    const frotaLida = ler("frota", frotaDeExemplo(hoje));
+    setFrota({ ...frotaLida, reservas: limparTags(frotaLida.reservas, lidas) });
+    setPedidos(limparTags(ler("espacos", pedidosDeExemplo(hoje)), lidas));
+    setDespesas(limparTags(ler("contas", despesasDeExemplo(hoje)), lidas));
+    setAtividades(limparTags(ler("atividades", atividadesDeExemplo(hoje)), lidas));
     setHistorico(ler("historico", historicoDeExemplo(hoje)));
     setPronto(true);
   }, [hoje]);
@@ -97,11 +100,11 @@ export function SistemaProvider({ children }: { children: ReactNode }) {
         return novo;
       });
     };
-    /** Grava a coleção e, se houver descrição, anota no histórico. */
-    function persistente<T>(chave: string, modulo: ModuloHistorico, set: (f: (atual: T) => T) => void): Atualizar<T> {
+    /** Grava a coleção (só com ids de tags que existem) e, se houver descrição, anota no histórico. */
+    function persistente<T>(chave: string, modulo: ModuloHistorico, set: (f: (atual: T) => T) => void, limpar: (v: T) => T = (v) => v): Atualizar<T> {
       return (muda, acao) => {
         set((atual) => {
-          const nova = muda(atual);
+          const nova = limpar(muda(atual));
           gravar(chave, nova);
           return nova;
         });
@@ -109,13 +112,15 @@ export function SistemaProvider({ children }: { children: ReactNode }) {
       };
     }
     const salvarEventos = (lista: Evento[]) => {
-      setEventos(lista);
-      if (funcionario) gravar(`agenda:${funcionario.id}`, lista);
+      const limpa = limparTags(lista, tags);
+      setEventos(limpa);
+      if (funcionario) gravar(`agenda:${funcionario.id}`, limpa);
     };
-    const atualizarFrota = persistente("frota", "frota", setFrota);
-    const atualizarPedidos = persistente("espacos", "espacos", setPedidos);
-    const atualizarDespesas = persistente("contas", "contas", setDespesas);
-    const atualizarAtividades = persistente("atividades", "atividades", setAtividades);
+    const semTagsApagadas = <I extends { tags?: string[] }>(l: I[]) => limparTags(l, tags);
+    const atualizarFrota = persistente("frota", "frota", setFrota, (f: EstadoFrota) => ({ ...f, reservas: semTagsApagadas(f.reservas) }));
+    const atualizarPedidos = persistente("espacos", "espacos", setPedidos, semTagsApagadas<PedidoEspaco>);
+    const atualizarDespesas = persistente("contas", "contas", setDespesas, semTagsApagadas<Despesa>);
+    const atualizarAtividades = persistente("atividades", "atividades", setAtividades, semTagsApagadas<Atividade>);
     const atualizarTags = persistente("tags", "tags", setTags);
     return {
       pronto,
