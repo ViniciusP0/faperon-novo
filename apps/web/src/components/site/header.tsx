@@ -60,7 +60,7 @@ export function SiteHeader() {
                     {...(item.externo ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                     aria-current={!item.externo && ativo(item.href) ? "page" : undefined}
                     className={cn(
-                      "inline-flex items-center gap-1 whitespace-nowrap border-b-[3px] border-transparent px-1.5 py-2 text-[0.8125rem] font-medium text-ink hover:text-brand-fg min-[1200px]:px-2 min-[1200px]:text-sm xl:px-3",
+                      "inline-flex items-center gap-1 whitespace-nowrap border-b-[3px] border-transparent px-1.5 py-2 text-[0.8125rem] font-medium text-ink hover:text-brand-fg min-[1200px]:px-2 min-[1200px]:text-sm min-[1400px]:px-3",
                       !item.externo && ativo(item.href) && "border-brand-light text-brand-fg",
                     )}
                   >

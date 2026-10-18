@@ -19,7 +19,7 @@ Endereço: Rua João Goulart, 1843, Nossa Sra. das Graças, Porto Velho - RO, CE
 Instituto de Pesquisa, Serviços e Desenvolvimento Agropecuário de Rondônia, entidade do Sistema FAPERON: ficha institucional, o Diagnóstico da Piscicultura de Rondônia e o comunicado de transparência sobre os recursos recebidos para o diagnóstico.
 
 ## [/sindicatos-rurais] Sindicatos Rurais
-Lista dos Sindicatos dos Produtores Rurais de Rondônia, com presidente, telefone, e-mail e endereço. É pelo sindicato que o produtor se associa e chega às ações do Sistema FAPERON/SENAR.
+Mapa de Rondônia com um pin para cada Sindicato dos Produtores Rurais. A busca, por município ou nome, filtra os pins; clicar num pin abre a foto do sindicato, o presidente, os telefones, o e-mail e o endereço. É pelo sindicato que o produtor se associa e chega às ações do Sistema FAPERON/SENAR.
 
 ## [/comissao-mulheres] Comissão Mulheres
 Comissão Estadual das Mulheres da FAPERON: desenvolvimento e capacitação das mulheres do agro, participação no Sistema e parcerias com o SENAR-RO e a Comissão Nacional da CNA.
@@ -29,3 +29,6 @@ Explica quais dados o site trata, inclusive as perguntas feitas ao Zétele (guar
 
 ## [/login] Acessar o sistema
 O botão "Acessar o sistema", no alto do site, leva à entrada da área logada. Hoje ela é um protótipo para a FAPERON avaliar: depois do login de demonstração, a pessoa escolhe um perfil de funcionário de exemplo. Os dados são fictícios e ficam salvos só no navegador de quem usa; nada é enviado ao servidor.
+
+## [/galeria] Galeria
+Fotos dos eventos da FAPERON e do Sistema FAPERON/SENAR (dias de campo, formaturas, missões, congressos e capacitações em Rondônia), organizadas em álbuns por evento. O filtro mostra todos os álbuns, só os da FAPERON ou só os do SENAR; clicar numa foto amplia e permite passar as outras pelo teclado. Cada álbum leva à matéria completa no site de origem.

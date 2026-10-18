@@ -7,7 +7,11 @@
       "(69) 98431-1001",
       "(69) 99903-2706"
     ],
-    "email": "sindicatoruralafo@gmail.com"
+    "email": "sindicatoruralafo@gmail.com",
+    "lat": -11.92969,
+    "lng": -61.99613,
+    "precisao": "cidade",
+    "foto": "/sindicatos/alta-floresta-d-oeste.webp"
   },
   {
     "nome": "Alto Paraíso",
@@ -16,7 +20,10 @@
     "telefones": [
       "(69) 99999-2366"
     ],
-    "email": "sindicatoruralaltoparaiso@gmail.com"
+    "email": "sindicatoruralaltoparaiso@gmail.com",
+    "lat": -9.72357,
+    "lng": -63.3188,
+    "precisao": "cidade"
   },
   {
     "nome": "Alvorada do Oeste",
@@ -25,7 +32,11 @@
     "telefones": [
       "(69) 98433-7253"
     ],
-    "email": "sindicatorural.alvorada@gmail.com"
+    "email": "sindicatorural.alvorada@gmail.com",
+    "lat": -11.51,
+    "lng": -62.46062,
+    "precisao": "endereco",
+    "foto": "/sindicatos/alvorada-do-oeste.webp"
   },
   {
     "nome": "Ariquemes",
@@ -34,7 +45,11 @@
     "telefones": [
       "(69) 99360-3537"
     ],
-    "email": "sinrural@sinrural.com"
+    "email": "sinrural@sinrural.com",
+    "lat": -9.92355,
+    "lng": -63.02436,
+    "precisao": "endereco",
+    "foto": "/sindicatos/ariquemes.webp"
   },
   {
     "nome": "Buritis",
@@ -43,7 +58,11 @@
     "telefones": [
       "(69) 99213-4475"
     ],
-    "email": "sindicatofaperondeburitis@hotmail.com"
+    "email": "sindicatofaperondeburitis@hotmail.com",
+    "lat": -10.20653,
+    "lng": -63.83223,
+    "precisao": "rua",
+    "foto": "/sindicatos/buritis.webp"
   },
   {
     "nome": "Cabixi",
@@ -53,7 +72,11 @@
       "(69) 98465-6411",
       "(69) 98139-6769"
     ],
-    "email": "sindicatocabixi@hotmail.com"
+    "email": "sindicatocabixi@hotmail.com",
+    "lat": -13.49561,
+    "lng": -60.54244,
+    "precisao": "cidade",
+    "foto": "/sindicatos/cabixi.webp"
   },
   {
     "nome": "Cacoal",
@@ -62,7 +85,11 @@
     "telefones": [
       "(69) 98133-1717"
     ],
-    "email": "sindicatorural.cacoal@gmail.com"
+    "email": "sindicatorural.cacoal@gmail.com",
+    "lat": -11.43075,
+    "lng": -61.45207,
+    "precisao": "rua",
+    "foto": "/sindicatos/cacoal.webp"
   },
   {
     "nome": "Campo Novo de Rondônia",
@@ -71,7 +98,11 @@
     "telefones": [
       "(69) 99389-9746"
     ],
-    "email": "sindicatocamponovoderondonia@gmail.com"
+    "email": "sindicatocamponovoderondonia@gmail.com",
+    "lat": -10.57085,
+    "lng": -63.61937,
+    "precisao": "endereco",
+    "foto": "/sindicatos/campo-novo-de-rondonia.webp"
   },
   {
     "nome": "Candeias do Jamari",
@@ -80,7 +111,11 @@
     "telefones": [
       "(69) 99326-2640"
     ],
-    "email": "sindicatoruralcandeias@gmail.com"
+    "email": "sindicatoruralcandeias@gmail.com",
+    "lat": -8.79499,
+    "lng": -63.70189,
+    "precisao": "cidade",
+    "foto": "/sindicatos/candeias-do-jamari.webp"
   },
   {
     "nome": "Castanheiras",
@@ -90,7 +125,11 @@
       "(69) 98130-4352",
       "(69) 98146-9798"
     ],
-    "email": "adrianedebranco@gmail.com"
+    "email": "adrianedebranco@gmail.com",
+    "lat": -11.42766,
+    "lng": -61.94715,
+    "precisao": "endereco",
+    "foto": "/sindicatos/castanheiras.webp"
   },
   {
     "nome": "Cerejeiras",
@@ -100,7 +139,11 @@
       "(69) 3342-4277",
       "(69) 99209-0494"
     ],
-    "email": "sindicatoruraldecerejeirasepimenteiras@hotmail.com"
+    "email": "sindicatoruraldecerejeirasepimenteiras@hotmail.com",
+    "lat": -13.1846,
+    "lng": -60.82859,
+    "precisao": "rua",
+    "foto": "/sindicatos/cerejeiras.webp"
   },
   {
     "nome": "Colorado do Oeste",
@@ -110,7 +153,11 @@
       "(69) 3341-2559",
       "(69) 98407-8386"
     ],
-    "email": "sindicatoruralcol@hotmail.com"
+    "email": "sindicatoruralcol@hotmail.com",
+    "lat": -13.13431,
+    "lng": -60.54298,
+    "precisao": "rua",
+    "foto": "/sindicatos/colorado-do-oeste.webp"
   },
   {
     "nome": "Costa Marques",
@@ -120,7 +167,11 @@
       "(69) 98443-1950",
       "(69) 99323-2224"
     ],
-    "email": "cpm.maciel@gmail.com"
+    "email": "cpm.maciel@gmail.com",
+    "lat": -12.44191,
+    "lng": -64.22721,
+    "precisao": "endereco",
+    "foto": "/sindicatos/costa-marques.webp"
   },
   {
     "nome": "Cujubim",
@@ -130,7 +181,11 @@
       "(69) 98414-0851",
       "(69) 99316-3843"
     ],
-    "email": "sind.produtorescujubim@hotmail.com"
+    "email": "sind.produtorescujubim@hotmail.com",
+    "lat": -9.36879,
+    "lng": -62.58321,
+    "precisao": "cidade",
+    "foto": "/sindicatos/cujubim.webp"
   },
   {
     "nome": "Espigão do Oeste",
@@ -139,7 +194,11 @@
     "telefones": [
       "(69) 98405-7630"
     ],
-    "email": "sindicatoruralespigaodooeste@hotmail.com"
+    "email": "sindicatoruralespigaodooeste@hotmail.com",
+    "lat": -11.53334,
+    "lng": -61.01757,
+    "precisao": "rua",
+    "foto": "/sindicatos/espigao-do-oeste.webp"
   },
   {
     "nome": "Governador Jorge Teixeira",
@@ -148,7 +207,11 @@
     "telefones": [
       "(69) 9364-6142"
     ],
-    "email": "sprural-gjt@hotmail.com"
+    "email": "sprural-gjt@hotmail.com",
+    "lat": -10.61509,
+    "lng": -62.73006,
+    "precisao": "endereco",
+    "foto": "/sindicatos/governador-jorge-teixeira.webp"
   },
   {
     "nome": "Guajará-Mirim",
@@ -158,7 +221,11 @@
       "(69) 3541-2055",
       "(69) 9965-2518"
     ],
-    "email": "sindicatoguajara@gmail.com"
+    "email": "sindicatoguajara@gmail.com",
+    "lat": -10.78042,
+    "lng": -65.33278,
+    "precisao": "cidade",
+    "foto": "/sindicatos/guajara-mirim.webp"
   },
   {
     "nome": "Itapuã do Oeste",
@@ -167,7 +234,11 @@
     "telefones": [
       "(69) 3222-4366"
     ],
-    "email": "spr.itapuadooeste@outlook.com"
+    "email": "spr.itapuadooeste@outlook.com",
+    "lat": -9.18666,
+    "lng": -63.18275,
+    "precisao": "endereco",
+    "foto": "/sindicatos/itapua-do-oeste.webp"
   },
   {
     "nome": "Jaru",
@@ -176,7 +247,10 @@
     "telefones": [
       "(69) 99348-9650"
     ],
-    "email": "salvadorpenga@gmail.com"
+    "email": "salvadorpenga@gmail.com",
+    "lat": -10.44117,
+    "lng": -62.47162,
+    "precisao": "rua"
   },
   {
     "nome": "Ji-Paraná",
@@ -185,7 +259,11 @@
     "telefones": [
       "(69) 99907-1252"
     ],
-    "email": "jbbento@hotmail.com"
+    "email": "jbbento@hotmail.com",
+    "lat": -10.88963,
+    "lng": -61.92589,
+    "precisao": "endereco",
+    "foto": "/sindicatos/ji-parana.webp"
   },
   {
     "nome": "Machadinho D'Oeste",
@@ -194,7 +272,11 @@
     "telefones": [
       "(69) 99228-2707"
     ],
-    "email": "sindicatoruralmachadinho@gmail.com"
+    "email": "sindicatoruralmachadinho@gmail.com",
+    "lat": -9.41964,
+    "lng": -61.98466,
+    "precisao": "endereco",
+    "foto": "/sindicatos/machadinho-d-oeste.webp"
   },
   {
     "nome": "Monte Negro",
@@ -203,7 +285,11 @@
     "telefones": [
       "(69) 99266-8028"
     ],
-    "email": "sindicatomontenegro@outlook.com.br"
+    "email": "sindicatomontenegro@outlook.com.br",
+    "lat": -10.26254,
+    "lng": -63.29473,
+    "precisao": "endereco",
+    "foto": "/sindicatos/monte-negro.webp"
   },
   {
     "nome": "Nova Mamoré",
@@ -212,7 +298,11 @@
     "telefones": [
       "(69) 99901-2667"
     ],
-    "email": "sindicatoruralnm2010@hotmail.com"
+    "email": "sindicatoruralnm2010@hotmail.com",
+    "lat": -10.41364,
+    "lng": -65.32218,
+    "precisao": "rua",
+    "foto": "/sindicatos/nova-mamore.webp"
   },
   {
     "nome": "Novo Horizonte do Oeste e Nova Brasilândia d'Oeste",
@@ -221,7 +311,11 @@
     "telefones": [
       "(69) 98464-2105"
     ],
-    "email": "sindicatorural.nho.nbo@gmail.com"
+    "email": "sindicatorural.nho.nbo@gmail.com",
+    "lat": -11.72442,
+    "lng": -62.14495,
+    "precisao": "endereco",
+    "foto": "/sindicatos/novo-horizonte-do-oeste.webp"
   },
   {
     "nome": "Ouro Preto do Oeste",
@@ -230,7 +324,11 @@
     "telefones": [
       "(69) 3461-3705"
     ],
-    "email": "sinpropo@hotmail.com"
+    "email": "sinpropo@hotmail.com",
+    "lat": -10.71915,
+    "lng": -62.26008,
+    "precisao": "endereco",
+    "foto": "/sindicatos/ouro-preto-do-oeste.webp"
   },
   {
     "nome": "Pimenta Bueno",
@@ -239,7 +337,11 @@
     "telefones": [
       "(69) 99904-6367"
     ],
-    "email": "jose.carvalhosind@gmail.com"
+    "email": "jose.carvalhosind@gmail.com",
+    "lat": -11.67196,
+    "lng": -61.1865,
+    "precisao": "rua",
+    "foto": "/sindicatos/pimenta-bueno.webp"
   },
   {
     "nome": "Porto Velho",
@@ -248,7 +350,11 @@
     "telefones": [
       "(69) 99291-3333"
     ],
-    "email": "sindicatoruraldeportovelho@hotmail.com"
+    "email": "sindicatoruraldeportovelho@hotmail.com",
+    "lat": -8.76497,
+    "lng": -63.90685,
+    "precisao": "endereco",
+    "foto": "/sindicatos/porto-velho.webp"
   },
   {
     "nome": "Presidente Médici",
@@ -257,7 +363,11 @@
     "telefones": [
       "(69) 99991-5101"
     ],
-    "email": "sind.produtoresruraisp.medici@gmail.com"
+    "email": "sind.produtoresruraisp.medici@gmail.com",
+    "lat": -11.17026,
+    "lng": -61.90957,
+    "precisao": "rua",
+    "foto": "/sindicatos/presidente-medici.webp"
   },
   {
     "nome": "Rolim de Moura",
@@ -266,7 +376,11 @@
     "telefones": [
       "(69) 98436-3876"
     ],
-    "email": "sindirolim22@gmail.com"
+    "email": "sindirolim22@gmail.com",
+    "lat": -11.72031,
+    "lng": -61.77337,
+    "precisao": "rua",
+    "foto": "/sindicatos/rolim-de-moura.webp"
   },
   {
     "nome": "São Francisco do Guaporé",
@@ -275,7 +389,11 @@
     "telefones": [
       "(69) 98441-4443"
     ],
-    "email": "sprsfg@outlook.com"
+    "email": "sprsfg@outlook.com",
+    "lat": -12.05684,
+    "lng": -63.56943,
+    "precisao": "endereco",
+    "foto": "/sindicatos/sao-francisco-do-guapore.webp"
   },
   {
     "nome": "São Miguel do Guaporé e Seringueiras",
@@ -284,7 +402,11 @@
     "telefones": [
       "(69) 98441-4548"
     ],
-    "email": "sindicato.dosprodutores@hotmail.com"
+    "email": "sindicato.dosprodutores@hotmail.com",
+    "lat": -11.69012,
+    "lng": -62.71618,
+    "precisao": "rua",
+    "foto": "/sindicatos/sao-miguel-do-guapore.webp"
   },
   {
     "nome": "Theobroma",
@@ -293,7 +415,11 @@
     "telefones": [
       "(69) 99253-7802"
     ],
-    "email": "sprthro2021@gmail.com"
+    "email": "sprthro2021@gmail.com",
+    "lat": -10.2479,
+    "lng": -62.34836,
+    "precisao": "endereco",
+    "foto": "/sindicatos/theobroma.webp"
   },
   {
     "nome": "Vale do Anari",
@@ -303,7 +429,11 @@
       "(69) 98110-3727",
       "(69) 99395-2408"
     ],
-    "email": "sprvanari@gmail.com"
+    "email": "sprvanari@gmail.com",
+    "lat": -9.86072,
+    "lng": -62.17575,
+    "precisao": "rua",
+    "foto": "/sindicatos/vale-do-anari.webp"
   },
   {
     "nome": "Vilhena",
@@ -312,6 +442,10 @@
     "telefones": [
       "(69) 3322-5754"
     ],
-    "email": "sindruralvha@gmail.com"
+    "email": "sindruralvha@gmail.com",
+    "lat": -12.72372,
+    "lng": -60.13712,
+    "precisao": "endereco",
+    "foto": "/sindicatos/vilhena.webp"
   }
 ]

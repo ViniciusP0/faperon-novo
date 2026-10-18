@@ -7,13 +7,14 @@ import { LINKS_INSTITUCIONAIS, MENU, ROTAS, WIX_PAGINAS } from "./site";
 const APP = path.resolve(__dirname, "../app");
 
 describe("páginas institucionais internas", () => {
-  it("Sobre, Informativos Técnicos, Notícias e Fale Conosco são rotas internas do menu", () => {
+  it("Sobre, Informativos Técnicos, Notícias, Galeria e Fale Conosco são rotas internas do menu", () => {
     expect(MENU.map((i) => [i.label, i.href])).toEqual([
       ["Início", "/"],
       ["Central de Inteligência", "/central-de-inteligencia"],
       ["Sobre", "/sobre"],
       ["Informativos Técnicos", "/informativos-tecnicos"],
       ["Notícias", "/noticias"],
+      ["Galeria", "/galeria"],
       ["Fale Conosco", "/fale-conosco"],
     ]);
     expect(MENU.some((i) => i.externo)).toBe(false);

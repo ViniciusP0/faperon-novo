@@ -25,6 +25,7 @@ ROTAS_PERMITIDAS = frozenset(
         "/fale-conosco",
         "/ipagro",
         "/sindicatos-rurais",
+        "/galeria",
         "/comissao-mulheres",
         "/politica-de-privacidade",
         "/login",

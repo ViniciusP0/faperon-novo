@@ -70,11 +70,11 @@ test("sem violações sérias de acessibilidade (axe), em claro e escuro", async
   }
 });
 
-test("a 1024 px o cabeçalho com 6 itens cabe numa linha, sem transbordar", async ({ page }) => {
+test("a 1024 px o cabeçalho com 7 itens cabe numa linha, sem transbordar", async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 768 });
   await page.goto("/noticias");
   const itens = page.getByRole("navigation", { name: "Principal" }).getByRole("link");
-  await expect(itens).toHaveCount(6);
+  await expect(itens).toHaveCount(7);
   const caixas = await itens.evaluateAll((els) => els.map((e) => e.getBoundingClientRect()));
   expect(new Set(caixas.map((c) => Math.round(c.top))).size, "todos os itens na mesma linha").toBe(1);
   const excesso = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);

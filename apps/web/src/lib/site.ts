@@ -12,6 +12,7 @@ export const ROTAS = {
   sobre: "/sobre",
   informativos: "/informativos-tecnicos",
   noticias: "/noticias",
+  galeria: "/galeria",
   faleConosco: "/fale-conosco",
   login: "/login",
   privacidade: "/politica-de-privacidade",
@@ -29,6 +30,7 @@ export const MENU: ItemMenu[] = [
   { label: "Sobre", href: ROTAS.sobre },
   { label: "Informativos Técnicos", href: ROTAS.informativos },
   { label: "Notícias", href: ROTAS.noticias },
+  { label: "Galeria", href: ROTAS.galeria },
   { label: "Fale Conosco", href: ROTAS.faleConosco },
 ];
 
