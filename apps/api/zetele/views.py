@@ -57,7 +57,7 @@ class EstadoSerializer(serializers.Serializer):
     motivo = serializers.CharField(allow_null=True)
 
 
-class FonteSerializer(serializers.Serializer):
+class FonteZeteleSerializer(serializers.Serializer):
     rotulo = serializers.CharField()
     url_fonte = serializers.CharField()
     url_interna = serializers.CharField(allow_null=True)
@@ -67,7 +67,7 @@ class FonteSerializer(serializers.Serializer):
 class RespostaSerializer(serializers.Serializer):
     status = serializers.ChoiceField(choices=["respondida", "recusada", "erro"])
     texto = serializers.CharField()
-    fontes = FonteSerializer(many=True)
+    fontes = FonteZeteleSerializer(many=True)
     sugestoes = serializers.ListField(child=serializers.CharField())
 
 
@@ -170,7 +170,7 @@ class PerguntarView(LimitesDoZetele):
         )
 
 
-class OpcaoSerializer(serializers.Serializer):
+class OpcaoVozSerializer(serializers.Serializer):
     id = serializers.CharField(max_length=40)
     descricao = serializers.CharField(max_length=80)
 
@@ -179,8 +179,8 @@ class InterpretarSerializer(serializers.Serializer):
     tipo = serializers.ChoiceField(choices=list(voz.FORMATOS))
     texto = serializers.CharField(max_length=500)
     hoje = serializers.DateField()
-    veiculos = OpcaoSerializer(many=True, required=False, default=list)
-    espacos = OpcaoSerializer(many=True, required=False, default=list)
+    veiculos = OpcaoVozSerializer(many=True, required=False, default=list)
+    espacos = OpcaoVozSerializer(many=True, required=False, default=list)
 
     def validate_veiculos(self, valor: list[dict[str, str]]) -> list[dict[str, str]]:
         if len(valor) > 20:
