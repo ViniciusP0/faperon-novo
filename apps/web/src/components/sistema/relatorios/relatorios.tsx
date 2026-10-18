@@ -110,7 +110,7 @@ export function Relatorios() {
   const gerar = (): Relatorio => {
     switch (tipo) {
       case "frota":
-        return relatorioFrota({ ...frota, reservas: comTag(frota.reservas, tagId) }, de, ate);
+        return relatorioFrota(frota, de, ate, tag);
       case "espacos":
         return relatorioEspacos(comTag(pedidos, tagId), de, ate);
       case "agenda":

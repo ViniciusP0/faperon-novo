@@ -184,7 +184,18 @@ describe("relatórios", () => {
     const base = relatorioEspacos([], "2026-10-01", "2026-10-31");
     expect(comNotaDeTag(base, null, "espacos")).toBe(base);
     expect(comNotaDeTag(base, tags[0]!, "espacos").resumo.at(-1)).toBe("Só os itens com a tag “SENAR”.");
-    const daFrota = comNotaDeTag(relatorioFrota(frota, "2026-10-01", "2026-10-31"), tags[0]!, "frota");
-    expect(daFrota.resumo.at(-1)).toBe("Só as viagens com a tag “SENAR”; abastecimentos e manutenções não têm tag e entram todos.");
+    const daFrota = comNotaDeTag(relatorioFrota(frota, "2026-10-01", "2026-10-31", tags[0]!), tags[0]!, "frota");
+    expect(daFrota.resumo.at(-1)).toMatch(/Abastecimentos e manutenções não têm tag/);
+  });
+
+  it("frota com tag: conta só as viagens dela e deixa custos e custo por km vazios", () => {
+    const comTagNaViagem: EstadoFrota = { ...frota, reservas: frota.reservas.map((r) => (r.id === "r1" ? { ...r, tags: ["t1"] } : r)) };
+    const r = relatorioFrota(comTagNaViagem, "2026-10-01", "2026-10-31", tags[0]!);
+    expect(r.linhas[0]).toEqual(["Hilux (ABC1D23)", 1, 480, null, null, null, null, null]);
+    expect(r.linhas[1]).toEqual(["Gol (XYZ9K87)", 0, 0, null, null, null, null, null]);
+    expect(r.total).toEqual(["Total", 1, 480, null, null, null, null, null]);
+    expect(r.resumo[0]).toBe("1 viagem(ns) e 480 km rodados com a tag “SENAR”.");
+    // sem tag, nada muda
+    expect(relatorioFrota(comTagNaViagem, "2026-10-01", "2026-10-31").total!.at(-1)).toBe(3.29);
   });
 });

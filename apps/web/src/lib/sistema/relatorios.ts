@@ -8,7 +8,7 @@ import { conflitosDoPedido } from "./espacos";
 import { km, litros, reais } from "./formato";
 import { LEGENDA, TIPO_DA_ATIVIDADE, tipoDoEvento, tiposPresentes } from "./legenda";
 import { formatarPlaca } from "./placa";
-import { nomesDasTags } from "./tags";
+import { comTag, nomesDasTags } from "./tags";
 import type { Atividade, Despesa, EstadoFrota, Evento, Funcionario, PedidoEspaco, StatusDespesa, Tag, TipoLegenda } from "./tipos";
 
 export type TipoRelatorio = "frota" | "espacos" | "agenda" | "contas" | "atividades";
@@ -46,8 +46,11 @@ const noPeriodo = (data: string, de: string, ate: string) => data.slice(0, 10) >
 const minutos = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
 const nomeDe = (id: string) => FUNCIONARIOS.find((f) => f.id === id)?.nome ?? id;
 
-export function relatorioFrota({ veiculos, reservas, abastecimentos, manutencoes }: EstadoFrota, de: string, ate: string): Relatorio {
-  const linhas = veiculos.map((v) => {
+/** Com tag, contam só as viagens com ela. Abastecimento e manutenção não têm tag: as colunas de custo ficam
+ *  vazias, para não atribuir à tag gastos que não são dela (nem dividir o custo do período pelos km da tag). */
+export function relatorioFrota({ veiculos, reservas: todas, abastecimentos, manutencoes }: EstadoFrota, de: string, ate: string, tag: Tag | null = null): Relatorio {
+  const reservas = tag ? comTag(todas, tag.id) : todas;
+  const linhas: Celula[][] = veiculos.map((v) => {
     const viagens = reservas.filter((r) => r.veiculoId === v.id && r.situacao !== "cancelada" && noPeriodo(r.saida, de, ate)).length;
     const rodado = reservas
       .filter((r) => r.veiculoId === v.id && r.situacao === "concluida" && noPeriodo(r.retorno, de, ate) && r.kmInicial != null && r.kmFinal != null)
@@ -56,23 +59,20 @@ export function relatorioFrota({ veiculos, reservas, abastecimentos, manutencoes
     const combustivel = arredondar(abast.reduce((s, a) => s + a.valor, 0));
     const manutencao = arredondar(manutencoes.filter((m) => m.veiculoId === v.id && noPeriodo(m.data, de, ate)).reduce((s, m) => s + m.valor, 0));
     const total = arredondar(combustivel + manutencao);
-    return [
-      `${v.modelo} (${formatarPlaca(v.placa)})`,
-      viagens,
-      rodado,
-      arredondar(abast.reduce((s, a) => s + a.litros, 0), 1),
-      combustivel,
-      manutencao,
-      total,
-      rodado > 0 ? arredondar(total / rodado) : null,
-    ];
+    const uso = [`${v.modelo} (${formatarPlaca(v.placa)})`, viagens, rodado];
+    if (tag) return [...uso, null, null, null, null, null];
+    return [...uso, arredondar(abast.reduce((s, a) => s + a.litros, 0), 1), combustivel, manutencao, total, rodado > 0 ? arredondar(total / rodado) : null];
   });
-  const soma = (i: number, casas = 2) => arredondar(linhas.reduce((s, l) => s + (l[i] as number), 0), casas);
+  const soma = (i: number, casas = 2) => arredondar(linhas.reduce((s, l) => s + ((l[i] as number | null) ?? 0), 0), casas);
   const kmTotal = soma(2, 0);
   const custoTotal = soma(6);
   return {
     titulo: "Uso e custos da frota",
-    resumo: [`${soma(1, 0)} viagem(ns), ${km(kmTotal)} rodados e ${reais(custoTotal)} em combustível e manutenção.`],
+    resumo: [
+      tag
+        ? `${soma(1, 0)} viagem(ns) e ${km(kmTotal)} rodados com a tag “${tag.nome}”.`
+        : `${soma(1, 0)} viagem(ns), ${km(kmTotal)} rodados e ${reais(custoTotal)} em combustível e manutenção.`,
+    ],
     colunas: [
       { rotulo: "Veículo", formato: "texto" },
       { rotulo: "Viagens", formato: "inteiro" },
@@ -84,7 +84,9 @@ export function relatorioFrota({ veiculos, reservas, abastecimentos, manutencoes
       { rotulo: "Custo por km", formato: "reais" },
     ],
     linhas,
-    total: ["Total", soma(1, 0), kmTotal, soma(3, 1), soma(4), soma(5), custoTotal, kmTotal > 0 ? arredondar(custoTotal / kmTotal) : null],
+    total: tag
+      ? ["Total", soma(1, 0), kmTotal, null, null, null, null, null]
+      : ["Total", soma(1, 0), kmTotal, soma(3, 1), soma(4), soma(5), custoTotal, kmTotal > 0 ? arredondar(custoTotal / kmTotal) : null],
   };
 }
 
@@ -247,12 +249,12 @@ export function relatorioAtividades(atividades: Atividade[], funcionario: Funcio
 }
 
 /** Relatório filtrado por tag: o resumo diz o filtro. Frota e espaços somam por veículo e espaço (sem coluna
- *  Tags); na frota, só as viagens têm tag, então abastecimento e manutenção seguem inteiros. */
+ *  Tags); na frota, só as viagens têm tag, então as colunas de custo ficam vazias. */
 export function comNotaDeTag(r: Relatorio, tag: Tag | null, tipo: TipoRelatorio): Relatorio {
   if (!tag) return r;
   const nota =
     tipo === "frota"
-      ? `Só as viagens com a tag “${tag.nome}”; abastecimentos e manutenções não têm tag e entram todos.`
+      ? `Só as viagens com a tag “${tag.nome}”. Abastecimentos e manutenções não têm tag: ficam fora deste filtro, e as colunas de custo e o custo por km ficam vazias.`
       : `Só os itens com a tag “${tag.nome}”.`;
   return { ...r, resumo: [...r.resumo, nota] };
 }
