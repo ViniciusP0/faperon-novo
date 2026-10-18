@@ -32,7 +32,7 @@ INST=$(aws ec2 describe-instances --filters Name=tag:Name,Values=faperon-teste N
   --query 'Reservations[0].Instances[0].InstanceId' --output text)
 CID=$(aws ssm send-command --instance-ids "$INST" --document-name AWS-RunShellScript \
   --comment "FAPERON: atualiza as chaves do .env.local" \
-  --parameters 'commands=["/usr/local/bin/faperon-chaves","cd /opt/faperon && docker compose -f docker-compose.yml -f /etc/faperon/docker-compose.teste.yml up -d --no-build --force-recreate api scheduler >/dev/null && echo api reiniciada"]' \
+  --parameters 'commands=["set -e","cd /opt/faperon && git fetch -q origin main && git reset -q --hard origin/main","install -m 700 /opt/faperon/infra/aws-teste/chaves.sh /usr/local/bin/faperon-chaves","/usr/local/bin/faperon-chaves","echo chaves: $(cut -d= -f1 /opt/faperon/.env.local | tr \"\\n\" \" \")","cd /opt/faperon && docker compose -f docker-compose.yml -f /etc/faperon/docker-compose.teste.yml up -d --no-build --force-recreate api scheduler >/dev/null && echo api reiniciada"]' \
   --query Command.CommandId --output text)
 aws ssm wait command-executed --command-id "$CID" --instance-id "$INST" || true
 aws ssm get-command-invocation --command-id "$CID" --instance-id "$INST" --query StandardOutputContent --output text

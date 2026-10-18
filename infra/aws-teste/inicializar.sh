@@ -46,22 +46,8 @@ sed -i \
 chmod 600 .env
 
 # Chaves do Zétele (Anthropic) e da voz (Groq, Gemini): lidas do Parameter Store (cifradas) pelo papel
-# da máquina; a que não existir fica de fora (a voz se desliga sozinha). Reaproveitado pelo
-# atualizar-chaves.sh para trocar as chaves depois.
-cat > /usr/local/bin/faperon-chaves <<'EOF'
-#!/bin/bash
-set -euo pipefail
-umask 077
-destino=/opt/faperon/.env.local
-: > "$destino.novo"
-for par in ANTHROPIC_API_KEY:anthropic-api-key GROQ_API_KEY:groq-api-key GEMINI_API_KEY:gemini-api-key; do
-  valor=$(aws ssm get-parameter --region sa-east-1 --name "/faperon-teste/${par#*:}" --with-decryption \
-    --query Parameter.Value --output text 2>/dev/null || true)
-  [ -n "$valor" ] && printf '%s=%s\n' "${par%%:*}" "$valor" >> "$destino.novo"
-done
-mv "$destino.novo" "$destino"
-EOF
-chmod 700 /usr/local/bin/faperon-chaves
+# da máquina (infra/aws-teste/chaves.sh, reaproveitado pelo atualizar-chaves.sh)
+install -m 700 infra/aws-teste/chaves.sh /usr/local/bin/faperon-chaves
 set +x
 /usr/local/bin/faperon-chaves
 set -x

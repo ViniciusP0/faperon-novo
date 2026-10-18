@@ -1,5 +1,6 @@
 import { ArrowRight, ArrowUpRight, ExternalLink, TrendingUp } from "lucide-react";
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { BannersSenar } from "@/components/inicio/banners-senar";
 import { HeroCarrossel, type SlideHero } from "@/components/inicio/hero-carrossel";
@@ -108,8 +109,17 @@ export default async function InicioPage() {
       id: "numeros",
       titulo: HERO.numeros.titulo,
       conteudo: (
-        <div className="flex min-h-[max(560px,calc(100svh-7.75rem))] items-center bg-surface-alt">
-          <div className="w-full pb-24 pt-14 md:pb-28">
+        <div className="relative flex min-h-[max(560px,calc(100svh-7.75rem))] items-center overflow-hidden bg-surface-alt">
+          {/* marca-d'água quase imperceptível atrás da manchete (pedido do usuário, 18/10/2026) */}
+          <Image
+            src="/marca-faperon.png"
+            alt=""
+            aria-hidden="true"
+            width={560}
+            height={560}
+            className="pointer-events-none absolute left-1/2 top-1/2 h-[min(78%,560px)] w-auto -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.05] dark:opacity-[0.04] lg:left-[30%]"
+          />
+          <div className="relative w-full pb-24 pt-14 md:pb-28">
             <div className="container grid items-end gap-8 lg:grid-cols-[1.55fr_1fr] lg:gap-16">
               <h2 id="manchete" className="text-3xl font-semibold leading-[1.16] tracking-tight md:text-4xl lg:text-5xl">
                 {partes ? (
