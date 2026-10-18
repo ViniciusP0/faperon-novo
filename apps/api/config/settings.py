@@ -139,6 +139,9 @@ REST_FRAMEWORK = {
         "zetele_global": os.environ.get("ZETELE_GLOBAL_RATE_LIMIT", "30/min"),
         "zetele_sistema": os.environ.get("ZETELE_SISTEMA_RATE_LIMIT", "10/min"),
         "zetele_sistema_global": os.environ.get("ZETELE_SISTEMA_GLOBAL_RATE_LIMIT", "30/min"),
+        # voz do Zétele do sistema (ouvir e falar dividem o mesmo limite; ADR 0034)
+        "zetele_voz": os.environ.get("ZETELE_VOZ_RATE_LIMIT", "10/min"),
+        "zetele_voz_global": os.environ.get("ZETELE_VOZ_GLOBAL_RATE_LIMIT", "30/min"),
     },
     "EXCEPTION_HANDLER": "indicadores.api.erros.tratador_de_excecoes",
     "NUM_PROXIES": int(os.environ.get("NUM_PROXIES", "1")),
@@ -160,6 +163,16 @@ ZETELE_LIMITE_DIARIO = int(os.environ.get("ZETELE_LIMITE_DIARIO", "200"))
 ZETELE_SISTEMA_LIMITE_DIARIO = int(os.environ.get("ZETELE_SISTEMA_LIMITE_DIARIO", "250"))
 ZETELE_SIMULTANEOS = int(os.environ.get("ZETELE_SIMULTANEOS", "3"))
 ZETELE_TERMOS_BLOQUEADOS = env_lista("ZETELE_TERMOS_BLOQUEADOS")
+
+# Voz do Zétele do sistema (ADR 0034). As chaves ficam no .env.local; sem a chave de um fornecedor,
+# aquela metade da voz (ouvir ou falar) fica desligada. O falar conta no teto diário do sistema.
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+ZETELE_OUVIR_PROVEDOR = os.environ.get("ZETELE_OUVIR_PROVEDOR", "groq")
+ZETELE_FALAR_PROVEDOR = os.environ.get("ZETELE_FALAR_PROVEDOR", "gemini")
+ZETELE_OUVIR_MODELO = os.environ.get("ZETELE_OUVIR_MODELO", "whisper-large-v3-turbo")
+ZETELE_FALAR_MODELO = os.environ.get("ZETELE_FALAR_MODELO", "gemini-3.8-flash-lite-tts")
+ZETELE_FALAR_VOZ = os.environ.get("ZETELE_FALAR_VOZ", "Kore")
 
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "same-origin"

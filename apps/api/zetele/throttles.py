@@ -16,3 +16,9 @@ class ZeteleSistemaGlobalThrottle(ZeteleGlobalThrottle):
     """Teto por minuto do Zétele do sistema, separado do público."""
 
     scope = "zetele_sistema_global"
+
+
+class ZeteleVozGlobalThrottle(ZeteleGlobalThrottle):
+    """Teto por minuto da voz do sistema (ouvir e falar juntos), somando todos os IPs."""
+
+    scope = "zetele_voz_global"

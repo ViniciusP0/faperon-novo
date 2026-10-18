@@ -9,5 +9,8 @@ urlpatterns = [
     # Zétele da área do sistema: base, tabela e limites próprios (ADR 0032)
     path("sistema/zetele/estado", views.EstadoSistemaView.as_view()),
     path("sistema/zetele/perguntar", views.PerguntarSistemaView.as_view()),
+    # voz do Zétele do sistema (ADR 0034)
+    path("sistema/zetele/ouvir", views.OuvirView.as_view()),
+    path("sistema/zetele/falar", views.FalarView.as_view()),
     path("sistema/interpretar", views.InterpretarView.as_view()),
 ]

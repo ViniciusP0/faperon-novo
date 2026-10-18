@@ -214,7 +214,8 @@ def test_limite_diario_de_cada_canal_e_independente(
     assert pedir(api).json()["motivo"] == "orcamento_diario"
     assert api.get("/api/v1/zetele/estado").json()["motivo"] == "orcamento_diario"
     # o público esgotado não afeta o sistema
-    assert api.get("/api/v1/sistema/zetele/estado").json() == {"disponivel": True, "motivo": None}
+    estado = api.get("/api/v1/sistema/zetele/estado").json()
+    assert (estado["disponivel"], estado["motivo"]) == (True, None)
     assert pedir_sistema(api).status_code == 200
     assert pedir_sistema(api).status_code == 200
     assert pedir_sistema(api).json()["motivo"] == "orcamento_diario"

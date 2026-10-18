@@ -30,11 +30,13 @@ jobs:
         run: |
           set -eu
           falhou=0
-          if grep -q '^ANTHROPIC_API_KEY=' .env.example; then
-            echo "::error file=.env.example::ANTHROPIC_API_KEY não pode estar no .env.example (fica no .env.local)"
-            falhou=1
-          fi
-          for nome in ZETELE_RATE_LIMIT ZETELE_GLOBAL_RATE_LIMIT ZETELE_LIMITE_DIARIO ZETELE_SIMULTANEOS; do
+          for segredo in ANTHROPIC_API_KEY GROQ_API_KEY GEMINI_API_KEY; do
+            if grep -q "^${segredo}=" .env.example; then
+              echo "::error file=.env.example::${segredo} não pode estar no .env.example (fica no .env.local)"
+              falhou=1
+            fi
+          done
+          for nome in ZETELE_RATE_LIMIT ZETELE_GLOBAL_RATE_LIMIT ZETELE_LIMITE_DIARIO ZETELE_SIMULTANEOS ZETELE_VOZ_RATE_LIMIT ZETELE_VOZ_GLOBAL_RATE_LIMIT; do
             if ! grep -q "^${nome}=" .env.example; then
               echo "::error file=.env.example::falta ${nome}= no .env.example"
               falhou=1
