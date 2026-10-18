@@ -70,3 +70,19 @@ Dom  Seg  Ter  Qua  Qui  Sex  Sáb             │ Hoje                  │
 - **Detector do Impeccable:** 0 achados em `agenda.tsx`, `tour.tsx` e `inicio-sistema.tsx`.
 - **Contraste:** o texto branco sobre o verde-mata e o verde-escuro sobre o lima passam do AA. O axe roda no e2e do sistema.
 - **Responsivo:** conferido em 1440 × 1000 e em 390 × 844, sem rolagem horizontal (e2e `responsivo.spec.ts`).
+
+## Passada de polish do Impeccable (18/10/2026)
+
+Seguiu `reference/polish.md` do Impeccable, com as evidências coletadas na agenda real:
+- **Larguras:** 1440, 1280, 1024, 768 e 390 px.
+- **Temas:** claro e escuro.
+- **Estados:** dia com muitos eventos e título longo, dia escolhido, Lista e foco de teclado.
+
+| Prioridade | Achado | Classe | Correção |
+|---|---|---|---|
+| 1 (leiaute quebrado) | Título longo em "Na sequência" não encolhia e criava rolagem horizontal (255 px a 1024, 135 px a 1440 no escuro) | defeito local | `min-w-0` nos itens e na coluna; o título é truncado e o texto completo vai no `title` |
+| 3 (responsivo) | A 1024 px as duas colunas espremiam o calendário | defeito local | Duas colunas só a partir de 1280 px; abaixo, o painel do dia e "Na sequência" ficam lado a lado sob o mês |
+| Conferido | Foco de teclado visível no "+" da célula; cores e contraste no tema escuro; "mais N" no dia cheio; Lista alinhada | — | — |
+| Fora do escopo | No celular, o Zétele cobre parte do painel do dia | sobreposição conhecida do Zétele | Registrado para revisão do tamanho do Zétele no celular |
+
+Na confirmação, a rolagem horizontal ficou em zero nas 10 combinações de largura e tema, sem erro no console.

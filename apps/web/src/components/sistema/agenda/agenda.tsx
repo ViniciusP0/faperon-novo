@@ -181,8 +181,8 @@ export function Agenda() {
       </div>
 
       {visao === "mes" ? (
-        <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_19rem]">
-          <section aria-labelledby="titulo-mes" data-tour="agenda-mes">
+        <div className="mt-8 grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_19rem]">
+          <section aria-labelledby="titulo-mes" className="min-w-0" data-tour="agenda-mes">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <h2 id="titulo-mes" className="text-3xl tracking-[-0.03em] text-ink">
                 <span className="font-semibold">{comInicialMaiuscula(nomeDoMes(mes.mes0))}</span> <span className="font-light text-brand-fg">{mes.ano}</span>
@@ -296,7 +296,8 @@ export function Agenda() {
             </ul>
           </section>
 
-          <aside aria-labelledby="titulo-dia" className="lg:sticky lg:top-40" data-tour="agenda-dia">
+          {/* abaixo de 1280 px o painel vai para baixo do mês, lado a lado com "Na sequência" */}
+          <aside aria-labelledby="titulo-dia" className="grid min-w-0 items-start gap-6 md:grid-cols-2 xl:sticky xl:top-40 xl:block" data-tour="agenda-dia">
             <div className="rounded-2xl bg-brand-dark p-5 text-white shadow-[0_18px_40px_-24px_rgb(0_70_58/0.7)]">
               <p className="text-sm text-white/75">{selecionado === hoje ? "Hoje" : selecionado < hoje ? "Dia que passou" : "Dia escolhido"}</p>
               <h2 id="titulo-dia" className="mt-0.5 text-xl font-semibold tracking-[-0.02em]">
@@ -353,17 +354,17 @@ export function Agenda() {
             </div>
 
             {proximos.length > 0 && (
-              <div className="mt-6">
+              <div className="min-w-0 xl:mt-6">
                 <h3 className="text-sm font-semibold text-ink">Na sequência</h3>
                 <ol className="mt-2 grid gap-3">
                   {proximos.map((dia) => (
-                    <li key={dia}>
+                    <li key={dia} className="min-w-0">
                       <button type="button" onClick={() => setSelecionado(dia)} className="text-left text-xs font-medium text-brand-fg hover:underline">
                         {comInicialMaiuscula(dataPorExtenso(dia))}
                       </button>
                       <ul className="mt-1 grid gap-0.5 text-sm text-ink">
                         {porDia.get(dia)!.map((e) => (
-                          <li key={e.id} className="flex gap-2">
+                          <li key={e.id} className="flex min-w-0 gap-2" title={e.titulo}>
                             <span aria-hidden="true" className={cn("mt-[0.5rem] h-1.5 w-1.5 shrink-0 rounded-full", ORIGENS[e.origem].ponto)} />
                             <span className="min-w-0 truncate">
                               <span className="tabular-nums text-ink-muted">{e.inicio}</span> {e.titulo}
