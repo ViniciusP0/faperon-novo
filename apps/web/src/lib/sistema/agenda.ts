@@ -1,5 +1,6 @@
 import { ESPACOS } from "@/content/sistema/exemplo";
 import { formatarHora, somarDias } from "./datas";
+import { TIPO_DO_ESPACO } from "./legenda";
 import { formatarPlaca } from "./placa";
 import type { Evento, Funcionario, PedidoEspaco, Reserva, TipoEvento, Veiculo } from "./tipos";
 
@@ -67,6 +68,7 @@ export function itensDaAgenda(
           tipo: "viagem",
           origem: "frota",
           destino: r.destino,
+          tags: r.tags,
         },
         `frota-${r.id}`,
       );
@@ -81,7 +83,7 @@ export function itensDaAgenda(
           const quem = nome.split(" ")[0]!;
           return diasDaViagem(
             r,
-            { titulo: `${nome} em viagem a ${r.destino}`, local: "", descricao: "", tipo: "viagem", origem: "frota", destino: r.destino, quem },
+            { titulo: `${nome} em viagem a ${r.destino}`, local: "", descricao: "", tipo: "viagem", origem: "frota", destino: r.destino, quem, tags: r.tags },
             `equipe-${r.id}`,
           );
         })
@@ -97,7 +99,9 @@ export function itensDaAgenda(
       local: ESPACOS.find((e) => e.id === p.espacoId)?.nome ?? "",
       descricao: "",
       tipo: "reuniao",
+      tipoNaLegenda: TIPO_DO_ESPACO[p.tipo],
       origem: "espaco",
+      tags: p.tags,
     }));
   return [...pessoais, ...institucionais, ...viagens, ...dosColegas, ...espacos].sort(
     (a, b) => a.data.localeCompare(b.data) || a.inicio.localeCompare(b.inicio) || a.titulo.localeCompare(b.titulo),

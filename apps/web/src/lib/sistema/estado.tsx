@@ -10,11 +10,12 @@ import {
   historicoDeExemplo,
   pedidosDeExemplo,
 } from "@/content/sistema/exemplo";
-import { funcionarioPorId } from "@/content/sistema/funcionarios";
+import { FUNCIONARIOS, funcionarioPorId } from "@/content/sistema/funcionarios";
 import { apagarTudo, gravar, gravarAcesso, gravarSessao, ler, lerAcesso, lerSessao } from "./armazenamento";
 import { anotar } from "./atividades";
 import { agoraISO, hojeISO } from "./datas";
-import type { Atividade, Despesa, EstadoFrota, Evento, Funcionario, ModuloHistorico, PedidoEspaco, RegistroHistorico } from "./tipos";
+import { removerTag, tagsDeExemplo } from "./tags";
+import type { Atividade, Despesa, EstadoFrota, Evento, Funcionario, ModuloHistorico, PedidoEspaco, RegistroHistorico, Tag } from "./tipos";
 
 /** Mudança com a descrição do que foi feito: entra no histórico (registro automático de atividades). */
 type Atualizar<T> = (muda: (atual: T) => T, acao?: string) => void;
@@ -43,6 +44,11 @@ interface ContextoSistema {
   atualizarDespesas: Atualizar<Despesa[]>;
   atividades: Atividade[];
   atualizarAtividades: Atualizar<Atividade[]>;
+  /** Tags compartilhadas por todos; só quem gere (`podeGerirTags`) cria, renomeia e apaga. */
+  tags: Tag[];
+  atualizarTags: Atualizar<Tag[]>;
+  /** Apaga a tag e a tira de todos os itens, inclusive das agendas dos colegas guardadas neste navegador. */
+  apagarTag: (id: string) => void;
   historico: RegistroHistorico[];
   registrar: (modulo: ModuloHistorico, acao: string) => void;
   restaurar: () => void;
@@ -62,6 +68,7 @@ export function SistemaProvider({ children }: { children: ReactNode }) {
   const [pedidos, setPedidos] = useState<PedidoEspaco[]>([]);
   const [despesas, setDespesas] = useState<Despesa[]>([]);
   const [atividades, setAtividades] = useState<Atividade[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
   const [historico, setHistorico] = useState<RegistroHistorico[]>([]);
 
   const carregar = useCallback(() => {
@@ -74,6 +81,7 @@ export function SistemaProvider({ children }: { children: ReactNode }) {
     setPedidos(ler("espacos", pedidosDeExemplo(hoje)));
     setDespesas(ler("contas", despesasDeExemplo(hoje)));
     setAtividades(ler("atividades", atividadesDeExemplo(hoje)));
+    setTags(ler("tags", tagsDeExemplo()));
     setHistorico(ler("historico", historicoDeExemplo(hoje)));
     setPronto(true);
   }, [hoje]);
@@ -104,6 +112,11 @@ export function SistemaProvider({ children }: { children: ReactNode }) {
       setEventos(lista);
       if (funcionario) gravar(`agenda:${funcionario.id}`, lista);
     };
+    const atualizarFrota = persistente("frota", "frota", setFrota);
+    const atualizarPedidos = persistente("espacos", "espacos", setPedidos);
+    const atualizarDespesas = persistente("contas", "contas", setDespesas);
+    const atualizarAtividades = persistente("atividades", "atividades", setAtividades);
+    const atualizarTags = persistente("tags", "tags", setTags);
     return {
       pronto,
       hoje,
@@ -132,13 +145,31 @@ export function SistemaProvider({ children }: { children: ReactNode }) {
         if (evento) registrar("agenda", `Excluiu o evento "${evento.titulo}"`);
       },
       frota,
-      atualizarFrota: persistente("frota", "frota", setFrota),
+      atualizarFrota,
       pedidos,
-      atualizarPedidos: persistente("espacos", "espacos", setPedidos),
+      atualizarPedidos,
       despesas,
-      atualizarDespesas: persistente("contas", "contas", setDespesas),
+      atualizarDespesas,
       atividades,
-      atualizarAtividades: persistente("atividades", "atividades", setAtividades),
+      atualizarAtividades,
+      tags,
+      atualizarTags,
+      apagarTag: (id) => {
+        const tag = tags.find((t) => t.id === id);
+        if (!tag) return;
+        salvarEventos(removerTag(eventos, id));
+        // agendas dos colegas: só as que já foram gravadas (as de exemplo não têm a tag apagada salva)
+        for (const f of FUNCIONARIOS) {
+          if (f.id === funcionario?.id) continue;
+          const salva = ler<Evento[] | null>(`agenda:${f.id}`, null);
+          if (Array.isArray(salva)) gravar(`agenda:${f.id}`, removerTag(salva, id));
+        }
+        atualizarFrota((fr) => ({ ...fr, reservas: removerTag(fr.reservas, id) }));
+        atualizarPedidos((l) => removerTag(l, id));
+        atualizarDespesas((l) => removerTag(l, id));
+        atualizarAtividades((l) => removerTag(l, id));
+        atualizarTags((l) => l.filter((t) => t.id !== id), `Apagou a tag "${tag.nome}"`);
+      },
       historico,
       registrar,
       restaurar: () => {
@@ -146,7 +177,7 @@ export function SistemaProvider({ children }: { children: ReactNode }) {
         carregar();
       },
     };
-  }, [pronto, hoje, acesso, funcionario, eventos, frota, pedidos, despesas, atividades, historico, carregar]);
+  }, [pronto, hoje, acesso, funcionario, eventos, frota, pedidos, despesas, atividades, tags, historico, carregar]);
 
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;
 }

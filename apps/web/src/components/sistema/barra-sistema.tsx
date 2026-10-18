@@ -1,11 +1,13 @@
 "use client";
 
-import { Compass, LogOut, RotateCcw, UserRoundCog } from "lucide-react";
+import { Compass, LogOut, RotateCcw, Tags, UserRoundCog } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PROTOTIPO } from "@/content/sistema/funcionarios";
 import { ARMAZENAMENTO_CHEIO } from "@/lib/sistema/armazenamento";
 import { useSistema } from "@/lib/sistema/estado";
+import { podeGerirTags } from "@/lib/sistema/tags";
+import { GerenciarTags } from "./tags";
 import { useTour } from "./tour/tour";
 
 const acao =
@@ -16,6 +18,7 @@ export function BarraSistema() {
   const { funcionario, sair, encerrar, restaurar } = useSistema();
   const { iniciar } = useTour();
   const [semEspaco, setSemEspaco] = useState(false);
+  const [gerindoTags, setGerindoTags] = useState(false);
   useEffect(() => {
     const avisar = () => setSemEspaco(true);
     window.addEventListener(ARMAZENAMENTO_CHEIO, avisar);
@@ -53,6 +56,12 @@ export function BarraSistema() {
               <span className="sr-only sm:not-sr-only">Tour guiado</span>
             </button>
           )}
+          {podeGerirTags(funcionario) && (
+            <button type="button" onClick={() => setGerindoTags(true)} className={acao}>
+              <Tags aria-hidden="true" className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+              <span className="sr-only sm:not-sr-only">Gerenciar tags</span>
+            </button>
+          )}
           {funcionario && (
             <button type="button" onClick={trocar} className={acao}>
               <UserRoundCog aria-hidden="true" className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
@@ -70,6 +79,7 @@ export function BarraSistema() {
       <p role="note" className="border-t border-line py-1 text-center text-[11px] font-medium tracking-wide text-ink-muted">
         {PROTOTIPO.faixa}
       </p>
+      {gerindoTags && <GerenciarTags aoFechar={() => setGerindoTags(false)} />}
       {semEspaco && (
         <p role="alert" className="border-t border-line bg-danger-soft px-4 py-1.5 text-center text-xs font-medium text-danger-ink">
           O espaço do navegador para o protótipo acabou: as últimas mudanças valem só até fechar esta aba. Exclua comprovantes ou use “Restaurar dados de exemplo”.
