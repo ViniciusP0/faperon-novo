@@ -115,9 +115,9 @@ export default async function InicioPage() {
             src="/marca-faperon.png"
             alt=""
             aria-hidden="true"
-            width={560}
-            height={560}
-            className="pointer-events-none absolute left-1/2 top-1/2 h-[min(78%,560px)] w-auto -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.05] dark:opacity-[0.04] lg:left-[30%]"
+            width={672}
+            height={672}
+            className="pointer-events-none absolute left-1/2 top-1/2 h-[min(94%,672px)] w-auto -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.06] dark:opacity-[0.048] lg:left-[30%]"
           />
           <div className="relative w-full pb-24 pt-14 md:pb-28">
             <div className="container grid items-end gap-8 lg:grid-cols-[1.55fr_1fr] lg:gap-16">

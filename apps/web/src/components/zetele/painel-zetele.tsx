@@ -1,6 +1,6 @@
 "use client";
 
-import { Mic, SendHorizontal, Square, X } from "lucide-react";
+import { Mic, SendHorizontal, Square, Volume2, X } from "lucide-react";
 import Link from "next/link";
 import { useState, type FormEvent, type RefObject } from "react";
 import { buttonVariants } from "@/components/ui/button";
@@ -243,6 +243,7 @@ export function PainelZetele(p: Props) {
               }}
               className="h-4 w-4 accent-[var(--brand)]"
             />
+            <Volume2 aria-hidden="true" className="h-4 w-4 text-brand-fg" />
             {ZETELE_VOZ.responderEmVoz}
           </label>
         )}

@@ -1,4 +1,4 @@
-import { Square, Volume2 } from "lucide-react";
+import { LoaderCircle, Square, Volume2 } from "lucide-react";
 import Link from "next/link";
 import { Fragment, type ReactNode } from "react";
 import { ZETELE, ZETELE_VOZ } from "@/content/zetele";
@@ -29,16 +29,17 @@ function BotaoOuvir({ m, ouvir }: { m: Mensagem; ouvir: OuvirMensagens }) {
   const tocando = ouvir.tocando === m.id;
   const preparando = ouvir.preparando === m.id;
   const ativo = tocando || preparando;
-  const Icone = ativo ? Square : Volume2;
+  // alto-falante para ouvir; girando enquanto o áudio é gerado; quadrado para parar
+  const Icone = preparando ? LoaderCircle : tocando ? Square : Volume2;
   return (
     <button
       type="button"
       onClick={() => (ativo ? ouvir.onParar() : ouvir.onOuvir(m))}
       aria-label={ativo ? ZETELE_VOZ.pararRotulo : ZETELE_VOZ.ouvirRotulo}
       aria-busy={preparando || undefined}
-      className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-line px-2 py-1 text-xs font-medium text-brand-fg hover:bg-surface-alt"
+      className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-xs font-medium text-brand-fg hover:bg-surface-alt"
     >
-      <Icone aria-hidden="true" className="h-3.5 w-3.5" />
+      <Icone aria-hidden="true" className={cn("h-4 w-4 shrink-0", preparando && "animate-spin motion-reduce:animate-none")} />
       {ativo ? ZETELE_VOZ.parar : ZETELE_VOZ.ouvir}
     </button>
   );
