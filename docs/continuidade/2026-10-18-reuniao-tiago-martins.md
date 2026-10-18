@@ -58,3 +58,14 @@ Também entraram as atualizações do Vinicius: mapa dos sindicatos, Galeria, ca
 - **Golden do Zétele:** 34 de 35 contra a API real (meta de 95%).
 - **Decisões:** ADR 0029 a 0032, sobre o Zétele, o registro anônimo, o protótipo no front e os dois canais com RAG.
 - **Logs de erros:** `docs/erros-conhecidos/` (do projeto) e o log global do Claude Code.
+
+## Atualização de 18/10/2026 (tarde)
+
+- **Feito:** legenda única de cores por tipo e sistema de tags (`docs/design/legenda-e-tags.md`). A lista de tags de exemplo ainda precisa ser validada com o Tiago.
+- **Viagens na agenda:** aparecem em todos os dias, da saída ao retorno. As viagens dos colegas aparecem na agenda de todos.
+- **Servidor de teste próprio no Brasil:** AWS São Paulo, a partir do nosso fork `justr1de/faperon-novo` ([ADR 0033](../adr/0033-servidor-de-teste-no-brasil-preparado-para-o-whatsapp.md)). Para criar: `bash infra/aws-teste/criar-servidor.sh`.
+- **Direção registrada:** a área administrativa e o Zétele serão completamente integrados ao WhatsApp, pela WhatsApp Business Cloud API oficial. Os três usos são:
+  - receber demandas;
+  - receber documentos;
+  - consultar o banco.
+  O pré-requisito é tirar o sistema do navegador: login real, permissões e Postgres, numa nova ADR. A parte de LGPD fica com o encarregado de dados, Weslley Hariel Lima e Silva Palomeque Gonçalves.
