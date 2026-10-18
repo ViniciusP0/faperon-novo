@@ -38,11 +38,11 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, classe: string, texto
 function montarPopup(s: Sindicato): HTMLElement {
   const raiz = el("article", "text-sm");
   if (s.foto) {
-    raiz.append(el("img", "block h-36 w-full object-cover", undefined, { src: s.foto, alt: `Fachada do Sindicato Rural de ${s.nome}`, loading: "lazy" }));
+    raiz.append(el("img", "block h-28 w-full object-cover", undefined, { src: s.foto, alt: `Fachada do Sindicato Rural de ${s.nome}`, loading: "lazy" }));
   } else {
-    raiz.append(el("div", "flex h-20 items-center justify-center bg-brand-soft text-xs text-ink-muted", "Foto da sede não disponível"));
+    raiz.append(el("div", "flex h-14 items-center justify-center bg-brand-soft text-xs text-ink-muted", "Foto da sede não disponível"));
   }
-  const corpo = el("div", "grid gap-2 p-4");
+  const corpo = el("div", "grid gap-1.5 p-3.5");
   corpo.append(el("h3", "text-base font-bold leading-snug text-brand-strong", s.nome));
   const presidente = el("p", "text-ink-muted");
   presidente.append(el("span", "font-semibold text-ink", "Presidente: "), document.createTextNode(s.presidente));
@@ -99,9 +99,17 @@ export function MapaSindicatos({ sindicatos }: { sindicatos: Sindicato[] }) {
       const icone = L.divIcon({ html: PIN, className: "", iconSize: [32, 42], iconAnchor: [16, 41], popupAnchor: [0, -38] });
       for (const s of sindicatos) {
         const pin = L.marker([s.lat, s.lng], { icon: icone, title: `Sindicato Rural de ${s.nome}`, alt: `Sindicato Rural de ${s.nome}` });
-        pin.bindPopup(() => montarPopup(s), { maxWidth: 280, minWidth: 280, autoPanPadding: [24, 24] });
+        // o cartão nunca passa da altura do painel: se precisar, rola por dentro
+        const alturaMaxima = Math.max(container.current.clientHeight - 72, 200);
+        pin.bindPopup(() => montarPopup(s), { maxWidth: 280, minWidth: 280, maxHeight: alturaMaxima, autoPanPadding: [16, 16] });
         registro.set(s.nome, pin);
       }
+      // Com o limite do estado ativo, o mapa volta para dentro dele logo depois de rolar até o cartão
+      // e o cartão de um pin perto da borda fica cortado. Enquanto há cartão aberto, o limite sai.
+      const mapaAtual = m;
+      const limiteDoMapa = limites.current.pad(0.08);
+      mapaAtual.on("popupopen", () => mapaAtual.setMaxBounds(null as unknown as LatLngBounds));
+      mapaAtual.on("popupclose", () => mapaAtual.setMaxBounds(limiteDoMapa));
       mapa.current = m;
       setPronto(true);
     });
