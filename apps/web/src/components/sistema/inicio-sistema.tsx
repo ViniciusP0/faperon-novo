@@ -57,14 +57,18 @@ export function InicioSistema() {
       </p>
 
       {convidar && !ativo && (
-        <section aria-labelledby="titulo-convite-tour" className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-brand-soft px-5 py-4">
+        <section aria-labelledby="titulo-convite-tour" className="mt-6 grid max-w-3xl gap-3 rounded-2xl bg-brand-soft px-5 py-4">
           <div className="max-w-[60ch]">
             <h2 id="titulo-convite-tour" className="font-semibold text-brand-strong">
               Primeira vez por aqui?
             </h2>
-            <p className="text-sm text-ink">O tour guiado passa por cada área e mostra, passo a passo, como fazer as tarefas do dia a dia. Leva uns 3 minutos.</p>
+            <p className="text-sm text-ink">O tour guiado passa por cada área e mostra, passo a passo, como fazer as tarefas do dia a dia. Leva uns 4 minutos.</p>
           </div>
-          <div className="flex gap-2">
+          {/* botões à esquerda: o canto direito é do Zétele, que cobriria o botão em telas baixas */}
+          <div className="flex flex-wrap gap-2">
+            <Button variant="vidro" size="sm" onClick={iniciar}>
+              Começar o tour
+            </Button>
             <Button
               variant="ghost"
               size="sm"
@@ -74,9 +78,6 @@ export function InicioSistema() {
               }}
             >
               Agora não
-            </Button>
-            <Button variant="vidro" size="sm" onClick={iniciar}>
-              Começar o tour
             </Button>
           </div>
         </section>

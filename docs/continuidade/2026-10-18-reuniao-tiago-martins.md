@@ -10,7 +10,7 @@ docker compose up -d --build api web      # site em http://localhost:3000
 ```
 
 - **Login:** acesso de demonstração em http://localhost:3000/login (`user@faperon.br`, senha combinada com a equipe). Depois, escolha um dos 5 funcionários fictícios. **Marcos Oliveira** é o gestor e coordenador e vê tudo.
-- **Tour:** "Tour guiado", na barra do sistema, percorre todas as áreas em 14 passos. Bom roteiro para a apresentação.
+- **Tour:** "Tour guiado", na barra do sistema, percorre todas as áreas em 16 passos. Bom roteiro para a apresentação.
 - **Dados:** são fictícios e ficam só no navegador. "Restaurar dados de exemplo" volta ao início.
 
 ## O que existe hoje na área logada (protótipo)
@@ -53,7 +53,8 @@ Também entraram as atualizações do Vinicius: mapa dos sindicatos, Galeria, ca
 
 ## Estado técnico
 
-- **Testes:** 495 testes unitários no front e 429 no backend, todos aprovados. No e2e, 41 de 44 passaram na rodada completa de 18/10; as 3 falhas foram de lentidão da máquina. Isolados, o Observatório e o sistema passam; o teste de comparação do Painel era intermitente por causa do seletor e foi corrigido (5 de 5).
+- **Testes:** 495 testes unitários no front e 429 no backend. No e2e, 44 de 44 em 18/10, incluindo o tour de ponta a ponta. Os 16 passos do tour foram conferidos com cliques reais em 1280 × 720 e no celular: cartão sempre inteiro e elemento destacado.
+- **Design da agenda:** o plano das skills frontend-design e impeccable está em `docs/design/agenda-caderno-de-campo.md`.
 - **Golden do Zétele:** 34 de 35 contra a API real (meta de 95%).
 - **Decisões:** ADR 0029 a 0032, sobre o Zétele, o registro anônimo, o protótipo no front e os dois canais com RAG.
 - **Logs de erros:** `docs/erros-conhecidos/` (do projeto) e o log global do Claude Code.

@@ -118,6 +118,19 @@ export const TOUR: PassoDoTour[] = [
     ],
   },
   {
+    id: "contas-aprovacao",
+    secao: "Contas",
+    rota: "/sistema/contas",
+    alvo: "contas-abas",
+    titulo: "Aprovação e totais",
+    texto: "O gestor das contas avalia cada despesa enviada; todos acompanham os totais por centro de custo.",
+    passos: [
+      "Gestor: abra Aprovação e clique em Aprovar, ou em Devolver dizendo o que corrigir.",
+      "Quem lançou vê o motivo em Minhas despesas, edita e envia de novo.",
+      "Por centro de custo soma as despesas enviadas e aprovadas no período escolhido.",
+    ],
+  },
+  {
     id: "atividades",
     secao: "Atividades",
     rota: "/sistema/atividades",
@@ -129,6 +142,15 @@ export const TOUR: PassoDoTour[] = [
       "No campo, use Registrar por voz e conte o que fez.",
       "A aba Histórico guarda sozinha tudo o que foi feito no sistema.",
     ],
+  },
+  {
+    id: "atividades-historico",
+    secao: "Atividades",
+    rota: "/sistema/atividades",
+    alvo: "atividades-abas",
+    titulo: "Equipe e histórico",
+    texto: "O coordenador vê, na aba Equipe, as atividades, as horas e o público atendido de cada pessoa. O Histórico mostra, com data e hora, tudo o que foi feito no sistema.",
+    passos: ["Em Equipe, escolha o período e o funcionário para ver o detalhe.", "Em Histórico, filtre por módulo (agenda, frota, espaços, contas, atividades) para achar uma ação."],
   },
   {
     id: "relatorios",
