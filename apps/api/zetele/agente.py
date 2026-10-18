@@ -28,6 +28,7 @@ PAGINAS_SISTEMA = frozenset(
         "/sistema/espacos",
         "/sistema/contas",
         "/sistema/relatorios",
+        "/sistema/atividades",
     }
 )
 PAGINAS_SO_ORIENTACAO = frozenset({"/"}) | PAGINAS_SISTEMA
@@ -37,8 +38,8 @@ ORIENTACAO_INICIO = (
 )
 ORIENTACAO_SISTEMA = (
     "Esta é a área logada do sistema (protótipo). O Zétele só explica como usar a agenda, a frota, "
-    "o agendamento de espaços, o agendamento por voz, a prestação de contas e os relatórios; ele não "
-    "vê os eventos, reservas, pedidos ou despesas da pessoa, que ficam no navegador dela. Para "
+    "o agendamento de espaços, o agendamento por voz, a prestação de contas, os relatórios e o registro de atividades; "
+    "ele não vê os eventos, reservas, pedidos, despesas ou atividades da pessoa, que ficam no navegador dela. Para "
     "números do agro, indique a Central de Inteligência."
 )
 

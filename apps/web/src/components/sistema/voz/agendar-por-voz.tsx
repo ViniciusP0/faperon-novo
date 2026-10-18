@@ -39,16 +39,19 @@ const EXEMPLO: Record<TipoVoz, string> = {
   evento: "“Reunião com o sindicato de Vilhena na terça às nove, na sede.”",
   reserva: "“Preciso da Hilux na quinta, das sete às dezoito, para ir a Cacoal fazer visita técnica.”",
   espaco: "“Auditório no dia 20 à tarde, palestra sobre crédito rural para 80 pessoas, com coffee break.”",
+  atividade: "“Hoje das oito ao meio-dia fiz visita técnica a produtores de café em Cacoal, atendi doze produtores e encaminhei três para análise de solo.”",
 };
 
 interface Props<T extends TipoVoz> {
   tipo: T;
+  /** Texto do botão e do diálogo; o padrão serve aos agendamentos. */
+  rotulo?: string;
   veiculos?: Opcao[];
   espacos?: Opcao[];
   aoInterpretar: (campos: CamposPorTipo[T], faltando: string[]) => void;
 }
 
-export function AgendarPorVoz<T extends TipoVoz>({ tipo, veiculos, espacos, aoInterpretar }: Props<T>) {
+export function AgendarPorVoz<T extends TipoVoz>({ tipo, rotulo = "Agendar por voz", veiculos, espacos, aoInterpretar }: Props<T>) {
   const { hoje } = useSistema();
   const [aberto, setAberto] = useState(false);
   const [suporte, setSuporte] = useState(false);
@@ -94,7 +97,7 @@ export function AgendarPorVoz<T extends TipoVoz>({ tipo, veiculos, espacos, aoIn
 
   async function preencher() {
     parar();
-    if (!texto.trim()) return setErro("Fale ou digite o que quer agendar.");
+    if (!texto.trim()) return setErro(tipo === "atividade" ? "Fale ou digite o que você fez." : "Fale ou digite o que quer agendar.");
     setInterpretando(true);
     setErro(null);
     const r = await interpretar(tipo, texto.trim(), hoje, { veiculos, espacos });
@@ -108,13 +111,13 @@ export function AgendarPorVoz<T extends TipoVoz>({ tipo, veiculos, espacos, aoIn
     <>
       <Button variant="vidro-claro" onClick={() => setAberto(true)}>
         <Mic aria-hidden="true" className="h-4 w-4" />
-        Agendar por voz
+        {rotulo}
       </Button>
       {aberto && (
-        <Dialogo titulo="Agendar por voz" aoFechar={fechar}>
+        <Dialogo titulo={rotulo} aoFechar={fechar}>
           <div className="grid gap-4">
             <p className="text-sm text-ink-muted">
-              Diga o que quer agendar, por exemplo: <span className="text-ink">{EXEMPLO[tipo]}</span> O formulário abre preenchido para você conferir antes de salvar.
+              {tipo === "atividade" ? "Conte o que você fez" : "Diga o que quer agendar"}, por exemplo: <span className="text-ink">{EXEMPLO[tipo]}</span> O formulário abre preenchido para você conferir antes de salvar.
             </p>
             {suporte ? (
               <div className="flex items-center gap-3">

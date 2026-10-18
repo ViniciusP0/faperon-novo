@@ -8,6 +8,8 @@ export interface Funcionario {
   gestorFrota: boolean;
   gestorEspacos: boolean;
   gestorContas: boolean;
+  /** Coordena a equipe: vê as atividades e o histórico de todos. */
+  coordenador: boolean;
 }
 
 export type TipoEvento = "reuniao" | "viagem" | "compromisso";
@@ -135,4 +137,42 @@ export interface Despesa {
   status: StatusDespesa;
   observacaoGestor: string;
   criadaEm: string;
+}
+
+export type TipoAtividade =
+  | "visita_tecnica"
+  | "atendimento"
+  | "reuniao"
+  | "capacitacao"
+  | "evento"
+  | "viagem"
+  | "administrativo"
+  | "outro";
+
+/** Atividade realizada, lançada pelo próprio funcionário. */
+export interface Atividade {
+  id: string;
+  funcionarioId: string;
+  data: string;
+  inicio: string;
+  fim: string;
+  tipo: TipoAtividade;
+  titulo: string;
+  municipio: string;
+  /** Pessoas atendidas ou participantes; 0 quando não se aplica. */
+  publico: number;
+  descricao: string;
+  resultados: string;
+  criadaEm: string;
+}
+
+export type ModuloHistorico = "acesso" | "agenda" | "frota" | "espacos" | "contas" | "atividades";
+
+/** Trilha automática do que foi feito no sistema: quem, quando, onde e o quê. */
+export interface RegistroHistorico {
+  id: string;
+  quando: string;
+  funcionarioId: string;
+  modulo: ModuloHistorico;
+  acao: string;
 }

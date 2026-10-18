@@ -13,6 +13,7 @@ const SECOES = [
   { href: "/sistema/frotas", rotulo: "Frotas" },
   { href: "/sistema/espacos", rotulo: "Espaços" },
   { href: "/sistema/contas", rotulo: "Contas" },
+  { href: "/sistema/atividades", rotulo: "Atividades" },
   { href: "/sistema/relatorios", rotulo: "Relatórios" },
 ];
 

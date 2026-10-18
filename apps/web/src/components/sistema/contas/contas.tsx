@@ -64,7 +64,7 @@ function MinhasDespesas({ aoEditar }: { aoEditar: (d: Despesa) => void }) {
   const { funcionario, despesas, atualizarDespesas } = useSistema();
   if (!funcionario) return null;
   const minhas = despesas.filter((d) => d.funcionarioId === funcionario.id).sort((a, b) => b.data.localeCompare(a.data));
-  const mudar = (id: string, muda: Partial<Despesa>) => atualizarDespesas((l) => l.map((d) => (d.id === id ? { ...d, ...muda } : d)));
+  const mudar = (id: string, muda: Partial<Despesa>, acao: string) => atualizarDespesas((l) => l.map((d) => (d.id === id ? { ...d, ...muda } : d)), acao);
   return (
     <div>
       {minhas.length === 0 && <p className="text-sm text-ink-muted">Nenhuma despesa lançada.</p>}
@@ -80,10 +80,10 @@ function MinhasDespesas({ aoEditar }: { aoEditar: (d: Despesa) => void }) {
                   <Button size="sm" variant="ghost" onClick={() => aoEditar(d)} aria-label={`Editar ${d.descricao}`}>
                     Editar
                   </Button>
-                  <Button size="sm" variant="vidro" onClick={() => mudar(d.id, { status: "enviada", observacaoGestor: "" })} aria-label={`Enviar ${d.descricao}`}>
+                  <Button size="sm" variant="vidro" onClick={() => mudar(d.id, { status: "enviada", observacaoGestor: "" }, `Enviou para aprovação a despesa "${d.descricao}"`)} aria-label={`Enviar ${d.descricao}`}>
                     Enviar
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => atualizarDespesas((l) => l.filter((x) => x.id !== d.id))} aria-label={`Excluir ${d.descricao}`}>
+                  <Button size="sm" variant="ghost" onClick={() => atualizarDespesas((l) => l.filter((x) => x.id !== d.id), `Excluiu a despesa "${d.descricao}"`)} aria-label={`Excluir ${d.descricao}`}>
                     Excluir
                   </Button>
                 </>
@@ -102,12 +102,12 @@ function Aprovacao() {
   const [obs, setObs] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const fila = despesas.filter((d) => d.status === "enviada").sort((a, b) => a.criadaEm.localeCompare(b.criadaEm));
-  const mudar = (id: string, muda: Partial<Despesa>) => atualizarDespesas((l) => l.map((d) => (d.id === id ? { ...d, ...muda } : d)));
+  const mudar = (id: string, muda: Partial<Despesa>, acao: string) => atualizarDespesas((l) => l.map((d) => (d.id === id ? { ...d, ...muda } : d)), acao);
 
   function devolver(e: FormEvent) {
     e.preventDefault();
     if (!obs.trim()) return setErro("Diga o que precisa ser corrigido.");
-    mudar(devolvendo!.id, { status: "devolvida", observacaoGestor: obs.trim() });
+    mudar(devolvendo!.id, { status: "devolvida", observacaoGestor: obs.trim() }, `Devolveu a despesa "${devolvendo!.descricao}"`);
     setDevolvendo(null);
     setObs("");
     setErro(null);
@@ -126,7 +126,7 @@ function Aprovacao() {
             mostrarQuem
             acoes={
               <>
-                <Button size="sm" variant="vidro" onClick={() => mudar(d.id, { status: "aprovada" })} aria-label={`Aprovar ${d.descricao}`}>
+                <Button size="sm" variant="vidro" onClick={() => mudar(d.id, { status: "aprovada" }, `Aprovou a despesa "${d.descricao}"`)} aria-label={`Aprovar ${d.descricao}`}>
                   Aprovar
                 </Button>
                 <Button size="sm" variant="vidro-claro" onClick={() => setDevolvendo(d)} aria-label={`Devolver ${d.descricao}`}>
@@ -258,7 +258,7 @@ export function Contas() {
             aoCancelar={() => setEditando(null)}
             aoSalvar={(d, enviar) => {
               const final: Despesa = { ...d, status: enviar ? "enviada" : "rascunho", observacaoGestor: enviar ? "" : d.observacaoGestor };
-              atualizarDespesas((l) => [...l.filter((x) => x.id !== final.id), final]);
+              atualizarDespesas((l) => [...l.filter((x) => x.id !== final.id), final], `${enviar ? "Enviou para aprovação" : "Salvou como rascunho"} a despesa "${final.descricao}"`);
               setEditando(null);
             }}
           />

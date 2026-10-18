@@ -131,13 +131,18 @@ export function Reservas() {
   function reservar(r: Reserva): string | null {
     const conflito = conflitoDeReserva(r, frota.reservas, frota.manutencoes);
     if (conflito) return MENSAGEM_CONFLITO[conflito];
-    atualizarFrota((f) => ({ ...f, reservas: [...f.reservas, r] }));
+    atualizarFrota((f) => ({ ...f, reservas: [...f.reservas, r] }), `Reservou ${nomeVeiculo(r.veiculoId)} para ${r.destino || "viagem"}`);
     setNova(null);
     return null;
   }
 
-  function mudar(id: string, muda: Partial<Reserva>) {
-    atualizarFrota((f) => ({ ...f, reservas: f.reservas.map((r) => (r.id === id ? { ...r, ...muda } : r)) }));
+  function mudar(id: string, muda: Partial<Reserva>, acao: string) {
+    atualizarFrota((f) => ({ ...f, reservas: f.reservas.map((r) => (r.id === id ? { ...r, ...muda } : r)) }), acao);
+  }
+
+  function nomeVeiculo(id: string) {
+    const v = veiculo(id);
+    return v ? `${v.modelo} (${formatarPlaca(v.placa)})` : "veículo";
   }
 
   const amanha = somarDias(hoje, 1);
@@ -209,7 +214,7 @@ export function Reservas() {
                       <Button size="sm" variant="vidro-claro" onClick={() => setKm({ reserva: r, etapa: "saida" })}>
                         Registrar saída
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={() => mudar(r.id, { situacao: "cancelada" })}>
+                      <Button size="sm" variant="ghost" onClick={() => mudar(r.id, { situacao: "cancelada" }, `Cancelou a reserva de ${nomeVeiculo(r.veiculoId)} para ${r.destino}`)}>
                         Cancelar
                       </Button>
                     </>
@@ -241,7 +246,7 @@ export function Reservas() {
           aoConfirmar={(valor) => {
             const r = km_.reserva;
             if (km_.etapa === "saida") {
-              mudar(r.id, { situacao: "em_uso", kmInicial: valor });
+              mudar(r.id, { situacao: "em_uso", kmInicial: valor }, `Registrou a saída de ${nomeVeiculo(r.veiculoId)} com ${valor} km`);
             } else {
               const problema = validarRetorno(r.kmInicial ?? 0, valor);
               if (problema) return problema;
@@ -250,7 +255,7 @@ export function Reservas() {
                 ...f,
                 reservas: f.reservas.map((o) => (o.id === r.id ? { ...o, situacao: "concluida", kmFinal: valor } : o)),
                 veiculos: f.veiculos.map((v) => (v.id === r.veiculoId ? { ...v, km: Math.max(v.km, valor) } : v)),
-              }));
+              }), `Registrou o retorno de ${nomeVeiculo(r.veiculoId)} com ${valor} km`);
             }
             setKm(null);
             return null;

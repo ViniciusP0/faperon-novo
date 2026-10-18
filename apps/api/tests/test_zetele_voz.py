@@ -243,3 +243,29 @@ def test_contexto_inclui_espacos(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.fixture(autouse=True)
 def _limpa_cache() -> None:
     cache.clear()
+
+
+def test_atividade_relato_no_passado(monkeypatch: pytest.MonkeyPatch) -> None:
+    bruto = {
+        "titulo": "Visita técnica a produtores de café",
+        "data": "2026-10-17",
+        "inicio": "08:00",
+        "fim": "12:00",
+        "tipo": "visita_tecnica",
+        "municipio": "Cacoal",
+        "publico": 12,
+        "descricao": "Visita às lavouras",
+        "resultados": "Três encaminhados para análise de solo",
+    }
+    cli = ClienteLLMFalso([saida(bruto)])
+    r = voz.interpretar(
+        cli, "atividade", "hoje das oito ao meio-dia visitei...", date(2026, 10, 17), [], []
+    )
+    assert r.campos == bruto
+    assert r.faltando == []
+    assert cli.pedidos[0]["formato"] == voz.FORMATOS["atividade"]
+    estranho = voz.conferir(
+        "atividade", {**bruto, "tipo": "festa", "publico": -3, "fim": "07:00"}, [], []
+    )
+    assert (estranho["tipo"], estranho["publico"], estranho["fim"]) == ("outro", 0, "")
+    assert voz.faltando("atividade", estranho) == ["fim"]

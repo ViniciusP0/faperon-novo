@@ -1,11 +1,23 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { agendaDeExemplo, despesasDeExemplo, eventosInstitucionais, frotaDeExemplo, pedidosDeExemplo } from "@/content/sistema/exemplo";
+import {
+  agendaDeExemplo,
+  atividadesDeExemplo,
+  despesasDeExemplo,
+  eventosInstitucionais,
+  frotaDeExemplo,
+  historicoDeExemplo,
+  pedidosDeExemplo,
+} from "@/content/sistema/exemplo";
 import { funcionarioPorId } from "@/content/sistema/funcionarios";
 import { apagarTudo, gravar, gravarAcesso, gravarSessao, ler, lerAcesso, lerSessao } from "./armazenamento";
-import { hojeISO } from "./datas";
-import type { Despesa, EstadoFrota, Evento, Funcionario, PedidoEspaco } from "./tipos";
+import { anotar } from "./atividades";
+import { agoraISO, hojeISO } from "./datas";
+import type { Atividade, Despesa, EstadoFrota, Evento, Funcionario, ModuloHistorico, PedidoEspaco, RegistroHistorico } from "./tipos";
+
+/** Mudança com a descrição do que foi feito: entra no histórico (registro automático de atividades). */
+type Atualizar<T> = (muda: (atual: T) => T, acao?: string) => void;
 
 interface ContextoSistema {
   /** Falso até ler o storage (no servidor e no primeiro render): evita descompasso de hidratação. */
@@ -24,11 +36,15 @@ interface ContextoSistema {
   salvarEvento: (evento: Evento) => void;
   excluirEvento: (id: string) => void;
   frota: EstadoFrota;
-  atualizarFrota: (muda: (atual: EstadoFrota) => EstadoFrota) => void;
+  atualizarFrota: Atualizar<EstadoFrota>;
   pedidos: PedidoEspaco[];
-  atualizarPedidos: (muda: (atual: PedidoEspaco[]) => PedidoEspaco[]) => void;
+  atualizarPedidos: Atualizar<PedidoEspaco[]>;
   despesas: Despesa[];
-  atualizarDespesas: (muda: (atual: Despesa[]) => Despesa[]) => void;
+  atualizarDespesas: Atualizar<Despesa[]>;
+  atividades: Atividade[];
+  atualizarAtividades: Atualizar<Atividade[]>;
+  historico: RegistroHistorico[];
+  registrar: (modulo: ModuloHistorico, acao: string) => void;
   restaurar: () => void;
 }
 
@@ -45,6 +61,8 @@ export function SistemaProvider({ children }: { children: ReactNode }) {
   const [frota, setFrota] = useState<EstadoFrota>(FROTA_VAZIA);
   const [pedidos, setPedidos] = useState<PedidoEspaco[]>([]);
   const [despesas, setDespesas] = useState<Despesa[]>([]);
+  const [atividades, setAtividades] = useState<Atividade[]>([]);
+  const [historico, setHistorico] = useState<RegistroHistorico[]>([]);
 
   const carregar = useCallback(() => {
     const liberado = lerAcesso();
@@ -55,12 +73,33 @@ export function SistemaProvider({ children }: { children: ReactNode }) {
     setFrota(ler("frota", frotaDeExemplo(hoje)));
     setPedidos(ler("espacos", pedidosDeExemplo(hoje)));
     setDespesas(ler("contas", despesasDeExemplo(hoje)));
+    setAtividades(ler("atividades", atividadesDeExemplo(hoje)));
+    setHistorico(ler("historico", historicoDeExemplo(hoje)));
     setPronto(true);
   }, [hoje]);
 
   useEffect(carregar, [carregar]);
 
   const valor = useMemo<ContextoSistema>(() => {
+    const registrar = (modulo: ModuloHistorico, acao: string) => {
+      if (!funcionario) return;
+      setHistorico((atual) => {
+        const novo = anotar(atual, { id: novoId("historico"), quando: agoraISO(), funcionarioId: funcionario.id, modulo, acao });
+        gravar("historico", novo);
+        return novo;
+      });
+    };
+    /** Grava a coleção e, se houver descrição, anota no histórico. */
+    function persistente<T>(chave: string, modulo: ModuloHistorico, set: (f: (atual: T) => T) => void): Atualizar<T> {
+      return (muda, acao) => {
+        set((atual) => {
+          const nova = muda(atual);
+          gravar(chave, nova);
+          return nova;
+        });
+        if (acao) registrar(modulo, acao);
+      };
+    }
     const salvarEventos = (lista: Evento[]) => {
       setEventos(lista);
       if (funcionario) gravar(`agenda:${funcionario.id}`, lista);
@@ -82,35 +121,32 @@ export function SistemaProvider({ children }: { children: ReactNode }) {
       },
       eventos,
       institucionais: eventosInstitucionais(hoje),
-      salvarEvento: (evento) => salvarEventos([...eventos.filter((e) => e.id !== evento.id), evento]),
-      excluirEvento: (id) => salvarEventos(eventos.filter((e) => e.id !== id)),
+      salvarEvento: (evento) => {
+        const existia = eventos.some((e) => e.id === evento.id);
+        salvarEventos([...eventos.filter((e) => e.id !== evento.id), evento]);
+        registrar("agenda", `${existia ? "Editou" : "Criou"} o evento "${evento.titulo}"`);
+      },
+      excluirEvento: (id) => {
+        const evento = eventos.find((e) => e.id === id);
+        salvarEventos(eventos.filter((e) => e.id !== id));
+        if (evento) registrar("agenda", `Excluiu o evento "${evento.titulo}"`);
+      },
       frota,
-      atualizarFrota: (muda) =>
-        setFrota((atual) => {
-          const nova = muda(atual);
-          gravar("frota", nova);
-          return nova;
-        }),
+      atualizarFrota: persistente("frota", "frota", setFrota),
       pedidos,
-      atualizarPedidos: (muda) =>
-        setPedidos((atual) => {
-          const nova = muda(atual);
-          gravar("espacos", nova);
-          return nova;
-        }),
+      atualizarPedidos: persistente("espacos", "espacos", setPedidos),
       despesas,
-      atualizarDespesas: (muda) =>
-        setDespesas((atual) => {
-          const nova = muda(atual);
-          gravar("contas", nova);
-          return nova;
-        }),
+      atualizarDespesas: persistente("contas", "contas", setDespesas),
+      atividades,
+      atualizarAtividades: persistente("atividades", "atividades", setAtividades),
+      historico,
+      registrar,
       restaurar: () => {
         apagarTudo();
         carregar();
       },
     };
-  }, [pronto, hoje, acesso, funcionario, eventos, frota, pedidos, despesas, carregar]);
+  }, [pronto, hoje, acesso, funcionario, eventos, frota, pedidos, despesas, atividades, historico, carregar]);
 
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;
 }

@@ -25,6 +25,16 @@ RE_DATA = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 RE_HORA = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 
 TEXTO = {"type": "string"}
+TIPOS_ATIVIDADE = [
+    "visita_tecnica",
+    "atendimento",
+    "reuniao",
+    "capacitacao",
+    "evento",
+    "viagem",
+    "administrativo",
+    "outro",
+]
 
 
 def _objeto(propriedades: dict[str, Any]) -> dict[str, Any]:
@@ -83,6 +93,19 @@ FORMATOS: dict[str, dict[str, Any]] = {
             "observacoes": TEXTO,
         }
     ),
+    "atividade": _objeto(
+        {
+            "titulo": TEXTO,
+            "data": TEXTO,
+            "inicio": TEXTO,
+            "fim": TEXTO,
+            "tipo": {"type": "string", "enum": TIPOS_ATIVIDADE},
+            "municipio": TEXTO,
+            "publico": {"type": "integer"},
+            "descricao": TEXTO,
+            "resultados": TEXTO,
+        }
+    ),
 }
 
 OBRIGATORIOS = {
@@ -101,6 +124,7 @@ OBRIGATORIOS = {
         "nome": "nome do evento",
         "participantes": "participantes",
     },
+    "atividade": {"titulo": "atividade", "data": "data", "inicio": "início", "fim": "fim"},
 }
 
 SISTEMA = """Você preenche formulários do sistema interno da FAPERON a partir de uma frase falada em português do Brasil.
@@ -116,7 +140,8 @@ ou no próximo se o dia 20 já passou.
 - Espaço: "de manhã" é periodo manha, "à tarde" tarde, "à noite" noite, "o dia todo" dia_todo; com horário \
 explícito, periodo horario com inicio e fim. Coffee break só se for citado.
 - Título ou nome: curto e descritivo, com inicial maiúscula, a partir do que foi dito (ex.: "Reunião com o sindicato de Vilhena").
-- Não invente: o que não foi dito nem se deduz fica "" (ou 0 em participantes)."""
+- Atividade é algo que a pessoa já fez (relato no passado): "hoje", "ontem" e dias da semana apontam para trás (o mais recente até hoje). tipo: visita_tecnica, atendimento (ao produtor), reuniao, capacitacao (curso, treinamento), evento, viagem, administrativo ou outro. publico é o número de pessoas atendidas ou participantes. descricao é o que foi feito; resultados, os resultados e encaminhamentos citados. municipio é o município citado.
+- Não invente: o que não foi dito nem se deduz fica "" (ou 0 em participantes e publico)."""
 
 
 @dataclass
@@ -200,6 +225,24 @@ def conferir(
             saida = datetime.fromisoformat(f"{c['dataSaida']}T{c['horaSaida']}")
             if datetime.fromisoformat(f"{c['dataRetorno']}T{c['horaRetorno']}") <= saida:
                 c["dataRetorno"] = c["horaRetorno"] = ""
+        return c
+    if tipo == "atividade":
+        publico = bruto.get("publico")
+        c = {
+            "titulo": _texto(bruto.get("titulo"), 120),
+            "data": _data(bruto.get("data")),
+            "inicio": _hora(bruto.get("inicio")),
+            "fim": _hora(bruto.get("fim")),
+            "tipo": bruto.get("tipo") if bruto.get("tipo") in TIPOS_ATIVIDADE else "outro",
+            "municipio": _texto(bruto.get("municipio"), 80),
+            "publico": publico
+            if isinstance(publico, int) and not isinstance(publico, bool) and 0 < publico <= 5000
+            else 0,
+            "descricao": _texto(bruto.get("descricao"), 500),
+            "resultados": _texto(bruto.get("resultados"), 500),
+        }
+        if c["inicio"] and c["fim"] and c["fim"] <= c["inicio"]:
+            c["fim"] = ""
         return c
     ids = {e["id"] for e in espacos}
     participantes = bruto.get("participantes")

@@ -13,6 +13,7 @@ export const PAGINAS_COM_ZETELE = [
   "/sistema/espacos",
   "/sistema/contas",
   "/sistema/relatorios",
+  "/sistema/atividades",
 ] as const;
 export type PaginaComZetele = (typeof PAGINAS_COM_ZETELE)[number];
 
@@ -207,6 +208,24 @@ export const PERGUNTAS: PerguntaPronta[] = [
     href: "/sistema/relatorios",
     rotuloLink: "Abrir os Relatórios",
   },
+  {
+    id: "sis-atividade",
+    area: "sistema",
+    texto: "Como registro uma atividade que fiz?",
+    tipo: "estatica",
+    resposta: 'Em Atividades, clique em "Registrar atividade" e informe o que fez, a data, o horário, o tipo (visita técnica, atendimento, reunião, capacitação...), o município, o público atendido e os resultados. Também dá para usar "Registrar por voz" e contar o que fez.',
+    href: "/sistema/atividades",
+    rotuloLink: "Abrir as Atividades",
+  },
+  {
+    id: "sis-historico",
+    area: "sistema",
+    texto: "O que é o histórico?",
+    tipo: "estatica",
+    resposta: "É o registro automático do que foi feito no sistema: entradas, eventos, reservas, pedidos de espaço, despesas e atividades, com data, hora e quem fez. Você vê o seu; o coordenador vê o de toda a equipe, além do resumo de atividades por funcionário.",
+    href: "/sistema/atividades?aba=historico",
+    rotuloLink: "Abrir o Histórico",
+  },
 ];
 
 /** No Início o Zétele só orienta (sem dados); perguntas de dados e preços ficam na Central. */
@@ -221,12 +240,13 @@ export const ORDEM_POR_PAGINA: Record<PaginaComZetele, string[]> = {
   "/central-de-inteligencia": ["painel-observatorio", "soja", "preco", "pdf"],
   "/painel": ["pdf", "soja", "preco", "gado"],
   "/central-de-inteligencia/observatorio": ["painel-observatorio", "cafe", "preco", "soja"],
-  "/sistema": ["sis-evento", "sis-voz", "sis-despesa", "sis-relatorio"],
+  "/sistema": ["sis-evento", "sis-atividade", "sis-voz", "sis-relatorio"],
   "/sistema/agenda": ["sis-evento", "sis-voz", "sis-agenda-outros", "sis-reserva"],
   "/sistema/frotas": ["sis-reserva", "sis-voz", "sis-km", "sis-custos"],
   "/sistema/espacos": ["sis-espaco", "sis-voz", "sis-fila", "sis-conflito"],
   "/sistema/contas": ["sis-despesa", "sis-aprovacao-contas", "sis-relatorio", "sis-evento"],
   "/sistema/relatorios": ["sis-relatorio", "sis-custos", "sis-despesa", "sis-voz"],
+  "/sistema/atividades": ["sis-atividade", "sis-historico", "sis-voz", "sis-relatorio"],
 };
 
 export function perguntasDaPagina(pagina: PaginaComZetele): { visiveis: PerguntaPronta[]; demais: PerguntaPronta[] } {

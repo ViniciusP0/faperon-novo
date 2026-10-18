@@ -43,7 +43,7 @@ export function AbastecimentoManutencao() {
       ...f,
       abastecimentos: [...f.abastecimentos, registro],
       veiculos: f.veiculos.map((v) => (v.id === registro.veiculoId ? { ...v, km: Math.max(v.km, registro.km) } : v)),
-    }));
+    }), `Registrou abastecimento de ${registro.litros} L em ${nomeVeiculo(registro.veiculoId)}`);
     setAb({ veiculoId: "", data: hoje, litros: "", valor: "", km: "" });
     setMsgAb({ tom: "info", texto: "Abastecimento registrado." });
   }
@@ -53,13 +53,17 @@ export function AbastecimentoManutencao() {
     const registro: Manutencao = { id: novoId("manutencao"), veiculoId: ma.veiculoId, data: ma.data, tipo: ma.tipo, valor: numero(ma.valor), km: numero(ma.km), concluida: ma.concluida };
     if (!registro.veiculoId || !registro.data) return setMsgMa({ tom: "erro", texto: "Escolha o veículo e a data." });
     if (!(registro.valor >= 0) || !(registro.km >= 0) || ma.valor === "" || ma.km === "") return setMsgMa({ tom: "erro", texto: "Informe valor e km válidos." });
-    atualizarFrota((f) => ({ ...f, manutencoes: [...f.manutencoes, registro] }));
+    atualizarFrota((f) => ({ ...f, manutencoes: [...f.manutencoes, registro] }), `Registrou manutenção (${registro.tipo}) em ${nomeVeiculo(registro.veiculoId)}`);
     setMa({ veiculoId: "", data: hoje, tipo: "revisao", valor: "", km: "", concluida: true });
     setMsgMa({ tom: "info", texto: registro.concluida ? "Manutenção registrada." : "Manutenção registrada; o veículo fica em manutenção até ser concluída." });
   }
 
   function concluir(id: string) {
-    atualizarFrota((f) => ({ ...f, manutencoes: f.manutencoes.map((m) => (m.id === id ? { ...m, concluida: true } : m)) }));
+    const m = frota.manutencoes.find((o) => o.id === id);
+    atualizarFrota(
+      (f) => ({ ...f, manutencoes: f.manutencoes.map((o) => (o.id === id ? { ...o, concluida: true } : o)) }),
+      `Concluiu a manutenção de ${nomeVeiculo(m?.veiculoId ?? "")}`,
+    );
   }
 
   const abastecimentos = [...frota.abastecimentos].sort((a, b) => b.data.localeCompare(a.data)).slice(0, ULTIMOS);

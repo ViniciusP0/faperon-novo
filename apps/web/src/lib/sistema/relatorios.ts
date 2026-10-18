@@ -1,14 +1,15 @@
 import { ESPACOS } from "@/content/sistema/exemplo";
 import { FUNCIONARIOS } from "@/content/sistema/funcionarios";
 import { ROTULO_ORIGEM, ROTULO_TIPO_EVENTO } from "./agenda";
+import { atividadesVisiveis, horasDaAtividade, ROTULO_TIPO_ATIVIDADE } from "./atividades";
 import { ROTULO_CATEGORIA, ROTULO_STATUS_DESPESA } from "./contas";
 import { formatarDataBR } from "./datas";
 import { conflitosDoPedido } from "./espacos";
 import { km, litros, reais } from "./formato";
 import { formatarPlaca } from "./placa";
-import type { Despesa, EstadoFrota, Evento, Funcionario, PedidoEspaco, StatusDespesa } from "./tipos";
+import type { Atividade, Despesa, EstadoFrota, Evento, Funcionario, PedidoEspaco, StatusDespesa } from "./tipos";
 
-export type TipoRelatorio = "frota" | "espacos" | "agenda" | "contas";
+export type TipoRelatorio = "frota" | "espacos" | "agenda" | "contas" | "atividades";
 export type FormatoColuna = "texto" | "inteiro" | "reais" | "km" | "litros" | "horas";
 export type Celula = string | number | null;
 
@@ -31,6 +32,7 @@ export const ROTULO_RELATORIO: Record<TipoRelatorio, string> = {
   espacos: "Espaços",
   agenda: "Agenda",
   contas: "Prestação de contas",
+  atividades: "Atividades",
 };
 
 const arredondar = (v: number, casas = 2) => Math.round(v * 10 ** casas) / 10 ** casas;
@@ -183,6 +185,50 @@ export function relatorioContas(despesas: Despesa[], funcionario: Funcionario, d
       d.valor,
     ]),
     total: ["Aprovadas + enviadas", ...(comQuem ? [""] : []), "", "", "", "", reconhecido],
+  };
+}
+
+/** O coordenador vê as atividades de todos; os demais, só as próprias. */
+export function relatorioAtividades(atividades: Atividade[], funcionario: Funcionario, de: string, ate: string): Relatorio {
+  const lista = atividadesVisiveis(atividades, funcionario)
+    .filter((a) => noPeriodo(a.data, de, ate))
+    .sort((a, b) => a.data.localeCompare(b.data) || a.inicio.localeCompare(b.inicio));
+  const comQuem = funcionario.coordenador;
+  const totalHoras = arredondar(lista.reduce((s, a) => s + horasDaAtividade(a), 0), 1);
+  const totalPublico = lista.reduce((s, a) => s + a.publico, 0);
+  const porTipo = (Object.keys(ROTULO_TIPO_ATIVIDADE) as Atividade["tipo"][])
+    .map((t) => [ROTULO_TIPO_ATIVIDADE[t], lista.filter((a) => a.tipo === t).length] as const)
+    .filter(([, n]) => n > 0)
+    .map(([rotulo, n]) => `${n} ${rotulo.toLowerCase()}`);
+  return {
+    titulo: comQuem ? "Atividades da equipe" : "Minhas atividades",
+    resumo: [
+      `${lista.length} atividade(s), ${totalHoras.toLocaleString("pt-BR")} hora(s) e ${totalPublico} pessoa(s) atendida(s).`,
+      ...(porTipo.length ? [`Por tipo: ${porTipo.join(", ")}.`] : []),
+    ],
+    colunas: [
+      { rotulo: "Data", formato: "texto" },
+      { rotulo: "Horário", formato: "texto" },
+      ...(comQuem ? [{ rotulo: "Funcionário", formato: "texto" as const }] : []),
+      { rotulo: "Tipo", formato: "texto" },
+      { rotulo: "Atividade", formato: "texto" },
+      { rotulo: "Município", formato: "texto" },
+      { rotulo: "Resultados", formato: "texto" },
+      { rotulo: "Público", formato: "inteiro" },
+      { rotulo: "Horas", formato: "horas" },
+    ],
+    linhas: lista.map((a) => [
+      formatarDataBR(a.data),
+      `${a.inicio}–${a.fim}`,
+      ...(comQuem ? [nomeDe(a.funcionarioId)] : []),
+      ROTULO_TIPO_ATIVIDADE[a.tipo],
+      a.titulo,
+      a.municipio,
+      a.resultados,
+      a.publico,
+      horasDaAtividade(a),
+    ]),
+    total: ["Total", "", ...(comQuem ? [""] : []), "", "", "", "", totalPublico, totalHoras],
   };
 }
 

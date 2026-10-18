@@ -1,8 +1,8 @@
 import { API_BASE } from "../api";
 import { horarioDoPeriodo } from "./espacos";
-import type { Evento, IdEspaco, PedidoEspaco, PeriodoEspaco, Reserva, TipoEvento, TipoEventoEspaco } from "./tipos";
+import type { Atividade, Evento, IdEspaco, PedidoEspaco, PeriodoEspaco, Reserva, TipoAtividade, TipoEvento, TipoEventoEspaco } from "./tipos";
 
-export type TipoVoz = "evento" | "reserva" | "espaco";
+export type TipoVoz = "evento" | "reserva" | "espaco" | "atividade";
 
 /** Campos como o servidor devolve, já conferidos: "" (ou 0) é o que não foi entendido. */
 export interface CamposEvento {
@@ -38,10 +38,23 @@ export interface CamposEspaco {
   observacoes: string;
 }
 
+export interface CamposAtividade {
+  titulo: string;
+  data: string;
+  inicio: string;
+  fim: string;
+  tipo: TipoAtividade;
+  municipio: string;
+  publico: number;
+  descricao: string;
+  resultados: string;
+}
+
 export interface CamposPorTipo {
   evento: CamposEvento;
   reserva: CamposReserva;
   espaco: CamposEspaco;
+  atividade: CamposAtividade;
 }
 
 export interface Opcao {
@@ -128,5 +141,20 @@ export function aplicarEspaco(base: PedidoEspaco, c: CamposEspaco): PedidoEspaco
     participantes: c.participantes || base.participantes,
     coffeeBreak: c.coffeeBreak,
     observacoes: c.observacoes || base.observacoes,
+  };
+}
+
+export function aplicarAtividade(base: Atividade, c: CamposAtividade): Atividade {
+  return {
+    ...base,
+    titulo: c.titulo || base.titulo,
+    data: c.data || base.data,
+    inicio: c.inicio || base.inicio,
+    fim: c.fim || base.fim,
+    tipo: c.tipo,
+    municipio: c.municipio || base.municipio,
+    publico: c.publico || base.publico,
+    descricao: c.descricao || base.descricao,
+    resultados: c.resultados || base.resultados,
   };
 }

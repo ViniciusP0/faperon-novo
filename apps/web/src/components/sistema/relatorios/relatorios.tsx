@@ -13,6 +13,7 @@ import {
   formatarCelula,
   paraCSV,
   relatorioAgenda,
+  relatorioAtividades,
   relatorioContas,
   relatorioEspacos,
   relatorioFrota,
@@ -80,7 +81,7 @@ function Tabela({ r }: { r: Relatorio }) {
 }
 
 export function Relatorios() {
-  const { hoje, funcionario, eventos, institucionais, frota, pedidos, despesas } = useSistema();
+  const { hoje, funcionario, eventos, institucionais, frota, pedidos, despesas, atividades } = useSistema();
   const inicioDoMes = `${hoje.slice(0, 7)}-01`;
   const fimDoMes = somarDias(somarMeses(inicioDoMes, 1), -1);
   const [tipo, setTipo] = useState<TipoRelatorio>("frota");
@@ -99,6 +100,8 @@ export function Relatorios() {
         return relatorioAgenda(itensDaAgenda(funcionario.id, eventos, institucionais, frota.reservas, frota.veiculos, pedidos), de, ate);
       case "contas":
         return relatorioContas(despesas, funcionario, de, ate);
+      case "atividades":
+        return relatorioAtividades(atividades, funcionario, de, ate);
     }
   };
   const relatorio = periodoValido ? gerar() : null;

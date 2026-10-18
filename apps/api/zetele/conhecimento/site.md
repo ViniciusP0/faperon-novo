@@ -87,4 +87,12 @@ Abas: Minhas despesas, Aprovação (só o gestor das contas) e Por centro de cus
 - Por centro de custo: total das despesas enviadas e aprovadas no período, por centro e categoria.
 
 ## [/sistema/relatorios] Relatórios
-Tipos: Frota (viagens, km rodados, litros, combustível, manutenção, custo total e custo por km de cada veículo), Espaços (pedidos, aprovados, pendentes, recusados, horas aprovadas, participantes e pendentes em conflito por espaço), Agenda (eventos da pessoa e da FAPERON no período) e Prestação de contas (despesas do período; o gestor das contas vê as de todos, os demais só as próprias). Período por datas ou pelos atalhos "Este mês", "Últimos 30 dias" e "Últimos 3 meses". "Imprimir / salvar PDF" imprime só o relatório; "Baixar CSV" gera planilha para o Excel.
+Tipos: Atividades (atividades realizadas no período, com horas e público; o coordenador vê as da equipe), Frota (viagens, km rodados, litros, combustível, manutenção, custo total e custo por km de cada veículo), Espaços (pedidos, aprovados, pendentes, recusados, horas aprovadas, participantes e pendentes em conflito por espaço), Agenda (eventos da pessoa e da FAPERON no período) e Prestação de contas (despesas do período; o gestor das contas vê as de todos, os demais só as próprias). Período por datas ou pelos atalhos "Este mês", "Últimos 30 dias" e "Últimos 3 meses". "Imprimir / salvar PDF" imprime só o relatório; "Baixar CSV" gera planilha para o Excel.
+
+## [/sistema/atividades] Registro de atividades
+Abas: Minhas atividades, Equipe (só o coordenador) e Histórico.
+- "Registrar atividade": o que foi feito, data, início e fim, tipo (visita técnica, atendimento ao produtor, reunião, capacitação ou curso, evento, viagem, administrativo, outro), município de Rondônia, público atendido (pessoas), o que foi feito e resultados e encaminhamentos. A atividade pode ser editada ou excluída por quem a registrou.
+- "Registrar por voz": a pessoa conta o que fez (ex.: "hoje das oito ao meio-dia fiz visita técnica a produtores de café em Cacoal, atendi doze produtores") e o formulário abre preenchido para conferir.
+- Minhas atividades: lista do período com total de horas e de pessoas atendidas.
+- Equipe: para o coordenador, total de atividades, horas e público por funcionário, e a lista de atividades de todos.
+- Histórico: registro automático do que foi feito no sistema (entrada, agenda, frota, espaços, contas e atividades), com data, hora e quem fez. Cada pessoa vê o seu; o coordenador vê o de todos. Ficam as 500 ações mais recentes.

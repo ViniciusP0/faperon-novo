@@ -2,8 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import { historicoDeExemplo } from "@/content/sistema/exemplo";
 import { FUNCIONARIOS } from "@/content/sistema/funcionarios";
-import { gravarSessao } from "@/lib/sistema/armazenamento";
+import { gravar, gravarSessao, ler } from "@/lib/sistema/armazenamento";
+import { anotar } from "@/lib/sistema/atividades";
+import { agoraISO, hojeISO } from "@/lib/sistema/datas";
+import { novoId } from "@/lib/sistema/estado";
+import type { RegistroHistorico } from "@/lib/sistema/tipos";
 
 /** Protótipo: no lugar de e-mail e senha, a pessoa escolhe um funcionário fictício. */
 export function EscolhaFuncionario() {
@@ -11,6 +16,9 @@ export function EscolhaFuncionario() {
 
   function entrar(id: string) {
     gravarSessao(id);
+    // a entrada fica no histórico; o SistemaProvider ainda não tem funcionário nesta tela
+    const historico = ler<RegistroHistorico[]>("historico", historicoDeExemplo(hojeISO()));
+    gravar("historico", anotar(historico, { id: novoId("historico"), quando: agoraISO(), funcionarioId: id, modulo: "acesso", acao: "Entrou no sistema" }));
     router.push("/sistema");
   }
 
@@ -28,7 +36,7 @@ export function EscolhaFuncionario() {
               <span className="block font-medium text-ink">{f.nome}</span>
               <span className="block text-sm text-ink-muted">{f.area}</span>
             </span>
-            {(f.gestorFrota || f.gestorEspacos) && <Badge>Gestor da frota e dos espaços</Badge>}
+            {f.coordenador && <Badge>Coordenador e gestor</Badge>}
           </button>
         </li>
       ))}

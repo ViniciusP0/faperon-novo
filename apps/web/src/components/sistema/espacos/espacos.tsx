@@ -162,13 +162,16 @@ function Fila() {
     const bloqueio = podeAprovar(p, pedidos);
     if (bloqueio) return setAviso(bloqueio);
     setAviso(null);
-    atualizarPedidos((lista) => lista.map((o) => (o.id === p.id ? { ...o, status: "aprovado" } : o)));
+    atualizarPedidos((lista) => lista.map((o) => (o.id === p.id ? { ...o, status: "aprovado" } : o)), `Aprovou o pedido de espaço "${p.nome}"`);
   }
 
   function recusar(e: FormEvent) {
     e.preventDefault();
     if (!motivo.trim()) return setErroMotivo("Informe o motivo da recusa.");
-    atualizarPedidos((lista) => lista.map((o) => (o.id === recusando!.id ? { ...o, status: "recusado", motivoRecusa: motivo.trim() } : o)));
+    atualizarPedidos(
+      (lista) => lista.map((o) => (o.id === recusando!.id ? { ...o, status: "recusado", motivoRecusa: motivo.trim() } : o)),
+      `Recusou o pedido de espaço "${recusando!.nome}"`,
+    );
     setRecusando(null);
     setMotivo("");
     setErroMotivo(null);
@@ -235,7 +238,7 @@ function MeusPedidos() {
           <li key={p.id} className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-line bg-card p-3">
             <DetalhesPedido p={p} mostrarQuem={false} />
             {(p.status === "pendente" || p.status === "aprovado") && (
-              <Button size="sm" variant="ghost" onClick={() => atualizarPedidos((lista) => lista.map((o) => (o.id === p.id ? { ...o, status: "cancelado" } : o)))} aria-label={`Cancelar ${p.nome}`}>
+              <Button size="sm" variant="ghost" onClick={() => atualizarPedidos((lista) => lista.map((o) => (o.id === p.id ? { ...o, status: "cancelado" } : o)), `Cancelou o pedido de espaço "${p.nome}"`)} aria-label={`Cancelar ${p.nome}`}>
                 Cancelar pedido
               </Button>
             )}
@@ -325,7 +328,7 @@ export function Espacos() {
             aoCancelar={() => setNovo(null)}
             aoEnviar={(p) => {
               const comConflito = conflitosDoPedido(p, pedidos).length > 0;
-              atualizarPedidos((lista) => [...lista, p]);
+              atualizarPedidos((lista) => [...lista, p], `Pediu o espaço ${ESPACOS.find((e) => e.id === p.espacoId)?.nome ?? ""} para "${p.nome}"`);
               setNovo(null);
               setEnviado(`Pedido "${p.nome}" enviado para a fila${comConflito ? ", marcado com conflito" : ""}. Acompanhe em Meus pedidos.`);
             }}

@@ -100,7 +100,7 @@ test("contas, relatórios e agendamento por voz digitado; o Zétele está em tod
     }),
   );
   await entrarComo(page, "Carla Mendes");
-  for (const secao of ["Agenda", "Frotas", "Espaços", "Contas", "Relatórios"]) {
+  for (const secao of ["Agenda", "Frotas", "Espaços", "Contas", "Atividades", "Relatórios"]) {
     await page.getByRole("link", { name: secao, exact: true }).click();
     await expect(page.getByRole("button", { name: "Falar com o Zétele, assistente do site" })).toBeAttached();
   }

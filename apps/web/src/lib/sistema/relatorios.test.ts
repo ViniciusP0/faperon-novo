@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { FUNCIONARIOS } from "@/content/sistema/funcionarios";
-import { paraCSV, relatorioAgenda, relatorioContas, relatorioEspacos, relatorioFrota, type Relatorio } from "./relatorios";
-import type { Despesa, EstadoFrota, Evento, PedidoEspaco } from "./tipos";
+import { paraCSV, relatorioAgenda, relatorioAtividades, relatorioContas, relatorioEspacos, relatorioFrota, type Relatorio } from "./relatorios";
+import type { Atividade, Despesa, EstadoFrota, Evento, PedidoEspaco } from "./tipos";
 
 const carla = FUNCIONARIOS.find((f) => f.id === "carla")!;
 const marcos = FUNCIONARIOS.find((f) => f.id === "marcos")!;
@@ -130,5 +130,18 @@ describe("relatórios", () => {
       total: ["Total", 1234.5, 480],
     };
     expect(paraCSV(r)).toBe('﻿Nome;Valor;Km\r\n"\'=HYPERLINK(""x"")";1234,50;480\r\n"Papel; A4";;0\r\nTotal;1234,50;480\r\n');
+  });
+
+  it("atividades: horas e público; o coordenador vê a equipe com o nome", () => {
+    const base: Atividade = { id: "a", funcionarioId: "carla", data: "2026-10-05", inicio: "08:00", fim: "10:30", tipo: "visita_tecnica", titulo: "Visita", municipio: "Cacoal", publico: 9, descricao: "", resultados: "Encaminhou 3", criadaEm: "" };
+    const lista = [base, { ...base, id: "b", funcionarioId: "ana", inicio: "14:00", fim: "15:00", tipo: "reuniao" as const, publico: 0 }, { ...base, id: "c", data: "2026-11-01" }];
+    const daCarla = relatorioAtividades(lista, carla, "2026-10-01", "2026-10-31");
+    expect(daCarla.linhas).toEqual([["05/10/2026", "08:00–10:30", "Visita técnica", "Visita", "Cacoal", "Encaminhou 3", 9, 2.5]]);
+    expect(daCarla.total).toEqual(["Total", "", "", "", "", "", 9, 2.5]);
+    const daEquipe = relatorioAtividades(lista, marcos, "2026-10-01", "2026-10-31");
+    expect(daEquipe.titulo).toBe("Atividades da equipe");
+    expect(daEquipe.linhas.map((l) => l[2])).toEqual(["Carla Mendes", "Ana Ribeiro"]);
+    expect(daEquipe.total!.at(-1)).toBe(3.5);
+    expect(daEquipe.resumo[1]).toBe("Por tipo: 1 visita técnica, 1 reunião.");
   });
 });

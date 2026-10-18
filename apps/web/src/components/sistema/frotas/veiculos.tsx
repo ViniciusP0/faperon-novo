@@ -79,7 +79,11 @@ export function Veiculos() {
 
   function salvar(v: Veiculo): string | null {
     if (frota.veiculos.some((o) => o.id !== v.id && normalizarPlaca(o.placa) === v.placa)) return "Já existe um veículo com essa placa.";
-    atualizarFrota((f) => ({ ...f, veiculos: [...f.veiculos.filter((o) => o.id !== v.id), v].sort((a, b) => a.modelo.localeCompare(b.modelo)) }));
+    const existia = frota.veiculos.some((o) => o.id === v.id);
+    atualizarFrota(
+      (f) => ({ ...f, veiculos: [...f.veiculos.filter((o) => o.id !== v.id), v].sort((a, b) => a.modelo.localeCompare(b.modelo)) }),
+      `${existia ? "Editou" : "Cadastrou"} o veículo ${v.modelo} (${formatarPlaca(v.placa)})`,
+    );
     setEditando(null);
     return null;
   }

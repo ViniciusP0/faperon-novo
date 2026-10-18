@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, Car, ChevronRight, DoorOpen } from "lucide-react";
+import { CalendarDays, Car, ChevronRight, DoorOpen, ClipboardList } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,7 @@ import { useSistema } from "@/lib/sistema/estado";
 const PROXIMOS = 6;
 
 export function InicioSistema() {
-  const { funcionario, hoje, eventos, institucionais, frota, pedidos } = useSistema();
+  const { funcionario, hoje, eventos, institucionais, frota, pedidos, atividades } = useSistema();
   const semana = somarDias(hoje, 7);
   const proximos = useMemo(
     () =>
@@ -34,6 +34,12 @@ export function InicioSistema() {
       icone: DoorOpen,
       titulo: "Espaços",
       texto: funcionario.gestorEspacos ? `${pendentes} pedido(s) na fila para avaliar` : `${meusPendentes} pedido(s) seu(s) aguardando`,
+    },
+    {
+      href: "/sistema/atividades",
+      icone: ClipboardList,
+      titulo: "Atividades",
+      texto: `${atividades.filter((a) => a.funcionarioId === funcionario.id && a.data >= somarDias(hoje, -6) && a.data <= hoje).length} atividade(s) sua(s) nos últimos 7 dias`,
     },
   ];
 

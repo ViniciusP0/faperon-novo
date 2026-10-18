@@ -1,5 +1,5 @@
 import { somarDias } from "@/lib/sistema/datas";
-import type { Despesa, Espaco, EstadoFrota, Evento, PedidoEspaco, Reserva } from "@/lib/sistema/tipos";
+import type { Atividade, Despesa, Espaco, EstadoFrota, Evento, PedidoEspaco, RegistroHistorico, Reserva } from "@/lib/sistema/tipos";
 
 /** Dados de exemplo calculados a partir de `hoje`, para o protótipo nunca parecer velho. Tudo fictício. */
 
@@ -169,5 +169,41 @@ export function despesasDeExemplo(hoje: string): Despesa[] {
     { ...d(6, { funcionarioId: "joao", data: somarDias(hoje, -15), centro: "Sindical", categoria: "eventos", descricao: "Lanche da reunião com o sindicato", fornecedor: "Padaria Pão Nosso", valor: 210, status: "devolvida" }), observacaoGestor: "Falta o comprovante fiscal." },
     d(7, { funcionarioId: "luiza", data: somarDias(hoje, -30), centro: "Presidência", categoria: "transporte", descricao: "Táxi para a Assembleia Legislativa", fornecedor: "Rádio Táxi PVH", valor: 58, status: "aprovada" }),
     d(8, { funcionarioId: "marcos", data: somarDias(hoje, -9), centro: "Administrativo", categoria: "material", descricao: "Toner para a impressora", fornecedor: "Info Suprimentos", valor: 415, status: "aprovada" }),
+  ];
+}
+
+export function atividadesDeExemplo(hoje: string): Atividade[] {
+  const a = (n: number, parcial: Omit<Atividade, "id" | "criadaEm" | "descricao" | "resultados"> & Partial<Atividade>): Atividade => ({
+    id: `atividade-ex-${n}`,
+    descricao: "",
+    resultados: "",
+    criadaEm: `${parcial.data}T18:00`,
+    ...parcial,
+  });
+  return [
+    a(1, { funcionarioId: "ana", data: somarDias(hoje, -12), inicio: "07:30", fim: "16:00", tipo: "visita_tecnica", titulo: "Visita técnica a produtores de café", municipio: "Cacoal", publico: 9, descricao: "Acompanhamento de lavouras de café clonal.", resultados: "Três produtores encaminhados para análise de solo." }),
+    a(2, { funcionarioId: "ana", data: somarDias(hoje, -5), inicio: "08:00", fim: "12:00", tipo: "capacitacao", titulo: "Curso de manejo de pastagem", municipio: "Ji-Paraná", publico: 28 }),
+    a(3, { funcionarioId: "carla", data: somarDias(hoje, -8), inicio: "09:00", fim: "11:30", tipo: "evento", titulo: "Cobertura do dia de campo", municipio: "Ariquemes", publico: 0, resultados: "Matéria e fotos publicadas no site." }),
+    a(4, { funcionarioId: "carla", data: somarDias(hoje, -2), inicio: "14:00", fim: "15:00", tipo: "reuniao", titulo: "Pauta de comunicação da semana", municipio: "Porto Velho", publico: 0 }),
+    a(5, { funcionarioId: "joao", data: somarDias(hoje, -6), inicio: "08:00", fim: "17:00", tipo: "atendimento", titulo: "Plantão de atendimento no sindicato", municipio: "Vilhena", publico: 17, resultados: "Dúvidas sobre CAR e crédito rural." }),
+    a(6, { funcionarioId: "marcos", data: somarDias(hoje, -3), inicio: "10:00", fim: "12:00", tipo: "administrativo", titulo: "Revisão dos contratos de manutenção da frota", municipio: "Porto Velho", publico: 0 }),
+    a(7, { funcionarioId: "luiza", data: somarDias(hoje, -4), inicio: "09:00", fim: "12:00", tipo: "reuniao", titulo: "Reunião com a Secretaria de Agricultura", municipio: "Porto Velho", publico: 6 }),
+  ];
+}
+
+export function historicoDeExemplo(hoje: string): RegistroHistorico[] {
+  const r = (n: number, dias: number, hora: string, funcionarioId: string, modulo: RegistroHistorico["modulo"], acao: string): RegistroHistorico => ({
+    id: `historico-ex-${n}`,
+    quando: `${somarDias(hoje, dias)}T${hora}`,
+    funcionarioId,
+    modulo,
+    acao,
+  });
+  return [
+    r(1, -2, "14:05", "carla", "atividades", "Registrou a atividade \"Pauta de comunicação da semana\""),
+    r(2, -3, "10:12", "marcos", "contas", "Aprovou a despesa \"Toner para a impressora\""),
+    r(3, -5, "12:20", "ana", "atividades", "Registrou a atividade \"Curso de manejo de pastagem\""),
+    r(4, -6, "09:41", "carla", "contas", "Enviou para aprovação a despesa \"Cartões de memória para a câmera\""),
+    r(5, -6, "17:30", "joao", "atividades", "Registrou a atividade \"Plantão de atendimento no sindicato\""),
   ];
 }

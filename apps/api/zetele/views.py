@@ -28,6 +28,7 @@ PAGINAS_COM_ZETELE = (
     "/sistema/espacos",
     "/sistema/contas",
     "/sistema/relatorios",
+    "/sistema/atividades",
 )
 # Uma pergunta prende uma thread do gunicorn por até 40 s: no máximo N por processo (ADR 0025).
 SEMAFORO = threading.BoundedSemaphore(settings.ZETELE_SIMULTANEOS)
