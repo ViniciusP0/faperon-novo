@@ -1,16 +1,19 @@
 #!/bin/bash
-# Leva as chaves do .env.local (Anthropic, Groq e Gemini) para o Parameter Store e para a máquina de
-# teste, sem mostrar os valores na tela. Uso, a partir da raiz do repositório:
-#   bash infra/aws-teste/atualizar-chaves.sh
+# Leva as chaves do .env.local (Anthropic, Groq e Gemini) para o Parameter Store e para a máquina,
+# sem mostrar os valores na tela. Uso, a partir da raiz do repositório:
+#   bash infra/aws-teste/atualizar-chaves.sh                      # teste
+#   AMBIENTE=producao bash infra/aws-teste/atualizar-chaves.sh    # produção
 set -euo pipefail
 export AWS_PROFILE="${AWS_PROFILE:-dataro}" AWS_REGION=sa-east-1 AWS_DEFAULT_REGION=sa-east-1
+AMBIENTE="${AMBIENTE:-teste}"
+P="faperon-$AMBIENTE"
 cd "$(dirname "$0")/../.."
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 
 # nome no .env.local -> parâmetro em /faperon-teste/
 for par in ANTHROPIC_API_KEY:anthropic-api-key GROQ_API_KEY:groq-api-key GEMINI_API_KEY:gemini-api-key; do
-  nome=${par%%:*} parametro=/faperon-teste/${par#*:}
+  nome=${par%%:*} parametro=/$P/${par#*:}
   ( umask 077
     python3 - "$nome" "$TMP/valor" <<'PY'
 import re, sys
@@ -28,11 +31,11 @@ PY
 done
 
 # Na máquina: refaz o .env.local a partir do Parameter Store e reinicia a API
-INST=$(aws ec2 describe-instances --filters Name=tag:Name,Values=faperon-teste Name=instance-state-name,Values=running \
+INST=$(aws ec2 describe-instances --filters Name=tag:Name,Values=$P Name=instance-state-name,Values=running \
   --query 'Reservations[0].Instances[0].InstanceId' --output text)
 CID=$(aws ssm send-command --instance-ids "$INST" --document-name AWS-RunShellScript \
   --comment "FAPERON: atualiza as chaves do .env.local" \
-  --parameters 'commands=["set -e","cd /opt/faperon && git fetch -q origin main && git reset -q --hard origin/main","install -m 700 /opt/faperon/infra/aws-teste/chaves.sh /usr/local/bin/faperon-chaves","/usr/local/bin/faperon-chaves","echo chaves: $(cut -d= -f1 /opt/faperon/.env.local | tr \"\\n\" \" \")","cd /opt/faperon && docker compose -f docker-compose.yml -f /etc/faperon/docker-compose.teste.yml up -d --no-build --force-recreate api scheduler >/dev/null && echo api reiniciada"]' \
+  --parameters 'commands=["set -e","cd /opt/faperon && ref=$([ -f /etc/faperon/ambiente ] && [ \"$(cat /etc/faperon/ambiente)\" = producao ] && echo producao || echo main) && git fetch -q origin $ref && git reset -q --hard origin/$ref","install -m 700 /opt/faperon/infra/aws-teste/chaves.sh /usr/local/bin/faperon-chaves","/usr/local/bin/faperon-chaves","echo chaves: $(cut -d= -f1 /opt/faperon/.env.local | tr \"\\n\" \" \")","cd /opt/faperon && docker compose -f docker-compose.yml -f /etc/faperon/docker-compose.$( [ -f /etc/faperon/docker-compose.ambiente.yml ] && echo ambiente || echo teste ).yml up -d --no-build --force-recreate api scheduler >/dev/null && echo api reiniciada"]' \
   --query Command.CommandId --output text)
 aws ssm wait command-executed --command-id "$CID" --instance-id "$INST" || true
 aws ssm get-command-invocation --command-id "$CID" --instance-id "$INST" --query StandardOutputContent --output text

@@ -85,6 +85,21 @@ O que ocupava memória era o build do Next, não a pilha no ar (~0,6 GB). A deci
 - **Limite da sincronização:** se o Vinicius mudar arquivos em `.github/workflows`, o token do Actions não pode publicar essa mudança no fork, e a sincronização avisa e espera um ajuste manual.
 - **Crescimento:** quando a conta for para o plano pago, a máquina vira t4g.medium (4 GB, ARM), com o mesmo disco e o mesmo IP.
 
+## Atualização de 18/10/2026: produção na AWS
+
+O usuário pediu para subir a produção na AWS e escolheu estas opções:
+- endereço provisório (sslip.io), até haver domínio;
+- plano gratuito da conta;
+- site público mais a área administrativa;
+- a vinicin continua como está.
+
+Os scripts de `infra/aws-teste/` ganharam `AMBIENTE=teste|producao`. A produção tem recursos próprios (`faperon-producao-*`) e segue o branch `producao` do fork, que só muda com `promover-producao.sh`. O script só promove commits com imagem de teste e com o CI verde. As imagens de produção são separadas, porque o `SITE_URL` entra no build.
+
+**Riscos aceitos:**
+- quando os créditos acabarem, o plano gratuito encerra a conta, e isso derruba a produção, o teste e o IntegraData;
+- a área administrativa ainda guarda os dados no navegador (ADR 0031), até o login real e os dados no banco ficarem prontos;
+- dados pessoais reais só com o aval do encarregado de dados.
+
 ## Consequências
 
 - **Ambiente de teste estável:** a DATA-RO passa a ter um ambiente próprio, no Brasil, que não depende da `vinicin`. Cada push precisa ir para os dois remotos: `origin` (Vinicius) e `fork`.

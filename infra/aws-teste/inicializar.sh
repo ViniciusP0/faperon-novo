@@ -1,14 +1,18 @@
 #!/bin/bash
-# Primeiro boot da máquina de teste (user-data da EC2, ADR 0033). Instala Docker, clona o nosso fork,
+# Primeiro boot da máquina (teste ou produção; user-data da EC2, ADR 0033). Instala Docker, clona o nosso fork,
 # gera os segredos locais, liga o Caddy (HTTPS automático) e agenda a atualização a cada 2 min, que
 # baixa do ECR as imagens ARM geradas pelo GitHub do fork (a máquina não faz build).
-# __HOST__, __BUCKET__ e __REGISTRO__ são trocados pelo criar-servidor.sh.
+# __HOST__, __BUCKET__, __REGISTRO__ e __AMBIENTE__ são trocados pelo criar-servidor.sh.
 set -euxo pipefail
 exec > /var/log/faperon-inicializar.log 2>&1
 
 HOST="__HOST__"
 BUCKET="__BUCKET__"
 REGISTRO="__REGISTRO__"
+AMBIENTE="__AMBIENTE__"
+# teste segue o main; produção segue o branch producao (só muda quando uma versão testada é promovida)
+REF=main
+[ "$AMBIENTE" = producao ] && REF=producao
 REPO="https://github.com/justr1de/faperon-novo.git"
 DIR=/opt/faperon
 
@@ -25,11 +29,12 @@ curl -fsSL https://get.docker.com | sh
 curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o /tmp/awscli.zip
 unzip -q /tmp/awscli.zip -d /tmp && /tmp/aws/install
 
-# -b main: o branch padrão do fork é o `servidor`, que só guarda o workflow das imagens
-git clone -b main "$REPO" "$DIR"
+# -b: o branch padrão do fork é o `servidor`, que só guarda o workflow das imagens
+git clone -b "$REF" "$REPO" "$DIR"
 cd "$DIR"
 mkdir -p /etc/faperon
 echo "$REGISTRO" > /etc/faperon/registro
+echo "$AMBIENTE" > /etc/faperon/ambiente
 
 # Segredos gerados aqui mesmo; nunca saem da máquina
 alea() { python3 -c "import secrets; print(secrets.token_urlsafe($1))"; }

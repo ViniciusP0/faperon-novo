@@ -20,6 +20,16 @@ Este é um ambiente de teste nosso, separado do portal do Vinicius (`vinicin`), 
 | Recuperação | Um alarme do CloudWatch reinicia a máquina, com o mesmo IP e o mesmo disco, se o hardware falhar |
 | Custo estimado | **Cerca de US$ 30/mês**: máquina 19,6 + disco 6,1 + IPv4 3,7 + S3, ECR e alarme abaixo de 1. Preços de São Paulo em 18/10/2026. |
 
+## Produção (18/10/2026)
+
+A produção usa os mesmos scripts com `AMBIENTE=producao`, numa **máquina separada**, com IP, banco, bucket, chaves e imagens próprios (`faperon-producao-*`), também t4g.small no plano gratuito da conta, por decisão do usuário.
+
+- **Atualização:** a produção **não recebe todo commit**. Ela segue o branch `producao` do fork, e esse branch só muda quando uma versão já vista no servidor de teste é promovida.
+- **Imagens:** são próprias da produção, porque o `SITE_URL` entra no build do web. O workflow do branch `servidor` gera essas imagens quando o branch `producao` muda.
+- **Criar:** `AMBIENTE=producao bash infra/aws-teste/criar-servidor.sh`. Ela começa no `main` atual do fork.
+- **Promover uma versão testada:** `bash infra/aws-teste/promover-producao.sh [commit]`. Sem argumento, ele promove o `main` atual do fork. O script recusa o commit se ele não tiver imagem de teste ou se o CI dele falhou.
+- **Trocar as chaves:** `AMBIENTE=producao bash infra/aws-teste/atualizar-chaves.sh`.
+
 ## Criar
 
 ```bash

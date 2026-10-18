@@ -1,0 +1,10 @@
+# Sobreposição do docker-compose.yml para a produção na AWS (ADR 0033): imagens ARM de produção,
+# geradas pelo GitHub do fork a partir do branch `producao` (com o SITE_URL de produção) e guardadas
+# no ECR de São Paulo. __REGISTRO__ é trocado pelo atualizar.sh.
+services:
+  api:
+    image: __REGISTRO__/faperon-producao/api:producao
+  scheduler:
+    image: __REGISTRO__/faperon-producao/api:producao
+  web:
+    image: __REGISTRO__/faperon-producao/web:producao
