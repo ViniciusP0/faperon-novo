@@ -185,7 +185,7 @@ export function Agenda() {
       <>
         <Marca e={e} escuro={escuro} />
         <span className="min-w-0">
-          <span className="font-semibold tabular-nums">{e.trecho && e.trecho !== "unico" ? horario(e) : e.inicio}</span> <span className={cn(compacto && "line-clamp-2")}>{e.titulo}</span>
+          <span className="font-semibold tabular-nums">{e.trecho && e.trecho !== "unico" ? horario(e) : e.inicio}</span> <span className={cn(compacto && "line-clamp-2 hyphens-auto [overflow-wrap:anywhere]")}>{e.titulo}</span>
           <span className="sr-only">
             , <span>{origemFalada(e)}</span>
           </span>
@@ -199,7 +199,8 @@ export function Agenda() {
       </>
     );
     const classe = cn(
-      "flex w-full gap-1.5 rounded-lg text-left transition duration-150 ease-out",
+      // min-w-0 e overflow-hidden: uma palavra longa ("Planejamento") não alarga o chip além da célula
+      "flex w-full min-w-0 gap-1.5 overflow-hidden rounded-lg text-left transition duration-150 ease-out",
       compacto ? "px-1.5 py-1 text-xs" : "px-2.5 py-2 text-sm",
       escuro ? "bg-white/[0.08] text-white" : cn(fundoDoItem(e), "text-ink"),
     );
@@ -377,7 +378,7 @@ export function Agenda() {
                           })}
                           <ul className="mt-1 hidden gap-1 md:grid">
                             {outros.slice(0, cabem).map((e) => (
-                              <li key={e.id}>
+                              <li key={e.id} className="min-w-0">
                                 <Item e={e} compacto />
                               </li>
                             ))}
