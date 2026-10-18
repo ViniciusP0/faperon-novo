@@ -91,7 +91,7 @@ export interface Espaco {
 
 export type PeriodoEspaco = "dia_todo" | "manha" | "tarde" | "noite" | "horario";
 export type TipoEventoEspaco = "reuniao" | "curso" | "palestra" | "institucional" | "outro";
-export type StatusPedido = "pendente" | "aprovado" | "recusado" | "cancelado";
+export type StatusPedido = "pendente" | "aprovado" | "recusado" | "cancelado" | "devolvido";
 
 export interface PedidoEspaco {
   id: string;
@@ -109,6 +109,8 @@ export interface PedidoEspaco {
   observacoes: string;
   status: StatusPedido;
   motivoRecusa: string;
+  /** O que o gestor pediu para corrigir ao devolver o pedido (status "devolvido"). */
+  correcao?: string;
   criadoEm: string;
 }
 

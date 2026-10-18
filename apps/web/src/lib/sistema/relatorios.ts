@@ -93,17 +93,18 @@ export function relatorioEspacos(pedidos: PedidoEspaco[], de: string, ate: strin
       aprovados.length,
       doEspaco.filter((p) => p.status === "pendente").length,
       doEspaco.filter((p) => p.status === "recusado").length,
+      doEspaco.filter((p) => p.status === "devolvido").length,
       arredondar(aprovados.reduce((s, p) => s + (minutos(p.fim) - minutos(p.inicio)) / 60, 0), 1),
       aprovados.reduce((s, p) => s + p.participantes, 0),
       doEspaco.filter((p) => p.status === "pendente" && conflitosDoPedido(p, pedidos).length > 0).length,
     ];
   });
   const soma = (i: number, casas = 0) => arredondar(linhas.reduce((s, l) => s + (l[i] as number), 0), casas);
-  const conflitos = soma(7);
+  const conflitos = soma(8);
   return {
     titulo: "Ocupação dos espaços",
     resumo: [
-      `${soma(1)} pedido(s), ${soma(2)} aprovado(s) e ${soma(5, 1).toLocaleString("pt-BR")} hora(s) de uso aprovadas.`,
+      `${soma(1)} pedido(s), ${soma(2)} aprovado(s), ${soma(5)} devolvido(s) para correção e ${soma(6, 1).toLocaleString("pt-BR")} hora(s) de uso aprovadas.`,
       conflitos > 0 ? `${conflitos} pedido(s) pendente(s) em conflito de horário.` : "Nenhum pedido pendente em conflito.",
     ],
     colunas: [
@@ -112,12 +113,13 @@ export function relatorioEspacos(pedidos: PedidoEspaco[], de: string, ate: strin
       { rotulo: "Aprovados", formato: "inteiro" },
       { rotulo: "Pendentes", formato: "inteiro" },
       { rotulo: "Recusados", formato: "inteiro" },
+      { rotulo: "Devolvidos", formato: "inteiro" },
       { rotulo: "Horas aprovadas", formato: "horas" },
       { rotulo: "Participantes", formato: "inteiro" },
       { rotulo: "Em conflito", formato: "inteiro" },
     ],
     linhas,
-    total: ["Total", soma(1), soma(2), soma(3), soma(4), soma(5, 1), soma(6), conflitos],
+    total: ["Total", soma(1), soma(2), soma(3), soma(4), soma(5), soma(6, 1), soma(7), conflitos],
   };
 }
 

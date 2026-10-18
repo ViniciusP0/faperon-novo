@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { conflitosDoPedido, excedeCapacidade, horarioDoPeriodo, podeAprovar } from "./espacos";
+import { conflitosDoPedido, excedeCapacidade, horarioDoPeriodo, podeAprovar, sugestaoDeCorrecao } from "./espacos";
 import type { Espaco, PedidoEspaco } from "./tipos";
 
 function pedido(parcial: Partial<PedidoEspaco>): PedidoEspaco {
@@ -72,5 +72,23 @@ describe("conflitos de espaço", () => {
     const pendenteComAprovado = pedido({ id: "novo", periodo: "dia_todo", inicio: "08:00", fim: "18:00" });
     expect(podeAprovar(pendenteComAprovado, outros)).toBe("Já há um agendamento aprovado nesse espaço e horário: Reunião (10:00–12:00).");
     expect(podeAprovar(pedido({ id: "novo", periodo: "tarde", inicio: "13:00", fim: "18:00" }), outros)).toBeNull();
+  });
+});
+
+describe("devolução para correção", () => {
+  const auditorio: Espaco = { id: "auditorio", nome: "Auditório", capacidade: 150 };
+
+  it("sugere o que corrigir: choques de horário e capacidade", () => {
+    const outro = pedido({ id: "o", nome: "Palestra do crédito", status: "aprovado", inicio: "10:00", fim: "11:00" });
+    const meu = pedido({ id: "m", participantes: 200 });
+    expect(sugestaoDeCorrecao(meu, [outro, meu], auditorio)).toBe(
+      'Conflita com "Palestra do crédito" (10:00–11:00, já aprovado). 200 participantes passam da capacidade de 150 do espaço. Escolha outro horário, dia ou espaço e reenvie.',
+    );
+    expect(sugestaoDeCorrecao(pedido({ id: "s" }), [], auditorio)).toBe("");
+  });
+
+  it("pedido devolvido não ocupa o espaço", () => {
+    const devolvido = pedido({ id: "d", status: "devolvido" });
+    expect(conflitosDoPedido(pedido({ id: "n" }), [devolvido])).toEqual([]);
   });
 });

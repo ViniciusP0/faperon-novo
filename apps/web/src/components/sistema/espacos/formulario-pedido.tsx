@@ -26,6 +26,8 @@ interface Props {
   pedidos: PedidoEspaco[];
   aoEnviar: (pedido: PedidoEspaco) => void;
   aoCancelar: () => void;
+  /** Texto do botão de envio; muda no reenvio de um pedido devolvido. */
+  rotuloEnviar?: string;
 }
 
 /** Monta o pedido a partir do rascunho; null se o horário ainda não fecha. */
@@ -35,7 +37,7 @@ function montar(base: PedidoEspaco, r: Rascunho): PedidoEspaco | null {
   return { ...base, ...r, ...horario, nome: r.nome.trim(), participantes: Number(r.participantes) || 0, observacoes: r.observacoes.trim() };
 }
 
-export function FormularioPedido({ base, pedidos, aoEnviar, aoCancelar }: Props) {
+export function FormularioPedido({ base, pedidos, aoEnviar, aoCancelar, rotuloEnviar = "Enviar para a fila" }: Props) {
   const [r, setR] = useState<Rascunho>({
     espacoId: base.espacoId,
     data: base.data,
@@ -156,7 +158,7 @@ export function FormularioPedido({ base, pedidos, aoEnviar, aoCancelar }: Props)
         <Button variant="ghost" onClick={aoCancelar}>
           Cancelar
         </Button>
-        <Button variant="vidro" type="submit">Enviar para a fila</Button>
+        <Button variant="vidro" type="submit">{rotuloEnviar}</Button>
       </div>
     </form>
   );

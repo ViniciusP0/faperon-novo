@@ -26,6 +26,7 @@ export const ROTULO_STATUS: Record<StatusPedido, string> = {
   aprovado: "Aprovado",
   recusado: "Recusado",
   cancelado: "Cancelado",
+  devolvido: "Devolvido para correção",
 };
 
 /** Período fixo vira horário; "horario" exige início e fim válidos (fim depois do início). */
@@ -59,4 +60,14 @@ export function podeAprovar(pedido: PedidoEspaco, pedidos: PedidoEspaco[]): stri
   return aprovado
     ? `Já há um agendamento aprovado nesse espaço e horário: ${aprovado.nome} (${aprovado.inicio}–${aprovado.fim}).`
     : null;
+}
+
+/** Texto inicial da devolução: os choques de horário e o excesso de participantes, para o gestor ajustar. */
+export function sugestaoDeCorrecao(pedido: PedidoEspaco, pedidos: PedidoEspaco[], espaco: Espaco): string {
+  const partes = conflitosDoPedido(pedido, pedidos).map(
+    (c) => `Conflita com "${c.nome}" (${c.inicio}–${c.fim}, ${c.status === "aprovado" ? "já aprovado" : "pendente"}).`,
+  );
+  if (excedeCapacidade(pedido, espaco)) partes.push(`${pedido.participantes} participantes passam da capacidade de ${espaco.capacidade} do espaço.`);
+  if (partes.length === 0) return "";
+  return `${partes.join(" ")} Escolha outro horário, dia ou espaço e reenvie.`;
 }

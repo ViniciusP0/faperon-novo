@@ -72,9 +72,9 @@ Abas: Veículos, Reservas, Abastecimento e manutenção, e Custos.
 Espaços: Auditório (até 150 pessoas), Hub (40), Sala de reuniões (12), Núcleo técnico (20) e Sala da presidência (8).
 - "Novo pedido": espaço, dia, período (dia todo das 8h às 18h, manhã das 8h às 12h, tarde das 13h às 18h, noite das 18h às 22h, ou horário específico), tipo de evento (reunião, curso ou treinamento, palestra, evento institucional, outro), nome do evento, participantes aproximados, coffee break e observações.
 - Antes de enviar, o pedido mostra os possíveis conflitos: outro pedido aprovado ou pendente no mesmo espaço e horário, ou participantes acima da capacidade. O pedido pode ir para a fila assim mesmo, marcado com conflito.
-- Fila: todo pedido entra como pendente, em ordem de chegada. O gestor dos espaços aprova ou recusa com motivo; não é possível aprovar um pedido que choque com outro já aprovado.
+- Fila: todo pedido entra como pendente, em ordem de chegada. O gestor dos espaços aprova, recusa com motivo ou devolve para correção com uma observação do que precisa ser corrigido (o texto já vem sugerido com os conflitos e a lotação). Não é possível aprovar um pedido que choque com outro já aprovado.
 - Painel de 7 dias: espaços nas linhas e dias nas colunas, com pendentes e aprovados e os conflitos destacados.
-- Meus pedidos: status de cada pedido, motivo da recusa e opção de cancelar. Pedidos aprovados entram na agenda de quem pediu.
+- Meus pedidos: status de cada pedido, motivo da recusa, observação de correção e opção de cancelar. Pedido devolvido tem o botão "Corrigir e reenviar": a pessoa ajusta o pedido e ele volta para a fila. Pedidos aprovados entram na agenda de quem pediu.
 
 ## Agendar por voz (Agenda, Frotas e Espaços)
 Na Agenda, na aba Reservas de Frotas e em Espaços há o botão "Agendar por voz". A pessoa clica em "Falar" e diz o que quer (ex.: "reunião com o sindicato de Vilhena terça às nove", "preciso da Hilux quinta das sete às dezoito para Cacoal", "auditório dia 20 à tarde, palestra para 80 pessoas com coffee break"). A fala é transcrita pelo reconhecimento de voz do navegador (Chrome e Edge); nos outros navegadores, digita-se a frase. O texto é interpretado e o formulário certo abre já preenchido, com aviso do que faltou, para a pessoa conferir e salvar: nada é salvo sem confirmação, e o texto não é guardado.

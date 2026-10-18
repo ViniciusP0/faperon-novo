@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/feedback";
 import { Label, Textarea } from "@/components/ui/field";
 import { agoraISO, formatarDataBR, somarDias } from "@/lib/sistema/datas";
-import { conflitosDoPedido, excedeCapacidade, podeAprovar, ROTULO_PERIODO, ROTULO_STATUS, ROTULO_TIPO_ESPACO } from "@/lib/sistema/espacos";
+import { conflitosDoPedido, excedeCapacidade, podeAprovar, ROTULO_PERIODO, ROTULO_STATUS, ROTULO_TIPO_ESPACO, sugestaoDeCorrecao } from "@/lib/sistema/espacos";
 import { novoId, useSistema } from "@/lib/sistema/estado";
 import type { PedidoEspaco, StatusPedido } from "@/lib/sistema/tipos";
 import { aplicarEspaco } from "@/lib/sistema/voz";
@@ -24,6 +24,7 @@ const corStatus: Record<StatusPedido, string> = {
   aprovado: "bg-brand-soft text-brand-strong",
   recusado: "bg-danger-soft text-danger-ink",
   cancelado: "bg-surface-alt text-ink-muted",
+  devolvido: "bg-danger-soft text-danger-ink",
 };
 
 const DIAS_SEMANA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -135,6 +136,7 @@ function DetalhesPedido({ p, mostrarQuem }: { p: PedidoEspaco; mostrarQuem: bool
       </p>
       {p.observacoes && <p className="text-ink-muted">Obs.: {p.observacoes}</p>}
       {p.status === "recusado" && p.motivoRecusa && <p className="text-danger-ink">Motivo da recusa: {p.motivoRecusa}</p>}
+      {p.status === "devolvido" && p.correcao && <p className="text-danger-ink">O que corrigir: {p.correcao}</p>}
       {(conflitos.length > 0 || lotado) && (
         <ul className="mt-1 list-disc pl-5 text-danger-ink">
           {conflitos.map((c) => (
@@ -155,12 +157,15 @@ function Fila() {
   const [recusando, setRecusando] = useState<PedidoEspaco | null>(null);
   const [motivo, setMotivo] = useState("");
   const [erroMotivo, setErroMotivo] = useState<string | null>(null);
+  const [devolvendo, setDevolvendo] = useState<PedidoEspaco | null>(null);
+  const [correcao, setCorrecao] = useState("");
+  const [erroCorrecao, setErroCorrecao] = useState<string | null>(null);
   const gestor = funcionario?.gestorEspacos ?? false;
   const fila = pedidos.filter((p) => p.status === "pendente").sort((a, b) => a.criadoEm.localeCompare(b.criadoEm));
 
   function aprovar(p: PedidoEspaco) {
     const bloqueio = podeAprovar(p, pedidos);
-    if (bloqueio) return setAviso(bloqueio);
+    if (bloqueio) return setAviso(`${bloqueio} Use "Devolver" para pedir a correção ao solicitante.`);
     setAviso(null);
     atualizarPedidos((lista) => lista.map((o) => (o.id === p.id ? { ...o, status: "aprovado" } : o)), `Aprovou o pedido de espaço "${p.nome}"`);
   }
@@ -175,6 +180,24 @@ function Fila() {
     setRecusando(null);
     setMotivo("");
     setErroMotivo(null);
+  }
+
+  function abrirDevolucao(p: PedidoEspaco) {
+    const espaco = ESPACOS.find((e) => e.id === p.espacoId)!;
+    setCorrecao(sugestaoDeCorrecao(p, pedidos, espaco));
+    setErroCorrecao(null);
+    setDevolvendo(p);
+  }
+
+  function devolver(e: FormEvent) {
+    e.preventDefault();
+    if (!correcao.trim()) return setErroCorrecao("Diga o que o solicitante precisa corrigir.");
+    atualizarPedidos(
+      (lista) => lista.map((o) => (o.id === devolvendo!.id ? { ...o, status: "devolvido", correcao: correcao.trim() } : o)),
+      `Devolveu para correção o pedido de espaço "${devolvendo!.nome}"`,
+    );
+    setDevolvendo(null);
+    setAviso(null);
   }
 
   return (
@@ -197,7 +220,10 @@ function Fila() {
                 <Button variant="vidro" size="sm" onClick={() => aprovar(p)} aria-label={`Aprovar ${p.nome}`}>
                   Aprovar
                 </Button>
-                <Button size="sm" variant="vidro-claro" onClick={() => setRecusando(p)} aria-label={`Recusar ${p.nome}`}>
+                <Button size="sm" variant="vidro-claro" onClick={() => abrirDevolucao(p)} aria-label={`Devolver ${p.nome} para correção`}>
+                  Devolver
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setRecusando(p)} aria-label={`Recusar ${p.nome}`}>
                   Recusar
                 </Button>
               </div>
@@ -222,12 +248,33 @@ function Fila() {
           </form>
         </Dialogo>
       )}
+      {devolvendo && (
+        <Dialogo titulo={`Devolver para correção: ${devolvendo.nome}`} aoFechar={() => setDevolvendo(null)}>
+          <form onSubmit={devolver} className="grid gap-4" noValidate>
+            <p className="text-sm text-ink-muted">O pedido volta para {nomeFuncionario(devolvendo.funcionarioId)}, que corrige e reenvia para a fila.</p>
+            <div>
+              <Label htmlFor="observacao-correcao">Observação: o que precisa ser corrigido</Label>
+              <Textarea id="observacao-correcao" value={correcao} onChange={(e) => setCorrecao(e.target.value)} className="min-h-24" />
+            </div>
+            {erroCorrecao && <Alert tone="erro">{erroCorrecao}</Alert>}
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setDevolvendo(null)}>
+                Cancelar
+              </Button>
+              <Button variant="vidro" type="submit">
+                Devolver ao solicitante
+              </Button>
+            </div>
+          </form>
+        </Dialogo>
+      )}
     </div>
   );
 }
 
 function MeusPedidos() {
   const { funcionario, pedidos, atualizarPedidos } = useSistema();
+  const [corrigindo, setCorrigindo] = useState<PedidoEspaco | null>(null);
   if (!funcionario) return null;
   const meus = pedidos.filter((p) => p.funcionarioId === funcionario.id).sort((a, b) => b.data.localeCompare(a.data));
   return (
@@ -237,7 +284,12 @@ function MeusPedidos() {
         {meus.map((p) => (
           <li key={p.id} className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-line bg-card p-3">
             <DetalhesPedido p={p} mostrarQuem={false} />
-            {(p.status === "pendente" || p.status === "aprovado") && (
+            {p.status === "devolvido" && (
+              <Button size="sm" variant="vidro" onClick={() => setCorrigindo(p)} aria-label={`Corrigir e reenviar ${p.nome}`}>
+                Corrigir e reenviar
+              </Button>
+            )}
+            {(p.status === "pendente" || p.status === "aprovado" || p.status === "devolvido") && (
               <Button size="sm" variant="ghost" onClick={() => atualizarPedidos((lista) => lista.map((o) => (o.id === p.id ? { ...o, status: "cancelado" } : o)), `Cancelou o pedido de espaço "${p.nome}"`)} aria-label={`Cancelar ${p.nome}`}>
                 Cancelar pedido
               </Button>
@@ -245,6 +297,28 @@ function MeusPedidos() {
           </li>
         ))}
       </ul>
+      {corrigindo && (
+        <Dialogo titulo={`Corrigir pedido: ${corrigindo.nome}`} aoFechar={() => setCorrigindo(null)}>
+          {corrigindo.correcao && (
+            <Alert tone="erro" className="mb-4">
+              O que corrigir: {corrigindo.correcao}
+            </Alert>
+          )}
+          <FormularioPedido
+            base={corrigindo}
+            pedidos={pedidos}
+            rotuloEnviar="Reenviar para a fila"
+            aoCancelar={() => setCorrigindo(null)}
+            aoEnviar={(p) => {
+              atualizarPedidos(
+                (lista) => lista.map((o) => (o.id === p.id ? { ...p, status: "pendente", correcao: "" } : o)),
+                `Corrigiu e reenviou o pedido de espaço "${p.nome}"`,
+              );
+              setCorrigindo(null);
+            }}
+          />
+        </Dialogo>
+      )}
     </div>
   );
 }
@@ -316,7 +390,14 @@ export function Espacos() {
         abas={[
           { id: "painel", rotulo: "Painel de 7 dias", conteudo: <PainelSemana /> },
           { id: "fila", rotulo: `Fila (${pedidos.filter((p) => p.status === "pendente").length})`, conteudo: <Fila /> },
-          { id: "meus", rotulo: "Meus pedidos", conteudo: <MeusPedidos /> },
+          {
+            id: "meus",
+            rotulo: (() => {
+              const n = pedidos.filter((p) => p.status === "devolvido" && p.funcionarioId === funcionario.id).length;
+              return n ? `Meus pedidos (${n} para corrigir)` : "Meus pedidos";
+            })(),
+            conteudo: <MeusPedidos />,
+          },
         ]}
       />
       {novo && (

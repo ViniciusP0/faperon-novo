@@ -75,12 +75,13 @@ describe("relatórios", () => {
         pedido({ id: "4", status: "cancelado" }),
         pedido({ id: "5", espacoId: "hub", inicio: "13:00", fim: "14:30", participantes: 12 }),
         pedido({ id: "6", data: "2026-11-02" }),
+        pedido({ id: "7", status: "devolvido", correcao: "Trocar o horário" }),
       ],
       "2026-10-01",
       "2026-10-31",
     );
-    expect(r.linhas.find((l) => l[0] === "Auditório")).toEqual(["Auditório", 3, 1, 1, 1, 4, 50, 1]);
-    expect(r.total).toEqual(["Total", 4, 2, 1, 1, 5.5, 62, 1]);
+    expect(r.linhas.find((l) => l[0] === "Auditório")).toEqual(["Auditório", 4, 1, 1, 1, 1, 4, 50, 1]);
+    expect(r.total).toEqual(["Total", 5, 2, 1, 1, 1, 5.5, 62, 1]);
   });
 
   it("agenda lista os eventos do período em ordem", () => {

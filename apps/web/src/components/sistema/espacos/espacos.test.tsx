@@ -5,7 +5,7 @@ import { Agenda } from "@/components/sistema/agenda/agenda";
 import { gravar, gravarAcesso, gravarSessao, ler } from "@/lib/sistema/armazenamento";
 import { hojeISO, somarDias } from "@/lib/sistema/datas";
 import { SistemaProvider } from "@/lib/sistema/estado";
-import type { PedidoEspaco } from "@/lib/sistema/tipos";
+import type { PedidoEspaco, RegistroHistorico } from "@/lib/sistema/tipos";
 import { Espacos } from "./espacos";
 
 let aba = "painel";
@@ -143,5 +143,31 @@ describe("Agendamento de espaços", () => {
     expect(screen.getByText("Pedido da Ana")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Cancelar Pedido da Ana" }));
     expect(ler<PedidoEspaco[]>("espacos", []).find((p) => p.id === "pendente")!.status).toBe("cancelado");
+  });
+
+  it("o gestor devolve com observação; o solicitante corrige e reenvia para a fila", async () => {
+    const user = userEvent.setup();
+    const { unmount } = renderEspacos("marcos", "fila");
+    await user.click(screen.getByRole("button", { name: "Devolver Pedido da Ana para correção" }));
+    const dialogo = screen.getByRole("dialog", { name: "Devolver para correção: Pedido da Ana" });
+    const campo = within(dialogo).getByLabelText("Observação: o que precisa ser corrigido");
+    expect((campo as HTMLTextAreaElement).value).toContain('Conflita com "Reunião aprovada"');
+    await user.clear(campo);
+    await user.click(within(dialogo).getByRole("button", { name: "Devolver ao solicitante" }));
+    expect(within(dialogo).getByRole("alert")).toHaveTextContent("Diga o que o solicitante precisa corrigir.");
+    await user.type(campo, "Troque para a tarde: de manhã o auditório já está ocupado.");
+    await user.click(within(dialogo).getByRole("button", { name: "Devolver ao solicitante" }));
+    expect(ler<PedidoEspaco[]>("espacos", []).find((p) => p.id === "pendente")).toMatchObject({ status: "devolvido", correcao: "Troque para a tarde: de manhã o auditório já está ocupado." });
+    expect(ler<RegistroHistorico[]>("historico", [])[0]).toMatchObject({ funcionarioId: "marcos", acao: 'Devolveu para correção o pedido de espaço "Pedido da Ana"' });
+    unmount();
+
+    renderEspacos("ana", "meus");
+    expect(screen.getByRole("tab", { name: "Meus pedidos (1 para corrigir)" })).toBeInTheDocument();
+    expect(screen.getByText("O que corrigir: Troque para a tarde: de manhã o auditório já está ocupado.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Corrigir e reenviar Pedido da Ana" }));
+    const correcao = screen.getByRole("dialog", { name: "Corrigir pedido: Pedido da Ana" });
+    await user.selectOptions(within(correcao).getByLabelText("Período"), "tarde");
+    await user.click(within(correcao).getByRole("button", { name: "Reenviar para a fila" }));
+    expect(ler<PedidoEspaco[]>("espacos", []).find((p) => p.id === "pendente")).toMatchObject({ status: "pendente", periodo: "tarde", inicio: "13:00", correcao: "" });
   });
 });

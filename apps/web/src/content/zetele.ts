@@ -159,7 +159,7 @@ export const PERGUNTAS: PerguntaPronta[] = [
     area: "sistema",
     texto: "Como funciona a fila de pedidos de espaço?",
     tipo: "estatica",
-    resposta: "Todo pedido entra como pendente, em ordem de chegada. O gestor dos espaços aprova ou recusa com um motivo. Você acompanha o status em Meus pedidos, e o que for aprovado entra na sua agenda.",
+    resposta: "Todo pedido entra como pendente, em ordem de chegada. O gestor dos espaços aprova, recusa com um motivo ou devolve para correção com uma observação do que mudar (por exemplo, quando há conflito de horário). Pedido devolvido aparece em Meus pedidos com o botão \"Corrigir e reenviar\"; corrigido, volta para a fila. O que for aprovado entra na sua agenda.",
     href: "/sistema/espacos?aba=fila",
     rotuloLink: "Abrir a Fila",
   },
