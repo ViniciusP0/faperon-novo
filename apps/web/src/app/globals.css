@@ -77,6 +77,22 @@
   --tag-ciano: #0e7490;
   --tag-magenta: #a21caf;
   --tag-indigo: #4338ca;
+  --tag-vermelho: #b91c1c;
+  --tag-coral: #c2413a;
+  --tag-terracota: #9a3412;
+  --tag-marrom: #78350f;
+  --tag-dourado: #8a6a00;
+  --tag-oliva: #5c6b10;
+  --tag-verde: #15803d;
+  --tag-esmeralda: #047857;
+  --tag-turquesa: #0f766e;
+  --tag-petroleo: #155e75;
+  --tag-celeste: #0369a1;
+  --tag-marinho: #1e3a8a;
+  --tag-lavanda: #6d4fc2;
+  --tag-ameixa: #6b2163;
+  --tag-vinho: #881337;
+  --tag-grafite: #475569;
   /* Fixos nos dois temas: controles brancos sobre foto (setas do carrossel), indicador inativo e hover do botão lima. */
   --on-light: #14261f;
   --dot-off: #8a9c92;
@@ -136,6 +152,22 @@
   --tag-ciano: #5fd4ea;
   --tag-magenta: #e98ef3;
   --tag-indigo: #a7aaff;
+  --tag-vermelho: #ff8a8a;
+  --tag-coral: #ff9e8f;
+  --tag-terracota: #f0a07a;
+  --tag-marrom: #d6a77a;
+  --tag-dourado: #e8c75a;
+  --tag-oliva: #c3d36a;
+  --tag-verde: #6fdc8c;
+  --tag-esmeralda: #5fe0b5;
+  --tag-turquesa: #5eead4;
+  --tag-petroleo: #7cc8dc;
+  --tag-celeste: #7cc4fa;
+  --tag-marinho: #9db4ff;
+  --tag-lavanda: #c9b8ff;
+  --tag-ameixa: #e0a3d8;
+  --tag-vinho: #f39ab5;
+  --tag-grafite: #b4c0cf;
   color-scheme: dark;
 }
 

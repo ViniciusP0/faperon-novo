@@ -10,6 +10,22 @@ export const CORES_TAG: Record<CorTag, { rotulo: string; ponto: string }> = {
   ciano: { rotulo: "Ciano", ponto: "bg-tag-ciano" },
   magenta: { rotulo: "Magenta", ponto: "bg-tag-magenta" },
   indigo: { rotulo: "Índigo", ponto: "bg-tag-indigo" },
+  vermelho: { rotulo: "Vermelho", ponto: "bg-tag-vermelho" },
+  coral: { rotulo: "Coral", ponto: "bg-tag-coral" },
+  terracota: { rotulo: "Terracota", ponto: "bg-tag-terracota" },
+  marrom: { rotulo: "Marrom", ponto: "bg-tag-marrom" },
+  dourado: { rotulo: "Dourado", ponto: "bg-tag-dourado" },
+  oliva: { rotulo: "Oliva", ponto: "bg-tag-oliva" },
+  verde: { rotulo: "Verde", ponto: "bg-tag-verde" },
+  esmeralda: { rotulo: "Esmeralda", ponto: "bg-tag-esmeralda" },
+  turquesa: { rotulo: "Turquesa", ponto: "bg-tag-turquesa" },
+  petroleo: { rotulo: "Petróleo", ponto: "bg-tag-petroleo" },
+  celeste: { rotulo: "Celeste", ponto: "bg-tag-celeste" },
+  marinho: { rotulo: "Azul-marinho", ponto: "bg-tag-marinho" },
+  lavanda: { rotulo: "Lavanda", ponto: "bg-tag-lavanda" },
+  ameixa: { rotulo: "Ameixa", ponto: "bg-tag-ameixa" },
+  vinho: { rotulo: "Vinho", ponto: "bg-tag-vinho" },
+  grafite: { rotulo: "Grafite", ponto: "bg-tag-grafite" },
 };
 
 export const TAMANHO_MAXIMO_TAG = 30;

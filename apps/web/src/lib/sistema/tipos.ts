@@ -196,7 +196,11 @@ export type TipoLegenda =
   | "outro";
 
 /** Paleta própria das tags, distinta da dos tipos: aparece só como ponto ao lado do nome. */
-export type CorTag = "azul" | "violeta" | "rosa" | "laranja" | "amarelo" | "ciano" | "magenta" | "indigo";
+// 24 cores, para os gestores criarem tags sem repetir cor (cada uma com par claro e escuro, ≥ 4,5:1 sobre o cartão)
+export type CorTag =
+  | "azul" | "violeta" | "rosa" | "laranja" | "amarelo" | "ciano" | "magenta" | "indigo"
+  | "vermelho" | "coral" | "terracota" | "marrom" | "dourado" | "oliva" | "verde" | "esmeralda"
+  | "turquesa" | "petroleo" | "celeste" | "marinho" | "lavanda" | "ameixa" | "vinho" | "grafite";
 
 /** Etiqueta livre, criada pelos gestores e aplicada por todos. */
 export interface Tag {
