@@ -191,7 +191,7 @@ A `series.composicao` mantém o agregado e tira o subconjunto, pela mesma lógic
 
 ## Zétele (assistente do site)
 
-Detalhes e motivos: ADR 0029 e ADR 0030.
+Detalhes e motivos: ADR 0029, ADR 0030 e ADR 0032 (canal público).
 
 `GET /api/v1/zetele/estado` → `200 {"disponivel": bool, "motivo": null | "sem_chave" | "orcamento_diario" | "indisponivel"}`. Não chama o modelo.
 
@@ -207,6 +207,26 @@ Detalhes e motivos: ADR 0029 e ADR 0030.
 - `200`: `{"status": "respondida" | "recusada" | "erro", "texto": "...", "fontes": [{"rotulo", "url_fonte", "url_interna", "atualizado_em"}], "sugestoes": ["..."]}`. `fontes` é montado pelo servidor; o texto só tem links Markdown para rotas do site, para as URLs das fontes, para os hosts da lista (IBGE, CNA, FAPERON) e para o WhatsApp oficial.
 - `400 {"erro": "Parâmetros inválidos", "campos": {...}}`; `429` com `Retry-After` (6/min por IP, 30/min no total); `503 {"erro", "motivo"}` com `Retry-After` (`sem_chave`, `orcamento_diario` (200/dia), `indisponivel`, `ocupado` (3 simultâneas por processo)).
 - O proxy do Next aceita POST com corpo de até 16 KB.
+
+## Zétele do sistema e agendamento por voz
+
+Detalhes e motivos: ADR 0032. Base de conhecimento, tabela de perguntas e limites próprios, separados do Zétele do site.
+
+`GET /api/v1/sistema/zetele/estado` → igual ao do site, mas com o teto diário do sistema (`ZETELE_SISTEMA_LIMITE_DIARIO`, 250 por padrão, contando a voz).
+
+`POST /api/v1/sistema/zetele/perguntar`: mesmo corpo e mesmas respostas do `/api/v1/zetele/perguntar`, com `pagina` entre `/sistema`, `/sistema/agenda`, `/sistema/frotas`, `/sistema/espacos`, `/sistema/contas`, `/sistema/relatorios` e `/sistema/atividades`. Não usa ferramentas de dados. Limites: `429` a 10/min por IP e 30/min no total.
+
+`POST /api/v1/sistema/interpretar`, corpo JSON:
+
+```json
+{"tipo": "evento" | "reserva" | "espaco" | "atividade", "texto": "reunião com o sindicato terça às nove",
+ "hoje": "2026-10-17", "veiculos": [{"id": "...", "descricao": "Toyota Hilux (QRB2F41)"}],
+ "espacos": [{"id": "auditorio", "descricao": "Auditório"}]}
+```
+
+- `texto`: até 500 caracteres (a transcrição não é gravada). `veiculos`: até 20; `espacos`: até 10.
+- `200 {"tipo", "campos": {...}, "faltando": ["data", ...]}`: campos conferidos em código (datas reais, horas `HH:mm` com fim depois do início, veículo e espaço da lista); o que não passa volta vazio.
+- `422` quando o modelo recusa ou foge do formato; `429` e `503` como no Zétele do sistema (a voz gasta o mesmo teto diário).
 
 ## Saúde
 

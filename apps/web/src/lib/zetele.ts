@@ -1,4 +1,4 @@
-import type { PaginaComZetele } from "@/content/zetele";
+import { areaDaPagina, type PaginaComZetele } from "@/content/zetele";
 import { API_BASE } from "./api";
 
 export interface FonteZetele {
@@ -31,12 +31,15 @@ export type ResultadoPergunta =
   | { tipo: "indisponivel"; motivo: string }
   | { tipo: "falha" };
 
-const BASE = `${API_BASE}/zetele`;
+/** Cada área fala com o próprio Zétele no servidor (ADR 0032). */
+export function baseDoZetele(pagina: string): string {
+  return areaDaPagina(pagina) === "sistema" ? `${API_BASE}/sistema/zetele` : `${API_BASE}/zetele`;
+}
 const MAX_HISTORICO = 6;
 
-export async function obterEstado(): Promise<EstadoZetele> {
+export async function obterEstado(pagina: string = "/"): Promise<EstadoZetele> {
   try {
-    const r = await fetch(`${BASE}/estado`, { cache: "no-store" });
+    const r = await fetch(`${baseDoZetele(pagina)}/estado`, { cache: "no-store" });
     if (!r.ok) return { disponivel: false, motivo: "indisponivel" };
     return (await r.json()) as EstadoZetele;
   } catch {
@@ -50,7 +53,7 @@ export async function perguntar(
   pagina: PaginaComZetele,
 ): Promise<ResultadoPergunta> {
   try {
-    const r = await fetch(`${BASE}/perguntar`, {
+    const r = await fetch(`${baseDoZetele(pagina)}/perguntar`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ pergunta, historico: historico.slice(-MAX_HISTORICO), pagina }),

@@ -9,6 +9,9 @@ def test_limites_do_zetele_configurados() -> None:
     assert taxas["zetele"] == "6/min"
     assert taxas["zetele_global"] == "30/min"
     assert settings.ZETELE_LIMITE_DIARIO == 200
+    assert settings.ZETELE_SISTEMA_LIMITE_DIARIO == 250
+    assert taxas["zetele_sistema"] == "10/min"
+    assert taxas["zetele_sistema_global"] == "30/min"
     assert settings.ZETELE_SIMULTANEOS == 3
     assert "zetele" in settings.INSTALLED_APPS
 
@@ -28,6 +31,9 @@ def test_env_example_documenta_os_limites_sem_a_chave() -> None:
         "ZETELE_RATE_LIMIT",
         "ZETELE_GLOBAL_RATE_LIMIT",
         "ZETELE_LIMITE_DIARIO",
+        "ZETELE_SISTEMA_LIMITE_DIARIO",
+        "ZETELE_SISTEMA_RATE_LIMIT",
+        "ZETELE_SISTEMA_GLOBAL_RATE_LIMIT",
         "ZETELE_SIMULTANEOS",
     ):
         assert f"{nome}=" in texto

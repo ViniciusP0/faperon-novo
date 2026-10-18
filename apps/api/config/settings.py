@@ -135,6 +135,8 @@ REST_FRAMEWORK = {
         "pdf_global": os.environ.get("PDF_GLOBAL_RATE_LIMIT", "30/min"),
         "zetele": os.environ.get("ZETELE_RATE_LIMIT", "6/min"),
         "zetele_global": os.environ.get("ZETELE_GLOBAL_RATE_LIMIT", "30/min"),
+        "zetele_sistema": os.environ.get("ZETELE_SISTEMA_RATE_LIMIT", "10/min"),
+        "zetele_sistema_global": os.environ.get("ZETELE_SISTEMA_GLOBAL_RATE_LIMIT", "30/min"),
     },
     "EXCEPTION_HANDLER": "indicadores.api.erros.tratador_de_excecoes",
     "NUM_PROXIES": int(os.environ.get("NUM_PROXIES", "1")),
@@ -151,7 +153,9 @@ SPECTACULAR_SETTINGS = {
 # Zétele (ADR 0029). Sem chave, o assistente responde só às perguntas prontas do front.
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 ZETELE_MODELO = os.environ.get("ZETELE_MODELO", "claude-sonnet-5-5")
+# Teto diário de chamadas ao modelo por canal (ADR 0032): o do sistema inclui a interpretação de voz.
 ZETELE_LIMITE_DIARIO = int(os.environ.get("ZETELE_LIMITE_DIARIO", "200"))
+ZETELE_SISTEMA_LIMITE_DIARIO = int(os.environ.get("ZETELE_SISTEMA_LIMITE_DIARIO", "250"))
 ZETELE_SIMULTANEOS = int(os.environ.get("ZETELE_SIMULTANEOS", "3"))
 ZETELE_TERMOS_BLOQUEADOS = env_lista("ZETELE_TERMOS_BLOQUEADOS")
 

@@ -11,25 +11,14 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from zetele import agente, disponibilidade, registro, voz
+from zetele.canais import PUBLICO, SISTEMA, Canal
 from zetele.cliente import ClienteAnthropic, ClienteLLM, ProvedorIndisponivel, TempoEsgotado
 from zetele.models import Pergunta
-from zetele.throttles import ZeteleGlobalThrottle
+from zetele.throttles import ZeteleGlobalThrottle, ZeteleSistemaGlobalThrottle
 
 log = logging.getLogger(__name__)
 
-PAGINAS_COM_ZETELE = (
-    "/",
-    "/central-de-inteligencia",
-    "/central-de-inteligencia/observatorio",
-    "/painel",
-    "/sistema",
-    "/sistema/agenda",
-    "/sistema/frotas",
-    "/sistema/espacos",
-    "/sistema/contas",
-    "/sistema/relatorios",
-    "/sistema/atividades",
-)
+PAGINAS_COM_ZETELE = PUBLICO.paginas + SISTEMA.paginas
 # Uma pergunta prende uma thread do gunicorn por até 40 s: no máximo N por processo (ADR 0025).
 SEMAFORO = threading.BoundedSemaphore(settings.ZETELE_SIMULTANEOS)
 MENSAGENS = {
@@ -51,9 +40,11 @@ class MensagemSerializer(serializers.Serializer):
 
 
 class PerguntaSerializer(serializers.Serializer):
+    """Pergunta ao Zétele do site público."""
+
     pergunta = serializers.CharField(max_length=500)
     historico = MensagemSerializer(many=True, required=False, default=list)
-    pagina = serializers.ChoiceField(choices=PAGINAS_COM_ZETELE)
+    pagina = serializers.ChoiceField(choices=PUBLICO.paginas)
 
     def validate_historico(self, valor: list[dict[str, str]]) -> list[dict[str, str]]:
         if len(valor) > 6:
@@ -86,14 +77,26 @@ def _indisponivel(motivo: str) -> Response:
     return r
 
 
+class PerguntaSistemaSerializer(PerguntaSerializer):
+    """Pergunta ao Zétele da área do sistema: só as páginas do sistema."""
+
+    pagina = serializers.ChoiceField(choices=SISTEMA.paginas)
+
+
 class EstadoView(APIView):
+    canal: Canal = PUBLICO
+
     @extend_schema(responses={200: EstadoSerializer})
     def get(self, request: Request) -> Response:
-        return Response(disponibilidade.estado())
+        return Response(disponibilidade.estado(self.canal.nome))
+
+
+class EstadoSistemaView(EstadoView):
+    canal = SISTEMA
 
 
 class LimitesDoZetele(APIView):
-    """Limite por IP e teto global de quem gasta a cota da Anthropic (perguntas e agendamento por voz)."""
+    """Limite por IP e teto global de quem gasta a cota da Anthropic; cada canal tem os seus."""
 
     throttle_classes = [ScopedRateThrottle, ZeteleGlobalThrottle]
     throttle_scope = "zetele"
@@ -105,36 +108,55 @@ class LimitesDoZetele(APIView):
                 self.throttled(request, cast(float, throttle.wait()))
 
 
+class LimitesDoZeteleSistema(LimitesDoZetele):
+    throttle_classes = [ScopedRateThrottle, ZeteleSistemaGlobalThrottle]
+    throttle_scope = "zetele_sistema"
+
+
 class PerguntarView(LimitesDoZetele):
+    canal: Canal = PUBLICO
+    serializer_class: type[PerguntaSerializer] = PerguntaSerializer
+
     @extend_schema(request=PerguntaSerializer, responses={200: RespostaSerializer})
     def post(self, request: Request) -> Response:
-        entrada = PerguntaSerializer(data=request.data)
+        return self.responder(request)
+
+    def responder(self, request: Request) -> Response:
+        canal = self.canal.nome
+        entrada = self.serializer_class(data=request.data)
         entrada.is_valid(raise_exception=True)
         d: dict[str, Any] = dict(entrada.validated_data)
         pergunta, pagina = d["pergunta"], d["pagina"]
         historico = [dict(m) for m in d["historico"]]
 
-        situacao = disponibilidade.estado()
+        situacao = disponibilidade.estado(canal)
         if not situacao["disponivel"]:
-            registro.registrar(pergunta, Pergunta.Status.INDISPONIVEL, pagina)
+            registro.registrar(pergunta, Pergunta.Status.INDISPONIVEL, pagina, canal=canal)
             return _indisponivel(situacao["motivo"])
-        if disponibilidade.contar_pergunta() > settings.ZETELE_LIMITE_DIARIO:
-            registro.registrar(pergunta, Pergunta.Status.INDISPONIVEL, pagina)
+        if disponibilidade.contar_pergunta(canal) > self.canal.limite_diario:
+            registro.registrar(pergunta, Pergunta.Status.INDISPONIVEL, pagina, canal=canal)
             return _indisponivel("orcamento_diario")
         if not SEMAFORO.acquire(blocking=False):
             return _indisponivel("ocupado")
         try:
-            resposta = agente.responder(obter_cliente(), pergunta, historico, pagina)
+            resposta = agente.responder(
+                obter_cliente(), pergunta, historico, pagina, canal=self.canal
+            )
         except ProvedorIndisponivel as exc:
             log.warning("zetele: provedor indisponível (%s)", exc)
             disponibilidade.abrir_disjuntor()
-            registro.registrar(pergunta, Pergunta.Status.ERRO, pagina)
+            registro.registrar(pergunta, Pergunta.Status.ERRO, pagina, canal=canal)
             return _indisponivel("indisponivel")
         finally:
             SEMAFORO.release()
 
         registro.registrar(
-            pergunta, resposta.status, pagina, resposta.tokens_entrada, resposta.tokens_saida
+            pergunta,
+            resposta.status,
+            pagina,
+            resposta.tokens_entrada,
+            resposta.tokens_saida,
+            canal=canal,
         )
         # a reserva determinística é uma resposta válida: o visitante não precisa saber da falha
         status = "respondida" if resposta.status == "verificacao_falhou" else resposta.status
@@ -177,7 +199,16 @@ class InterpretacaoSerializer(serializers.Serializer):
     faltando = serializers.ListField(child=serializers.CharField())
 
 
-class InterpretarView(LimitesDoZetele):
+class PerguntarSistemaView(LimitesDoZeteleSistema, PerguntarView):
+    canal = SISTEMA
+    serializer_class = PerguntaSistemaSerializer
+
+    @extend_schema(request=PerguntaSistemaSerializer, responses={200: RespostaSerializer})
+    def post(self, request: Request) -> Response:
+        return self.responder(request)
+
+
+class InterpretarView(LimitesDoZeteleSistema):
     """Agendamento por voz do protótipo do sistema: mesmos limites do Zétele, transcrição não gravada."""
 
     @extend_schema(request=InterpretarSerializer, responses={200: InterpretacaoSerializer})
@@ -188,10 +219,11 @@ class InterpretarView(LimitesDoZetele):
         veiculos = [dict(o) for o in d["veiculos"]]
         espacos = [dict(o) for o in d["espacos"]]
 
-        situacao = disponibilidade.estado()
+        # a voz gasta o orçamento do Zétele do sistema (o mesmo teto diário das perguntas de lá)
+        situacao = disponibilidade.estado(SISTEMA.nome)
         if not situacao["disponivel"]:
             return _indisponivel(situacao["motivo"])
-        if disponibilidade.contar_pergunta() > settings.ZETELE_LIMITE_DIARIO:
+        if disponibilidade.contar_pergunta(SISTEMA.nome) > SISTEMA.limite_diario:
             return _indisponivel("orcamento_diario")
         if not SEMAFORO.acquire(blocking=False):
             return _indisponivel("ocupado")

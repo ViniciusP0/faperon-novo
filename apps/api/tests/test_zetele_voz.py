@@ -202,7 +202,7 @@ def test_provedor_fora_abre_o_disjuntor(
 def test_conta_no_limite_diario(
     api: APIClient, com_chave: None, settings: Any, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    settings.ZETELE_LIMITE_DIARIO = 1
+    settings.ZETELE_SISTEMA_LIMITE_DIARIO = 1
     usar(monkeypatch, saida(EVENTO), saida(EVENTO))
     assert pedir(api).status_code == 200
     assert pedir(api).json()["motivo"] == "orcamento_diario"
@@ -269,3 +269,13 @@ def test_atividade_relato_no_passado(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     assert (estranho["tipo"], estranho["publico"], estranho["fim"]) == ("outro", 0, "")
     assert voz.faltando("atividade", estranho) == ["fim"]
+
+
+def test_voz_gasta_o_orcamento_do_sistema_e_nao_o_publico(
+    api: APIClient, com_chave: None, settings: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    settings.ZETELE_SISTEMA_LIMITE_DIARIO = 1
+    usar(monkeypatch, saida(EVENTO))
+    assert pedir(api).status_code == 200
+    assert api.get("/api/v1/sistema/zetele/estado").json()["motivo"] == "orcamento_diario"
+    assert api.get("/api/v1/zetele/estado").json() == {"disponivel": True, "motivo": None}

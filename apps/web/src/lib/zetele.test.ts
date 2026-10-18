@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { obterEstado, partesDoTexto, perguntar } from "./zetele";
+import { obterEstado, partesDoTexto, perguntar, baseDoZetele } from "./zetele";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -30,6 +30,18 @@ describe("cliente da API", () => {
   it("obterEstado cai para indisponível se a API falhar", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("rede")));
     expect(await obterEstado()).toEqual({ disponivel: false, motivo: "indisponivel" });
+  });
+
+  it("cada área fala com o próprio Zétele no servidor", async () => {
+    expect(baseDoZetele("/painel")).toMatch(/\/zetele$/);
+    expect(baseDoZetele("/painel")).not.toMatch(/sistema/);
+    expect(baseDoZetele("/sistema/espacos")).toMatch(/\/sistema\/zetele$/);
+    const f = vi.fn().mockResolvedValue(json({ status: "respondida", texto: "ok", fontes: [], sugestoes: [] }));
+    vi.stubGlobal("fetch", f);
+    await perguntar("x", [], "/sistema/contas");
+    expect(String(f.mock.calls[0]![0])).toMatch(/\/sistema\/zetele\/perguntar$/);
+    await obterEstado("/sistema");
+    expect(String(f.mock.calls[1]![0])).toMatch(/\/sistema\/zetele\/estado$/);
   });
 
   it("perguntar envia só as últimas 6 mensagens e lê a resposta", async () => {

@@ -8,9 +8,10 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from zetele import ferramentas, prompt, verificacao
+from zetele.canais import PUBLICO, Canal
 from zetele.cliente import ClienteLLM, TempoEsgotado
-from zetele.conhecimento import texto_da_base
 from zetele.ferramentas import ResultadoFerramenta
+from zetele.rag import Trecho, recuperador_do_canal
 
 log = logging.getLogger(__name__)
 
@@ -18,34 +19,39 @@ MAX_RODADAS = 3
 MAX_CHAMADAS = 4
 ORCAMENTO_SEGUNDOS = 40.0
 MAX_HISTORICO = 6
+# Quantos trechos da base (RAG) vão com cada pergunta.
+LIMITE_TRECHOS = 6
 # No Início o Zétele só orienta para as áreas do site; dados e preços ficam na Central.
-# Na área logada (protótipo) os dados da pessoa ficam no navegador dela: ele só explica o uso.
-PAGINAS_SISTEMA = frozenset(
-    {
-        "/sistema",
-        "/sistema/agenda",
-        "/sistema/frotas",
-        "/sistema/espacos",
-        "/sistema/contas",
-        "/sistema/relatorios",
-        "/sistema/atividades",
-    }
-)
-PAGINAS_SO_ORIENTACAO = frozenset({"/"}) | PAGINAS_SISTEMA
 ORIENTACAO_INICIO = (
     "Nesta página o Zétele só orienta para onde ir no site: não consulte dados nem cite números; "
     "para números e preços, indique a Central de Inteligência."
 )
-ORIENTACAO_SISTEMA = (
-    "Esta é a área logada do sistema (protótipo). O Zétele só explica como usar a agenda, a frota, "
-    "o agendamento de espaços, o agendamento por voz, a prestação de contas, os relatórios e o registro de atividades; "
-    "ele não vê os eventos, reservas, pedidos, despesas ou atividades da pessoa, que ficam no navegador dela. Para "
-    "números do agro, indique a Central de Inteligência."
-)
 
-TEXTO_RECUSA = "Isso eu não sei responder. Posso ajudar com o Painel, o Observatório ou as páginas da FAPERON."
-TEXTO_DEMORA = "Demorei demais para consultar os dados. Tente de novo ou abra o Painel Agro Analítico."
-TEXTO_SEM_CONFIRMACAO = "Não consegui confirmar essa informação. Para números, use o Painel Agro Analítico."
+
+@dataclass(frozen=True)
+class Textos:
+    recusa: str
+    demora: str
+    sem_confirmacao: str
+
+
+TEXTOS = {
+    "publico": Textos(
+        recusa="Isso eu não sei responder. Posso ajudar com o Painel, o Observatório ou as páginas da FAPERON.",
+        demora="Demorei demais para consultar os dados. Tente de novo ou abra o Painel Agro Analítico.",
+        sem_confirmacao="Não consegui confirmar essa informação. Para números, use o Painel Agro Analítico.",
+    ),
+    "sistema": Textos(
+        recusa="Isso eu não sei responder. Posso ajudar com a agenda, a frota, os espaços, as contas, "
+        "as atividades e os relatórios.",
+        demora="Demorei demais para responder. Tente de novo em instantes.",
+        sem_confirmacao="Não consegui confirmar essa informação. Veja o módulo no menu do sistema.",
+    ),
+}
+# compatibilidade: os textos do canal público seguem com os nomes antigos
+TEXTO_RECUSA = TEXTOS["publico"].recusa
+TEXTO_DEMORA = TEXTOS["publico"].demora
+TEXTO_SEM_CONFIRMACAO = TEXTOS["publico"].sem_confirmacao
 
 
 @dataclass(frozen=True)
@@ -62,7 +68,12 @@ class _Abortar(Exception):
     """Erro inesperado numa ferramenta: não é culpa do modelo, vai para a reserva."""
 
 
-def _mensagens(historico: list[dict[str, str]], pergunta: str, pagina: str) -> list[dict[str, Any]]:
+def _mensagens(
+    historico: list[dict[str, str]],
+    pergunta: str,
+    pagina: str,
+    trechos: list[Trecho] | None = None,
+) -> list[dict[str, Any]]:
     """A API exige começar pelo usuário e alternar papéis: descarta o que sobra e junta repetidos."""
     msgs: list[dict[str, Any]] = []
     for item in historico[-MAX_HISTORICO:]:
@@ -73,13 +84,10 @@ def _mensagens(historico: list[dict[str, str]], pergunta: str, pagina: str) -> l
             msgs[-1]["content"] += "\n\n" + item["texto"]
         else:
             msgs.append({"role": papel, "content": item["texto"]})
-    if pagina in PAGINAS_SISTEMA:
-        aviso = f" {ORIENTACAO_SISTEMA}"
-    elif pagina in PAGINAS_SO_ORIENTACAO:
-        aviso = f" {ORIENTACAO_INICIO}"
-    else:
-        aviso = ""
+    aviso = f" {ORIENTACAO_INICIO}" if pagina == "/" else ""
     atual = f"(O visitante está em {pagina}.{aviso})\n\n{pergunta}"
+    if trechos:
+        atual = f"{prompt.contexto(trechos)}\n\n{atual}"
     if msgs and msgs[-1]["role"] == "user":
         msgs[-1]["content"] += "\n\n" + atual
     else:
@@ -114,7 +122,11 @@ def _fontes(resultados: list[ResultadoFerramenta]) -> list[dict[str, Any]]:
 def _executar(uso: Any, n: int, resultados: list[ResultadoFerramenta]) -> dict[str, Any]:
     base = {"type": "tool_result", "tool_use_id": uso.id}
     if n > MAX_CHAMADAS:
-        return {**base, "content": "Limite de consultas desta pergunta atingido. Responda com o que já tem.", "is_error": True}
+        return {
+            **base,
+            "content": "Limite de consultas desta pergunta atingido. Responda com o que já tem.",
+            "is_error": True,
+        }
     try:
         res = ferramentas.executar(uso.name, dict(uso.input))
     except ferramentas.ErroDeFerramenta as exc:
@@ -132,12 +144,18 @@ def responder(
     historico: list[dict[str, str]],
     pagina: str,
     *,
+    canal: Canal = PUBLICO,
     relogio: Callable[[], float] = time.monotonic,
 ) -> Resposta:
     inicio = relogio()
-    system = prompt.system_atual()
-    messages = _mensagens(historico, pergunta, pagina)
-    ferramentas_da_pagina = [] if pagina in PAGINAS_SO_ORIENTACAO else ferramentas.DEFINICOES
+    textos = TEXTOS[canal.nome]
+    base = recuperador_do_canal(canal.nome)
+    # a pergunta anterior ajuda a achar o assunto de um "e como cancelo?"
+    anterior = next((h["texto"] for h in reversed(historico) if h["papel"] == "visitante"), "")
+    trechos = base.buscar(f"{anterior} {pergunta}", pagina, LIMITE_TRECHOS)
+    system = prompt.system_atual(canal)
+    messages = _mensagens(historico, pergunta, pagina, trechos)
+    ferramentas_da_pagina = [] if pagina in canal.so_orientacao else ferramentas.DEFINICOES
     resultados: list[ResultadoFerramenta] = []
     tokens = [0, 0]
     chamadas = 0
@@ -148,7 +166,7 @@ def responder(
 
     for rodada in range(MAX_RODADAS):
         if relogio() - inicio > ORCAMENTO_SEGUNDOS:
-            return reserva("erro", TEXTO_DEMORA)
+            return reserva("erro", textos.demora)
         try:
             r = cliente.criar(
                 system=system,
@@ -157,7 +175,7 @@ def responder(
                 ultima_rodada=rodada == MAX_RODADAS - 1,
             )
         except TempoEsgotado:
-            return reserva("erro", TEXTO_DEMORA)
+            return reserva("erro", textos.demora)
         uso_tokens = r.usage
         tokens[0] += (
             uso_tokens.input_tokens
@@ -166,7 +184,7 @@ def responder(
         )
         tokens[1] += uso_tokens.output_tokens
         if r.stop_reason == "refusal":
-            return Resposta("recusada", TEXTO_RECUSA, [], [], tokens[0], tokens[1])
+            return Resposta("recusada", textos.recusa, [], [], tokens[0], tokens[1])
         usos = [b for b in r.content if getattr(b, "type", None) == "tool_use"]
         if r.stop_reason == "tool_use" and usos:
             # só acréscimo: o content volta inteiro (thinking incluído), sem edição
@@ -177,22 +195,22 @@ def responder(
                     chamadas += 1
                     blocos.append(_executar(uso, chamadas, resultados))
             except _Abortar:
-                return reserva("erro", TEXTO_SEM_CONFIRMACAO)
+                return reserva("erro", textos.sem_confirmacao)
             messages.append({"role": "user", "content": blocos})
             continue
         tipo, texto, sugestoes = _ler_final(r)
         if tipo == "recusa":
-            return Resposta("recusada", texto or TEXTO_RECUSA, [], sugestoes, tokens[0], tokens[1])
+            return Resposta("recusada", texto or textos.recusa, [], sugestoes, tokens[0], tokens[1])
         v = verificacao.verificar(
             texto,
             dados=[res.dados for res in resultados],
-            referencias=[texto_da_base(), pergunta, *(h["texto"] for h in historico)],
+            referencias=[base.texto_completo(), pergunta, *(h["texto"] for h in historico)],
             urls_ferramentas=set().union(*(res.urls for res in resultados)),
         )
         if v.links_removidos:
             log.info("zetele: %s link(s) removido(s) da resposta", v.links_removidos)
         if not v.aprovada or not v.texto:
             log.warning("zetele: conferência reprovou a resposta: %s", "; ".join(v.motivos))
-            return reserva("verificacao_falhou", TEXTO_SEM_CONFIRMACAO)
+            return reserva("verificacao_falhou", textos.sem_confirmacao)
         return Resposta("respondida", v.texto, _fontes(resultados), sugestoes, tokens[0], tokens[1])
-    return reserva("verificacao_falhou", TEXTO_SEM_CONFIRMACAO)
+    return reserva("verificacao_falhou", textos.sem_confirmacao)

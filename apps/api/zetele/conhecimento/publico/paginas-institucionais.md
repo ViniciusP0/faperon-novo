@@ -1,0 +1,31 @@
+# Zétele público: paginas institucionais
+
+## [/] Início
+Página inicial do site. Abre com um carrossel de destaques (a FAPERON, "Rondônia em números" com indicadores do IBGE e o Sistema FAPERON/SENAR). Depois mostra as notícias mais recentes, o Sistema FAPERON (FAPERON, SENAR-RO, IPAGRO, sindicatos rurais e Comissão Mulheres), o atalho para os preços das commodities acompanhados pela CNA, os banners do Sistema FAPERON/SENAR, o destaque da Central de Inteligência Agropecuária de Rondônia e a seção "Nosso Agro", com números do IBGE.
+
+## [/sobre] Sobre a FAPERON
+Federação da Agricultura e Pecuária do Estado de Rondônia: quem somos, missão, visão e valores, diretoria, estatuto e o Sistema FAPERON, com o calendário do Sistema FAPERON | SENAR-RO em PDF.
+
+## [/informativos-tecnicos] Informativos Técnicos
+Informativos mensais e boletins técnicos em PDF com dados do setor agropecuário de Rondônia, separados por categoria: Bovinocultura de Corte e Bovinocultura de Leite.
+
+## [/noticias] Notícias
+Lista das notícias da FAPERON, com filtro por categoria. Cada notícia abre no site atual da FAPERON.
+
+## [/fale-conosco] Fale Conosco
+Endereço: Rua João Goulart, 1843, Nossa Sra. das Graças, Porto Velho - RO, CEP 78915-450. Telefone (69) 3214-8371. WhatsApp (69) 3224-7620. O formulário da página monta a mensagem e abre uma conversa no WhatsApp da FAPERON.
+
+## [/ipagro] IPAGRO
+Instituto de Pesquisa, Serviços e Desenvolvimento Agropecuário de Rondônia, entidade do Sistema FAPERON: ficha institucional, o Diagnóstico da Piscicultura de Rondônia e o comunicado de transparência sobre os recursos recebidos para o diagnóstico.
+
+## [/sindicatos-rurais] Sindicatos Rurais
+Lista dos Sindicatos dos Produtores Rurais de Rondônia, com presidente, telefone, e-mail e endereço. É pelo sindicato que o produtor se associa e chega às ações do Sistema FAPERON/SENAR.
+
+## [/comissao-mulheres] Comissão Mulheres
+Comissão Estadual das Mulheres da FAPERON: desenvolvimento e capacitação das mulheres do agro, participação no Sistema e parcerias com o SENAR-RO e a Comissão Nacional da CNA.
+
+## [/politica-de-privacidade] Política de Privacidade
+Explica quais dados o site trata, inclusive as perguntas feitas ao Zétele (guardadas por 90 dias, sem IP), e como exercer os direitos da LGPD.
+
+## [/login] Acessar o sistema
+O botão "Acessar o sistema", no alto do site, leva à entrada da área logada. Hoje ela é um protótipo para a FAPERON avaliar: depois do login de demonstração, a pessoa escolhe um perfil de funcionário de exemplo. Os dados são fictícios e ficam salvos só no navegador de quem usa; nada é enviado ao servidor.

@@ -10,6 +10,7 @@ import pytest
 from django.core.management import call_command
 
 from zetele import agente, ferramentas
+from zetele.canais import CANAIS
 from zetele.cliente import ClienteAnthropic
 
 CASOS = json.loads((Path(__file__).parent / "zetele_ouro.json").read_text(encoding="utf-8"))
@@ -36,18 +37,28 @@ def test_perguntas_de_ouro(settings: Any, monkeypatch: pytest.MonkeyPatch) -> No
     verificacoes = 0
     for caso in CASOS:
         usadas.clear()
-        r = agente.responder(cliente, caso["pergunta"], [], caso["pagina"])
+        canal = CANAIS[caso.get("canal", "publico")]
+        r = agente.responder(cliente, caso["pergunta"], [], caso["pagina"], canal=canal)
         status = "respondida" if r.status == "verificacao_falhou" else r.status
         verificacoes += r.status == "verificacao_falhou"
         problemas = []
         if status != caso["espera"]:
             problemas.append(f"status {r.status}")
-        if caso.get("ferramenta") and caso["ferramenta"] not in usadas:
-            problemas.append(f"não usou {caso['ferramenta']} (usou {usadas})")
+        # "ferramenta" aceita uma ou uma lista de alternativas igualmente certas
+        esperadas = caso.get("ferramenta") or []
+        esperadas = [esperadas] if isinstance(esperadas, str) else esperadas
+        if esperadas and not set(esperadas) & set(usadas):
+            problemas.append(f"não usou {esperadas} (usou {usadas})")
         rota = caso.get("rota")
-        if rota and rota not in r.texto and not any((f.get("url_interna") or "").startswith(rota) for f in r.fontes):
+        if (
+            rota
+            and rota not in r.texto
+            and not any((f.get("url_interna") or "").startswith(rota) for f in r.fontes)
+        ):
             problemas.append(f"não citou {rota}")
-        print(f"[{'OK' if not problemas else 'FALHA'}] {caso['pergunta']} -> {r.status}: {r.texto[:160]}")
+        print(
+            f"[{'OK' if not problemas else 'FALHA'}] {caso['pergunta']} -> {r.status}: {r.texto[:160]}"
+        )
         if problemas:
             falhas.append(f"{caso['pergunta']}: {', '.join(problemas)}")
     recusas = [c for c in CASOS if c["espera"] == "recusada"]

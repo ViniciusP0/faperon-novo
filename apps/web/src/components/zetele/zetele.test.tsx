@@ -152,4 +152,19 @@ describe("Zetele", () => {
     await user.click(await screen.findByRole("button", { name: "Tentar de novo" }));
     expect(await screen.findByText(/Ariquemes liderou/)).toBeInTheDocument();
   });
+
+  it("na área do sistema usa o Zétele do sistema, com outra boas-vindas", async () => {
+    caminho = "/sistema/agenda";
+    const f = stubFetch();
+    const user = userEvent.setup();
+    render(<Zetele />);
+    await abrir(user);
+    expect(screen.getByText(/Oi, eu sou o Zétele do sistema!/)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Escreva sua dúvida sobre o sistema")).toBeInTheDocument();
+    await user.type(screen.getByLabelText("Sua pergunta"), "como crio um evento?{Enter}");
+    const urls = f.mock.calls.map((c) => String(c[0]));
+    expect(urls.some((u) => u.endsWith("/sistema/zetele/estado"))).toBe(true);
+    expect(urls.some((u) => u.endsWith("/sistema/zetele/perguntar"))).toBe(true);
+    expect(urls.some((u) => /\/api\/v1\/zetele\//.test(u))).toBe(false);
+  });
 });

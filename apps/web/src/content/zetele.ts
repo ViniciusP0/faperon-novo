@@ -17,6 +17,13 @@ export const PAGINAS_COM_ZETELE = [
 ] as const;
 export type PaginaComZetele = (typeof PAGINAS_COM_ZETELE)[number];
 
+/** Os dois Zétele (ADR 0032): o do site público e o da área do sistema, com base, limites e registro próprios. */
+export type AreaZetele = "site" | "sistema";
+
+export function areaDaPagina(pagina: string): AreaZetele {
+  return pagina.startsWith("/sistema") ? "sistema" : "site";
+}
+
 export function ehPaginaComZetele(caminho: string | null): caminho is PaginaComZetele {
   return PAGINAS_COM_ZETELE.includes(caminho as PaginaComZetele);
 }
@@ -252,7 +259,7 @@ export const ORDEM_POR_PAGINA: Record<PaginaComZetele, string[]> = {
 export function perguntasDaPagina(pagina: PaginaComZetele): { visiveis: PerguntaPronta[]; demais: PerguntaPronta[] } {
   const ids = ORDEM_POR_PAGINA[pagina];
   const porId = new Map(PERGUNTAS.map((p) => [p.id, p]));
-  const area = pagina.startsWith("/sistema") ? "sistema" : "site";
+  const area = areaDaPagina(pagina);
   return {
     visiveis: ids.map((id) => porId.get(id)).filter((p): p is PerguntaPronta => Boolean(p)),
     demais: PERGUNTAS.filter((p) => !ids.includes(p.id) && (p.area ?? "site") === area),
@@ -264,10 +271,7 @@ export const ZETELE = {
   rotuloBotao: "Falar com o Zétele, assistente do site",
   saudacao: "Oi! Posso ajudar?",
   rotuloFecharSaudacao: "Fechar saudação",
-  boasVindas:
-    "Oi, eu sou o Zétele! Tiro dúvidas sobre o site da FAPERON: onde achar cada coisa, como usar o Painel e o Observatório e os números do IBGE que o site mostra.",
   rotuloCampo: "Sua pergunta",
-  placeholder: "Escreva sua pergunta sobre o site",
   enviar: "Enviar pergunta",
   fechar: "Fechar o Zétele",
   rotuloSugestoes: "Perguntas sugeridas",
@@ -276,7 +280,6 @@ export const ZETELE = {
   ocultarSugestoes: "Ocultar sugestões",
   consultando: "Zétele está consultando os dados…",
   indisponivel: "Hoje só respondo às perguntas prontas.",
-  descansando: "O Zétele está descansando. Tente de novo em instantes ou abra o Painel.",
   falha: "Não consegui responder agora.",
   tentarDeNovo: "Tentar de novo",
   espera: (segundos: number) => `Muitas perguntas de uma vez; espere ${segundos} segundos.`,
@@ -286,3 +289,19 @@ export const ZETELE = {
   politica: "Política de Privacidade",
   tamanhoMaximo: 500,
 } as const;
+
+/** O que muda entre o Zétele do site e o do sistema. */
+export const TEXTOS_DA_AREA: Record<AreaZetele, { boasVindas: string; placeholder: string; descansando: string }> = {
+  site: {
+    boasVindas:
+      "Oi, eu sou o Zétele! Tiro dúvidas sobre o site da FAPERON: onde achar cada coisa, como usar o Painel e o Observatório e os números do IBGE que o site mostra.",
+    placeholder: "Escreva sua pergunta sobre o site",
+    descansando: "O Zétele está descansando. Tente de novo em instantes ou abra o Painel.",
+  },
+  sistema: {
+    boasVindas:
+      "Oi, eu sou o Zétele do sistema! Explico como usar a agenda, a frota, os espaços, as contas, as atividades e os relatórios, e como agendar ou registrar por voz.",
+    placeholder: "Escreva sua dúvida sobre o sistema",
+    descansando: "O Zétele está descansando. Tente de novo em instantes.",
+  },
+};

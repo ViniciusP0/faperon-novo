@@ -2,27 +2,20 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import {
-  PAGINAS_SO_ORIENTACAO,
-  ZETELE,
-  ehPaginaComZetele,
-  perguntasDaPagina,
-  type PaginaComZetele,
-  type PerguntaPronta,
-  type Pose,
-} from "@/content/zetele";
+import { areaDaPagina, ehPaginaComZetele, type PaginaComZetele, PAGINAS_SO_ORIENTACAO, type PerguntaPronta, perguntasDaPagina, type Pose, TEXTOS_DA_AREA, ZETELE } from "@/content/zetele";
 import { obterEstado, perguntar, type MensagemHistorico } from "@/lib/zetele";
 import { BotaoZetele } from "./botao-zetele";
 import type { Mensagem } from "./mensagens";
 import { PainelZetele } from "./painel-zetele";
 import { SaudacaoZetele, marcarSaudou } from "./saudacao-zetele";
 
-/** Assistente do site (ADR 0029). Só no Início e na Central; a conversa sobrevive à navegação entre elas.
+/** Assistente do site (ADR 0029) e do sistema (ADR 0032). A conversa sobrevive à navegação dentro da
+ *  mesma área; ao trocar de área (site ↔ sistema) começa outra, com o outro Zétele.
  *  Fica fixo no canto inferior direito (acompanha a rolagem), com o balão de saudação à esquerda. */
 export function Zetele() {
   const caminho = usePathname();
   if (!ehPaginaComZetele(caminho)) return null;
-  return <ZeteleNaPagina pagina={caminho} />;
+  return <ZeteleNaPagina key={areaDaPagina(caminho)} pagina={caminho} />;
 }
 
 function ZeteleNaPagina({ pagina }: { pagina: PaginaComZetele }) {
@@ -39,15 +32,17 @@ function ZeteleNaPagina({ pagina }: { pagina: PaginaComZetele }) {
   const fecharRef = useRef<HTMLButtonElement>(null);
   const proximoId = useRef(1);
 
+  const area = areaDaPagina(pagina);
+
   useEffect(() => {
     let vivo = true;
-    void obterEstado().then((e) => {
+    void obterEstado(area === "sistema" ? "/sistema" : "/").then((e) => {
       if (vivo) setDisponivel(e.disponivel);
     });
     return () => {
       vivo = false;
     };
-  }, []);
+  }, [area]);
 
   useEffect(() => {
     if (espera <= 0) return;
@@ -102,7 +97,7 @@ function ZeteleNaPagina({ pagina }: { pagina: PaginaComZetele }) {
     } else if (r.tipo === "indisponivel") {
       // sem chave ou orçamento do dia: só perguntas prontas até recarregar; fora do ar ou ocupado: só avisa
       if (r.motivo === "sem_chave" || r.motivo === "orcamento_diario") setDisponivel(false);
-      adicionar({ autor: "zetele", texto: ZETELE.descansando });
+      adicionar({ autor: "zetele", texto: TEXTOS_DA_AREA[area].descansando });
       setMostrarChips(true);
     } else {
       adicionar({ autor: "zetele", texto: ZETELE.falha, perguntaOriginal: texto });
@@ -148,6 +143,7 @@ function ZeteleNaPagina({ pagina }: { pagina: PaginaComZetele }) {
           mensagens={mensagens}
           carregando={carregando}
           disponivel={disponivel}
+          area={area}
           soOrientacao={PAGINAS_SO_ORIENTACAO.includes(pagina)}
           espera={espera}
           mostrarChips={mostrarChips}

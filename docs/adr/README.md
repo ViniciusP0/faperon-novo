@@ -33,3 +33,4 @@ Decisões de arquitetura no formato MADR (Contexto, Opções, Decisão, Consequ�
 - [0029](0029-zetele-assistente-com-llm-restrito-ao-site-e-numeros-conferidos-em-codigo.md) — Zétele, assistente com LLM restrito ao site e números conferidos em código
 - [0030](0030-registro-anonimo-das-perguntas-do-zetele-por-90-dias.md) — Registro anônimo das perguntas do Zétele por 90 dias
 - [0031](0031-prototipo-do-sistema-interno-so-no-front-com-dados-no-navegador.md) — Protótipo do sistema interno só no front, com dados fictícios no navegador
+- [0032](0032-zetele-em-dois-canais-com-rag-proprio.md) — Zétele em dois canais (site público e sistema), cada um com RAG, banco e limites próprios

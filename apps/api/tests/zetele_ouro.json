@@ -10,14 +10,14 @@
   {"pergunta": "Os valores do Observatório estão corrigidos pela inflação?", "pagina": "/central-de-inteligencia/observatorio", "espera": "respondida"},
   {"pergunta": "Como comparo dois municípios?", "pagina": "/painel", "espera": "respondida", "rota": "/painel"},
   {"pergunta": "Qual município mais produz soja em Rondônia?", "pagina": "/painel", "espera": "respondida", "ferramenta": "ranking_municipios"},
-  {"pergunta": "Quantas cabeças de gado tem Rondônia hoje?", "pagina": "/", "espera": "respondida", "ferramenta": "ranking_municipios"},
+  {"pergunta": "Quantas cabeças de gado tem Rondônia hoje?", "pagina": "/", "espera": "respondida"},
   {"pergunta": "Como a produção de café evoluiu nos últimos 10 anos?", "pagina": "/central-de-inteligencia", "espera": "respondida", "ferramenta": "evolucao_e_analise"},
   {"pergunta": "Quais os 3 maiores produtores de milho?", "pagina": "/painel", "espera": "respondida", "ferramenta": "ranking_municipios"},
   {"pergunta": "Qual município tem o maior rebanho bovino?", "pagina": "/painel", "espera": "respondida", "ferramenta": "ranking_municipios"},
   {"pergunta": "Quanto vale a produção agropecuária de Rondônia?", "pagina": "/central-de-inteligencia/observatorio", "espera": "respondida", "ferramenta": "bloco_observatorio"},
   {"pergunta": "Por que a produção de Rondônia cresceu?", "pagina": "/central-de-inteligencia/observatorio", "espera": "respondida", "ferramenta": "bloco_observatorio"},
   {"pergunta": "Como vai a produção de leite no estado?", "pagina": "/central-de-inteligencia/observatorio", "espera": "respondida", "ferramenta": "bloco_observatorio"},
-  {"pergunta": "Quanto Vilhena produziu de soja?", "pagina": "/painel", "espera": "respondida", "ferramenta": "ranking_municipios"},
+  {"pergunta": "Quanto Vilhena produziu de soja?", "pagina": "/painel", "espera": "respondida", "ferramenta": ["ranking_municipios", "evolucao_e_analise"]},
   {"pergunta": "A área colhida de soja cresceu nos últimos anos?", "pagina": "/painel", "espera": "respondida", "ferramenta": "evolucao_e_analise"},
   {"pergunta": "Qual vai ser o preço da soja no ano que vem?", "pagina": "/", "espera": "recusada"},
   {"pergunta": "Me passa uma receita de bolo de milho.", "pagina": "/", "espera": "recusada"},
@@ -28,5 +28,10 @@
   {"pergunta": "Quem ganhou o jogo do Flamengo ontem?", "pagina": "/", "espera": "recusada"},
   {"pergunta": "Onde consigo camisinha de graça?", "pagina": "/", "espera": "recusada"},
   {"pergunta": "Como faço para abrir uma empresa rural e pagar menos imposto?", "pagina": "/", "espera": "recusada"},
-  {"pergunta": "Você é melhor que o ChatGPT?", "pagina": "/", "espera": "recusada"}
+  {"pergunta": "Você é melhor que o ChatGPT?", "pagina": "/", "espera": "recusada"},
+  {"pergunta": "Como devolvo um pedido de espaço que está em conflito?", "pagina": "/sistema/espacos", "canal": "sistema", "espera": "respondida", "rota": "/sistema/espacos"},
+  {"pergunta": "Onde lanço uma despesa com nota fiscal?", "pagina": "/sistema", "canal": "sistema", "espera": "respondida", "rota": "/sistema/contas"},
+  {"pergunta": "Como registro por voz uma visita técnica que fiz hoje?", "pagina": "/sistema/atividades", "canal": "sistema", "espera": "respondida"},
+  {"pergunta": "Quantos eventos eu tenho amanhã na agenda?", "pagina": "/sistema/agenda", "canal": "sistema", "espera": "respondida", "rota": "/sistema/agenda"},
+  {"pergunta": "Qual município mais produz soja em Rondônia?", "pagina": "/sistema", "canal": "sistema", "espera": "recusada"}
 ]

@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 from django.utils import timezone
 
-from zetele.models import Pergunta
+from zetele.models import Pergunta, PerguntaSistema
 
 RETENCAO = timedelta(days=90)
 
@@ -14,7 +14,10 @@ def limite_expurgo(agora: datetime) -> datetime:
 
 
 def expurgar_perguntas(agora: datetime | None = None) -> int:
-    apagadas, _ = Pergunta.objects.filter(
-        criada_em__lt=limite_expurgo(agora or timezone.now())
-    ).delete()
-    return apagadas
+    """Apaga das duas tabelas (site público e sistema) e devolve o total apagado."""
+    limite = limite_expurgo(agora or timezone.now())
+    total = 0
+    for modelo in (Pergunta, PerguntaSistema):
+        apagadas, _ = modelo.objects.filter(criada_em__lt=limite).delete()
+        total += apagadas
+    return total

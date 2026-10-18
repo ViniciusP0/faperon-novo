@@ -10,8 +10,12 @@ DADOS: list[Any] = [
     {
         "ano_referencia": 2024,
         "itens": [
-            {"municipio": "Ariquemes", "valor": Decimal("450"), "valor_formatado": "1.234.567",
-             "percentual_formatado": "14,9"},
+            {
+                "municipio": "Ariquemes",
+                "valor": Decimal("450"),
+                "valor_formatado": "1.234.567",
+                "percentual_formatado": "14,9",
+            },
         ],
         "total_formatado": "8.123.456,5",
         "url_painel": URL,
@@ -21,7 +25,13 @@ DADOS: list[Any] = [
 
 @pytest.mark.parametrize(
     ("token", "esperado"),
-    [("1.234.567", "1234567"), ("14,9", "14.9"), ("14,90", "14.9"), ("2024", "2024"), ("0,5", "0.5")],
+    [
+        ("1.234.567", "1234567"),
+        ("14,9", "14.9"),
+        ("14,90", "14.9"),
+        ("2024", "2024"),
+        ("0,5", "0.5"),
+    ],
 )
 def test_normaliza_numeros_pt_br(token: str, esperado: str) -> None:
     assert normalizar(token) == esperado
@@ -109,9 +119,7 @@ def test_decimal_com_ponto_aceito_quando_esta_na_fonte() -> None:
     assert aprova("O índice foi 8.1 no ano.", refs=("índice 8,1",))
 
 
-@pytest.mark.parametrize(
-    "texto", ["[Painel](//golpe.example/painel)", "[Home](//golpe.example/)"]
-)
+@pytest.mark.parametrize("texto", ["[Painel](//golpe.example/painel)", "[Home](//golpe.example/)"])
 def test_link_sem_esquema_para_outro_host_e_removido(texto: str) -> None:
     limpo, removidos = limpar_links(texto, set())
     assert removidos == 1

@@ -2,7 +2,7 @@ from django.db import models
 from django.utils import timezone
 
 
-class Pergunta(models.Model):
+class PerguntaBase(models.Model):
     """Pergunta feita ao Zétele, anônima: sem IP, sem resposta, sem id de conversa (ADR 0030)."""
 
     class Status(models.TextChoices):
@@ -20,5 +20,19 @@ class Pergunta(models.Model):
     tokens_saida = models.PositiveIntegerField(default=0)
 
     class Meta:
-        db_table = "zetele_pergunta"
+        abstract = True
         ordering = ["-criada_em"]
+
+
+class Pergunta(PerguntaBase):
+    """Zétele do site público."""
+
+    class Meta(PerguntaBase.Meta):
+        db_table = "zetele_pergunta"
+
+
+class PerguntaSistema(PerguntaBase):
+    """Zétele da área do sistema: tabela própria, separada do público (ADR 0032)."""
+
+    class Meta(PerguntaBase.Meta):
+        db_table = "zetele_pergunta_sistema"

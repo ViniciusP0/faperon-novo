@@ -10,3 +10,9 @@ class ZeteleGlobalThrottle(SimpleRateThrottle):
 
     def get_cache_key(self, request: Any, view: Any) -> str:
         return self.cache_format % {"scope": self.scope, "ident": "todos"}
+
+
+class ZeteleSistemaGlobalThrottle(ZeteleGlobalThrottle):
+    """Teto por minuto do Zétele do sistema, separado do público."""
+
+    scope = "zetele_sistema_global"

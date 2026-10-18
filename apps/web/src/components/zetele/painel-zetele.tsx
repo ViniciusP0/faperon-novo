@@ -6,7 +6,7 @@ import { useState, type FormEvent, type RefObject } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { ROTAS } from "@/lib/site";
 import { cn } from "@/lib/utils";
-import { ZETELE, type PerguntaPronta, type Pose } from "@/content/zetele";
+import { TEXTOS_DA_AREA, ZETELE, type AreaZetele, type PerguntaPronta, type Pose } from "@/content/zetele";
 import { Chips } from "./chips";
 import { Mensagens, type Mensagem } from "./mensagens";
 import { Personagem } from "./personagem";
@@ -16,6 +16,7 @@ interface Props {
   mensagens: Mensagem[];
   carregando: boolean;
   disponivel: boolean;
+  area: AreaZetele;
   /** Início: só orientação, sem perguntas de dados. */
   soOrientacao: boolean;
   espera: number;
@@ -75,7 +76,7 @@ export function PainelZetele(p: Props) {
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-3">
-        <p className="mb-3 text-sm text-ink-muted">{ZETELE.boasVindas}</p>
+        <p className="mb-3 text-sm text-ink-muted">{TEXTOS_DA_AREA[p.area].boasVindas}</p>
         <Mensagens mensagens={p.mensagens} onTentarDeNovo={p.onEnviar} />
         {p.carregando && (
           <p role="status" className="mt-3 text-sm text-ink-muted">
@@ -115,7 +116,7 @@ export function PainelZetele(p: Props) {
             maxLength={ZETELE.tamanhoMaximo}
             value={texto}
             disabled={!p.disponivel}
-            placeholder={ZETELE.placeholder}
+            placeholder={TEXTOS_DA_AREA[p.area].placeholder}
             onChange={(e) => setTexto(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {

@@ -10,7 +10,13 @@ import { OBSERVATORIO } from "./observatorio";
 import { ORDEM_POR_PAGINA, PAGINAS_COM_ZETELE, PERGUNTAS, ehPaginaComZetele, perguntasDaPagina } from "./zetele";
 
 // Mesmo padrão de content.test.ts: no jsdom, import.meta.url não é file://.
-const SITE_MD = path.resolve(__dirname, "../../../api/zetele/conhecimento/site.md");
+// Bases do RAG de cada Zétele (ADR 0032): todos os .md da pasta do canal.
+const PASTA_BASES = path.resolve(__dirname, "../../../api/zetele/conhecimento");
+const lerBase = (canal: "publico" | "sistema") =>
+  readdirSync(join(PASTA_BASES, canal))
+    .filter((f) => f.endsWith(".md"))
+    .map((f) => readFileSync(join(PASTA_BASES, canal, f), "utf-8"))
+    .join("\n");
 const ROTAS = sitemap().map((e) => new URL(e.url).pathname);
 
 describe("Zétele: conteúdo", () => {
@@ -75,8 +81,14 @@ describe("Zétele: conteúdo", () => {
   });
 });
 
-describe("Zétele: base de conhecimento (site.md) acompanha o site", () => {
-  const md = readFileSync(SITE_MD, "utf-8");
+describe("Zétele: bases de conhecimento acompanham o site e o sistema", () => {
+  const md = lerBase("publico");
+  const sistema = lerBase("sistema");
+
+  it("a base do sistema tem uma seção para cada tela logada, e a pública não fala do sistema", () => {
+    for (const pagina of PAGINAS_COM_ZETELE.filter((p) => p.startsWith("/sistema"))) expect(sistema, pagina).toContain(`## [${pagina}]`);
+    expect(md).not.toContain("## [/sistema");
+  });
 
   it("cita toda rota do sitemap", () => {
     for (const rota of ROTAS) expect(md, rota).toContain(`## [${rota}]`);

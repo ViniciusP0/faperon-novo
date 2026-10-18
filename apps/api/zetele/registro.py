@@ -5,7 +5,7 @@ import re
 
 from django.db import DatabaseError, transaction
 
-from zetele.models import Pergunta
+from zetele.models import Pergunta, PerguntaSistema
 
 log = logging.getLogger(__name__)
 
@@ -31,14 +31,23 @@ def mascarar(texto: str) -> str:
     return texto[:500]
 
 
+MODELOS: dict[str, type[Pergunta] | type[PerguntaSistema]] = {"publico": Pergunta, "sistema": PerguntaSistema}
+
+
 def registrar(
-    texto: str, status: str, pagina: str, tokens_entrada: int = 0, tokens_saida: int = 0
+    texto: str,
+    status: str,
+    pagina: str,
+    tokens_entrada: int = 0,
+    tokens_saida: int = 0,
+    *,
+    canal: str = "publico",
 ) -> None:
-    """Falha ao gravar não derruba a resposta ao visitante."""
+    """Falha ao gravar não derruba a resposta ao visitante. Cada canal grava na própria tabela."""
     try:
         # savepoint próprio: o erro do INSERT não aborta a transação de quem chamou
         with transaction.atomic():
-            Pergunta.objects.create(
+            MODELOS[canal].objects.create(
                 texto=mascarar(texto),
                 status=status,
                 pagina=pagina[:64],

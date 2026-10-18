@@ -315,8 +315,10 @@ def _preco(e: dict[str, Any]) -> ResultadoFerramenta:
     preco = valor * 1000 / quantidade
     unidade = SINGULAR.get(recorte_qtd.unidade, recorte_qtd.unidade.lower())
     url = _url_painel(
-        segmento=recorte_valor.produto.segmento, produto=recorte_valor.produto.slug,
-        indicador="valor-da-producao", fim=fim,
+        segmento=recorte_valor.produto.segmento,
+        produto=recorte_valor.produto.slug,
+        indicador="valor-da-producao",
+        fim=fim,
     )
     fonte = _fonte(recorte_valor.produto.tabela_origem, fim, url)
     dados = {

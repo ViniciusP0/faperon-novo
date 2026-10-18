@@ -33,7 +33,12 @@ def test_registra_texto_mascarado_sem_identificar_ninguem() -> None:
     registrar("meu email é a@b.com, qual o maior produtor?", "respondida", "/painel", 120, 40)
     p = Pergunta.objects.get()
     assert p.texto == "meu email é [removido], qual o maior produtor?"
-    assert (p.status, p.pagina, p.tokens_entrada, p.tokens_saida) == ("respondida", "/painel", 120, 40)
+    assert (p.status, p.pagina, p.tokens_entrada, p.tokens_saida) == (
+        "respondida",
+        "/painel",
+        120,
+        40,
+    )
     campos = {f.name for f in Pergunta._meta.get_fields()}
     assert campos.isdisjoint({"ip", "user_agent", "resposta", "conversa"})
 
@@ -46,8 +51,12 @@ def test_limite_do_expurgo_e_90_dias() -> None:
 @pytest.mark.django_db
 def test_expurgo_apaga_so_as_antigas() -> None:
     agora = timezone.now()
-    velha = Pergunta.objects.create(texto="a", status="respondida", pagina="/", criada_em=agora - timedelta(days=91))
-    nova = Pergunta.objects.create(texto="b", status="respondida", pagina="/", criada_em=agora - timedelta(days=89))
+    velha = Pergunta.objects.create(
+        texto="a", status="respondida", pagina="/", criada_em=agora - timedelta(days=91)
+    )
+    nova = Pergunta.objects.create(
+        texto="b", status="respondida", pagina="/", criada_em=agora - timedelta(days=89)
+    )
     assert expurgar_perguntas(agora) == 1
     assert not Pergunta.objects.filter(pk=velha.pk).exists()
     assert Pergunta.objects.filter(pk=nova.pk).exists()
@@ -58,7 +67,9 @@ def test_scheduler_expurga_em_toda_passada(monkeypatch: pytest.MonkeyPatch) -> N
     from ingestao.management.commands import run_scheduler
 
     monkeypatch.setattr(run_scheduler, "precisa_ingerir", lambda *a: False)
-    Pergunta.objects.create(texto="a", status="respondida", pagina="/", criada_em=timezone.now() - timedelta(days=120))
+    Pergunta.objects.create(
+        texto="a", status="respondida", pagina="/", criada_em=timezone.now() - timedelta(days=120)
+    )
     run_scheduler.rodar_ciclo(None)  # type: ignore[arg-type]
     assert Pergunta.objects.count() == 0
 
@@ -78,8 +89,12 @@ def test_falha_no_expurgo_nao_derruba_o_scheduler(monkeypatch: pytest.MonkeyPatc
 @pytest.mark.django_db
 def test_exportar_gera_csv_das_perguntas_recentes() -> None:
     agora = timezone.now()
-    Pergunta.objects.create(texto="onde fica o painel?", status="respondida", pagina="/", criada_em=agora)
-    Pergunta.objects.create(texto="antiga", status="recusada", pagina="/", criada_em=agora - timedelta(days=40))
+    Pergunta.objects.create(
+        texto="onde fica o painel?", status="respondida", pagina="/", criada_em=agora
+    )
+    Pergunta.objects.create(
+        texto="antiga", status="recusada", pagina="/", criada_em=agora - timedelta(days=40)
+    )
     saida = io.StringIO()
     call_command("zetele_exportar", "--dias", "30", stdout=saida)
     linhas = list(csv.reader(io.StringIO(saida.getvalue())))
@@ -111,11 +126,9 @@ def test_falha_ao_registrar_nao_aborta_a_transacao_de_quem_chama() -> None:
 @pytest.mark.django_db
 def test_exportar_neutraliza_formula_no_csv() -> None:
     agora = timezone.now()
-    for texto in ["=HYPERLINK(\"x\")", "+1", "-2", "@SOMA(A1)", "normal"]:
+    for texto in ['=HYPERLINK("x")', "+1", "-2", "@SOMA(A1)", "normal"]:
         Pergunta.objects.create(texto=texto, status="respondida", pagina="/", criada_em=agora)
     saida = io.StringIO()
     call_command("zetele_exportar", stdout=saida)
     textos = [linha[0] for linha in csv.reader(io.StringIO(saida.getvalue()))][1:]
-    assert sorted(textos) == sorted(
-        ["'=HYPERLINK(\"x\")", "'+1", "'-2", "'@SOMA(A1)", "normal"]
-    )
+    assert sorted(textos) == sorted(['\'=HYPERLINK("x")', "'+1", "'-2", "'@SOMA(A1)", "normal"])
