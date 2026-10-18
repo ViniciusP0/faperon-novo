@@ -1,13 +1,15 @@
 import { ESPACOS } from "@/content/sistema/exemplo";
 import { FUNCIONARIOS } from "@/content/sistema/funcionarios";
-import { ROTULO_ORIGEM, ROTULO_TIPO_EVENTO } from "./agenda";
+import { ROTULO_ORIGEM } from "./agenda";
 import { atividadesVisiveis, horasDaAtividade, ROTULO_TIPO_ATIVIDADE } from "./atividades";
 import { ROTULO_CATEGORIA, ROTULO_STATUS_DESPESA } from "./contas";
 import { formatarDataBR } from "./datas";
 import { conflitosDoPedido } from "./espacos";
 import { km, litros, reais } from "./formato";
+import { LEGENDA, TIPO_DA_ATIVIDADE, tipoDoEvento, tiposPresentes } from "./legenda";
 import { formatarPlaca } from "./placa";
-import type { Atividade, Despesa, EstadoFrota, Evento, Funcionario, PedidoEspaco, StatusDespesa } from "./tipos";
+import { nomesDasTags } from "./tags";
+import type { Atividade, Despesa, EstadoFrota, Evento, Funcionario, PedidoEspaco, StatusDespesa, Tag, TipoLegenda } from "./tipos";
 
 export type TipoRelatorio = "frota" | "espacos" | "agenda" | "contas" | "atividades";
 export type FormatoColuna = "texto" | "inteiro" | "reais" | "km" | "litros" | "horas";
@@ -16,6 +18,8 @@ export type Celula = string | number | null;
 export interface Coluna {
   rotulo: string;
   formato: FormatoColuna;
+  /** Coluna de tipo: na tela, cada célula vira um selo na cor da legenda (`Relatorio.tipos`). */
+  selo?: boolean;
 }
 
 /** Tabela pronta para a prévia, a impressão e o CSV: os três saem da mesma fonte. */
@@ -25,6 +29,8 @@ export interface Relatorio {
   colunas: Coluna[];
   linhas: Celula[][];
   total: Celula[] | null;
+  /** Tipo da legenda de cada linha, para o selo da coluna de tipo. */
+  tipos?: TipoLegenda[];
 }
 
 export const ROTULO_RELATORIO: Record<TipoRelatorio, string> = {
@@ -123,13 +129,11 @@ export function relatorioEspacos(pedidos: PedidoEspaco[], de: string, ate: strin
   };
 }
 
-/** Recebe os itens já montados por `itensDaAgenda` (próprios, FAPERON, viagens e espaços). */
-export function relatorioAgenda(itens: Evento[], de: string, ate: string): Relatorio {
+/** Recebe os itens já montados por `itensDaAgenda` (próprios, FAPERON, viagens e espaços). O tipo é o da legenda única. */
+export function relatorioAgenda(itens: Evento[], de: string, ate: string, tags: Tag[] = []): Relatorio {
   const doPeriodo = itens.filter((e) => noPeriodo(e.data, de, ate));
-  const porTipo = (Object.keys(ROTULO_TIPO_EVENTO) as Evento["tipo"][])
-    .map((t) => [ROTULO_TIPO_EVENTO[t], doPeriodo.filter((e) => e.tipo === t).length] as const)
-    .filter(([, n]) => n > 0)
-    .map(([rotulo, n]) => `${n} ${rotulo.toLowerCase()}`);
+  const tipos = doPeriodo.map(tipoDoEvento);
+  const porTipo = tiposPresentes(tipos).map((t) => `${tipos.filter((x) => x === t).length} ${LEGENDA[t].toLowerCase()}`);
   return {
     titulo: "Agenda no período",
     resumo: [`${doPeriodo.length} evento(s)${porTipo.length ? `: ${porTipo.join(", ")}` : ""}.`],
@@ -137,24 +141,27 @@ export function relatorioAgenda(itens: Evento[], de: string, ate: string): Relat
       { rotulo: "Data", formato: "texto" },
       { rotulo: "Horário", formato: "texto" },
       { rotulo: "Evento", formato: "texto" },
-      { rotulo: "Tipo", formato: "texto" },
+      { rotulo: "Tipo", formato: "texto", selo: true },
       { rotulo: "Origem", formato: "texto" },
       { rotulo: "Local", formato: "texto" },
+      { rotulo: "Tags", formato: "texto" },
     ],
-    linhas: doPeriodo.map((e) => [
+    linhas: doPeriodo.map((e, i) => [
       formatarDataBR(e.data),
       `${e.inicio}–${e.fim}`,
       e.titulo,
-      ROTULO_TIPO_EVENTO[e.tipo],
+      LEGENDA[tipos[i]!],
       ROTULO_ORIGEM[e.origem] ?? "Pessoal",
       e.local,
+      nomesDasTags(e.tags, tags),
     ]),
     total: null,
+    tipos,
   };
 }
 
 /** O gestor das contas vê as despesas de todos; os demais, só as próprias. */
-export function relatorioContas(despesas: Despesa[], funcionario: Funcionario, de: string, ate: string): Relatorio {
+export function relatorioContas(despesas: Despesa[], funcionario: Funcionario, de: string, ate: string, tags: Tag[] = []): Relatorio {
   const visiveis = despesas
     .filter((d) => (funcionario.gestorContas || d.funcionarioId === funcionario.id) && noPeriodo(d.data, de, ate))
     .sort((a, b) => a.data.localeCompare(b.data) || a.descricao.localeCompare(b.descricao));
@@ -175,6 +182,7 @@ export function relatorioContas(despesas: Despesa[], funcionario: Funcionario, d
       { rotulo: "Categoria", formato: "texto" },
       { rotulo: "Descrição", formato: "texto" },
       { rotulo: "Status", formato: "texto" },
+      { rotulo: "Tags", formato: "texto" },
       { rotulo: "Valor", formato: "reais" },
     ],
     linhas: visiveis.map((d) => [
@@ -184,14 +192,15 @@ export function relatorioContas(despesas: Despesa[], funcionario: Funcionario, d
       ROTULO_CATEGORIA[d.categoria],
       d.descricao,
       ROTULO_STATUS_DESPESA[d.status],
+      nomesDasTags(d.tags, tags),
       d.valor,
     ]),
-    total: ["Aprovadas + enviadas", ...(comQuem ? [""] : []), "", "", "", "", reconhecido],
+    total: ["Aprovadas + enviadas", ...(comQuem ? [""] : []), "", "", "", "", "", reconhecido],
   };
 }
 
 /** O coordenador vê as atividades de todos; os demais, só as próprias. */
-export function relatorioAtividades(atividades: Atividade[], funcionario: Funcionario, de: string, ate: string): Relatorio {
+export function relatorioAtividades(atividades: Atividade[], funcionario: Funcionario, de: string, ate: string, tags: Tag[] = []): Relatorio {
   const lista = atividadesVisiveis(atividades, funcionario)
     .filter((a) => noPeriodo(a.data, de, ate))
     .sort((a, b) => a.data.localeCompare(b.data) || a.inicio.localeCompare(b.inicio));
@@ -212,10 +221,11 @@ export function relatorioAtividades(atividades: Atividade[], funcionario: Funcio
       { rotulo: "Data", formato: "texto" },
       { rotulo: "Horário", formato: "texto" },
       ...(comQuem ? [{ rotulo: "Funcionário", formato: "texto" as const }] : []),
-      { rotulo: "Tipo", formato: "texto" },
+      { rotulo: "Tipo", formato: "texto", selo: true },
       { rotulo: "Atividade", formato: "texto" },
       { rotulo: "Município", formato: "texto" },
       { rotulo: "Resultados", formato: "texto" },
+      { rotulo: "Tags", formato: "texto" },
       { rotulo: "Público", formato: "inteiro" },
       { rotulo: "Horas", formato: "horas" },
     ],
@@ -227,11 +237,24 @@ export function relatorioAtividades(atividades: Atividade[], funcionario: Funcio
       a.titulo,
       a.municipio,
       a.resultados,
+      nomesDasTags(a.tags, tags),
       a.publico,
       horasDaAtividade(a),
     ]),
-    total: ["Total", "", ...(comQuem ? [""] : []), "", "", "", "", totalPublico, totalHoras],
+    total: ["Total", "", ...(comQuem ? [""] : []), "", "", "", "", "", totalPublico, totalHoras],
+    tipos: lista.map((a) => TIPO_DA_ATIVIDADE[a.tipo]),
   };
+}
+
+/** Relatório filtrado por tag: o resumo diz o filtro. Frota e espaços somam por veículo e espaço (sem coluna
+ *  Tags); na frota, só as viagens têm tag, então abastecimento e manutenção seguem inteiros. */
+export function comNotaDeTag(r: Relatorio, tag: Tag | null, tipo: TipoRelatorio): Relatorio {
+  if (!tag) return r;
+  const nota =
+    tipo === "frota"
+      ? `Só as viagens com a tag “${tag.nome}”; abastecimentos e manutenções não têm tag e entram todos.`
+      : `Só os itens com a tag “${tag.nome}”.`;
+  return { ...r, resumo: [...r.resumo, nota] };
 }
 
 const inteiroBR = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 });

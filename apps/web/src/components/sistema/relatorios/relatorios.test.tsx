@@ -105,4 +105,35 @@ describe("Relatórios", () => {
     renderRelatorios("carla");
     expect(within(screen.getByRole("region", { name: "Capa" })).getByRole("heading", { name: "Frota da Regional Sul" })).toBeInTheDocument();
   });
+
+  it("filtra por tag, com coluna Tags na prévia e no CSV e selo de tipo", async () => {
+    const user = userEvent.setup();
+    const criar = vi.fn((_: Blob) => "blob:x");
+    Object.assign(URL, { createObjectURL: criar, revokeObjectURL: vi.fn() });
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    renderRelatorios("marcos");
+    await user.click(screen.getByRole("button", { name: "Últimos 3 meses" }));
+    await user.click(screen.getByRole("button", { name: "Atividades" }));
+    expect(screen.getByRole("columnheader", { name: "Tags" })).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "Curso de manejo de pastagem" })).toBeInTheDocument();
+    // o tipo vira selo na cor da legenda
+    expect(screen.getByText("Capacitação ou curso")).toHaveClass("bg-tipo-capacitacao-suave");
+
+    await user.selectOptions(screen.getByLabelText("Tag"), "Sindicatos");
+    expect(screen.getByText("Só os itens com a tag “Sindicatos”.")).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "Plantão de atendimento no sindicato" })).toBeInTheDocument();
+    expect(screen.queryByRole("cell", { name: "Curso de manejo de pastagem" })).toBeNull();
+    expect(screen.getByRole("cell", { name: "Sindicatos" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Baixar CSV/ }));
+    const texto = await new Promise<string>((ok) => {
+      const leitor = new FileReader();
+      leitor.onload = () => ok(String(leitor.result));
+      leitor.readAsText(criar.mock.calls[0]![0]);
+    });
+    expect(texto).toMatch(/;Tags;Público;Horas/);
+    expect(texto).toContain("Plantão de atendimento no sindicato");
+    expect(texto).not.toContain("Curso de manejo de pastagem");
+  });
 });
+

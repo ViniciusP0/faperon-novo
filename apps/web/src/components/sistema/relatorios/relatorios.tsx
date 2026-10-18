@@ -11,7 +11,9 @@ import { gravar, ler } from "@/lib/sistema/armazenamento";
 import { completar, preencher, type ModeloDocumento } from "@/lib/sistema/documento";
 import { formatarDataBR, somarDias, somarMeses } from "@/lib/sistema/datas";
 import { useSistema } from "@/lib/sistema/estado";
+import { comTag } from "@/lib/sistema/tags";
 import {
+  comNotaDeTag,
   formatarCelula,
   paraCSV,
   relatorioAgenda,
@@ -25,7 +27,9 @@ import {
 } from "@/lib/sistema/relatorios";
 import { cn } from "@/lib/utils";
 import { Dialogo } from "../dialogo";
+import { SeloDeTipo } from "../legenda-de-tipos";
 import { Segmentado } from "../segmentado";
+import { FiltroDeTag, useFiltroDeTag } from "../tags";
 import { FormularioDocumento } from "./formulario-documento";
 import { Capa, Contracapa, Faixa } from "./paginas-documento";
 
@@ -63,7 +67,7 @@ function Tabela({ r }: { r: Relatorio }) {
             <tr key={li} className="border-b border-line print:break-inside-avoid">
               {l.map((c, i) => (
                 <td key={i} className={cn("px-2 py-2 first:pl-0 print:px-1 print:py-1", numerica[i] ? "text-right tabular-nums" : "text-ink")}>
-                  {formatarCelula(c, r.colunas[i]!.formato)}
+                  {r.colunas[i]!.selo && r.tipos?.[li] ? <SeloDeTipo tipo={r.tipos[li]}>{formatarCelula(c, "texto")}</SeloDeTipo> : formatarCelula(c, r.colunas[i]!.formato)}
                 </td>
               ))}
             </tr>
@@ -86,7 +90,7 @@ function Tabela({ r }: { r: Relatorio }) {
 }
 
 export function Relatorios() {
-  const { hoje, funcionario, eventos, institucionais, frota, pedidos, despesas, atividades } = useSistema();
+  const { hoje, funcionario, eventos, institucionais, frota, pedidos, despesas, atividades, tags } = useSistema();
   const inicioDoMes = `${hoje.slice(0, 7)}-01`;
   const fimDoMes = somarDias(somarMeses(inicioDoMes, 1), -1);
   const [tipo, setTipo] = useState<TipoRelatorio>("frota");
@@ -94,6 +98,7 @@ export function Relatorios() {
   const [ate, setAte] = useState(fimDoMes);
   const [personalizando, setPersonalizando] = useState(false);
   const [versaoModelo, setVersaoModelo] = useState(0);
+  const [tagId, setTagId] = useFiltroDeTag();
   if (!funcionario) return null;
 
   // lido a cada render: muda ao trocar de tipo e depois de salvar (versaoModelo força o render)
@@ -101,21 +106,22 @@ export function Relatorios() {
   const modelo = completar(ler<Partial<ModeloDocumento> | null>(`documento:${tipo}`, null), tipo);
   const documento = preencher(modelo, { de, ate, hoje, funcionario });
   const periodoValido = /^\d{4}-\d{2}-\d{2}$/.test(de) && /^\d{4}-\d{2}-\d{2}$/.test(ate) && de <= ate;
+  const tag = tags.find((t) => t.id === tagId) ?? null;
   const gerar = (): Relatorio => {
     switch (tipo) {
       case "frota":
-        return relatorioFrota(frota, de, ate);
+        return relatorioFrota({ ...frota, reservas: comTag(frota.reservas, tagId) }, de, ate);
       case "espacos":
-        return relatorioEspacos(pedidos, de, ate);
+        return relatorioEspacos(comTag(pedidos, tagId), de, ate);
       case "agenda":
-        return relatorioAgenda(itensDaAgenda(funcionario.id, eventos, institucionais, frota.reservas, frota.veiculos, pedidos), de, ate);
+        return relatorioAgenda(comTag(itensDaAgenda(funcionario.id, eventos, institucionais, frota.reservas, frota.veiculos, pedidos), tagId), de, ate, tags);
       case "contas":
-        return relatorioContas(despesas, funcionario, de, ate);
+        return relatorioContas(comTag(despesas, tagId), funcionario, de, ate, tags);
       case "atividades":
-        return relatorioAtividades(atividades, funcionario, de, ate);
+        return relatorioAtividades(comTag(atividades, tagId), funcionario, de, ate, tags);
     }
   };
-  const relatorio = periodoValido ? gerar() : null;
+  const relatorio = periodoValido ? comNotaDeTag(gerar(), tag, tipo) : null;
   const atalhos = [
     { rotulo: "Este mês", de: inicioDoMes, ate: fimDoMes },
     { rotulo: "Últimos 30 dias", de: somarDias(hoje, -29), ate: hoje },
@@ -136,6 +142,7 @@ export function Relatorios() {
             <Label htmlFor="relatorio-ate">Até</Label>
             <Input id="relatorio-ate" type="date" value={ate} onChange={(e) => setAte(e.target.value)} />
           </div>
+          <FiltroDeTag id="relatorio-tag" valor={tagId} aoMudar={setTagId} className="w-48" />
           {atalhos.map((a) => (
             <Button
               key={a.rotulo}

@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { FUNCIONARIOS } from "@/content/sistema/funcionarios";
-import { paraCSV, relatorioAgenda, relatorioAtividades, relatorioContas, relatorioEspacos, relatorioFrota, type Relatorio } from "./relatorios";
-import type { Atividade, Despesa, EstadoFrota, Evento, PedidoEspaco } from "./tipos";
+import { comNotaDeTag, paraCSV, relatorioAgenda, relatorioAtividades, relatorioContas, relatorioEspacos, relatorioFrota, type Relatorio } from "./relatorios";
+import type { Atividade, Despesa, EstadoFrota, Evento, PedidoEspaco, Tag } from "./tipos";
+
+const tags: Tag[] = [
+  { id: "t1", nome: "SENAR", cor: "ciano" },
+  { id: "t2", nome: "Urgente", cor: "rosa" },
+];
 
 const carla = FUNCIONARIOS.find((f) => f.id === "carla")!;
 const marcos = FUNCIONARIOS.find((f) => f.id === "marcos")!;
@@ -92,10 +97,12 @@ describe("relatórios", () => {
     ];
     const r = relatorioAgenda(itens, "2026-10-01", "2026-10-31");
     expect(r.linhas).toEqual([
-      ["05/10/2026", "09:00–11:00", "Reunião do conselho", "Reunião", "FAPERON", "Sede"],
-      ["07/10/2026", "07:00–18:00", "Viagem a Cacoal", "Viagem", "Frota", "Hilux"],
+      ["05/10/2026", "09:00–11:00", "Reunião do conselho", "Reunião", "FAPERON", "Sede", ""],
+      ["07/10/2026", "07:00–18:00", "Viagem a Cacoal", "Viagem", "Frota", "Hilux", ""],
     ]);
     expect(r.resumo[0]).toBe("2 evento(s): 1 reunião, 1 viagem.");
+    expect(r.tipos).toEqual(["reuniao", "viagem"]);
+    expect(r.colunas.find((c) => c.rotulo === "Tipo")?.selo).toBe(true);
   });
 
   it("contas: o funcionário vê só as próprias; o gestor vê todas, com o nome", () => {
@@ -137,12 +144,47 @@ describe("relatórios", () => {
     const base: Atividade = { id: "a", funcionarioId: "carla", data: "2026-10-05", inicio: "08:00", fim: "10:30", tipo: "visita_tecnica", titulo: "Visita", municipio: "Cacoal", publico: 9, descricao: "", resultados: "Encaminhou 3", criadaEm: "" };
     const lista = [base, { ...base, id: "b", funcionarioId: "ana", inicio: "14:00", fim: "15:00", tipo: "reuniao" as const, publico: 0 }, { ...base, id: "c", data: "2026-11-01" }];
     const daCarla = relatorioAtividades(lista, carla, "2026-10-01", "2026-10-31");
-    expect(daCarla.linhas).toEqual([["05/10/2026", "08:00–10:30", "Visita técnica", "Visita", "Cacoal", "Encaminhou 3", 9, 2.5]]);
-    expect(daCarla.total).toEqual(["Total", "", "", "", "", "", 9, 2.5]);
+    expect(daCarla.linhas).toEqual([["05/10/2026", "08:00–10:30", "Visita técnica", "Visita", "Cacoal", "Encaminhou 3", "", 9, 2.5]]);
+    expect(daCarla.total).toEqual(["Total", "", "", "", "", "", "", 9, 2.5]);
+    expect(daCarla.tipos).toEqual(["visita_tecnica"]);
     const daEquipe = relatorioAtividades(lista, marcos, "2026-10-01", "2026-10-31");
     expect(daEquipe.titulo).toBe("Atividades da equipe");
     expect(daEquipe.linhas.map((l) => l[2])).toEqual(["Carla Mendes", "Ana Ribeiro"]);
     expect(daEquipe.total!.at(-1)).toBe(3.5);
     expect(daEquipe.resumo[1]).toBe("Por tipo: 1 visita técnica, 1 reunião.");
+  });
+
+  it("coluna Tags com os nomes, inclusive no CSV, e tipo da legenda única na agenda", () => {
+    const itens: Evento[] = [
+      { id: "a", titulo: "Curso SENAR", data: "2026-10-05", inicio: "08:00", fim: "12:00", local: "Hub", descricao: "", tipo: "reuniao", tipoNaLegenda: "capacitacao", origem: "espaco", tags: ["t1", "apagada"] },
+    ];
+    const agenda = relatorioAgenda(itens, "2026-10-01", "2026-10-31", tags);
+    expect(agenda.linhas[0]).toEqual(["05/10/2026", "08:00–12:00", "Curso SENAR", "Capacitação", "Espaço", "Hub", "SENAR"]);
+    expect(agenda.resumo[0]).toBe("1 evento(s): 1 capacitação.");
+
+    const contas = relatorioContas([despesa({ id: "1", tags: ["t2", "t1"] })], carla, "2026-10-01", "2026-10-31", tags);
+    expect(contas.colunas.map((c) => c.rotulo)).toEqual(["Data", "Centro de custo", "Categoria", "Descrição", "Status", "Tags", "Valor"]);
+    expect(contas.linhas[0]!.at(-2)).toBe("Urgente, SENAR");
+    expect(contas.total!.length).toBe(contas.colunas.length);
+    expect(paraCSV(contas)).toContain(";Tags;Valor\r\n");
+    expect(paraCSV(contas)).toContain(";Urgente, SENAR;100,00\r\n");
+
+    const atividades = relatorioAtividades(
+      [{ id: "a", funcionarioId: "carla", data: "2026-10-05", inicio: "08:00", fim: "10:00", tipo: "evento", titulo: "Feira", municipio: "", publico: 0, descricao: "", resultados: "", criadaEm: "", tags: ["t2"] }],
+      carla,
+      "2026-10-01",
+      "2026-10-31",
+      tags,
+    );
+    expect(atividades.linhas[0]![6]).toBe("Urgente");
+    expect(atividades.tipos).toEqual(["institucional"]);
+  });
+
+  it("comNotaDeTag explica o filtro no resumo; na frota, avisa que abastecimento e manutenção entram todos", () => {
+    const base = relatorioEspacos([], "2026-10-01", "2026-10-31");
+    expect(comNotaDeTag(base, null, "espacos")).toBe(base);
+    expect(comNotaDeTag(base, tags[0]!, "espacos").resumo.at(-1)).toBe("Só os itens com a tag “SENAR”.");
+    const daFrota = comNotaDeTag(relatorioFrota(frota, "2026-10-01", "2026-10-31"), tags[0]!, "frota");
+    expect(daFrota.resumo.at(-1)).toBe("Só as viagens com a tag “SENAR”; abastecimentos e manutenções não têm tag e entram todos.");
   });
 });
