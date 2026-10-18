@@ -81,11 +81,13 @@ export function opcaoBarras({ eixo, series, deitadas = false, formatar, cores, e
     inverse: deitadas,
     axisTick: { show: false },
     axisLine: { lineStyle: { color: cores.linha } },
-    axisLabel: { color: cores.muted, ...(deitadas ? { width: 150, overflow: "truncate" } : {}) },
+    // fonte explícita no rótulo: o ECharts mede o texto com ela, e o rótulo não é cortado na borda
+    axisLabel: { color: cores.muted, ...fonte, ...(deitadas ? { width: 130, overflow: "truncate" } : {}) },
   };
   const valor = {
     type: "value",
-    axisLabel: { color: cores.muted, formatter: (v: number) => formatar(v) },
+    // no celular os valores em reais se encostavam: o ECharts esconde o que sobrepõe
+    axisLabel: { color: cores.muted, ...fonte, hideOverlap: true, formatter: (v: number) => formatar(v) },
     splitLine: { lineStyle: { color: cores.linha } },
     splitNumber: 3,
   };
@@ -94,8 +96,8 @@ export function opcaoBarras({ eixo, series, deitadas = false, formatar, cores, e
   return {
     animation: false,
     textStyle: fonte,
-    grid: { left: 4, right: 20, top: pilha ? 36 : 12, bottom: 4, containLabel: true },
-    ...(pilha ? { legend: { top: 0, left: 0, icon: "roundRect", itemWidth: 12, itemHeight: 12, textStyle: { color: cores.texto } } } : {}),
+    grid: { left: 10, right: 20, top: !pilha ? 12 : series.length > 3 ? 60 : 36, bottom: 4, containLabel: true },
+    ...(pilha ? { legend: { top: 0, left: 0, icon: "roundRect", itemWidth: 12, itemHeight: 12, textStyle: { color: cores.texto, ...fonte } } } : {}),
     tooltip: {
       trigger: "axis",
       axisPointer: { type: "shadow", shadowStyle: { color: "rgba(127, 140, 134, 0.12)" } },
@@ -118,6 +120,8 @@ export function opcaoBarras({ eixo, series, deitadas = false, formatar, cores, e
       name: s.nome,
       stack: pilha ? "total" : undefined,
       barMaxWidth: deitadas ? 18 : 28,
+      // a cor da série vale para a legenda; a de cada barra, para o tipo
+      itemStyle: { color: Array.isArray(s.cor) ? s.cor[0] : s.cor },
       data: s.valores.map((v, j) => ({
         value: v,
         itemStyle: {

@@ -107,11 +107,11 @@ function Figura({ id, titulo, resumo, option, altura, tabela, nota }: { id: stri
 /** Números do bloco: o primeiro é a informação principal e é o único grande. */
 function Numeros({ itens }: { itens: { rotulo: string; valor: string; detalhe?: string }[] }) {
   return (
-    <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+    <dl className="mt-4 flex flex-wrap items-start gap-x-8 gap-y-4">
       {itens.map((item, i) => (
-        <div key={item.rotulo} className={cn("flex min-w-0 flex-col", i === 0 && "col-span-2 sm:col-span-1")}>
+        <div key={item.rotulo} className={cn("flex max-w-[11rem] flex-col", i === 0 && "w-full sm:w-auto sm:max-w-none")}>
           <dt className="order-2 text-xs text-ink-muted">{item.rotulo}</dt>
-          <dd className={cn("order-1 font-semibold tabular-nums tracking-[-0.02em] text-ink", i === 0 ? "text-[2rem] leading-tight" : "text-lg leading-snug")}>{item.valor}</dd>
+          <dd className={cn("order-1 whitespace-nowrap font-semibold tabular-nums tracking-[-0.02em] text-ink", i === 0 ? "text-[2rem] leading-tight" : "text-lg leading-snug")}>{item.valor}</dd>
           {item.detalhe && <dd className="order-3 text-xs text-ink-muted">{item.detalhe}</dd>}
         </div>
       ))}
@@ -190,7 +190,7 @@ function Bloco({
   );
 }
 
-function Lista({ titulo, itens }: { titulo: string; itens: { nome: string; valor: string }[] }) {
+function Lista({ titulo, itens }: { titulo: string; itens: { nome: string; valor: string; detalhe?: string }[] }) {
   return (
     <div className="min-w-0">
       <h3 className="text-sm font-semibold text-ink">{titulo}</h3>
@@ -198,8 +198,11 @@ function Lista({ titulo, itens }: { titulo: string; itens: { nome: string; valor
         {itens.map((item, i) => (
           <li key={item.nome} className="flex items-baseline gap-3 py-1.5">
             <span className="w-5 shrink-0 text-right text-xs tabular-nums text-ink-muted">{i + 1}</span>
-            <span className="min-w-0 flex-1 truncate text-ink" title={item.nome}>
-              {item.nome}
+            <span className="min-w-0 flex-1 text-ink">
+              <span className="block truncate" title={item.nome}>
+                {item.nome}
+              </span>
+              {item.detalhe && <span className="block text-xs text-ink-muted">{item.detalhe}</span>}
             </span>
             <span className="shrink-0 tabular-nums text-ink-muted">{item.valor}</span>
           </li>
@@ -496,7 +499,7 @@ export function Indicadores() {
           <div className="grid gap-8 sm:grid-cols-2">
             <Lista
               titulo={`Municípios com mais atividades${ativ.municipios.length === 10 ? " (10 primeiros)" : ""}`}
-              itens={ativ.municipios.map((m) => ({ nome: m.municipio, valor: `${n(m.atividades)} · ${n(m.publico)} pessoa(s)` }))}
+              itens={ativ.municipios.map((m) => ({ nome: m.municipio, valor: `${n(m.atividades)} atividade(s)`, detalhe: `${n(m.publico)} pessoa(s) atendida(s)` }))}
             />
             {ativ.porFuncionario && ativ.porFuncionario.length > 0 && (
               <Lista titulo="Horas por funcionário" itens={ativ.porFuncionario.map((f) => ({ nome: f.nome, valor: horas(f.horas) }))} />
