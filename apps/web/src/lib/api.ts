@@ -1,6 +1,8 @@
 import type {
   AnaliseResposta,
   BlocoObservatorio,
+  BoletimDia,
+  BoletimDiasResposta,
   ComparacaoResposta,
   ErroApi,
   Indicador,
@@ -55,6 +57,11 @@ export const api = {
   serie: (query: string) => request<SerieResposta>(`${API_BASE}/serie?${query}`),
   comparacao: (query: string) => request<ComparacaoResposta>(`${API_BASE}/comparacao?${query}`),
   analise: (query: string) => request<AnaliseResposta>(`${API_BASE}/analise?${query}`),
+  boletimDias: () => request<BoletimDiasResposta>(`${API_BASE}/boletim/dias`),
+  boletimDia: (dia: string, origem: "todas" | "estado" | "uniao" = "todas", todas = false) =>
+    request<BoletimDia>(
+      `${API_BASE}/boletim/dia/${dia}${qs({ origem: origem === "todas" ? undefined : origem, todas: todas ? "1" : undefined })}`,
+    ),
   observatorio: <B extends BlocoObservatorio>(bloco: B, query: string) =>
     request<RespostasObservatorio[B]>(`${API_BASE}/observatorio/${bloco}${query ? `?${query}` : ""}`),
 };

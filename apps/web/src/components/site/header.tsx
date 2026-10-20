@@ -8,6 +8,8 @@ import { useState } from "react";
 import { BotaoTema } from "@/components/site/botao-tema";
 import { buttonVariants } from "@/components/ui/button";
 import { gravarAcesso, gravarSessao } from "@/lib/sistema/armazenamento";
+import { podeVerBoletim } from "@/lib/sistema/boletim";
+import { useFuncionarioDaSessao } from "@/lib/sistema/sessao";
 import { MENU, MENU_SISTEMA, ROTAS } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
@@ -30,7 +32,9 @@ export function SiteHeader() {
 
   // "/" e "/sistema" só ficam ativos neles mesmos; as demais seções, em qualquer subpágina
   const ativo = (href: string) => (href === "/" || href === "/sistema" ? pathname === href : pathname.startsWith(href));
-  const itens = logado ? MENU_SISTEMA : MENU;
+  // o cabeçalho fica fora do SistemaProvider: a sessão é lida após montar (nula até lá, igual ao servidor)
+  const funcionario = useFuncionarioDaSessao();
+  const itens = logado ? MENU_SISTEMA.filter((i) => !i.restrito || podeVerBoletim(funcionario)) : MENU;
   const rotuloMenu = logado ? "Seções do sistema" : "Principal";
 
   return (

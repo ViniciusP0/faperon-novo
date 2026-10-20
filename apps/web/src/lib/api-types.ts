@@ -264,3 +264,45 @@ export interface RespostasObservatorio {
   territorio: TerritorioResposta;
   pecuaria: PecuariaResposta;
 }
+
+/** Boletim do agro: notas dos diários oficiais (DOE-RO e DOU), lidas de /boletim. */
+export type BoletimOrigem = "estado" | "uniao";
+export type BoletimStatusFonte = "ok" | "pendente" | "falha" | "sem_coleta";
+
+export interface BoletimNota {
+  id: number;
+  origem: BoletimOrigem;
+  /** Ex.: "DOE-RO nº 201", "DOU nº 198". */
+  diario: string;
+  orgao: string;
+  titulo: string;
+  resumo: string;
+  rondonia: boolean;
+  data: string;
+  url: string;
+}
+
+/** Situação da coleta de cada diário num dia; `erro` é mensagem pública ("" quando não há). */
+export interface BoletimFontes {
+  dou: { status: BoletimStatusFonte; erro: string };
+  doe: { status: BoletimStatusFonte; erro: string };
+}
+
+export interface BoletimDia {
+  dia: string;
+  destaque: BoletimNota | null;
+  notas: BoletimNota[];
+  total: number;
+  fontes: BoletimFontes;
+}
+
+export interface BoletimDiaResumo {
+  dia: string;
+  total: number;
+  tem_destaque: boolean;
+  fontes: { dou: BoletimStatusFonte; doe: BoletimStatusFonte };
+}
+
+export interface BoletimDiasResposta {
+  dias: BoletimDiaResumo[];
+}

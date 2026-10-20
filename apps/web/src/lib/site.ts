@@ -22,6 +22,8 @@ export interface ItemMenu {
   label: string;
   href: string;
   externo?: boolean;
+  /** Só aparece para quem tem permissão (hoje, o boletim: coordenação e gestão). */
+  restrito?: boolean;
 }
 
 export const MENU: ItemMenu[] = [
@@ -44,6 +46,7 @@ export const MENU_SISTEMA: ItemMenu[] = [
   { label: "Atividades", href: "/sistema/atividades" },
   { label: "Indicadores", href: "/sistema/indicadores" },
   { label: "Relatórios", href: "/sistema/relatorios" },
+  { label: "Boletim", href: "/sistema/boletim", restrito: true },
 ];
 
 export const LINKS_INSTITUCIONAIS: ItemMenu[] = [

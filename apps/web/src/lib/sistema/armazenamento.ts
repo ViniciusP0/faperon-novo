@@ -10,6 +10,9 @@ const soNaMemoria = new Set<string>();
 /** Evento disparado quando o navegador fica sem espaço para o protótipo (a barra avisa a pessoa). */
 export const ARMAZENAMENTO_CHEIO = "sistema:armazenamento-cheio";
 
+/** Evento disparado depois de gravar a sessão, para quem está fora do provider (cabeçalho) acompanhar quem entrou. */
+export const EVENTO_SESSAO = "sistema:sessao";
+
 function local(): Storage | null {
   try {
     return typeof window === "undefined" ? null : window.localStorage;
@@ -100,6 +103,7 @@ export function lerSessao(): string | null {
 
 export function gravarSessao(id: string | null): void {
   gravarBruto(sessao(), CHAVE_SESSAO, id);
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent(EVENTO_SESSAO));
 }
 
 /** "Restaurar dados de exemplo": apaga agenda e frota, mantém quem está logado. */
