@@ -1,3 +1,4 @@
+from dataclasses import replace
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -7,7 +8,7 @@ from django.test import override_settings
 from boletim.fontes.doe import dividir_edicao
 from boletim.fontes.dou import ler_pagina_dou
 from boletim.tipos import AtoBruto
-from boletim.triagem import extrair_valor, triar
+from boletim.triagem import extrair_valor, precisa_texto_completo, triar
 
 FIXTURES = Path(__file__).parent / "fixtures" / "boletim"
 
@@ -31,6 +32,9 @@ def _ato(titulo: str, texto: str, orgao: str = "Prefeitura Municipal de Algum Lu
 def test_descarta_portaria_de_pessoal():
     atos = _dou("dou_19-10-2026_do2.html", 19, "DO2")
     assert not triar(_achar(atos, "portaria-de-pessoal-n-322"))
+    do2_20 = _dou("dou_20-10-2026_do2.html", 20, "DO2")
+    assert not triar(_achar(do2_20, "portaria-de-pessoal-ibama"))
+    assert not triar(_achar(do2_20, "portaria-de-pessoal-n-1.156"))
     mapa = _ato(
         "PORTARIA DE PESSOAL SE/MAPA Nº 10, DE 16 DE OUTUBRO DE 2026",
         "Designar servidor para exercer função. Ministério da Agricultura e Pecuária.",
@@ -99,3 +103,47 @@ def test_nao_passa_so_por_palavra_rural():
         "Dispõe sobre a iluminação pública na zona rural do município e a cooperativa de eletrificação.",
     )
     assert not triar(ato)
+
+
+def test_cnpj_nao_vira_dinheiro():
+    assert extrair_valor("CNPJ R$ 27.271.958/0001-10") is None
+    assert extrair_valor("R$ 40.167.027/0001-10 e R$ 1.000,00") == Decimal("1000.00")
+
+
+def test_passa_so_pelo_orgao_ibama_nome_completo():
+    orgao = (
+        "Ministério do Meio Ambiente/Instituto Brasileiro do Meio Ambiente "
+        "e dos Recursos Naturais Renováveis"
+    )
+    assert triar(_ato("PORTARIA Nº 5, DE 16 DE OUTUBRO DE 2026", "Regras gerais.", orgao))
+    assert triar(_ato("PORTARIA IBAMA Nº 5, DE 16 DE OUTUBRO DE 2026", "Regras gerais."))
+
+
+def test_passa_so_pelo_orgao_toxicologia():
+    orgao = "Ministério da Saúde/Agência Nacional de Vigilância Sanitária/Gerência-Geral de Toxicologia"
+    assert triar(_ato("Resolução-RE nº 4.111, DE 15 DE OUTUBRO DE 2026", "Aprova atos.", orgao))
+
+
+def test_pessoal_ancorado():
+    mda = "Ministério do Desenvolvimento Agrário/Departamento de Promoção"
+    assert triar(_ato("PORTARIA Nº 1", "Área nomeada de assentamento, procedência rural.", mda))
+    assert not triar(_ato("PORTARIA Nº 2", "Texto.", "Instituto Chico Mendes/Gestão de Pessoas"))
+    mapa = "Ministério da Agricultura e Pecuária"
+    assert not triar(_ato("PORTARIA Nº 3", "Conceder a promoção do servidor.", mapa))
+    assert not triar(_ato("PORTARIA Nº 4", "Art. 38 da Lei nº 8.112, de 1990, assentamento.", mapa))
+
+
+def test_edital_de_habilitacao_e_extrato_de_ata_fora_da_regra_do_valor():
+    assert triar(_ato("EDITAL Nº 3 de habilitação", "Habilitação de veterinários, rebanho."))
+    assert triar(_ato("EXTRATO DE ATA", "Ata do conselho sobre crédito rural."))
+    assert not triar(_ato("AVISO DE LICITAÇÃO", "Compra de sementes para a safra."))
+
+
+def test_precisa_texto_completo():
+    corte = "Aquisição de sementes para a safra, objeto do pregão..."
+    titulo = "AVISO DE LICITAÇÃO PREGÃO Nº 1"
+    assert precisa_texto_completo(_ato(titulo, corte))
+    assert not precisa_texto_completo(_ato(titulo, "Sementes, safra, R$ 900.000,00..."))
+    assert not precisa_texto_completo(_ato(titulo, corte[:-3]))
+    assert not precisa_texto_completo(replace(_ato(titulo, corte), fonte="doe"))
+    assert not precisa_texto_completo(_ato(titulo, "Compra de canetas..."))
