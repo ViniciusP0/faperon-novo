@@ -103,3 +103,57 @@ def test_texto_do_ato_e_truncado():
     llm = ClienteLLMFalso([_resp([_item("id1")])])
     classificar([_ato(1, "a" * 20000)], llm)
     assert "a" * 6001 not in llm.pedidos[0]["messages"][0]["content"]
+
+
+def test_prompt_tem_o_limiar_de_500_mil():
+    from boletim.classificador import SISTEMA
+
+    assert "500 mil" in SISTEMA
+
+
+def test_lote_invalido_conta_omitidos_e_avisa(caplog):
+    llm = ClienteLLMFalso([_resp("lixo {")])
+    vs, uso = classificar([_ato(1), _ato(2), _ato(3)], llm)
+    assert vs == [] and uso.omitidos == 3 and uso.chamadas == 1
+    assert any("descartado" in r.message for r in caplog.records)
+    assert "Texto do ato" not in caplog.text
+
+
+def test_item_invalido_em_lote_valido_conta_um_omitido():
+    llm = ClienteLLMFalso([_resp([_item("id1"), _item("id2", resumo="")])])
+    vs, uso = classificar([_ato(1), _ato(2)], llm)
+    assert len(vs) == 1 and uso.omitidos == 1
+
+
+def test_pontuacao_nan_omite_o_item():
+    corpo = '{"itens": [{"id": "id1", "relevante": true, "pontuacao": NaN, "rondonia": true, ' \
+        '"titulo_chave": "t", "resumo": "r"}]}'
+    vs, uso = classificar([_ato(1)], ClienteLLMFalso([_resp(corpo)]))
+    assert vs == [] and uso.omitidos == 1
+
+
+def test_pontuacao_infinita_omite_o_item():
+    corpo = '{"itens": [{"id": "id1", "relevante": true, "pontuacao": Infinity, "rondonia": true, ' \
+        '"titulo_chave": "t", "resumo": "r"}]}'
+    vs, _ = classificar([_ato(1)], ClienteLLMFalso([_resp(corpo)]))
+    assert vs == []
+
+
+def test_resposta_truncada_por_max_tokens_descarta_o_lote():
+    r = _resp([_item("id1")])
+    r.stop_reason = "max_tokens"
+    vs, uso = classificar([_ato(1)], ClienteLLMFalso([r]))
+    assert vs == [] and uso.omitidos == 1
+
+
+def test_usage_none_nao_quebra_e_conta_a_chamada():
+    r = _resp([_item("id1")])
+    r.usage = None  # type: ignore[assignment]
+    vs, uso = classificar([_ato(1)], ClienteLLMFalso([r]))
+    assert len(vs) == 1 and uso.chamadas == 1 and uso.tokens_entrada == 0
+
+
+def test_fecha_o_ato_depois_do_texto_truncado():
+    llm = ClienteLLMFalso([_resp([_item("id1")])])
+    classificar([_ato(1, "a" * 20000)], llm)
+    assert ("a" * 6000 + "\n</ato>") in llm.pedidos[0]["messages"][0]["content"]

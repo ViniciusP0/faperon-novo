@@ -1,11 +1,14 @@
 """Classificação e resumo dos atos do boletim por IA, em lotes."""
 
 import json
+import logging
 from dataclasses import dataclass
 from typing import Any
 
 from boletim.tipos import AtoBruto, Veredito
 from zetele.cliente import ClienteLLM
+
+log = logging.getLogger(__name__)
 
 TAMANHO_LOTE = 8
 MAX_CARACTERES_ATO = 6000
@@ -22,18 +25,23 @@ marcas <ato id="..."> e </ato>.
 Critérios:
 - relevante: o ato muda regra ou direito do produtor rural em Rondônia, ou é norma nacional do \
 agro (crédito rural, defesa agropecuária, sanidade animal e vegetal, terras, ambiental rural, \
-tributos do campo, cadeias como café, pecuária, cacau, soja).
-- irrelevante: atos de pessoal (nomeações, férias, diárias), funcionamento interno de órgãos, \
-licitações e compras pequenas, e o que não toca o agro.
+tributos do campo, cadeias como café, pecuária, cacau, soja); ou é licitação, contratação ou \
+contrato do agro com valor total estimado de R$ 500 mil ou mais.
+- irrelevante: atos de pessoal (nomeações, férias, diárias), atos de funcionamento interno de \
+órgãos de qualquer estado, atos individuais de habilitação ou credenciamento de profissionais \
+ou empresas (ex.: habilitação de médicos veterinários para GTA), casos concretos de outros \
+estados que não sejam norma nacional, licitação ou contratação abaixo de R$ 500 mil e o que \
+não toca o agro. Sem valor informado, na dúvida, irrelevante.
 
 Para cada ato devolva um item com:
 - id: o mesmo id do ato.
 - relevante: verdadeiro ou falso.
 - pontuacao: inteiro de 0 a 100; maior para o que afeta Rondônia diretamente.
-- rondonia: verdadeiro só se o texto cita Rondônia, um município do estado ou um órgão estadual.
+- rondonia: verdadeiro só se o texto cita Rondônia, um município de Rondônia ou um órgão do \
+estado de Rondônia.
 - titulo_chave: título curto (até cerca de 80 caracteres) que diz o que mudou.
-- resumo: de 4 a 5 linhas, usando apenas o que está no texto. Não invente números, datas, \
-valores ou nomes. Se o ato não é relevante, o resumo pode ficar vazio.
+- resumo: de 4 a 5 linhas (cerca de 400 a 600 caracteres), usando apenas o que está no texto. \
+Não invente números, datas, valores ou nomes. Se o ato não é relevante, o resumo pode ficar vazio.
 
 Responda somente com o JSON no formato pedido, com um item para cada ato recebido.\
 """
@@ -75,6 +83,7 @@ class Uso:
     chamadas: int
     tokens_entrada: int
     tokens_saida: int
+    omitidos: int = 0  # atos sem veredito válido (lote descartado ou item inválido)
 
 
 def _mensagem(lote: list[AtoBruto]) -> str:
@@ -104,10 +113,16 @@ def _veredito(item: Any, esperados: set[str]) -> Veredito | None:
     resumo = str(item.get("resumo") or "").strip()
     if relevante and (not titulo or not resumo):
         return None
-    return Veredito(id_, relevante, max(0, min(100, int(pontuacao))), rondonia, titulo, resumo)
+    try:
+        nota = max(0, min(100, int(pontuacao)))
+    except (ValueError, OverflowError):  # NaN ou infinito
+        return None
+    return Veredito(id_, relevante, nota, rondonia, titulo, resumo)
 
 
 def _ler_lote(resposta: Any, lote: list[AtoBruto]) -> list[Veredito]:
+    if getattr(resposta, "stop_reason", None) in ("max_tokens", "refusal"):
+        return []
     texto = "".join(b.text for b in resposta.content if getattr(b, "type", None) == "text")
     try:
         itens = json.loads(texto)["itens"]
@@ -137,7 +152,7 @@ def classificar(
     precisar do resultado parcial deve chamar esta função por grupos pequenos de atos.
     """
     vereditos: list[Veredito] = []
-    chamadas = entrada = saida = 0
+    chamadas = entrada = saida = omitidos = 0
     for i in range(0, len(atos), lote):
         grupo = atos[i : i + lote]
         resposta = llm.criar(
@@ -149,7 +164,12 @@ def classificar(
             max_tokens=MAX_TOKENS,
         )
         chamadas += 1
-        entrada += int(getattr(resposta.usage, "input_tokens", 0) or 0)
-        saida += int(getattr(resposta.usage, "output_tokens", 0) or 0)
-        vereditos.extend(_ler_lote(resposta, grupo))
-    return vereditos, Uso(chamadas, entrada, saida)
+        uso = getattr(resposta, "usage", None)
+        entrada += int(getattr(uso, "input_tokens", 0) or 0)
+        saida += int(getattr(uso, "output_tokens", 0) or 0)
+        validos = _ler_lote(resposta, grupo)
+        if not validos:
+            log.warning("Lote do boletim descartado: %d atos sem veredito válido", len(grupo))
+        omitidos += len(grupo) - len(validos)
+        vereditos.extend(validos)
+    return vereditos, Uso(chamadas, entrada, saida, omitidos)
