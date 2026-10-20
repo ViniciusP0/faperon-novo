@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime
 
 from drf_spectacular.utils import extend_schema
 from rest_framework.request import Request
@@ -29,7 +29,9 @@ class DiaView(APIView):
     )
     def get(self, request: Request, dia: str) -> Response:
         try:
-            data = date.fromisoformat(dia)
+            if len(dia) != 10:
+                raise ValueError(dia)
+            data = datetime.strptime(dia, "%Y-%m-%d").date()
         except ValueError:
             raise ConsultaInvalida("Data inválida", {"dia": "Use AAAA-MM-DD"}) from None
         d = validar_consulta(sz.ConsultaDiaSerializer, request)

@@ -62,7 +62,7 @@ def test_dias_lista_7_dias_com_total(api: APIClient) -> None:
         "fontes": {"dou": "ok", "doe": "pendente"},
     }
     assert dias[-1]["dia"] == "2026-10-13"
-    assert dias[3]["total"] == 1 and dias[3]["tem_destaque"] is False
+    assert dias[3]["total"] == 1 and dias[3]["tem_destaque"] is True
     assert dias[1] == {
         "dia": "2026-10-19",
         "total": 0,
@@ -126,7 +126,7 @@ def test_dia_sem_notas_devolve_vazio_e_status_das_fontes(api: APIClient) -> None
     assert corpo["destaque"] is None and corpo["notas"] == [] and corpo["total"] == 0
     assert corpo["fontes"]["dou"] == {"status": "sem_coleta", "erro": ""}
     assert corpo["fontes"]["doe"]["status"] == "falha"
-    assert len(corpo["fontes"]["doe"]["erro"]) == 300
+    assert corpo["fontes"]["doe"]["erro"] == "Não foi possível ler o diário neste dia."
 
 
 def test_dia_fora_da_janela_404(api: APIClient) -> None:
@@ -200,3 +200,23 @@ def test_consultas_sao_poucas(
 def test_rotas_existem_no_schema(api: APIClient) -> None:
     schema = api.get("/api/schema/").content.decode()
     assert "/api/v1/boletim/dias" in schema and "/api/v1/boletim/dia/{dia}" in schema
+
+
+def test_erro_interno_da_coleta_nao_vaza(api: APIClient) -> None:
+    Coleta.objects.create(
+        fonte="doe",
+        dia=HOJE,
+        status="falha",
+        erro='OperationalError: connection to server at "db" (10.0.0.5), user "faperon"',
+    )
+    Coleta.objects.create(fonte="dou", dia=HOJE, status="pendente", erro="segredo-interno")
+    bruto = api.get("/api/v1/boletim/dia/2026-10-20").content.decode()
+    for proibido in ("OperationalError", "db", "10.0.0.5", "faperon", "segredo-interno"):
+        assert proibido not in bruto
+    fontes = api.get("/api/v1/boletim/dia/2026-10-20").json()["fontes"]
+    assert fontes["dou"]["erro"] == "Edição ainda não publicada."
+
+
+def test_data_em_formato_nao_estrito_400(api: APIClient) -> None:
+    for texto in ("20261020", "2026-W43-2", "2026-1-5"):
+        assert get(api, f"dia/{texto}")[0] == 400

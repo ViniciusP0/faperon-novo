@@ -11,8 +11,10 @@ class ConsultaDiaSerializer(serializers.Serializer):
 
 
 class SituacaoFonteSerializer(serializers.Serializer):
-    status = serializers.CharField(help_text="ok, pendente, falha ou sem_coleta")
-    erro = serializers.CharField(help_text="Motivo da falha, quando houver")
+    status = serializers.ChoiceField(
+        choices=["ok", "pendente", "falha", "sem_coleta"], help_text="Situação da coleta do dia"
+    )
+    erro = serializers.CharField(help_text="Mensagem pública fixa por status (vazia em ok e sem_coleta); nunca o erro interno")
 
 
 class FontesSerializer(serializers.Serializer):

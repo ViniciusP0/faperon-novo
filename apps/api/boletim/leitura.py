@@ -4,17 +4,21 @@ from datetime import date, timedelta
 from typing import Any
 
 from django.conf import settings
-from django.db.models import Count, Q, QuerySet
+from django.db.models import Count, QuerySet
 from django.utils import timezone
 
 from boletim.models import Ato, Coleta, Fonte
 from indicadores.erros import NaoEncontrado
 
 LIMITE_NOTAS = 10
-LIMITE_ERRO = 300
 ORIGENS = {"todas": None, "estado": Fonte.DOE, "uniao": Fonte.DOU}
 _ROTULO_DIARIO = {Fonte.DOE.value: "DOE-RO", Fonte.DOU.value: "DOU"}
 _ORDEM = ("-rondonia", "-pontuacao", "-coletado_em", "-id")
+# Texto público por situação: nunca se expõe `Coleta.erro` (diagnóstico interno).
+_MENSAGEM_PUBLICA = {
+    Coleta.Status.FALHA.value: "Não foi possível ler o diário neste dia.",
+    Coleta.Status.PENDENTE.value: "Edição ainda não publicada.",
+}
 
 
 def hoje() -> date:
@@ -30,15 +34,18 @@ def janela(hoje_: date) -> list[date]:
     return [hoje_ - timedelta(days=i) for i in range(settings.BOLETIM_RETENCAO_DIAS + 1)]
 
 
-def listar_dias(hoje: date) -> list[dict[str, Any]]:
-    """Uma entrada por data da janela, com total de notas relevantes e situação da coleta."""
-    datas = janela(hoje)
+def listar_dias(referencia: date) -> list[dict[str, Any]]:
+    """Uma entrada por data da janela: total de notas relevantes, situação da coleta.
+
+    `tem_destaque` é `total > 0`: o dia sempre tem destaque se houver nota relevante.
+    """
+    datas = janela(referencia)
     resumo = {
         linha["dia"]: linha
         for linha in Ato.objects.filter(relevante=True, dia__in=datas)
         .order_by()
         .values("dia")
-        .annotate(total=Count("id"), destaques=Count("id", filter=Q(destaque=True)))
+        .annotate(total=Count("id"))
     }
     status: dict[date, dict[str, str]] = {}
     for coleta in Coleta.objects.filter(dia__in=datas):
@@ -50,7 +57,7 @@ def listar_dias(hoje: date) -> list[dict[str, Any]]:
             {
                 "dia": d.isoformat(),
                 "total": linha["total"] if linha else 0,
-                "tem_destaque": bool(linha and linha["destaques"]),
+                "tem_destaque": bool(linha),
                 "fontes": {f.value: status.get(d, {}).get(f.value, "sem_coleta") for f in Fonte},
             }
         )
@@ -77,16 +84,17 @@ def _fontes(dia: date) -> dict[str, dict[str, str]]:
     saida = {}
     for f in Fonte:
         c = por_fonte.get(f.value)
+        situacao = c.status if c else "sem_coleta"
         saida[f.value] = {
-            "status": c.status if c else "sem_coleta",
-            "erro": (c.erro if c else "")[:LIMITE_ERRO],
+            "status": situacao,
+            "erro": _MENSAGEM_PUBLICA.get(situacao, ""),
         }
     return saida
 
 
-def montar_dia(dia: date, origem: str, todas: bool, hoje: date) -> dict[str, Any]:
+def montar_dia(dia: date, origem: str, todas: bool, referencia: date) -> dict[str, Any]:
     """Destaque e notas de um dia; fora da janela levanta `NaoEncontrado`."""
-    if dia not in janela(hoje):
+    if dia not in janela(referencia):
         raise NaoEncontrado("Dia fora da janela do boletim")
     qs: QuerySet[Ato] = Ato.objects.filter(relevante=True, dia=dia)
     fonte = ORIGENS[origem]
