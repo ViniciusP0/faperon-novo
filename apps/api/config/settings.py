@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "analise",
     "observatorio",
     "zetele",
+    "boletim",
     "rest_framework",
     "drf_spectacular",
     "django.contrib.auth",
@@ -163,6 +164,12 @@ ZETELE_LIMITE_DIARIO = int(os.environ.get("ZETELE_LIMITE_DIARIO", "600"))
 ZETELE_SISTEMA_LIMITE_DIARIO = int(os.environ.get("ZETELE_SISTEMA_LIMITE_DIARIO", "750"))
 ZETELE_SIMULTANEOS = int(os.environ.get("ZETELE_SIMULTANEOS", "3"))
 ZETELE_TERMOS_BLOQUEADOS = env_lista("ZETELE_TERMOS_BLOQUEADOS")
+
+# Boletim do Agro (DOE-RO e DOU). Desligado por padrão; a triagem usa o mesmo modelo do Zétele.
+BOLETIM_ATIVO = os.environ.get("BOLETIM_ATIVO", "").strip().lower() in {"1", "true", "sim"}
+BOLETIM_MODELO = os.environ.get("BOLETIM_MODELO", ZETELE_MODELO)
+BOLETIM_RETENCAO_DIAS = int(os.environ.get("BOLETIM_RETENCAO_DIAS", "7"))
+BOLETIM_VALOR_MINIMO = int(os.environ.get("BOLETIM_VALOR_MINIMO", "500000"))
 
 # Voz do Zétele do sistema (ADR 0034). As chaves ficam no .env.local; sem a chave de um fornecedor,
 # aquela metade da voz (ouvir ou falar) fica desligada. O falar conta no teto diário do sistema.

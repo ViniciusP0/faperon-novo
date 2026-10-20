@@ -7,7 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 RUN apt-get update && apt-get install -y --no-install-recommends \
       libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b libffi8 \
       libjpeg62-turbo libopenjp2-7 zlib1g fonts-dejavu-core \
-      shared-mime-info curl \
+      shared-mime-info curl poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
