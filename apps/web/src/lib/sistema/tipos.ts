@@ -81,6 +81,8 @@ export interface Manutencao {
   valor: number;
   km: number;
   concluida: boolean;
+  /** Motivo da manutenção; obrigatório quando o tipo é "outros". */
+  observacao?: string;
 }
 
 export interface EstadoFrota {

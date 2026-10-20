@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/feedback";
-import { Input, Label, Select } from "@/components/ui/field";
+import { Input, Label, Select, Textarea } from "@/components/ui/field";
 import { formatarDataBR } from "@/lib/sistema/datas";
 import { novoId, useSistema } from "@/lib/sistema/estado";
 import { km, litros, reais } from "@/lib/sistema/formato";
@@ -20,7 +20,7 @@ function numero(texto: string): number {
 export function AbastecimentoManutencao() {
   const { funcionario, hoje, frota, atualizarFrota } = useSistema();
   const [ab, setAb] = useState({ veiculoId: "", data: hoje, litros: "", valor: "", km: "" });
-  const [ma, setMa] = useState({ veiculoId: "", data: hoje, tipo: "revisao" as TipoManutencao, valor: "", km: "", concluida: true });
+  const [ma, setMa] = useState({ veiculoId: "", data: hoje, tipo: "revisao" as TipoManutencao, valor: "", km: "", concluida: true, observacao: "" });
   const [msgAb, setMsgAb] = useState<{ tom: "info" | "erro"; texto: string } | null>(null);
   const [msgMa, setMsgMa] = useState<{ tom: "info" | "erro"; texto: string } | null>(null);
   if (!funcionario) return null;
@@ -50,11 +50,12 @@ export function AbastecimentoManutencao() {
 
   function registrarManutencao(e: FormEvent) {
     e.preventDefault();
-    const registro: Manutencao = { id: novoId("manutencao"), veiculoId: ma.veiculoId, data: ma.data, tipo: ma.tipo, valor: numero(ma.valor), km: numero(ma.km), concluida: ma.concluida };
+    const registro: Manutencao = { id: novoId("manutencao"), veiculoId: ma.veiculoId, data: ma.data, tipo: ma.tipo, valor: numero(ma.valor), km: numero(ma.km), concluida: ma.concluida, ...(ma.tipo === "outros" && { observacao: ma.observacao.trim() }) };
     if (!registro.veiculoId || !registro.data) return setMsgMa({ tom: "erro", texto: "Escolha o veículo e a data." });
+    if (ma.tipo === "outros" && !registro.observacao) return setMsgMa({ tom: "erro", texto: "Descreva o motivo da manutenção em Observação." });
     if (!(registro.valor >= 0) || !(registro.km >= 0) || ma.valor === "" || ma.km === "") return setMsgMa({ tom: "erro", texto: "Informe valor e km válidos." });
     atualizarFrota((f) => ({ ...f, manutencoes: [...f.manutencoes, registro] }), `Registrou manutenção (${registro.tipo}) em ${nomeVeiculo(registro.veiculoId)}`);
-    setMa({ veiculoId: "", data: hoje, tipo: "revisao", valor: "", km: "", concluida: true });
+    setMa({ veiculoId: "", data: hoje, tipo: "revisao", valor: "", km: "", concluida: true, observacao: "" });
     setMsgMa({ tom: "info", texto: registro.concluida ? "Manutenção registrada." : "Manutenção registrada; o veículo fica em manutenção até ser concluída." });
   }
 
@@ -156,6 +157,12 @@ export function AbastecimentoManutencao() {
                 Já concluída
               </label>
             </div>
+            {ma.tipo === "outros" && (
+              <div>
+                <Label htmlFor="ma-observacao">Observação</Label>
+                <Textarea id="ma-observacao" rows={2} placeholder="Descreva o motivo da manutenção" value={ma.observacao} onChange={(e) => setMa({ ...ma, observacao: e.target.value })} />
+              </div>
+            )}
             {msgMa && <Alert tone={msgMa.tom}>{msgMa.texto}</Alert>}
             <Button variant="vidro" type="submit">Registrar manutenção</Button>
           </form>
@@ -168,6 +175,7 @@ export function AbastecimentoManutencao() {
             <li key={m.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-line py-1.5">
               <span>
                 {formatarDataBR(m.data)} · {nomeVeiculo(m.veiculoId)} · {ROTULO_MANUTENCAO[m.tipo]}
+                {m.observacao && <span className="block text-ink-muted">{m.observacao}</span>}
               </span>
               <span className="flex items-center gap-2 text-ink-muted">
                 {km(m.km)} · {reais(m.valor)}
