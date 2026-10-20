@@ -32,6 +32,15 @@ O Zétele fica no canto inferior direito do Início e da Central (ADR 0029). No 
 - `make test` não chama a Anthropic. As perguntas de ouro (30 casos, API real) rodam com `docker compose run --rm --entrypoint "" -v "$PWD/apps/api:/app" -v "$PWD/data:/app/data" api-dev pytest -m llm -s`.
 - `docker compose exec api python manage.py zetele_exportar --dias 90` exporta as perguntas (anônimas, 90 dias) em CSV para montar o FAQ.
 
+## Boletim do Agro
+
+Diariamente o `scheduler` lê o Diário Oficial da União e o de Rondônia, separa os atos do agro e resume os relevantes com IA. Vem desligado.
+
+- `BOLETIM_ATIVO=1` no `.env.local` liga (nos servidores AWS, no `.env` da máquina). Usa a `ANTHROPIC_API_KEY` do Zétele; não há teto de gasto, o consumo por dia fica na tabela `ConsumoDia`.
+- Rodar uma vez, na mão: `docker compose exec scheduler python manage.py coletar_boletim [--dia AAAA-MM-DD] [--fonte dou|doe]`.
+- Calibração (API real, fixtures de 19 e 20/10/2026; imprime os resumos e o consumo): `docker compose run --rm --entrypoint "" -v "$PWD/apps/api:/app" -v "$PWD/data:/app/data" api-dev pytest -m llm tests/test_boletim_ouro.py -s`. Sem a chave, o teste é pulado.
+- Pendente: a calibração ainda não rodou contra a API real (faltava a chave). Até rodar e ajustar o prompt de `classificador.py`, mantenha `BOLETIM_ATIVO=0`.
+
 ## Estrutura
 
 ```

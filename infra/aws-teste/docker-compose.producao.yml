@@ -1,10 +1,15 @@
 # Sobreposição do docker-compose.yml para a produção na AWS (ADR 0033): imagens ARM de produção,
 # geradas pelo GitHub do fork a partir do branch `producao` (com o SITE_URL de produção) e guardadas
 # no ECR de São Paulo. __REGISTRO__ é trocado pelo atualizar.sh.
+# BOLETIM_ATIVO (Boletim do Agro) vem do .env da máquina (padrão 0 = desligado); o .env.local não vale aqui.
 services:
   api:
     image: __REGISTRO__/faperon-producao/api:producao
+    environment:
+      BOLETIM_ATIVO: ${BOLETIM_ATIVO:-0}
   scheduler:
     image: __REGISTRO__/faperon-producao/api:producao
+    environment:
+      BOLETIM_ATIVO: ${BOLETIM_ATIVO:-0}
   web:
     image: __REGISTRO__/faperon-producao/web:producao
