@@ -85,20 +85,24 @@ def test_ouro_19_e_20_de_outubro(settings: Any) -> None:
     ]
     assert not falhas, f"deveriam sair relevantes e não saíram: {falhas}"
 
-    pessoal = [
-        a.titulo
-        for a in candidatos
-        if "PESSOAL" in a.titulo.upper()
-        and a.id_externo in por_id
-        and por_id[a.id_externo].relevante
+    # a triagem tem de barrar as portarias de pessoal antes da IA (regressão dela passaria batido)
+    pessoais = [a for a in atos if "PESSOAL" in a.titulo.upper()]
+    assert pessoais, "as fixtures deveriam ter portarias de pessoal"
+    liberadas = [a.titulo for a in pessoais if triar(a)]
+    assert not liberadas, f"a triagem deixou passar portaria de pessoal: {liberadas}"
+    relevantes_pessoal = [
+        a.titulo for a in pessoais if a.id_externo in por_id and por_id[a.id_externo].relevante
     ]
-    assert not pessoal, f"portaria de pessoal saiu relevante: {pessoal}"
+    assert not relevantes_pessoal, f"portaria de pessoal saiu relevante: {relevantes_pessoal}"
 
     for v in vereditos:
         if v.relevante:
             assert 0 < len(v.resumo) <= MAX_RESUMO, f"resumo fora do tamanho: {v.id_externo}"
 
-    relevantes = [v for v in vereditos if v.relevante]
+    # o destaque é por dia (coleta.escolher_destaque); as do Incra são do DOU de 20/10
+    relevantes = [
+        v for v in vereditos if v.relevante and por_ato[v.id_externo].dia == date(2026, 10, 20)
+    ]
     melhor = max((v.rondonia, v.pontuacao) for v in relevantes)
     ids_incra = {incra_2276.id_externo, incra_2273.id_externo}
     donos = {v.id_externo for v in relevantes if (v.rondonia, v.pontuacao) == melhor}

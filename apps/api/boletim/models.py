@@ -70,7 +70,7 @@ class Coleta(models.Model):
 
 
 class ConsumoDia(models.Model):
-    """Consumo diário do modelo na triagem (teto de custo)."""
+    """Consumo diário do modelo na triagem; só registra, não há teto de gasto."""
 
     dia = models.DateField(unique=True)
     chamadas = models.PositiveIntegerField(default=0)
