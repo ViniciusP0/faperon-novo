@@ -64,7 +64,12 @@ FORMATO_BOLETIM: dict[str, Any] = {
                         "resumo": {"type": "string"},
                     },
                     "required": [
-                        "id", "relevante", "pontuacao", "rondonia", "titulo_chave", "resumo",
+                        "id",
+                        "relevante",
+                        "pontuacao",
+                        "rondonia",
+                        "titulo_chave",
+                        "resumo",
                     ],
                     "additionalProperties": False,
                 },

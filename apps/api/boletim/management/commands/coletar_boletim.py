@@ -25,7 +25,12 @@ class Command(BaseCommand):
             dia = date.fromisoformat(opts["dia"]) if opts["dia"] else timezone.localdate()
         except ValueError as erro:
             raise CommandError(f"Data inválida: {opts['dia']!r}. Use AAAA-MM-DD.") from erro
+        if dia > timezone.localdate():
+            raise CommandError(f"Data no futuro: {dia}. Use hoje ou um dia anterior.")
         llm = ClienteAnthropic(settings.ANTHROPIC_API_KEY, settings.BOLETIM_MODELO)
         for fonte in [opts["fonte"]] if opts["fonte"] else ["dou", "doe"]:
             coleta = coletar_dia(dia, cast(Literal["dou", "doe"], fonte), llm)
-            self.stdout.write(f"{coleta.fonte} {coleta.dia} {coleta.status} lidos={coleta.lidos}")
+            linha = f"{coleta.fonte} {coleta.dia} {coleta.status} lidos={coleta.lidos}"
+            if coleta.status == "falha":
+                linha += f" erro={coleta.erro}"
+            self.stdout.write(linha)

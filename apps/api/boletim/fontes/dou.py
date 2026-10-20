@@ -21,9 +21,7 @@ USER_AGENT = (
 )
 TIMEOUT_S = 60
 
-_PARAMS = re.compile(
-    r'<script id="params" type="application/json">(.*?)</script>', re.DOTALL
-)
+_PARAMS = re.compile(r'<script id="params" type="application/json">(.*?)</script>', re.DOTALL)
 _TEXTO_NOTA = re.compile(r'<div class="texto-dou"[^>]*>([\s\S]*?)</div>\s*</div>')
 _TAGS = re.compile(r"<[^>]+>")
 
