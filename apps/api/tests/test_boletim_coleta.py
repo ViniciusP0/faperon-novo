@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from boletim import coleta as modulo_coleta
 from boletim.coleta import Fontes, coletar_dia, escolher_destaque, expurgar
 from boletim.fontes import FonteIndisponivel
 from boletim.fontes.doe import dividir_edicao
@@ -142,7 +143,7 @@ def test_falha_do_provedor_preserva_chunks_anteriores():
     assert Ato.objects.filter(relevante=True).count() == 8
     assert Ato.objects.filter(relevante=None).count() == 12
     consumo = ConsumoDia.objects.get(dia=DIA)
-    assert consumo.chamadas == 1 and consumo.tokens_entrada == 100
+    assert consumo.chamadas == 2 and consumo.tokens_entrada == 100  # a chamada que falhou conta
 
 
 @pytest.mark.django_db
@@ -269,3 +270,71 @@ def test_busca_de_texto_completo_tem_limite():
     coletar_dia(DIA, "dou", LlmPorId(), _fontes(dou=lambda d, s: atos if s == "do1" else [],
                                                 texto_nota=texto_nota))
     assert len(chamadas) == 150
+
+
+@pytest.mark.django_db
+def test_campos_acima_do_limite_e_nul_sao_saneados():
+    ato = replace(_agro(1), orgao="Ministério da Agricultura " + "x" * 310,
+                  titulo="PORTARIA\x00 Nº 1", texto="Defesa agropecuária\x00 e sanidade animal.")
+    coleta = coletar_dia(DIA, "dou", LlmPorId(), _fontes(dou=lambda d, s: [ato] if s == "do1" else []))
+    assert coleta.status == "ok" and coleta.erro == ""
+    gravado = Ato.objects.get(id_externo="agro-1")
+    assert len(gravado.orgao) == Ato._meta.get_field("orgao").max_length == 300
+    assert "\x00" not in gravado.titulo and "\x00" not in gravado.texto
+    assert gravado.relevante is True
+
+
+@pytest.mark.django_db
+def test_titulo_chave_longo_do_modelo_e_cortado():
+    llm = LlmPorId(lambda i: {"relevante": True, "pontuacao": 5, "rondonia": False,
+                              "titulo_chave": "t" * 400})
+    coletar_dia(DIA, "dou", llm, _fontes(dou=lambda d, s: [_agro(1)] if s == "do1" else []))
+    assert len(Ato.objects.get().titulo_chave) == 300
+
+
+@pytest.mark.django_db
+def test_ato_que_o_banco_recusa_nao_derruba_o_dia():
+    ruim = replace(_agro(1), pagina=10**12)  # estoura a coluna inteira
+    atos = [ruim, _agro(2)]
+    coleta = coletar_dia(DIA, "dou", LlmPorId(), _fontes(dou=lambda d, s: atos if s == "do1" else []))
+    assert coleta.status == "ok" and "1 atos não gravados" in coleta.erro
+    assert list(Ato.objects.values_list("id_externo", flat=True)) == ["agro-2"]
+    assert Ato.objects.get().relevante is True
+
+
+@pytest.mark.django_db
+def test_excecao_inesperada_fica_registrada_na_coleta():
+    def dou(dia, secao):
+        raise RuntimeError("bug qualquer")
+
+    coleta = coletar_dia(DIA, "dou", LlmPorId(), _fontes(dou=dou))  # não levanta
+    coleta.refresh_from_db()
+    assert coleta.status == "falha" and "RuntimeError: bug qualquer" in coleta.erro
+    assert coleta.tentativas == 1
+
+
+@pytest.mark.django_db
+def test_atos_sem_classificacao_geram_nota_sem_falha():
+    class LixoLlm(LlmPorId):
+        def criar(self, **kwargs):
+            self.chamadas += 1
+            return RespostaFalsa("end_turn", [Bloco("text", text="lixo {")], Uso(10, 5))
+
+    coleta = coletar_dia(DIA, "dou", LixoLlm(), _fontes(dou=lambda d, s: [_agro(1)] if s == "do1" else []))
+    assert coleta.status == "ok"
+    assert "1 atos sem classificação (serão tentados de novo)" in coleta.erro
+    assert Ato.objects.get().relevante is None
+
+
+@pytest.mark.django_db
+def test_orcamento_de_tempo_das_notas_mantem_recortes(monkeypatch):
+    monkeypatch.setattr(modulo_coleta, "ORCAMENTO_TEXTO_NOTA", 0.0)
+    base = _secao("do3")[0]
+    atos = [replace(base, id_externo=f"lic-{n}", url=f"http://x/{n}", titulo="EXTRATO DE CONTRATO",
+                    orgao="Ministério da Agricultura e Pecuária",
+                    texto="Contrato de defesa agropecuária ...") for n in range(3)]
+    chamadas = []
+    coletar_dia(DIA, "dou", LlmPorId(), _fontes(
+        dou=lambda d, s: atos if s == "do1" else [],
+        texto_nota=lambda url: chamadas.append(url) or "x"))
+    assert chamadas == []
