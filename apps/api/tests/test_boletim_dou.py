@@ -5,7 +5,7 @@ import pytest
 import requests
 
 from boletim.fontes import FonteIndisponivel
-from boletim.fontes.dou import baixar_dou, ler_pagina_dou
+from boletim.fontes.dou import baixar_dou, baixar_texto_nota, ler_pagina_dou
 
 FIXTURE = Path(__file__).parent / "fixtures" / "boletim" / "dou_20-10-2026_do1.html"
 DIA = date(2026, 10, 20)
@@ -118,3 +118,42 @@ def test_baixar_decodifica_utf8_mesmo_com_encoding_errado():
             return Resposta()
 
     assert baixar_dou(DIA, "do1", http=HttpFalso())[0].titulo == "Ação"
+
+
+_NOTA = (
+    '<html><body><div class="texto-dou" id="x"><p>EXTRATO &amp; CONTRATO</p>'
+    "<p>Valor   total:\n R$ 1.200.000,00</p></div>\n</div></body></html>"
+)
+
+
+class _HttpNota:
+    def __init__(self, status: int = 200, corpo: str = _NOTA):
+        self.status, self.corpo, self.chamadas = status, corpo, []
+
+    def get(self, url, **kwargs):
+        self.chamadas.append((url, kwargs))
+
+        class Resposta:
+            status_code = self.status
+            content = self.corpo.encode("utf-8")
+
+        return Resposta()
+
+
+def test_baixar_texto_nota_limpa_tags_e_espacos():
+    http = _HttpNota()
+    texto = baixar_texto_nota("https://www.in.gov.br/web/dou/-/nota-1", http=http)
+    assert texto == "EXTRATO & CONTRATO Valor total: R$ 1.200.000,00"
+    url, kwargs = http.chamadas[0]
+    assert url == "https://www.in.gov.br/web/dou/-/nota-1"
+    assert "Mozilla" in kwargs["headers"]["User-Agent"] and kwargs["timeout"] == 60
+
+
+def test_baixar_texto_nota_sem_bloco_levanta():
+    with pytest.raises(FonteIndisponivel):
+        baixar_texto_nota("http://x", http=_HttpNota(corpo="<html></html>"))
+
+
+def test_baixar_texto_nota_http_erro_levanta():
+    with pytest.raises(FonteIndisponivel):
+        baixar_texto_nota("http://x", http=_HttpNota(status=500))

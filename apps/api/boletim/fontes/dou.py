@@ -1,5 +1,6 @@
 """Leitor do Diário Oficial da União (in.gov.br/leiturajornal)."""
 
+import html
 import json
 import re
 import ssl
@@ -23,6 +24,8 @@ TIMEOUT_S = 60
 _PARAMS = re.compile(
     r'<script id="params" type="application/json">(.*?)</script>', re.DOTALL
 )
+_TEXTO_NOTA = re.compile(r'<div class="texto-dou"[^>]*>([\s\S]*?)</div>\s*</div>')
+_TAGS = re.compile(r"<[^>]+>")
 
 
 class _AdaptadorTls12(HTTPAdapter):
@@ -93,3 +96,20 @@ def baixar_dou(dia: date, secao: str, http: Any = None) -> list[AtoBruto]:
     if resposta.status_code >= 400:
         raise FonteIndisponivel(f"DOU respondeu HTTP {resposta.status_code}")
     return ler_pagina_dou(resposta.content.decode("utf-8", errors="replace"), dia, secao)
+
+
+def baixar_texto_nota(url: str, http: Any = None) -> str:
+    """Baixa a página de uma nota do DOU e devolve só o texto do ato, sem tags."""
+    cliente = http if http is not None else _sessao_tls12()
+    try:
+        resposta = cliente.get(url, headers={"User-Agent": USER_AGENT}, timeout=TIMEOUT_S)
+    except requests.RequestException as erro:
+        raise FonteIndisponivel(f"Falha de rede no DOU: {erro}") from erro
+    if resposta.status_code >= 400:
+        raise FonteIndisponivel(f"DOU respondeu HTTP {resposta.status_code}")
+    pagina = resposta.content.decode("utf-8", errors="replace")
+    achado = _TEXTO_NOTA.search(pagina)
+    if achado is None:
+        raise FonteIndisponivel("Nota do DOU sem o bloco texto-dou")
+    texto = html.unescape(_TAGS.sub(" ", achado.group(1)))
+    return " ".join(texto.split())
