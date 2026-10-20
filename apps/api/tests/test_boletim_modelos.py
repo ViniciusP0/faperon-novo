@@ -33,5 +33,6 @@ def test_ato_unico_por_fonte_e_id() -> None:
 
 def test_ajustes_padrao() -> None:
     assert settings.BOLETIM_ATIVO is False
+    assert settings.BOLETIM_MODELO == settings.ZETELE_MODELO
     assert settings.BOLETIM_RETENCAO_DIAS == 7
     assert settings.BOLETIM_VALOR_MINIMO == 500000

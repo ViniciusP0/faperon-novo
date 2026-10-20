@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 def env_bool(nome: str, padrao: bool = False) -> bool:
-    return os.environ.get(nome, "1" if padrao else "0").lower() in {"1", "true", "yes", "on"}
+    return os.environ.get(nome, "1" if padrao else "0").lower() in {"1", "true", "yes", "on", "sim"}
 
 
 def env_lista(nome: str, padrao: str = "") -> list[str]:
@@ -166,7 +166,7 @@ ZETELE_SIMULTANEOS = int(os.environ.get("ZETELE_SIMULTANEOS", "3"))
 ZETELE_TERMOS_BLOQUEADOS = env_lista("ZETELE_TERMOS_BLOQUEADOS")
 
 # Boletim do Agro (DOE-RO e DOU). Desligado por padrão; a triagem usa o mesmo modelo do Zétele.
-BOLETIM_ATIVO = os.environ.get("BOLETIM_ATIVO", "").strip().lower() in {"1", "true", "sim"}
+BOLETIM_ATIVO = env_bool("BOLETIM_ATIVO")
 BOLETIM_MODELO = os.environ.get("BOLETIM_MODELO", ZETELE_MODELO)
 BOLETIM_RETENCAO_DIAS = int(os.environ.get("BOLETIM_RETENCAO_DIAS", "7"))
 BOLETIM_VALOR_MINIMO = int(os.environ.get("BOLETIM_VALOR_MINIMO", "500000"))
