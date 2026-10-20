@@ -6,6 +6,7 @@ from django.core.management.base import BaseCommand
 from django.db import close_old_connections
 from django.utils import timezone
 
+from boletim.servico_agenda import rodar_boletim
 from ingestao.agendador import precisa_ingerir
 from ingestao.models import Carga
 from ingestao.servico import CargaFalhou, executar_carga
@@ -56,6 +57,11 @@ def rodar_ciclo(cliente: SidraCliente) -> int:
     except Exception:
         # o expurgo não pode derrubar a ingestão; a próxima passada tenta de novo
         log.exception("scheduler: expurgo do Zétele falhou")
+    try:
+        rodar_boletim()
+    except Exception:
+        # o boletim também não derruba a ingestão; a próxima passada tenta de novo
+        log.exception("scheduler: coleta do boletim falhou")
     return tentadas
 
 
