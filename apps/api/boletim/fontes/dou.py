@@ -52,18 +52,23 @@ def ler_pagina_dou(html: str, dia: date, secao: str) -> list[AtoBruto]:
     except (ValueError, KeyError, TypeError) as erro:
         raise FonteIndisponivel(f"JSON do DOU ilegível: {erro}") from erro
 
+    if not isinstance(itens, list):
+        raise FonteIndisponivel("jsonArray do DOU não é uma lista")
+
     atos = []
     for item in itens:
+        if not isinstance(item, dict) or not item.get("urlTitle"):
+            continue  # sem urlTitle não há id_externo nem url
         pagina = str(item.get("numberPage") or "")
         atos.append(
             AtoBruto(
                 fonte="dou",
                 id_externo=item["urlTitle"],
                 dia=dia,
-                edicao=str(item.get("editionNumber", "")),
-                secao=secao,
-                orgao=item.get("hierarchyStr", ""),
-                titulo=item.get("title", ""),
+                edicao=str(item.get("editionNumber") or ""),
+                secao=secao.lower(),
+                orgao=item.get("hierarchyStr") or "",
+                titulo=item.get("title") or "",
                 texto=(item.get("content") or "").strip(),
                 url=URL_NOTA.format(url_title=item["urlTitle"]),
                 pagina=int(pagina) if pagina.isdigit() else None,
@@ -87,4 +92,4 @@ def baixar_dou(dia: date, secao: str, http: Any = None) -> list[AtoBruto]:
         raise FonteIndisponivel(f"Falha de rede no DOU: {erro}") from erro
     if resposta.status_code >= 400:
         raise FonteIndisponivel(f"DOU respondeu HTTP {resposta.status_code}")
-    return ler_pagina_dou(resposta.text, dia, secao)
+    return ler_pagina_dou(resposta.content.decode("utf-8", errors="replace"), dia, secao)

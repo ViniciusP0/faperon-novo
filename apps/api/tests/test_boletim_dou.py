@@ -2,6 +2,7 @@ from datetime import date
 from pathlib import Path
 
 import pytest
+import requests
 
 from boletim.fontes import FonteIndisponivel
 from boletim.fontes.dou import baixar_dou, ler_pagina_dou
@@ -18,7 +19,7 @@ def test_le_atos_do_dia():
     atos = ler_pagina_dou(_html(), DIA, "DO1")
     assert atos
     assert all(a.edicao == "198" and a.fonte == "dou" for a in atos)
-    assert all(a.dia == DIA and a.secao == "DO1" for a in atos)
+    assert all(a.dia == DIA and a.secao == "do1" for a in atos)
 
 
 def test_monta_url_da_nota():
@@ -39,7 +40,8 @@ def test_baixar_usa_user_agent_de_navegador():
 
     class Resposta:
         status_code = 200
-        text = _html()
+        content = _html().encode("utf-8")
+        encoding = "latin-1"
 
     class HttpFalso:
         def get(self, url, **kwargs):
@@ -58,6 +60,7 @@ def test_baixar_status_de_erro_levanta():
     class Resposta:
         status_code = 503
         text = ""
+        content = b""
 
     class HttpFalso:
         def get(self, url, **kwargs):
@@ -65,3 +68,53 @@ def test_baixar_status_de_erro_levanta():
 
     with pytest.raises(FonteIndisponivel):
         baixar_dou(DIA, "do1", http=HttpFalso())
+
+
+def _pagina(json_array: str) -> str:
+    return (
+        '<script id="params" type="application/json">'
+        '{"jsonArray":' + json_array + "}</script>"
+    )
+
+
+def test_json_array_vazio_devolve_lista_vazia():
+    assert ler_pagina_dou(_pagina("[]"), DIA, "DO1") == []
+
+
+def test_item_sem_url_title_e_ignorado():
+    itens = '[{"title":"x"}, 5, {"urlTitle":"ok-1","editionNumber":null,"title":null}]'
+    atos = ler_pagina_dou(_pagina(itens), DIA, "DO1")
+    assert [a.id_externo for a in atos] == ["ok-1"]
+    assert atos[0].edicao == ""
+    assert atos[0].titulo == "" and atos[0].orgao == ""
+
+
+@pytest.mark.parametrize("valor", ["null", '"texto"', "{}"])
+def test_json_array_que_nao_e_lista_levanta(valor):
+    with pytest.raises(FonteIndisponivel):
+        ler_pagina_dou(_pagina(valor), DIA, "DO1")
+
+
+def test_erro_de_rede_levanta():
+    class HttpFalso:
+        def get(self, url, **kwargs):
+            raise requests.ConnectionError("caiu")
+
+    with pytest.raises(FonteIndisponivel):
+        baixar_dou(DIA, "do1", http=HttpFalso())
+
+
+def test_baixar_decodifica_utf8_mesmo_com_encoding_errado():
+    corpo = _pagina('[{"urlTitle":"a","title":"Ação"}]')
+
+    class Resposta:
+        status_code = 200
+        encoding = "ISO-8859-1"
+        content = corpo.encode("utf-8")
+        text = corpo.encode("utf-8").decode("latin-1")
+
+    class HttpFalso:
+        def get(self, url, **kwargs):
+            return Resposta()
+
+    assert baixar_dou(DIA, "do1", http=HttpFalso())[0].titulo == "Ação"
