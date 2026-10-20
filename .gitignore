@@ -17,3 +17,6 @@ infra/deploy.log
 .coverage
 
 infra/.deploy-pendente
+
+# Mockups do brainstorming (superpowers)
+.superpowers/
