@@ -41,6 +41,7 @@ class ClienteLLM(Protocol):
         ultima_rodada: bool,
         formato: dict[str, Any] | None = None,
         timeout: float | None = None,
+        max_tokens: int | None = None,
     ) -> Any: ...
 
 
@@ -58,12 +59,14 @@ class ClienteAnthropic:
         ultima_rodada: bool,
         formato: dict[str, Any] | None = None,
         timeout: float | None = None,
+        max_tokens: int | None = None,
     ) -> Any:
         """`formato` troca a saída estruturada padrão (resposta do Zétele) por outra, como a do
-        agendamento por voz. `timeout` limita esta chamada ao que resta do orçamento do agente."""
+        agendamento por voz. `timeout` limita esta chamada ao que resta do orçamento do agente.
+        `max_tokens` troca o teto padrão (1500, do Zétele), como no lote do boletim."""
         parametros: dict[str, Any] = {
             "model": self._modelo,
-            "max_tokens": 1500,
+            "max_tokens": max_tokens or 1500,
             "system": system,
             "messages": messages,
             "thinking": {"type": "adaptive"},
