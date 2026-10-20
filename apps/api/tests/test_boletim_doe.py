@@ -50,7 +50,9 @@ def test_acha_avisos_da_idaron():
     assert len(avisos) == 3
     assert [a.id_externo for a in avisos] == ["77759029", "77771019", "77764044"]
     assert avisos[0].titulo.startswith("AVISO DE PROCURA DE IMÓVEL")
-    assert avisos[0].pagina == 399
+    assert avisos[0].pagina == 75  # fixture cortada: rodapé anterior é o 74
+    # os avisos 2 e 3 vêm depois do rodapé 399 -> página 400
+    assert [a.pagina for a in avisos[1:]] == [400, 400]
 
 
 def test_texto_do_ato_nao_traz_rodape():
@@ -107,3 +109,62 @@ def test_baixar_edicao_pdf_vazio_ou_ilegivel_levanta():
 
     with pytest.raises(FonteIndisponivel):
         baixar_edicao(DIA, http=_Http(_Resp()), pdf_para_texto=quebra)
+
+
+@pytest.mark.parametrize(
+    "linha",
+    [
+        "RUECKERT - ME",
+        "MAÇÃ NACIONAL - VERMELHA",
+        "CONTRATADA: ML. DA SILVEIRA - ME",
+        "VANESSA DA SILVA KRAUSE DIRETORA DA ESCOLA ESTADUAL DE SERVIÇOS PENAIS - ESEP",
+        "JOÃO SILVA (ENGENHEIRO CIVIL) SECRETARIA DE OBRAS - GFISC",
+        "CASA MILITAR - GERENTE",
+        "CASA MILITAR - DIRETOR",
+        "DECISAO PROJETOS E ASSESSORIA LTDA - ME",
+    ],
+)
+def test_linha_falsa_nao_vira_cabecalho(linha):
+    texto = f"Titulo do ato\n{linha}\ncorpo\nProtocolo 1\n"
+    (ato,) = dividir_edicao(texto, DIA, URL)
+    assert ato.orgao == ""
+    assert linha in ato.texto
+
+
+def test_cabecalhos_reais_viram_orgao():
+    for cab in (
+        "SECRETARIA DE ESTADO DA SAÚDE - SESAU",
+        "POLÍCIA MILITAR - PM",
+        "CORPO DE BOMBEIROS MILITAR - CBM",
+        "INSTITUTO DE PREVIDÊNCIA DOS SERVIDORES PÚBLICOS - IPERON",
+    ):
+        (ato,) = dividir_edicao(f"{cab}\nPortaria 1\nProtocolo 9\n", DIA, URL)
+        assert ato.orgao == cab
+
+
+def test_cabecalho_em_duas_linhas_e_juntado():
+    texto = (
+        "FUNDAÇÃO RONDÔNIA DE AMPARO AO DESENVOLVIMENTO DAS AÇÕES CIENTÍFICAS,\n"
+        "TECNOLÓGICAS E À PESQUISA - FAPERO\nEdital 1\nProtocolo 5\n"
+    )
+    (ato,) = dividir_edicao(texto, DIA, URL)
+    assert ato.orgao.endswith("CIENTÍFICAS, TECNOLÓGICAS E À PESQUISA - FAPERO")
+    assert ato.titulo == "Edital 1"
+
+
+def test_pagina_e_a_do_inicio_do_ato():
+    texto = (
+        "Rondônia, ed. 201 - 10\nAto A\nmeio\nRondônia, ed. 201 - 11\nfim\nProtocolo 1\n"
+        "Ato B\nProtocolo 2\n"
+    )
+    a, b = dividir_edicao(texto, DIA, URL)
+    assert (a.pagina, b.pagina) == (11, 12)
+    (c,) = dividir_edicao("Ato C\nProtocolo 3\n", DIA, URL)
+    assert c.pagina == 1
+
+
+def test_sumario_e_titulo_repetido():
+    atos = dividir_edicao(
+        "SUMÁRIO\nPODER....... 3\nProtocolo 1\nAVISO AVISO DE X\nProtocolo 2\n", DIA, URL
+    )
+    assert [a.titulo for a in atos] == ["AVISO DE X"]

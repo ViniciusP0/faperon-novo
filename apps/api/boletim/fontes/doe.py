@@ -24,8 +24,15 @@ _PROTOCOLO = re.compile(r"Protocolo\s+(\d+)\s*$")
 _RODAPE = re.compile(r"Rondônia,\s+ed\.\s+(\d+)\s+-\s+(\d+)")
 _AUTENTICIDADE = re.compile(r"^Autenticidade pode ser verificada")
 _LINHA_DATA = re.compile(r"^(?:\w+-feira|Sábado|Domingo), \d{1,2} de \w+ de \d{4}$", re.IGNORECASE)
-# Cabeçalho de órgão: tudo em caixa-alta, terminando em " - SIGLA".
-_ORGAO = re.compile(r"^\S.* - [A-Z0-9]{2,}$")
+# Cabeçalho de órgão: caixa-alta, começa por palavra institucional e termina em " - SIGLA".
+_PREFIXOS_ORGAO = (
+    "SECRETARIA", "SUPERINTENDÊNCIA", "AGÊNCIA", "DEPARTAMENTO", "FUNDAÇÃO", "INSTITUTO",
+    "POLÍCIA", "PROCURADORIA", "CONTROLADORIA", "CORPO DE", "HOSPITAL", "LABORATÓRIO",
+    "JUNTA", "ENTIDADE", "TRIBUNAL", "DEFENSORIA", "ASSEMBLEIA", "MINISTÉRIO",
+)  # fmt: skip
+_ORGAO = re.compile(r"^(?:" + "|".join(_PREFIXOS_ORGAO) + r")\b.* - ([A-Z0-9]{2,12})$")
+_CARGOS = {"GERENTE", "DIRETOR", "DIRETORA", "PRESIDENTE", "SECRETÁRIO", "SECRETARIA", "ME", "EPP"}
+_INICIO_ORGAO = re.compile(r"^(?:" + "|".join(_PREFIXOS_ORGAO) + r")\b")
 
 
 def url_pdf(dia: date, sufixo: str = "") -> str:
@@ -37,14 +44,25 @@ def url_pdf(dia: date, sufixo: str = "") -> str:
 
 
 def _eh_orgao(linha: str) -> bool:
-    return len(linha) >= 10 and linha == linha.upper() and bool(_ORGAO.match(linha))
+    """Cabeçalho institucional com sigla; descarta empresas, cargos e linhas com ':' ou '('."""
+    if len(linha) < 10 or linha != linha.upper() or any(c in linha for c in ":("):
+        return False
+    if "LTDA" in linha:
+        return False
+    achado = _ORGAO.match(linha)
+    return achado is not None and achado.group(1) not in _CARGOS
 
 
 def _titulo(linhas: list[str]) -> str:
-    """Primeira linha útil; em avisos, a que vem depois da palavra AVISO."""
+    """Primeira linha útil; pula "AVISO" sozinho e colapsa palavra inicial repetida."""
     if linhas and linhas[0].upper() == "AVISO" and len(linhas) > 1:
-        return linhas[1]
-    return linhas[0] if linhas else ""
+        titulo = linhas[1]
+    else:
+        titulo = linhas[0] if linhas else ""
+    palavras = titulo.split(" ", 2)
+    if len(palavras) == 3 and palavras[0].upper() == palavras[1].upper():
+        return palavras[1] + " " + palavras[2]
+    return titulo
 
 
 def dividir_edicao(texto: str, dia: date, url: str) -> list[AtoBruto]:
@@ -56,7 +74,7 @@ def dividir_edicao(texto: str, dia: date, url: str) -> list[AtoBruto]:
     """
     achado = _RODAPE.search(texto or "")
     edicao = achado.group(1) if achado else ""
-    pagina: int | None = int(achado.group(2)) if achado else None
+    ultimo_rodape = 0  # número do último rodapé visto; o rodapé N fecha a página N
     orgao = ""
     linhas: list[str] = []
     pagina_ato: int | None = None
@@ -64,7 +82,7 @@ def dividir_edicao(texto: str, dia: date, url: str) -> list[AtoBruto]:
 
     def fechar(id_externo: str | None) -> None:
         nonlocal linhas, pagina_ato
-        if linhas:
+        if linhas and not linhas[0].upper().startswith("SUMÁRIO"):
             corpo = "\n".join(linhas)
             ident = id_externo or "s" + hashlib.sha256(corpo.encode()).hexdigest()[:12]
             atos.append(
@@ -78,31 +96,47 @@ def dividir_edicao(texto: str, dia: date, url: str) -> list[AtoBruto]:
                     titulo=_titulo(linhas),
                     texto=corpo,
                     url=url,
-                    pagina=pagina_ato if pagina_ato is not None else pagina,
+                    pagina=pagina_ato,
                 )
             )
         linhas = []
         pagina_ato = None
 
-    for bruta in (texto or "").splitlines():
-        linha = bruta.strip()
+    def acrescentar(linha: str) -> None:
+        nonlocal pagina_ato
+        if not linhas:
+            pagina_ato = ultimo_rodape + 1  # página onde o ato começa
+        linhas.append(linha)
+
+    todas = (texto or "").splitlines()
+    i = 0
+    while i < len(todas):
+        linha = todas[i].strip()
+        i += 1
         rodape = _RODAPE.search(linha)
         if rodape:
-            pagina = pagina_ato = int(rodape.group(2))
+            ultimo_rodape = int(rodape.group(2))
             linha = (linha[: rodape.start()] + " " + linha[rodape.end() :]).strip()
         if _AUTENTICIDADE.match(linha) or _LINHA_DATA.match(linha):
             continue
+        # Cabeçalho que quebra em duas linhas: junta com a continuação.
+        if linha.endswith(",") and linha == linha.upper() and _INICIO_ORGAO.match(linha):
+            while i < len(todas) and not todas[i].strip():
+                i += 1
+            if i < len(todas):
+                linha = linha + " " + todas[i].strip()
+                i += 1
         protocolo = _PROTOCOLO.search(linha)
         if protocolo:
             linha = linha[: protocolo.start()].strip()
             if linha:
-                linhas.append(linha)
+                acrescentar(linha)
             fechar(protocolo.group(1))
         elif _eh_orgao(linha):
             fechar(None)
             orgao = linha
         elif linha:
-            linhas.append(linha)
+            acrescentar(linha)
     return atos
 
 
