@@ -15,6 +15,7 @@ export const PAGINAS_COM_ZETELE = [
   "/sistema/relatorios",
   "/sistema/atividades",
   "/sistema/indicadores",
+  "/sistema/boletim",
 ] as const;
 export type PaginaComZetele = (typeof PAGINAS_COM_ZETELE)[number];
 
@@ -265,6 +266,7 @@ export const ORDEM_POR_PAGINA: Record<PaginaComZetele, string[]> = {
   "/sistema/relatorios": ["sis-relatorio", "sis-custos", "sis-despesa", "sis-voz"],
   "/sistema/atividades": ["sis-atividade", "sis-historico", "sis-voz", "sis-relatorio"],
   "/sistema/indicadores": ["sis-indicadores", "sis-relatorio", "sis-custos", "sis-atividade"],
+  "/sistema/boletim": ["sis-indicadores", "sis-relatorio", "sis-atividade", "sis-voz"],
 };
 
 export function perguntasDaPagina(pagina: PaginaComZetele): { visiveis: PerguntaPronta[]; demais: PerguntaPronta[] } {
