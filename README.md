@@ -36,6 +36,8 @@ O Zétele fica no canto inferior direito do Início e da Central (ADR 0029). No 
 
 Diariamente o `scheduler` lê o Diário Oficial da União e o de Rondônia, separa os atos do agro e resume os relevantes com IA. Vem desligado.
 
+A tela fica em `/sistema/boletim` (depois de "Relatórios") e só aparece para coordenação e gestão; a decisão está na [ADR 0035](docs/adr/0035-boletim-do-agro-coleta-diaria-dos-diarios-oficiais-com-ia.md).
+
 - `BOLETIM_ATIVO=1` no `.env.local` liga (nos servidores AWS, no `.env` da máquina). Usa a `ANTHROPIC_API_KEY` do Zétele; não há teto de gasto, o consumo por dia fica no modelo `ConsumoDia` (tabela `boletim_consumo_dia`). Nos servidores, mudança no `.env` vale na próxima rodada do `faperon-atualizar` (cerca de 2 minutos), sem reiniciar na mão.
 - Rodar uma vez, na mão: `docker compose exec scheduler python manage.py coletar_boletim [--dia AAAA-MM-DD] [--fonte dou|doe]`.
 - Calibração (API real, fixtures de 19 e 20/10/2026; imprime os resumos e o consumo): `docker compose run --rm --entrypoint "" -v "$PWD/apps/api:/app" -v "$PWD/data:/app/data" api-dev pytest -m llm tests/test_boletim_ouro.py -s`. Sem a chave, o teste é pulado.
