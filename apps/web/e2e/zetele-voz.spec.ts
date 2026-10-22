@@ -48,7 +48,9 @@ async function simularApiDaVoz(page: Page) {
 async function entrar(page: Page) {
   await page.addInitScript(() => window.sessionStorage.setItem("zetele-saudou", "1"));
   await page.goto("/login");
-  if (await page.getByLabel("E-mail").isVisible().catch(() => false)) {
+  // O /login mostra um skeleton até hidratar: espera o formulário ou a escolha de perfil antes de decidir.
+  await page.getByLabel("E-mail").or(page.getByRole("button", { name: "Entrar como Carla Mendes" })).waitFor();
+  if (await page.getByLabel("E-mail").isVisible()) {
     await page.getByLabel("E-mail").fill("user@faperon.br");
     await page.getByLabel("Senha", { exact: true }).fill("Senha@123");
     await page.getByRole("button", { name: "Entrar", exact: true }).click();
